@@ -72,3 +72,5 @@ nav:
 - Home: index.md
 - Examples:
   - Hello world: examples/hello-world.md
+- API Reference:
+  - Hello world: api/hello-world.md
