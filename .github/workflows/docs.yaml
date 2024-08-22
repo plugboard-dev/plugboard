@@ -3,7 +3,7 @@ name: Publish Documentation
 on:
   push:
     branches:
-      - '**'
+      - 'main'
     tags:
       - 'v*'
 
@@ -44,7 +44,7 @@ jobs:
       - run: |
           echo "Deploying dev version ${{ steps.install.outputs.version }}"
           poetry run mike deploy -b gh-pages dev --push
-        #if: github.ref == 'refs/heads/main'
+        if: github.ref == 'refs/heads/main'
 
       # Tagged commits publish latest and numbered version of docs
       - run: |
