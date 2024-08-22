@@ -1,4 +1,4 @@
-"""Plugboard is a modeling and orchestration framework for simulating complex processes."""
+"""Plugboard is a modelling and orchestration framework for simulating complex processes."""
 
 from importlib.metadata import version
 

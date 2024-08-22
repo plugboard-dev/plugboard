@@ -5,10 +5,10 @@ build-backend = "poetry_dynamic_versioning.backend"
 [tool.poetry]
 name = "plugboard"
 version = "0.0.0"
-description = "Plugboard is an event driven modeling and orchestration framework for simulating complex processes with many interconnected components."
+description = "Plugboard is an event driven modelling and orchestration framework for simulating complex processes with many interconnected components."
 authors = [
-    "Chris Knight <chris@csknight.uk>",
-    "Toby Coleman <toby@tobycoleman.com>",
+    "Chris Knight <plugboard@csknight.uk>",
+    "Toby Coleman <plugboard@tobycoleman.com>",
 ]
 
 [tool.poetry.dependencies]
