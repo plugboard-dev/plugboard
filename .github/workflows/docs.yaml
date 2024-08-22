@@ -1,0 +1,53 @@
+name: Publish Documentation
+
+on:
+  push:
+    branches:
+      - '*'
+    tags:
+      - 'v*'
+
+env:
+  PYTHON_VERION: '3.12'
+  POETRY_VERSION: '1.8'
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout gh-pages
+        uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+
+      - name: checkout current branch
+        uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: $PYTHON_VERSION
+
+      - name: install
+        id: install
+        run: |
+          pip install poetry==$POETRY_VERSION
+          poetry install --with docs
+          VERSION=$(poetry version --short)
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Set git credentials
+        run: |
+          git config --global user.name "${{ github.actor }}"
+          git config --global user.email "${{ github.actor }}@users.noreply.github.com"
+
+      # Main branch publishes dev version of docs
+      - run: |
+          echo "Deploying dev version $${{ steps.install.outputs.version }}"
+          mike deploy -b gh-pages dev --push
+        #if: github.ref == 'refs/heads/main'
+
+      # Tagged commits publish latest and numbered version of docs
+      - run: |
+          echo "Deploying dev version $${{ steps.install.outputs.version }}"
+          mike deploy -b gh-pages $${{ steps.install.outputs.version }} latest --update-aliases --push
+        if: startsWith(github.ref, 'refs/tags/')
