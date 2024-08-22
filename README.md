@@ -106,7 +106,7 @@ plugboard process run --yaml-input my-model.yaml
 ```
 
 ## Documentation
-For more information including a detailed API reference and step-by-step usage examples, refer to the [documentation site]().
+For more information including a detailed API reference and step-by-step usage examples, refer to the [documentation site](https://plugboard.dev).
 
 ## Contributions
 Contributions are welcomed and warmly received! For bug fixes and smaller feature requests feel free to open an issue on this repo. For any larger changes please get in touch with us to discuss first. More information for developers can be found in [the contributors section]() of the docs.
