@@ -66,7 +66,3 @@ jobs:
         run: poetry build
         if: always()
 
-      - name: Failed checks
-        run: echo "Lint and/or test failed"; exit 1
-        if: failure()
-
