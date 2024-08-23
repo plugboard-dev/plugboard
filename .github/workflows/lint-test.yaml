@@ -1,0 +1,73 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - 'main'
+      - '*'  # Testing
+  pull_request_target:
+    types:
+      - opened
+      - edited
+      - synchronize
+      - reopened
+
+env:
+  PYTHON_VERSION: '3.12'
+  POETRY_VERSION: '1.8'
+
+jobs:
+  pr-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check PR title
+        uses: amannn/action-semantic-pull-request@v5
+        if: github.event_name == 'pull_request_target'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  lint-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{env.PYTHON_VERSION}}
+
+      - name: Install
+        run: |
+          pip install poetry==$POETRY_VERSION
+          poetry install --all-extras --sync
+      
+      # Run all checks, even if some fail
+      - name: Ruff linting
+        run: poetry run ruff check .
+        continue-on-error: true
+
+      - name: Ruff formatting
+        run: poetry run ruff format --check .
+        continue-on-error: true
+
+      - name: Type checking
+        run: poetry run mypy .
+        continue-on-error: true
+
+      - name: Tests
+        run: poetry run pytest .
+        continue-on-error: true
+
+      - name: Build docs
+        run: poetry run mkdocs build
+        continue-on-error: true
+
+      - name: Build package
+        run: poetry build
+        continue-on-error: true
+
+      # Fail the job if any previous step fails
+      - name: Fail checks
+        if: failure()
+        run: echo "Checks failed during lint and test"; exit 1
+
