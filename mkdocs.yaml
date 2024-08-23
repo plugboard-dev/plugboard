@@ -1,0 +1,76 @@
+site_name: Plugboard
+site_url: https://plugboard.dev
+site_description: An event-driven modelling and orchestration framework for simulating complex processes
+
+repo_name: plugboard-dev/plugboard
+repo_url: https://github.com/plugboard-dev/plugboard
+extra:
+  version:
+    provider: mike
+
+validation:
+  omitted_files: warn
+  absolute_links: warn
+  unrecognized_links: warn
+  anchors: warn
+
+plugins:
+- search
+- mkdocstrings:
+    default_handler: python
+    handlers:
+      python:
+        paths: [src]
+- mike:
+    alias_type: symlink
+    canonical_version: latest
+
+markdown_extensions:
+# Annotations: https://squidfunk.github.io/mkdocs-material/reference/annotations/
+- attr_list
+- md_in_html
+- pymdownx.superfences
+# Code blocks: https://squidfunk.github.io/mkdocs-material/reference/code-blocks/
+- pymdownx.highlight:
+    anchor_linenums: true
+    line_spans: __span
+    pygments_lang_class: true
+- pymdownx.inlinehilite
+- pymdownx.snippets
+- pymdownx.superfences
+
+theme:
+  name: material
+  features:
+  - navigation.tabs
+  - content.code.annotate
+  palette:
+  # Palette toggle for automatic mode
+  - media: "(prefers-color-scheme)"
+    toggle:
+      icon: material/brightness-auto
+      name: Switch to light mode
+  # Palette toggle for light mode
+  - media: "(prefers-color-scheme: light)"
+    scheme: default 
+    toggle:
+      icon: material/brightness-7
+      name: Switch to dark mode
+  # Palette toggle for dark mode
+  - media: "(prefers-color-scheme: dark)"
+    scheme: slate
+    toggle:
+      icon: material/brightness-4
+      name: Switch to system preference
+
+watch:
+- mkdocs.yaml
+- docs
+- plugboard
+
+nav:
+- Home: index.md
+- Examples:
+  - Hello world: examples/hello-world.md
+- API Reference:
+  - Hello world: api/hello-world.md
