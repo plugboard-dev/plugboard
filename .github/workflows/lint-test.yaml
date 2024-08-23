@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - 'main'
-      - '*'  # Testing
+      - '**'  # Testing
   pull_request_target:
     types:
       - opened
