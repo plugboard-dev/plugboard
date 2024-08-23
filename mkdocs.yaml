@@ -1,6 +1,6 @@
 site_name: Plugboard
 site_url: https://plugboard.dev
-site_description: An event driven modeling and orchestration framework for simulating complex processes
+site_description: An event-driven modelling and orchestration framework for simulating complex processes
 
 repo_name: plugboard-dev/plugboard
 repo_url: https://github.com/plugboard-dev/plugboard
