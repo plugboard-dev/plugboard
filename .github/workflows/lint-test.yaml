@@ -28,7 +28,6 @@ jobs:
 
   lint-test:
     runs-on: ubuntu-latest
-    continue-on-error: true  # Run all checks, even if some fail
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -45,19 +44,29 @@ jobs:
       # Run all checks, even if some fail
       - name: Ruff linting
         run: poetry run ruff check .
+        if: always()
 
       - name: Ruff formatting
         run: poetry run ruff format --check .
+        if: always()
 
       - name: Type checking
         run: poetry run mypy .
+        if: always()
 
       - name: Tests
         run: poetry run pytest .
+        if: always()
 
       - name: Build docs
         run: poetry run mkdocs build
+        if: always()
 
       - name: Build package
         run: poetry build
+        if: always()
+
+      - name: Failed checks
+        run: echo "Lint and/or test failed"; exit 1
+        if: failure()
 
