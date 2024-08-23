@@ -7,6 +7,8 @@ on:
 jobs:
   release:
     name: Perform release
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v3
           with:
@@ -28,3 +30,4 @@ jobs:
         with:
           body_path: GITHUB_CHANGELOG.md
           tag_name: ${{ steps.release.outputs.version }}
+          token: ${{ secrets.GITHUB_TOKEN }}
