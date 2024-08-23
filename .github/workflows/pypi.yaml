@@ -28,7 +28,6 @@ jobs:
       - name: Install
         run: |
           pip install poetry==$POETRY_VERSION
-          poetry self add poetry 
           poetry install --without dev
       
       - name: Build wheel
