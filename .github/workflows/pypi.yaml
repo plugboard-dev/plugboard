@@ -10,8 +10,6 @@ on:
 env:
   PYTHON_VERSION: '3.12'
   POETRY_VERSION: '1.8'
-  # Enable when project is public
-  PYPI_ENABLE: false
 
 # See https://packaging.python.org/en/latest/guides/publishing-package-distribution-releases-using-github-actions-ci-cd-workflows/
 jobs:
@@ -45,7 +43,7 @@ jobs:
   publish-to-pypi:
     name: >-
       Publish Python 🐍 distribution 📦 to PyPI
-    if: startsWith(github.ref, 'refs/tags/') && (${{env.PYPI_ENABLE}} == true)  # only publish to PyPI on tag pushes
+    if: startsWith(github.ref, 'refs/tags/')  # only publish to PyPI on tag pushes
     needs:
     - build
     runs-on: ubuntu-latest
@@ -61,9 +59,10 @@ jobs:
         with:
           name: python-package-distributions
           path: dist/
-          
-      - name: Publish distribution 📦 to PyPI
-        uses: pypa/gh-action-pypi-publish@release/v1
+
+      # Uncomment when PyPI setup    
+      # - name: Publish distribution 📦 to PyPI
+      #   uses: pypa/gh-action-pypi-publish@release/v1
         
   github-release:
     name: >-
@@ -91,8 +90,9 @@ jobs:
             ./dist/*.tar.gz
             ./dist/*.whl
 
-      - name: Upload artifact signatures to GitHub Release
-        env:
-          GITHUB_TOKEN: ${{ github.token }}
-        # The release will have been created by cocogitto
-        run: gh release upload '${{ github.ref_name }}' dist/**  --repo '${{ github.repository }}'
+      # Uncomment when releases setup
+      # - name: Upload artifact signatures to GitHub Release
+      #   env:
+      #     GITHUB_TOKEN: ${{ github.token }}
+      #   # The release will have been created by cocogitto
+      #   run: gh release upload '${{ github.ref_name }}' dist/**  --repo '${{ github.repository }}'
