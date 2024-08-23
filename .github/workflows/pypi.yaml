@@ -34,7 +34,7 @@ jobs:
         run: poetry build
 
       - name: Store the distribution packages
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: python-package-distributions
           path: dist/
@@ -54,7 +54,7 @@ jobs:
 
     steps:
       - name: Download all the dists
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: python-package-distributions
           path: dist/
@@ -77,7 +77,7 @@ jobs:
 
     steps:
       - name: Download all the dists
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: python-package-distributions
           path: dist/
@@ -89,9 +89,7 @@ jobs:
             ./dist/*.tar.gz
             ./dist/*.whl
 
-      # Uncomment when releases setup
-      # - name: Upload artifact signatures to GitHub Release
-      #   env:
-      #     GITHUB_TOKEN: ${{ github.token }}
-      #   # The release will have been created by cocogitto
-      #   run: gh release upload '${{ github.ref_name }}' dist/**  --repo '${{ github.repository }}'
+      - name: Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/**
