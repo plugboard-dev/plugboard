@@ -3,7 +3,7 @@ name: Build and publish a Docker image
 on:
   push:
     branches:
-      - 'main'
+      - '**'
     tags:
       - 'v*'
     
@@ -28,8 +28,8 @@ jobs:
   
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
-      -
-        name: Set up Docker Buildx
+
+      - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
       - name: Log in to the Container registry
@@ -64,3 +64,9 @@ jobs:
       #     subject-digest: ${{ steps.push.outputs.digest }}
       #     push-to-registry: true
       
+      - name: Delete untagged images
+        uses: actions/delete-package-versions@v5
+        with: 
+          package-name: 'plugboard'
+          package-type: 'container'
+          delete-only-untagged-versions: 'true'
