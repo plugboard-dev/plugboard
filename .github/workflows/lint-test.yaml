@@ -24,6 +24,8 @@ jobs:
         if: github.event_name == 'pull_request'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          wip: true
 
   lint-test:
     runs-on: ubuntu-latest
