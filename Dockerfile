@@ -33,8 +33,8 @@ ENV PATH="${VIRTUAL_ENV}/bin:${PATH}"
 COPY --from=builder ${VIRTUAL_ENV} ${VIRTUAL_ENV}
 
 # Install package with version string passed as build arg
-ARG package_version
-ENV POETRY_DYNAMIC_VERSIONING_BYPASS=${package_version}
+ARG semver
+ENV POETRY_DYNAMIC_VERSIONING_BYPASS=${semver}
 RUN --mount=type=bind,target=/app,rw --mount=type=tmpfs,target=/tmp/build \
   poetry build -f wheel -o /tmp/build/dist && \
   pip install --no-deps /tmp/build/dist/*.whl
@@ -50,11 +50,10 @@ USER appuser
 # Git metadata for image identification
 ARG git_hash_short
 ARG git_branch
-ARG git_tag
 ARG build_date
+ENV SEMVER=${semver}
 ENV GIT_HASH_SHORT=${git_hash_short}
 ENV GIT_BRANCH=${git_branch}
-ENV GIT_TAG=${git_tag}
 ENV BUILD_DATE=${build_date}
 
 CMD python -c "from plugboard import __version__; print(__version__);"

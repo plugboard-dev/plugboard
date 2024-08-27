@@ -63,11 +63,10 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
-            package_version=${{ steps.meta.outputs.tags.semver }}
+            semver=${{ steps.meta.outputs.tags.semver }}
             git_hash_short=${{ steps.meta.outputs.tags.sha }}
             git_branch=${{ steps.meta.outputs.tags.ref }}
-            git_tag=${{ steps.meta.outputs.tags.ref }}
-            build_date=$(date -u +'%Y-%m-%dT%H:%M:%SZ')
+            build_date=$(date -u -Iseconds)
 
       # This can be enabled when the repo is public
       # - name: Generate artifact attestation
