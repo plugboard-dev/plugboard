@@ -4,16 +4,11 @@
 	"name": "Plugboard",
 	// Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
 	"image": "mcr.microsoft.com/devcontainers/python:1-3.12-bullseye",
-	"features": {
-		"ghcr.io/devcontainers/features/python:1": {
-			"installTools": true,
-			"toolsToInstall": "poetry"
-		}
-	},
+	"features": {},
 	// Use 'forwardPorts' to make a list of ports inside the container available locally.
 	// "forwardPorts": [],
 	// Use 'postCreateCommand' to run commands after the container is created.
-	"postCreateCommand": "poetry install",
+	"postCreateCommand": "./.devcontainer/postCreateCommand.sh",
 	// Configure tool-specific properties.
 	"customizations": {
 		"codespaces": {
