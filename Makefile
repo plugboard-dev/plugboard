@@ -58,7 +58,7 @@ PACKAGE_VERSION ?= $(shell poetry version -s)
 PACKAGE_VERSION_DOCKER_SAFE = $(shell echo $(PACKAGE_VERSION) | tr + .)
 
 DOCKER_FILE ?= Dockerfile
-DOCKER_REGISTRY ?= localhost:5000
+DOCKER_REGISTRY ?= ghcr.io
 DOCKER_IMAGE ?= plugboard
 DOCKER_TAG ?= latest
 
