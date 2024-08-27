@@ -60,7 +60,6 @@ PACKAGE_VERSION_DOCKER_SAFE = $(shell echo $(PACKAGE_VERSION) | tr + .)
 DOCKER_FILE ?= Dockerfile
 DOCKER_REGISTRY ?= ghcr.io
 DOCKER_IMAGE ?= plugboard
-DOCKER_TAG ?= latest
 
 requirements.txt: $(VENV) pyproject.toml
 	$(BIN)/$(PY) -m poetry export -f requirements.txt -o requirements.txt --without-hashes
@@ -75,11 +74,10 @@ docker-build: ${DOCKER_FILE} requirements.txt
 	  --build-arg git_branch=$(GIT_BRANCH) \
 	  --build-arg git_tag=$(GIT_TAG) \
 	  --build-arg build_date=$(BUILD_DATE) \
-	  -t ${DOCKER_IMAGE}:${DOCKER_TAG} \
+	  -t ${DOCKER_IMAGE}:latest \
 	  -t ${DOCKER_IMAGE}:${PACKAGE_VERSION_DOCKER_SAFE} \
 	  -t ${DOCKER_IMAGE}:${GIT_HASH_SHORT} \
 	  -t ${DOCKER_IMAGE}:${GIT_BRANCH} \
-	  -t ${DOCKER_REGISTRY}/${DOCKER_IMAGE}:${DOCKER_TAG} \
 	  -t ${DOCKER_REGISTRY}/${DOCKER_IMAGE}:${PACKAGE_VERSION_DOCKER_SAFE} \
 	  -t ${DOCKER_REGISTRY}/${DOCKER_IMAGE}:${GIT_HASH_SHORT} \
 	  -t ${DOCKER_REGISTRY}/${DOCKER_IMAGE}:${GIT_BRANCH} \
