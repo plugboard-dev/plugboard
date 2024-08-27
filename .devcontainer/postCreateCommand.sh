@@ -1,4 +1,4 @@
 #!/usr/bin/env bash
 pipx install poetry
-poetry config virtualenvs.prefer-active-python true
+poetry config virtualenvs.in-project true
 poetry install
