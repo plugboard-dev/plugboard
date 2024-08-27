@@ -2,6 +2,13 @@
 requires = ["poetry-core>=1.0.0", "poetry-dynamic-versioning>=1.0.0,<2.0.0"]
 build-backend = "poetry_dynamic_versioning.backend"
 
+[tool.poetry-dynamic-versioning]
+enable = true
+vcs = "git"
+pattern = "default"
+style = "semver"
+strict = false
+
 [tool.poetry]
 name = "plugboard"
 version = "0.0.0"
