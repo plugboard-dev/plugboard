@@ -11,6 +11,8 @@ on:
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
+  PYTHON_VERSION: '3.12'
+  POETRY_VERSION: '1.8'
 
 # See https://docs.github.com/en/actions/use-cases-and-examples/publishing-packages/publishing-docker-images
 jobs:
@@ -26,6 +28,18 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{env.PYTHON_VERSION}}
+
+      - name: Install
+        run: |
+          pip install poetry==$POETRY_VERSION
+
+      - name: Export python requirements
+        run: |
+          poetry export -f requirements.txt -o requirements.txt --without-hashes
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
