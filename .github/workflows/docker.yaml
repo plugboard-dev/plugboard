@@ -55,13 +55,15 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       # Tagging documented at: https://github.com/docker/metadata-action?tab=readme-ov-file#basic
+      # Image layer storage is limited for private repos. Add below line to tags
+      # section to enable sha tags when repo is public.
+      # type=sha,format=short
       - name: Extract metadata (tags, labels) for Docker
         id: meta
         uses: docker/metadata-action@v5
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
-            type=sha,format=short
             type=semver,pattern={{version}}
             type=ref,event=branch
             type=ref,event=tag
