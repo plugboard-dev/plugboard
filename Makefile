@@ -59,6 +59,7 @@ PACKAGE_VERSION_DOCKER_SAFE = $(shell echo $(PACKAGE_VERSION) | tr + .)
 DOCKER_FILE ?= Dockerfile
 DOCKER_REGISTRY ?= ghcr.io
 DOCKER_IMAGE ?= plugboard
+DOCKER_REGISTRY_IMAGE=${DOCKER_REGISTRY}/plugboard-dev/${DOCKER_IMAGE}
 
 requirements.txt: $(VENV) pyproject.toml
 	$(BIN)/$(PY) -m poetry export -f requirements.txt -o requirements.txt --without-hashes
@@ -72,15 +73,18 @@ docker-build: ${DOCKER_FILE} requirements.txt
 	  --build-arg git_hash_short=$(GIT_HASH_SHORT) \
 	  --build-arg git_branch=$(GIT_BRANCH) \
 	  --build-arg build_date=$(BUILD_DATE) \
-	  -t ${DOCKER_IMAGE}:latest \
 	  -t ${DOCKER_IMAGE}:${PACKAGE_VERSION_DOCKER_SAFE} \
 	  -t ${DOCKER_IMAGE}:${GIT_HASH_SHORT} \
 	  -t ${DOCKER_IMAGE}:${GIT_BRANCH} \
-	  -t ${DOCKER_REGISTRY}/${DOCKER_IMAGE}:${PACKAGE_VERSION_DOCKER_SAFE} \
-	  -t ${DOCKER_REGISTRY}/${DOCKER_IMAGE}:${GIT_HASH_SHORT} \
-	  -t ${DOCKER_REGISTRY}/${DOCKER_IMAGE}:${GIT_BRANCH} \
+	  -t ${DOCKER_REGISTRY_IMAGE}:${PACKAGE_VERSION_DOCKER_SAFE} \
+	  -t ${DOCKER_REGISTRY_IMAGE}:${GIT_HASH_SHORT} \
+	  -t ${DOCKER_REGISTRY_IMAGE}:${GIT_BRANCH} \
 	  --progress=plain 2>&1 | tee docker-build.log
+
+.PHONY: docker-login
+docker-login:
+	echo $$GITHUB_ACCESS_TOKEN | docker login -u $$GITHUB_USERNAME --password-stdin ${DOCKER_REGISTRY}
 
 .PHONY: docker-push
 docker-push:
-	docker push --all-tags ${DOCKER_REGISTRY}/${DOCKER_IMAGE}
+	docker push --all-tags ${DOCKER_REGISTRY_IMAGE}
