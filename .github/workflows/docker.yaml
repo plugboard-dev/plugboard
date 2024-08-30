@@ -63,6 +63,8 @@ jobs:
           echo "GIT_HASH_SHORT=${git_hash_short}" >> $GITHUB_ENV
           git_branch=$(git branch -r --contains ${{ github.ref }} --format "%(refname:lstrip=3)")
           echo "GIT_BRANCH=${git_branch}" >> $GITHUB_ENV
+          git_branch_docker_safe=$(echo ${git_branch} | tr / -)
+          echo "GIT_BRANCH_DOCKER_SAFE=${git_branch_docker_safe}" >> $GITHUB_ENV
 
       # Tagging documented at: https://github.com/docker/metadata-action?tab=readme-ov-file#basic
       # Image layer storage is limited for private repos. Add below line to tags
@@ -84,7 +86,7 @@ jobs:
           context: .
           platforms: linux/amd64,linux/arm64
           push: true
-          tags: ${{ steps.meta.outputs.tags }},${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.GIT_BRANCH }}
+          tags: ${{ steps.meta.outputs.tags }},${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.GIT_BRANCH_DOCKER_SAFE }}
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
             semver=${{ env.PACKAGE_VERSION }}
