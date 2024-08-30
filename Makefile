@@ -73,6 +73,7 @@ docker-build: ${DOCKER_FILE} requirements.txt
 	  --build-arg git_hash_short=$(GIT_HASH_SHORT) \
 	  --build-arg git_branch=$(GIT_BRANCH) \
 	  --build-arg build_date=$(BUILD_DATE) \
+	  -t ${DOCKER_IMAGE}:latest \
 	  -t ${DOCKER_IMAGE}:${PACKAGE_VERSION_DOCKER_SAFE} \
 	  -t ${DOCKER_IMAGE}:${GIT_HASH_SHORT} \
 	  -t ${DOCKER_IMAGE}:${GIT_BRANCH} \
