@@ -33,7 +33,7 @@ jobs:
         with:
           python-version: ${{env.PYTHON_VERSION}}
 
-      - name: Install
+      - name: Install Poetry
         run: |
           pip install poetry==$POETRY_VERSION
 
