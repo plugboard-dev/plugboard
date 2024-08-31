@@ -2,6 +2,13 @@
 requires = ["poetry-core>=1.0.0", "poetry-dynamic-versioning>=1.0.0,<2.0.0"]
 build-backend = "poetry_dynamic_versioning.backend"
 
+[tool.poetry-dynamic-versioning]
+enable = true
+vcs = "git"
+pattern = "default"
+style = "semver"
+strict = false
+
 [tool.poetry]
 name = "plugboard"
 version = "0.0.0"
@@ -13,11 +20,12 @@ authors = [
 
 [tool.poetry.dependencies]
 python = ">=3.12,<4.0"
-pydantic = "^2.0.0"
+pydantic = "^2.8.2"
 
 [tool.poetry.group.dev.dependencies]
 ipython = "^8.26.0"
-mypy = "^1.11.1"
+mypy = "^1.11.2"
+poetry-dynamic-versioning = "^1.4.0"
 poetry-plugin-export = "^1.8.0"
 poetry-plugin-sort = "^0.2.1"
 poetry-plugin-up = "^0.7.2"

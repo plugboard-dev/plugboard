@@ -2,15 +2,16 @@ name: Build and publish a Docker image
 
 on:
   push:
-    branches:
-      - 'main'
     tags:
       - 'v*'
   workflow_dispatch:
-    
+
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
+  PYTHON_VERSION: '3.12'
+  POETRY_VERSION: '1.8'
+  POETRY_DYNAMIC_VERSIONING_VERSION: '1.4'
 
 # See https://docs.github.com/en/actions/use-cases-and-examples/publishing-packages/publishing-docker-images
 jobs:
@@ -22,11 +23,27 @@ jobs:
       packages: write
       attestations: write
       id-token: write
-    
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-  
+        with:
+          fetch-depth: 0
+          ref: ${{ github.ref }}
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{env.PYTHON_VERSION}}
+
+      - name: Install Poetry
+        run: |
+          pip install poetry==$POETRY_VERSION poetry-dynamic-versioning[plugin]==$POETRY_DYNAMIC_VERSIONING_VERSION
+
+      - name: Export python package metadata and requirements
+        run: |
+          poetry export -f requirements.txt -o requirements.txt --without-hashes
+          echo "PACKAGE_VERSION=$(poetry version -s)" >> $GITHUB_ENV
+
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
 
@@ -40,12 +57,27 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Get git branch and short sha for tag
+        run: |
+          git_hash_short=$(git rev-parse --short "$GITHUB_SHA")
+          echo "GIT_HASH_SHORT=${git_hash_short}" >> $GITHUB_ENV
+          git_branch=$(git branch -r --contains ${{ github.ref }} --format "%(refname:lstrip=3)")
+          echo "GIT_BRANCH=${git_branch}" >> $GITHUB_ENV
+          git_branch_docker_safe=$(echo ${git_branch} | tr / -)
+          echo "GIT_BRANCH_DOCKER_SAFE=${git_branch_docker_safe}" >> $GITHUB_ENV
+
       # Tagging documented at: https://github.com/docker/metadata-action?tab=readme-ov-file#basic
+      # Image layer storage is limited for private repos. Add below line to tags
+      # section to enable sha tags when repo is public.
+      # type=sha,format=short
       - name: Extract metadata (tags, labels) for Docker
         id: meta
         uses: docker/metadata-action@v5
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=semver,pattern={{version}}
+            type=raw,value=latest,enable=${{ env.GIT_BRANCH == 'main' }}
 
       - name: Build and push Docker image
         id: push
@@ -54,9 +86,14 @@ jobs:
           context: .
           platforms: linux/amd64,linux/arm64
           push: true
-          tags: ${{ steps.meta.outputs.tags }}
+          tags: ${{ steps.meta.outputs.tags }},${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.GIT_BRANCH_DOCKER_SAFE }}
           labels: ${{ steps.meta.outputs.labels }}
-      
+          build-args: |
+            semver=${{ env.PACKAGE_VERSION }}
+            git_hash_short=${{ env.GIT_HASH_SHORT }}
+            git_branch=${{ env.GIT_BRANCH }}
+            build_date=$(date -u -Iseconds)
+
       # This can be enabled when the repo is public
       # - name: Generate artifact attestation
       #   uses: actions/attest-build-provenance@v1
@@ -64,10 +101,10 @@ jobs:
       #     subject-name: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME}}
       #     subject-digest: ${{ steps.push.outputs.digest }}
       #     push-to-registry: true
-      
+
       - name: Delete untagged images
         uses: actions/delete-package-versions@v5
-        with: 
+        with:
           package-name: 'plugboard'
           package-type: 'container'
           delete-only-untagged-versions: 'true'
