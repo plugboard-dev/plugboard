@@ -1,0 +1,32 @@
+services:
+  rabbitmq:
+    image: rabbitmq:4.0-rc-management-alpine
+    container_name: rabbitmq
+    ports:
+      - 5672:5672
+      - 15672:15672
+    volumes:
+      - plugboard-rabbitmq-data:/var/lib/rabbitmq
+    networks:
+      - plugboard-network
+    restart: always
+
+  valkey:
+    image: valkey/valkey:8.0-alpine
+    container_name: valkey
+    command: valkey-server --dir /var/lib/valkey --bind 0.0.0.0 -::1 --protected-mode no
+    ports:
+      - 6379:6379
+    volumes:
+      - plugboard-valkey-data:/var/lib/valkey
+    networks:
+      - plugboard-network
+    restart: always
+
+networks:
+  plugboard-network:
+    driver: bridge
+
+volumes:
+  plugboard-rabbitmq-data:
+  plugboard-valkey-data:

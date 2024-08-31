@@ -25,6 +25,8 @@ share/python-wheels/
 .installed.cfg
 *.egg
 MANIFEST
+# requirements.txt generated for docker build but doesn't need to be in vcs
+requirements.txt
 
 # PyInstaller
 #  Usually these files are written by a python script from a template
