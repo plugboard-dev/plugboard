@@ -39,6 +39,7 @@ markdown_extensions:
 - pymdownx.snippets:
     dedent_subsections: true
 - pymdownx.superfences
+- mkdocs-jupyter
 
 theme:
   name: material
