@@ -40,7 +40,7 @@ jobs:
           path: dist/
 
       - name: Match semver regex
-        uses: actions-ecosystem/action-regex-match@v2
+        uses: kaisugi/action-regex-match@v1.0.1
         id: regex-match
         with:
           text: ${{ github.ref }}
