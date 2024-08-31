@@ -36,7 +36,8 @@ markdown_extensions:
     line_spans: __span
     pygments_lang_class: true
 - pymdownx.inlinehilite
-- pymdownx.snippets
+- pymdownx.snippets:
+    dedent_subsections: true
 - pymdownx.superfences
 
 theme:
@@ -44,6 +45,7 @@ theme:
   features:
   - navigation.tabs
   - content.code.annotate
+  - content.code.copy
   palette:
   # Palette toggle for automatic mode
   - media: "(prefers-color-scheme)"
@@ -66,12 +68,11 @@ theme:
 watch:
 - mkdocs.yaml
 - docs
-- examples
 - plugboard
 
 nav:
 - Home: index.md
 - Examples:
-  - Hello world: examples/hello-world.md
+  - Hello world: examples/001_hello_world/hello-world.md
 - API Reference:
   - Hello world: api/hello-world.md

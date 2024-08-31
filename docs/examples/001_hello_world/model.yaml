@@ -1,0 +1,15 @@
+plugboard:
+  process:
+    args:
+      components:
+      - type: A
+        args:
+          name: "a"
+          iters: 10
+      - type: B
+        args:
+          name: "b"
+          path: "./b.txt"
+      connectors:
+      - source: "a.out_1"
+        target: "b.in_1"
