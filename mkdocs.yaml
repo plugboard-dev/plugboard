@@ -74,6 +74,6 @@ nav:
 - Home: index.md
 - Examples:
   - Hello world: examples/001_hello_world/hello-world.md
-  - Water heater: examples/002_water_heater/simple_water_heater.ipynb
+  - Simple model: examples/002_simple_model/simple-model.md
 - API Reference:
   - Hello world: api/hello-world.md
