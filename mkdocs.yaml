@@ -39,7 +39,6 @@ markdown_extensions:
 - pymdownx.snippets:
     dedent_subsections: true
 - pymdownx.superfences
-- mkdocs-jupyter
 
 theme:
   name: material
@@ -75,5 +74,6 @@ nav:
 - Home: index.md
 - Examples:
   - Hello world: examples/001_hello_world/hello-world.md
+  - Water heater: examples/002_water_heater/simple_water_heater.ipynb
 - API Reference:
   - Hello world: api/hello-world.md
