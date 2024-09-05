@@ -5,9 +5,9 @@ import asyncio
 import typing as _t
 
 import aiofiles
-from pluboard.connector import ConnectorSpec
 
-from plugboard import Component, Pipeline
+from plugboard import Component
+from plugboard.connector import ConnectorSpec
 from plugboard.io import IOController as IO
 from plugboard.process import ProcessBuilder
 
