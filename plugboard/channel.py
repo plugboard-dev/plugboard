@@ -3,11 +3,13 @@
 from abc import ABC, abstractmethod
 import typing as _t
 
+from plugboard.utils import AsDictMixin
+
 
 CHAN_MAXSIZE = 0  # Max number of items in the channel. Value <= 0 implies unlimited.
 
 
-class Channel(ABC):
+class Channel(ABC, AsDictMixin):
     """`Channel` defines an interface for data communication."""
 
     _maxsize = CHAN_MAXSIZE
@@ -35,3 +37,10 @@ class Channel(ABC):
     async def recv(self) -> _t.Any:
         """Receives an item from the `Channel` and returns it."""
         pass
+
+    def dict(self) -> dict[str, _t.Any]:  # noqa: D102
+        return {
+            **super().dict(),
+            "ref": self._ref,
+            "maxsize": self._maxsize,
+        }

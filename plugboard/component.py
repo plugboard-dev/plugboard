@@ -6,9 +6,10 @@ import typing as _t
 
 from plugboard.io_controller import IOController, IODirection
 from plugboard.state_backend import StateBackend
+from plugboard.utils import AsDictMixin
 
 
-class Component(ABC):
+class Component(ABC, AsDictMixin):
     """`Component` base class for all components in a process model."""
 
     io: IOController
@@ -54,10 +55,6 @@ class Component(ABC):
 
         return _wrapper
 
-    async def run(self) -> None:
-        """Executes component logic for all steps to completion."""
-        pass
-
     def _bind_inputs(self) -> None:
         """Binds input fields to component fields."""
         for field in self.io.inputs:
@@ -67,3 +64,16 @@ class Component(ABC):
         """Binds component fields to output fields."""
         for field in self.io.outputs:
             self.io.data[IODirection.OUTPUT][field] = getattr(self, field)
+
+    async def run(self) -> None:
+        """Executes component logic for all steps to completion."""
+        pass
+
+    def dict(self) -> dict[str, _t.Any]:  # noqa: D102
+        return {
+            **super().dict(),
+            "name": self.name,
+            "parameters": self._parameters,
+            "constraints": self._constraints,
+            **self.io.data,
+        }

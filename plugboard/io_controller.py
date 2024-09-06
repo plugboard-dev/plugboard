@@ -24,7 +24,7 @@ class IOController:
         self.namespace = namespace
         self.inputs = inputs
         self.outputs = outputs
-        self.data: dict[IODirection, dict[str, _t.Any]] = {
+        self.data: dict[str, dict[str, _t.Any]] = {
             IODirection.INPUT: {},
             IODirection.OUTPUT: {},
         }
@@ -39,8 +39,8 @@ class IOController:
 
     async def write(self) -> None:
         """Writes data to output channels."""
-        for field, chan in self._output_channels.items():
-            item = self.data[IODirection.OUTPUT][field]
+        for field, item in self.data[IODirection.OUTPUT].items():
+            chan = self._output_channels[field]
             await chan.send(item)
 
     def _add_channel_for_field(self, field: str, direction: IODirection, channel: Channel) -> None:

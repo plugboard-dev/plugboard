@@ -4,11 +4,13 @@ from __future__ import annotations
 
 from enum import StrEnum
 import re
+import typing as _t
 
 from pydantic import BaseModel
 from pydantic.fields import ClassVar
 
 from plugboard.channel import Channel
+from plugboard.utils import AsDictMixin
 
 
 class ConnectorMode(StrEnum):
@@ -20,12 +22,19 @@ class ConnectorMode(StrEnum):
     MANY_TO_MANY = "many-to-many"
 
 
-class Connector:
+class Connector(AsDictMixin):
     """`Connector` contains a `Channel` connecting two components."""
 
     def __init__(self, spec: ConnectorSpec, channel: Channel) -> None:
         self.spec: ConnectorSpec = spec
         self.channel: Channel = channel
+
+    def dict(self) -> dict[str, _t.Any]:  # noqa: D102
+        return {
+            **super().dict(),
+            "spec": self.spec.dict(),
+            "channel": self.channel.dict(),
+        }
 
 
 class ConnectorSpec:
@@ -44,6 +53,13 @@ class ConnectorSpec:
 
     def __str__(self) -> str:
         return self.id
+
+    def dict(self) -> dict[str, _t.Any]:  # noqa: D102
+        return {
+            "source": self.source.model_dump(),
+            "target": self.target.model_dump(),
+            "mode": self.mode,
+        }
 
 
 class ComponentSocket(BaseModel):
