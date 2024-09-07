@@ -37,11 +37,3 @@ class Process(AsDictMixin):
         """Runs the process to completion."""
         for component in self.components.values():
             await component.run()
-
-    def dict(self) -> dict[str, _t.Any]:  # noqa: D102
-        return {
-            **super().dict(),
-            "components": {name: component.dict() for name, component in self.components.items()},
-            "connectors": [connector.dict() for connector in self.connectors],
-            "parameters": self.parameters,
-        }

@@ -71,9 +71,5 @@ class Component(ABC, AsDictMixin):
 
     def dict(self) -> dict[str, _t.Any]:  # noqa: D102
         return {
-            **super().dict(),
-            "name": self.name,
-            "parameters": self._parameters,
-            "constraints": self._constraints,
             **self.io.data,
         }

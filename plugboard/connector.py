@@ -31,9 +31,7 @@ class Connector(AsDictMixin):
 
     def dict(self) -> dict[str, _t.Any]:  # noqa: D102
         return {
-            **super().dict(),
             "spec": self.spec.dict(),
-            "channel": self.channel.dict(),
         }
 
 
@@ -56,8 +54,8 @@ class ConnectorSpec:
 
     def dict(self) -> dict[str, _t.Any]:  # noqa: D102
         return {
-            "source": self.source.model_dump(),
-            "target": self.target.model_dump(),
+            "source": str(self.source),
+            "target": str(self.target),
             "mode": self.mode,
         }
 
