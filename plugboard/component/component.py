@@ -4,8 +4,8 @@ from abc import ABC, abstractmethod
 from functools import wraps
 import typing as _t
 
-from plugboard.io_controller import IOController, IODirection
-from plugboard.state_backend import StateBackend
+from plugboard.component.io_controller import IOController, IODirection
+from plugboard.state import StateBackend
 from plugboard.utils import AsDictMixin
 
 

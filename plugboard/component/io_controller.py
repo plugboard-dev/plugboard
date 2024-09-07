@@ -3,8 +3,7 @@
 from enum import StrEnum
 import typing as _t
 
-from plugboard.channel import Channel
-from plugboard.connector import Connector
+from plugboard.connector import Channel, Connector
 
 
 IO_NS_UNSET = "__UNSET__"

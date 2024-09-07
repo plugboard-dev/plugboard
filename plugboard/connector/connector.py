@@ -9,7 +9,7 @@ import typing as _t
 from pydantic import BaseModel
 from pydantic.fields import ClassVar
 
-from plugboard.channel import Channel
+from plugboard.connector.channel import Channel
 from plugboard.utils import AsDictMixin
 
 

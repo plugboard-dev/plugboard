@@ -4,7 +4,7 @@ import typing as _t
 
 from plugboard.component import Component
 from plugboard.connector import Connector
-from plugboard.state_backend import StateBackend
+from plugboard.state import StateBackend
 from plugboard.utils import AsDictMixin
 
 
