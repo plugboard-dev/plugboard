@@ -13,5 +13,5 @@ class ProcessSpec(BaseModel):
     type: str
     components: list[ComponentSpec]
     connectors: list[ConnectorSpec]
-    # TODO: connector_builder: ConnectorBuilderSpec
-    options: dict
+    parameters: dict
+    # TODO: state
