@@ -4,6 +4,7 @@ from pydantic import BaseModel
 
 from .component import ComponentSpec
 from .connector import ConnectorSpec
+from .state import StateBackendSpec
 
 
 class ProcessSpec(BaseModel):
@@ -14,4 +15,4 @@ class ProcessSpec(BaseModel):
     components: list[ComponentSpec]
     connectors: list[ConnectorSpec]
     parameters: dict
-    # TODO: state
+    state: StateBackendSpec

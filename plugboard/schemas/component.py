@@ -11,4 +11,3 @@ class ComponentSpec(BaseModel):
     initial_values: dict
     parameters: dict
     constraints: dict
-    # TODO: State
