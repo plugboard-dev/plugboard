@@ -29,5 +29,5 @@ class ConnectorSpec(BaseModel):
 class ConnectorBuilderSpec(BaseModel):
     """Specification of a Plugboard `ConnectorBuilder`."""
 
-    source: str
-    target: str
+    type: str
+    parameters: dict
