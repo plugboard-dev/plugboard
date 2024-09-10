@@ -24,11 +24,14 @@ pydantic = "^2.8.2"
 
 [tool.poetry.group.dev.dependencies]
 ipython = "^8.26.0"
+jupyterlab = "^4.2.4"
 mypy = "^1.11.2"
+nbstripout = "^0.7.1"
 poetry-dynamic-versioning = "^1.4.0"
 poetry-plugin-export = "^1.8.0"
 poetry-plugin-sort = "^0.2.1"
 poetry-plugin-up = "^0.7.2"
+pre-commit = "^3.8.0"
 ruff = "^0.5.6"
 
 [tool.poetry.group.test.dependencies]
@@ -54,7 +57,7 @@ mkdocstrings = {extras = ["python"], version = "^0.25.2"}
 env = []
 
 [tool.mypy]  # Static type checking
-exclude = [".git", "__pycache__", ".venv", "venv"]
+exclude = [".git", "__pycache__", ".venv", "venv", "docs"]
 ignore_missing_imports = true
 disallow_untyped_defs = true
 disallow_incomplete_defs = true
@@ -76,6 +79,7 @@ line-ending = "auto"
 [tool.ruff.lint]
 select = ["D", "E", "F", "I", "W"]
 ignore = ["D105", "D107", "D401", "E203", "E226", "E24", "E731", "E741", "F541", "F821", "W605"]
+exclude = ["docs/*"]
 
 [tool.ruff.lint.pydocstyle]
 convention = "google"
