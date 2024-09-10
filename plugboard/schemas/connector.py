@@ -22,10 +22,6 @@ class ConnectorSpec(BaseModel):
     target: str
     mode: ConnectorMode = ConnectorMode.ONE_TO_ONE
 
-    @property
-    def id(self) -> str:  # noqa: D102
-        return f"{self.source.id}..{self.target.id}"
-
 
 class ConnectorBuilderArgsSpec(BaseModel, extra="allow"):
     """Specification of the `Connector` constructor arguments."""
