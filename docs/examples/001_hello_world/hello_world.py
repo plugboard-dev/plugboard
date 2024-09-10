@@ -25,6 +25,7 @@ class A(Component):
     async def step(self) -> None:
         self.out_1 = next(self._seq)
 
+
 class B(Component):
     io = IO(inputs=["in_1"])
 
@@ -36,17 +37,16 @@ class B(Component):
         out = 2 * self.in_1
         async with aiofiles.open(self._path, "a") as f:
             f.write(f"{out}\n")
+
+
 # --8<-- [end:components]
+
 
 async def main() -> None:
     # --8<-- [start:main]
     process = ProcessBuilder(
-        components=[
-            A(name="a", iters=10), B(name="b", path="./b.txt")
-        ],
-        connector_specs=[
-            ConnectorSpec(source="a.out_1", target="b.in_1")
-        ]
+        components=[A(name="a", iters=10), B(name="b", path="./b.txt")],
+        connector_specs=[ConnectorSpec(source="a.out_1", target="b.in_1")],
     )
 
     await process.init()

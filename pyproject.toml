@@ -57,7 +57,7 @@ mkdocstrings = {extras = ["python"], version = "^0.25.2"}
 env = []
 
 [tool.mypy]  # Static type checking
-exclude = [".git", "__pycache__", ".venv", "venv"]
+exclude = [".git", "__pycache__", ".venv", "venv", "docs"]
 ignore_missing_imports = true
 disallow_untyped_defs = true
 disallow_incomplete_defs = true
@@ -79,6 +79,7 @@ line-ending = "auto"
 [tool.ruff.lint]
 select = ["D", "E", "F", "I", "W"]
 ignore = ["D105", "D107", "D401", "E203", "E226", "E24", "E731", "E741", "F541", "F821", "W605"]
+exclude = ["docs/*"]
 
 [tool.ruff.lint.pydocstyle]
 convention = "google"
