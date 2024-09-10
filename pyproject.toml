@@ -57,7 +57,7 @@ mkdocstrings = {extras = ["python"], version = "^0.25.2"}
 env = []
 
 [tool.mypy]  # Static type checking
-exclude = [".git", "__pycache__", ".venv", "venv"]
+exclude = [".git", "__pycache__", ".venv", "venv", "docs"]
 ignore_missing_imports = true
 disallow_untyped_defs = true
 disallow_incomplete_defs = true
