@@ -1,6 +1,7 @@
 """Provides spec classes related to `Connector`s."""
 
 from enum import StrEnum
+import typing as _t
 
 from pydantic import BaseModel
 
@@ -26,8 +27,14 @@ class ConnectorSpec(BaseModel):
         return f"{self.source.id}..{self.target.id}"
 
 
+class ConnectorBuilderArgsSpec(BaseModel, extra="allow"):
+    """Specification of the `Connector` constructor arguments."""
+
+    parameters: _t.Optional[dict] = None
+
+
 class ConnectorBuilderSpec(BaseModel):
     """Specification of a Plugboard `ConnectorBuilder`."""
 
     type: str
-    parameters: dict
+    args: ConnectorBuilderArgsSpec
