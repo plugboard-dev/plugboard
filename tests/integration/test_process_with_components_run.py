@@ -90,7 +90,7 @@ def tempfile_path() -> _t.Generator[Path, None, None]:
 
 
 @pytest.mark.anyio
-@pytest.mark.parameterize(
+@pytest.mark.parametrize(
     "iters, factor",
     [
         (10, 2.0),
