@@ -19,10 +19,15 @@ class IODirection(StrEnum):
 class IOController:
     """`IOController` manages input/output to/from component fields."""
 
-    def __init__(self, inputs: _t.Any, outputs: _t.Any, namespace: str = IO_NS_UNSET) -> None:
+    def __init__(
+        self,
+        inputs: _t.Optional[_t.Any] = None,
+        outputs: _t.Optional[_t.Any] = None,
+        namespace: str = IO_NS_UNSET,
+    ) -> None:
         self.namespace = namespace
-        self.inputs = inputs
-        self.outputs = outputs
+        self.inputs = inputs or []
+        self.outputs = outputs or []
         self.data: dict[str, dict[str, _t.Any]] = {
             IODirection.INPUT: {},
             IODirection.OUTPUT: {},

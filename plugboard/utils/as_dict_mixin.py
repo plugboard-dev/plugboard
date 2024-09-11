@@ -22,7 +22,7 @@ class AsDictMixin:
     @staticmethod
     def _dict_inject_wrapper(method: _t.Callable) -> _t.Callable:
         @wraps(method)
-        def _wrapper(self: _t.Any) -> None:
+        def _wrapper(self: _t.Any) -> dict:
             inject_data = AsDictMixin.dict(self)
             data = method(self)
             return {**inject_data, **data}
@@ -30,8 +30,8 @@ class AsDictMixin:
         return _wrapper
 
     def __init_subclass__(cls, *args: _t.Any, **kwargs: _t.Any) -> None:
-        cls.__init__ = AsDictMixin._save_args_wrapper(cls.__init__, _SAVE_ARGS_INIT_KEY)
-        cls.dict = AsDictMixin._dict_inject_wrapper(cls.dict)
+        cls.__init__ = AsDictMixin._save_args_wrapper(cls.__init__, _SAVE_ARGS_INIT_KEY)  # type: ignore # noqa: E501,W505
+        cls.dict = AsDictMixin._dict_inject_wrapper(cls.dict)  # type: ignore
 
     def dict(self) -> dict:
         """Returns dict representation of object."""
@@ -43,7 +43,7 @@ class AsDictMixin:
         }
 
 
-def _get_obj_cls_path(obj: _t.Any):
+def _get_obj_cls_path(obj: _t.Any) -> str:
     module = obj.__class__.__module__
     cls_name = obj.__class__.__name__
     if module == "builtins":

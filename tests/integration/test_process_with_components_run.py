@@ -53,7 +53,7 @@ class A(ComponentTestHelper):
         self._iters = iters
 
     async def init(self) -> None:
-        self._seq = range(self._iters)
+        self._seq = iter(range(self._iters))
 
     async def step(self) -> None:
         self.out_1 = next(self._seq)
@@ -67,7 +67,7 @@ class B(ComponentTestHelper):
         self._factor = factor
 
     async def step(self) -> None:
-        self.out_1 = self._factor * self.in_1
+        self.out_1 = self._factor * self.in_1  # type: ignore
 
 
 class C(ComponentTestHelper):
@@ -78,9 +78,9 @@ class C(ComponentTestHelper):
         self._path = path
 
     async def step(self) -> None:
-        out = self.in_1
+        out = self.in_1  # type: ignore
         async with aiofiles.open(self._path, "a") as f:
-            f.write(f"{out}\n")
+            await f.write(f"{out}\n")
 
 
 @pytest.fixture
@@ -99,7 +99,7 @@ def tempfile_path() -> _t.Generator[Path, None, None]:
 async def test_process_with_components_run(iters: int, factor: float, tempfile_path: Path) -> None:
     comp_a = A(iters=iters, name="comp_a")
     comp_b = B(factor=factor, name="comp_a")
-    comp_c = C(path=tempfile_path, name="comp_a")
+    comp_c = C(path=str(tempfile_path), name="comp_a")
     components = [comp_a, comp_b, comp_c]
 
     conn_ab = Connector(
