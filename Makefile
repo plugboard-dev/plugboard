@@ -1,8 +1,11 @@
 SHELL := /bin/bash
-VENV := .venv
-BIN := $(VENV)/bin
+PROJECT := plugboard
 PYTHON_VERSION ?= 3.12
 PY := python$(PYTHON_VERSION)
+WITH_PYENV := $(shell which pyenv > /dev/null && echo true || echo false)
+VIRTUAL_ENV ?= $(shell $(WITH_PYENV) && echo $(shell pyenv root)/versions/$(PROJECT) || echo $(PWD)/.venv)
+VENV := $(VIRTUAL_ENV)
+BIN := $(VENV)/bin
 SRC := ./plugboard
 TESTS := ./tests
 
@@ -17,24 +20,30 @@ all: lint test
 
 .PHONY: clean
 clean:
-	rm -rf $(VENV)
+	$(WITH_PYENV) && pyenv virtualenv-delete -f $(PROJECT) || rm -rf $(VENV)
 	find $(SRC) -type f -name *.pyc -delete
 	find $(SRC) -type d -name __pycache__ -delete
 
 $(VENV):
-	$(PY) -m venv $(VENV)
+	$(WITH_PYENV) && pyenv virtualenv $(PYTHON_VERSION) $(PROJECT) || $(PY) -m venv $(VENV)
+	@touch $@
+
+$(VENV)/.stamps/init-poetry: $(VENV)
 	$(BIN)/$(PY) -m pip install --upgrade pip setuptools poetry poetry-dynamic-versioning[plugin]
 	$(BIN)/$(PY) -m poetry config virtualenvs.in-project true
 	$(BIN)/$(PY) -m poetry config virtualenvs.prompt venv
 	mkdir -p $(VENV)/.stamps
 	@touch $@
 
-$(VENV)/.stamps/init: $(VENV) pyproject.toml
+$(VENV)/.stamps/install: pyproject.toml
 	$(BIN)/$(PY) -m poetry install
 	@touch $@
 
+.PHONY: install
+install: $(VENV)/.stamps/install
+
 .PHONY: init
-init: $(VENV)/.stamps/init
+init: $(VENV)/.stamps/init-poetry install
 
 .PHONY: lint
 lint: init
