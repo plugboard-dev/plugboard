@@ -30,9 +30,7 @@ class Component(ABC, AsDictMixin):
         self.io = IOController(
             inputs=type(self).io.inputs, outputs=type(self).io.outputs, namespace=name
         )
-
-    def __init_subclass__(cls) -> None:
-        cls.step = cls._handle_step_wrapper(cls.step)  # type: ignore
+        self.step = self._handle_step_wrapper()  # type: ignore
 
     async def init(self) -> None:
         """Performs component initialisation actions."""
@@ -43,13 +41,14 @@ class Component(ABC, AsDictMixin):
         """Executes component logic for a single step."""
         pass
 
-    @staticmethod
-    def _handle_step_wrapper(func: _t.Callable) -> _t.Callable:
-        @wraps(func)
-        async def _wrapper(self: Component) -> None:
+    def _handle_step_wrapper(self) -> _t.Callable:
+        self._step = self.step
+
+        @wraps(self.step)
+        async def _wrapper() -> None:
             await self.io.read()
             self._bind_inputs()
-            await func(self)
+            await self._step()
             self._bind_outputs()
             await self.io.write()
 

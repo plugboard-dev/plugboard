@@ -22,6 +22,11 @@ class Process(AsDictMixin):
         self.connectors: list[Connector] = list(connectors)
         self.parameters: dict = parameters or {}
         self.state: StateBackend = state or StateBackend()
+        self._connect_components()
+
+    def _connect_components(self) -> None:
+        for component in self.components.values():
+            component.io.connect(self.connectors)
 
     async def init(self) -> None:
         """Performs component initialisation actions."""
