@@ -1,5 +1,6 @@
 """Provides the `Process` class for managing components in a process model."""
 
+import asyncio
 import typing as _t
 
 from plugboard.component import Component
@@ -30,15 +31,18 @@ class Process(AsDictMixin):
 
     async def init(self) -> None:
         """Performs component initialisation actions."""
-        for component in self.components.values():
-            await component.init()
+        async with asyncio.TaskGroup() as tg:
+            for component in self.components.values():
+                tg.create_task(component.init())
 
     async def step(self) -> None:
         """Executes a single step for the process."""
-        for component in self.components.values():
-            await component.step()
+        async with asyncio.TaskGroup() as tg:
+            for component in self.components.values():
+                tg.create_task(component.step())
 
     async def run(self) -> None:
         """Runs the process to completion."""
-        for component in self.components.values():
-            await component.run()
+        async with asyncio.TaskGroup() as tg:
+            for component in self.components.values():
+                tg.create_task(component.run())
