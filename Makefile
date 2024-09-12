@@ -55,8 +55,16 @@ lint: init
 test: init
 	$(BIN)/$(PY) -m pytest -rs $(TESTS)/ --ignore=$(TESTS)/smoke
 
+.PHONY: docs
+docs: $(VENV)
+	$(BIN)/$(PY) -m mkdocs build
+
+.PHONY: docs-serve
+docs-serve: $(VENV)
+	$(BIN)/$(PY) -m mkdocs serve
+
 .PHONY: build
-build: $(VENV)
+build: $(VENV) docs
 	$(BIN)/$(PY) -m poetry build
 
 GIT_HASH_SHORT ?= $(shell git rev-parse --short HEAD)
