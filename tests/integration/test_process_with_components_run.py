@@ -57,11 +57,12 @@ class A(ComponentTestHelper):
         self._seq = iter(range(self._iters))
 
     async def step(self) -> None:
-        await super().step()
         try:
             self.out_1 = next(self._seq)
         except StopIteration:
             await self.io.close()
+        else:
+            await super().step()
 
 
 class B(ComponentTestHelper):
@@ -72,8 +73,8 @@ class B(ComponentTestHelper):
         self._factor = factor
 
     async def step(self) -> None:
-        await super().step()
         self.out_1 = self._factor * self.in_1  # type: ignore
+        await super().step()
 
 
 class C(ComponentTestHelper):
@@ -84,10 +85,10 @@ class C(ComponentTestHelper):
         self._path = path
 
     async def step(self) -> None:
-        await super().step()
         out = self.in_1  # type: ignore
         async with aiofiles.open(self._path, "a") as f:
             await f.write(f"{out}\n")
+        await super().step()
 
 
 @pytest.fixture
