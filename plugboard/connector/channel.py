@@ -28,6 +28,7 @@ class Channel(ABC):
         """
         self._maxsize = maxsize
         self._is_closed = False
+        self._close_msg_received = False
         self.send = self._handle_send_wrapper()  # type: ignore
         self.recv = self._handle_recv_wrapper()  # type: ignore
 
@@ -38,7 +39,11 @@ class Channel(ABC):
 
     @property
     def is_closed(self) -> bool:
-        """Returns `True` if the `Channel` is closed, `False` otherwise."""
+        """Returns `True` if the `Channel` is closed, `False` otherwise.
+
+        When a `Channel` is closed, it can no longer be used to send messages,
+        though there may still be some messages waiting to be read.
+        """
         return self._is_closed
 
     @abstractmethod
@@ -76,11 +81,11 @@ class Channel(ABC):
 
         @wraps(self.recv)
         async def _wrapper() -> _t.Any:
-            if self._is_closed:
+            if self._close_msg_received:
                 raise ChannelClosedError()
             msg = await self._recv()
             if msg == CHAN_CLOSE_MSG:
-                self._is_closed = True
+                self._close_msg_received = True
                 raise ChannelClosedError()
             return msg
 
