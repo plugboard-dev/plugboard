@@ -3,10 +3,16 @@
 from enum import StrEnum
 import typing as _t
 
-from plugboard.connector import Channel, Connector
+from plugboard.connector import Channel, ChannelClosedError, Connector
 
 
 IO_NS_UNSET = "__UNSET__"
+
+
+class IOStreamClosedError(Exception):
+    """`IOStreamClosedError` is raised when an IO stream is closed."""
+
+    pass
 
 
 class IODirection(StrEnum):
@@ -34,18 +40,40 @@ class IOController:
         }
         self._input_channels: dict[str, Channel] = {}
         self._output_channels: dict[str, Channel] = {}
+        self._is_closed = False
+
+    @property
+    def is_closed(self) -> bool:
+        """Returns `True` if the `IOController` is closed, `False` otherwise."""
+        return self._is_closed
 
     async def read(self) -> None:
         """Reads data from input channels."""
+        if self._is_closed:
+            raise IOStreamClosedError()
         for field, chan in self._input_channels.items():
-            item = await chan.recv()
+            try:
+                item = await chan.recv()
+            except ChannelClosedError:
+                await self.close()
+                raise IOStreamClosedError(f"Channel for field {field} is closed.")
             self.data[IODirection.INPUT][field] = item
 
     async def write(self) -> None:
         """Writes data to output channels."""
+        if self._is_closed:
+            raise IOStreamClosedError()
         for field, item in self.data[IODirection.OUTPUT].items():
             chan = self._output_channels[field]
+            if chan.is_closed:
+                raise IOStreamClosedError(f"Channel for field {field} is closed.")
             await chan.send(item)
+
+    async def close(self) -> None:
+        """Closes all input/output channels."""
+        for chan in self._output_channels.values():
+            await chan.close()
+        self._is_closed = True
 
     def _add_channel_for_field(self, field: str, direction: IODirection, channel: Channel) -> None:
         io_fields = getattr(self, f"{direction}s")

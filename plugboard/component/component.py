@@ -4,7 +4,7 @@ from abc import ABC, abstractmethod
 from functools import wraps
 import typing as _t
 
-from plugboard.component.io_controller import IOController, IODirection
+from plugboard.component.io_controller import IOController, IODirection, IOStreamClosedError
 from plugboard.state import StateBackend
 from plugboard.utils import AsDictMixin
 
@@ -66,7 +66,11 @@ class Component(ABC, AsDictMixin):
 
     async def run(self) -> None:
         """Executes component logic for all steps to completion."""
-        pass
+        while True:
+            try:
+                await self.step()
+            except IOStreamClosedError:
+                break
 
     def dict(self) -> dict[str, _t.Any]:  # noqa: D102
         return {

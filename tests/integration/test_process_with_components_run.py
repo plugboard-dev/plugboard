@@ -58,7 +58,10 @@ class A(ComponentTestHelper):
 
     async def step(self) -> None:
         await super().step()
-        self.out_1 = next(self._seq)
+        try:
+            self.out_1 = next(self._seq)
+        except StopIteration:
+            await self.io.close()
 
 
 class B(ComponentTestHelper):

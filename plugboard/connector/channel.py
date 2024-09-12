@@ -1,10 +1,18 @@
 """Provides `Channel` base class for data communication."""
 
 from abc import ABC, abstractmethod
+from functools import wraps
 import typing as _t
 
 
 CHAN_MAXSIZE = 0  # Max number of items in the channel. Value <= 0 implies unlimited.
+CHAN_CLOSE_MSG = "__PLUGBOARD_CHAN_CLOSE_MSG__"
+
+
+class ChannelClosedError(Exception):
+    """Raised when a closed channel is accessed."""
+
+    pass
 
 
 class Channel(ABC):
@@ -12,10 +20,26 @@ class Channel(ABC):
 
     _maxsize = CHAN_MAXSIZE
 
+    def __init__(self, *args: _t.Any, maxsize: int = CHAN_MAXSIZE, **kwargs: _t.Any) -> None:  # noqa: D417
+        """Initialises the `Channel`.
+
+        Args:
+            maxsize: Optional; The message capacity of the `Channel`.
+        """
+        self._maxsize = maxsize
+        self._is_closed = False
+        self.send = self._handle_send_wrapper()  # type: ignore
+        self.recv = self._handle_recv_wrapper()  # type: ignore
+
     @property
     def maxsize(self) -> int:
         """Returns the message capacity of the `Channel`."""
         return self._maxsize
+
+    @property
+    def is_closed(self) -> bool:
+        """Returns `True` if the `Channel` is closed, `False` otherwise."""
+        return self._is_closed
 
     @abstractmethod
     async def send(self, msg: _t.Any) -> None:
@@ -30,3 +54,34 @@ class Channel(ABC):
     async def recv(self) -> _t.Any:
         """Receives an item from the `Channel` and returns it."""
         pass
+
+    async def close(self) -> None:
+        """Closes the `Channel`."""
+        await self.send(CHAN_CLOSE_MSG)
+        self._is_closed = True
+
+    def _handle_send_wrapper(self) -> _t.Callable:
+        self._send = self.send
+
+        @wraps(self.send)
+        async def _wrapper(item: _t.Any) -> None:
+            if self._is_closed:
+                raise ChannelClosedError()
+            await self._send(item)
+
+        return _wrapper
+
+    def _handle_recv_wrapper(self) -> _t.Callable:
+        self._recv = self.recv
+
+        @wraps(self.recv)
+        async def _wrapper() -> _t.Any:
+            if self._is_closed:
+                raise ChannelClosedError()
+            msg = await self._recv()
+            if msg == CHAN_CLOSE_MSG:
+                self._is_closed = True
+                raise ChannelClosedError()
+            return msg
+
+        return _wrapper
