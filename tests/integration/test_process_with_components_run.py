@@ -101,6 +101,7 @@ def tempfile_path() -> _t.Generator[Path, None, None]:
 @pytest.mark.parametrize(
     "iters, factor",
     [
+        (1, 1.0),
         (10, 2.0),
     ],
 )
