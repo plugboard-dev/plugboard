@@ -87,8 +87,8 @@ class IOController:
     def _build_io_stream_error(
         self, direction: IODirection, eg: ExceptionGroup
     ) -> IOStreamClosedError:
-        inner_exceptions = "\n\t".join([repr(e) for e in eg.exceptions])
-        msg = f"Error reading {direction} for namespace: {self.namespace}\n\t{inner_exceptions}"
+        inner_exc_msg = "\n\t".join([repr(e) for e in eg.exceptions])
+        msg = f"Error reading {direction} for namespace: {self.namespace}\n\t{inner_exc_msg}"
         return IOStreamClosedError(msg)
 
     async def close(self) -> None:
