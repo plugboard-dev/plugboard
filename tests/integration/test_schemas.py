@@ -16,9 +16,9 @@ def config() -> dict:
 
 def test_load(config: dict) -> None:
     """Tests loading the YAML config."""
-    config = ConfigSpec.model_validate(config)
-    process_spec = config.plugboard.process
+    spec = ConfigSpec.model_validate(config)
+    process_spec = spec.plugboard.process
     # Must be two components defined
-    assert len(process_spec.args.components) == 2
+    assert len(process_spec.args.components or []) == 2
     # Must be one connector defined
-    assert len(process_spec.args.connectors) == 1
+    assert len(process_spec.args.connectors or []) == 1
