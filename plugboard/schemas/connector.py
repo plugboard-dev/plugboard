@@ -3,7 +3,7 @@
 from enum import StrEnum
 import typing as _t
 
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 
 
 class ConnectorMode(StrEnum):
@@ -34,6 +34,13 @@ class ConnectorSpec(BaseModel):
     source: str
     target: str
     mode: ConnectorMode = ConnectorMode.ONE_TO_ONE
+
+    @field_validator("source", "target")
+    @classmethod
+    def _validate_source_target(cls, v: str) -> str:
+        if v.count(".") != 1:
+            raise ValueError("Source and target must be in the format 'component_name.port_name'")
+        return v
 
 
 class ConnectorBuilderArgsSpec(BaseModel, extra="allow"):
