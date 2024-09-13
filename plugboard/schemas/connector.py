@@ -26,8 +26,8 @@ class ConnectorSpec(BaseModel):
     """Specification of a Plugboard [`Connector`][plugboard.connector.Connector].
 
     Attributes:
-        source: An output of a `Component` to connect from.
-        target: An input of a `Component` to connect to.
+        source: An output from a `Component` in the form `component_name.port_name`.
+        target: An input to a `Component`  in the form `component_name.port_name`.
         mode: The mode of the `Connector`.
     """
 
