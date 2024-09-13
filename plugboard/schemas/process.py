@@ -29,9 +29,7 @@ class ProcessSpec(BaseModel):
     """Specification of a Plugboard [`Process`][plugboard.process.Process].
 
     Attributes:
-        type: The type of the `Process`.
         args: The arguments for the `Process`.
     """
 
-    type: str = "plugboard.process.Process"
     args: ProcessArgsSpec
