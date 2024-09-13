@@ -1864,6 +1864,9 @@ files = [
     {file = "msgspec-0.18.6.tar.gz", hash = "sha256:a59fc3b4fcdb972d09138cb516dbde600c99d07c38fd9372a6ef500d2d031b4e"},
 ]
 
+[package.dependencies]
+pyyaml = {version = "*", optional = true, markers = "extra == \"yaml\""}
+
 [package.extras]
 dev = ["attrs", "coverage", "furo", "gcovr", "ipython", "msgpack", "mypy", "pre-commit", "pyright", "pytest", "pyyaml", "sphinx", "sphinx-copybutton", "sphinx-design", "tomli", "tomli-w"]
 doc = ["furo", "ipython", "sphinx", "sphinx-copybutton", "sphinx-design"]
@@ -3949,4 +3952,4 @@ type = ["pytest-mypy"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.12,<4.0"
-content-hash = "975a710af7097d8771ed6f9a25a551756f5b82b0ca2692e7ee8fd0e202276801"
+content-hash = "d0b4863f296e4977b3d0bb7fd95a2912c2251677d834d73ae084b3c98addd968"
