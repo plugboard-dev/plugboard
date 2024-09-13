@@ -54,7 +54,7 @@ theme:
       name: Switch to light mode
   # Palette toggle for light mode
   - media: "(prefers-color-scheme: light)"
-    scheme: default 
+    scheme: default
     toggle:
       icon: material/brightness-7
       name: Switch to dark mode
@@ -76,4 +76,8 @@ nav:
   - Hello world: examples/001_hello_world/hello-world.md
   - Simple model: examples/002_simple_model/simple-model.md
 - API Reference:
-  - Hello world: api/hello-world.md
+  - component: api/component/component.md
+  - connector: api/connector/connector.md
+  - process: api/process/process.md
+  - state: api/state/state.md
+  - utils: api/utils/utils.md
