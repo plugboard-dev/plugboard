@@ -1,10 +1,10 @@
 """Provides the `IOController` class for handling input/output operations."""
 
 import asyncio
-from enum import StrEnum
 import typing as _t
 
 from plugboard.connector import Channel, ChannelClosedError, Connector
+from plugboard.schemas.io import IODirection
 
 
 IO_NS_UNSET = "__UNSET__"
@@ -14,13 +14,6 @@ class IOStreamClosedError(Exception):
     """`IOStreamClosedError` is raised when an IO stream is closed."""
 
     pass
-
-
-class IODirection(StrEnum):
-    """`IODirection` defines the type of IO operation."""
-
-    INPUT = "input"
-    OUTPUT = "output"
 
 
 class IOController:

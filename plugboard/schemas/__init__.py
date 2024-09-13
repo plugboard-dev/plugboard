@@ -7,6 +7,7 @@ from .connector import (
     ConnectorMode,
     ConnectorSpec,
 )
+from .io import IODirection
 from .process import ProcessArgsSpec, ProcessSpec
 from .state import StateBackendArgsSpec, StateBackendSpec
 
@@ -18,6 +19,7 @@ __all__ = [
     "ConnectorSpec",
     "ConnectorBuilderSpec",
     "ConnectorBuilderArgsSpec",
+    "IODirection",
     "StateBackendSpec",
     "StateBackendArgsSpec",
     "ProcessSpec",
