@@ -1,5 +1,6 @@
 """Provides the `IOController` class for handling input/output operations."""
 
+import asyncio
 from enum import StrEnum
 import typing as _t
 
@@ -50,24 +51,45 @@ class IOController:
     async def read(self) -> None:
         """Reads data from input channels."""
         if self._is_closed:
-            raise IOStreamClosedError()
-        for field, chan in self._input_channels.items():
-            try:
-                item = await chan.recv()
-            except ChannelClosedError:
-                await self.close()
-                raise IOStreamClosedError(f"Channel for field {field} is closed.")
-            self.data[IODirection.INPUT][field] = item
+            raise IOStreamClosedError("Attempted read on a closed io controller.")
+        try:
+            async with asyncio.TaskGroup() as tg:
+                for field, chan in self._input_channels.items():
+                    tg.create_task(self._read_channel_handler(field, chan))
+        except* ChannelClosedError as eg:
+            await self.close()
+            raise self._build_io_stream_error(IODirection.INPUT, eg) from eg
+
+    async def _read_channel_handler(self, field: str, chan: Channel) -> None:
+        try:
+            self.data[IODirection.INPUT][field] = await chan.recv()
+        except ChannelClosedError as e:
+            raise ChannelClosedError(f"Channel closed for field: {field}.") from e
 
     async def write(self) -> None:
         """Writes data to output channels."""
         if self._is_closed:
-            raise IOStreamClosedError()
-        for field, item in self.data[IODirection.OUTPUT].items():
-            chan = self._output_channels[field]
-            if chan.is_closed:
-                raise IOStreamClosedError(f"Channel for field {field} is closed.")
+            raise IOStreamClosedError("Attempted write on a closed io controller.")
+        try:
+            async with asyncio.TaskGroup() as tg:
+                for field, chan in self._output_channels.items():
+                    tg.create_task(self._write_channel_handler(field, chan))
+        except* ChannelClosedError as eg:
+            raise self._build_io_stream_error(IODirection.OUTPUT, eg) from eg
+
+    async def _write_channel_handler(self, field: str, chan: Channel) -> None:
+        item = self.data[IODirection.OUTPUT][field]
+        try:
             await chan.send(item)
+        except ChannelClosedError as e:
+            raise ChannelClosedError(f"Channel closed for field: {field}.") from e
+
+    def _build_io_stream_error(
+        self, direction: IODirection, eg: ExceptionGroup
+    ) -> IOStreamClosedError:
+        inner_exceptions = "\n\t".join([repr(e) for e in eg.exceptions])
+        msg = f"Error reading {direction} for namespace: {self.namespace}\n\t{inner_exceptions}"
+        return IOStreamClosedError(msg)
 
     async def close(self) -> None:
         """Closes all input/output channels."""

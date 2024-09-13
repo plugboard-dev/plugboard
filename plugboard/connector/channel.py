@@ -71,7 +71,7 @@ class Channel(ABC):
         @wraps(self.send)
         async def _wrapper(item: _t.Any) -> None:
             if self._is_closed:
-                raise ChannelClosedError()
+                raise ChannelClosedError("Attempted send on closed channel.")
             await self._send(item)
 
         return _wrapper
@@ -82,11 +82,11 @@ class Channel(ABC):
         @wraps(self.recv)
         async def _wrapper() -> _t.Any:
             if self._close_msg_received:
-                raise ChannelClosedError()
+                raise ChannelClosedError("Attempted recv on closed channel.")
             msg = await self._recv()
             if msg == CHAN_CLOSE_MSG:
                 self._close_msg_received = True
-                raise ChannelClosedError()
+                raise ChannelClosedError("Attempted recv on closed channel.")
             return msg
 
         return _wrapper
