@@ -1,1 +1,4 @@
-::: plugboard.process.Process
+::: plugboard.process
+    options:
+      members:
+      - Process

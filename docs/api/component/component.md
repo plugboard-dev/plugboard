@@ -1,1 +1,5 @@
-::: plugboard.component.Component
+::: plugboard.component
+    options:
+      members:
+      - Component
+      - IOController

@@ -76,9 +76,8 @@ nav:
   - Hello world: examples/001_hello_world/hello-world.md
   - Simple model: examples/002_simple_model/simple-model.md
 - API Reference:
-  - Process: api/process/process.md
-  - Component: api/component/component.md
-  - IOController: api/component/io-controller.md
-  - Connector: api/connector/connector.md
-  - Channel: api/connector/channel.md
-  - StateBackend: api/state/state-backend.md
+  - component: api/component/component.md
+  - connector: api/connector/connector.md
+  - process: api/process/process.md
+  - state: api/state/state.md
+  - utils: api/utils/utils.md
