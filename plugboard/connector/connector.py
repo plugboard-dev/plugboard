@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from enum import StrEnum
 import re
 import typing as _t
 
@@ -10,16 +9,8 @@ from pydantic import BaseModel
 from pydantic.fields import ClassVar
 
 from plugboard.connector.channel import Channel
+from plugboard.schemas.connector import ConnectorMode
 from plugboard.utils import AsDictMixin
-
-
-class ConnectorMode(StrEnum):
-    """Defines the mode of a connector."""
-
-    ONE_TO_ONE = "one-to-one"
-    ONE_TO_MANY = "one-to-many"
-    MANY_TO_ONE = "many-to-one"
-    MANY_TO_MANY = "many-to-many"
 
 
 class Connector(AsDictMixin):
