@@ -79,5 +79,6 @@ nav:
   - component: api/component/component.md
   - connector: api/connector/connector.md
   - process: api/process/process.md
+  - schemas: api/schemas/schemas.md
   - state: api/state/state.md
   - utils: api/utils/utils.md
