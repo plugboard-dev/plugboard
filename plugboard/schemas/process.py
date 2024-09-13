@@ -10,19 +10,28 @@ from .state import StateBackendSpec
 
 
 class ProcessArgsSpec(BaseModel, extra="allow"):
-    """Specification of the `Process` constructor arguments."""
+    """Specification of the [`Process`][plugboard.process.Process] constructor arguments.
 
-    components: _t.List[ComponentSpec]
-    connector_specs: _t.List[ConnectorSpec]
-    parameters: _t.Optional[dict] = None
-    state: StateBackendSpec
+    Attributes:
+        components: Specifies each `Component` in the `Process`.
+        connectors: Specifies the connections between each `Component`.
+        parameters: Optional; Parameters for the `Process`.
+        state: Optional; Specifies the `StateBackend` used for the `Process`.
+    """
 
-
-class ProcessSpec(BaseModel):
-    """Specification of a Plugboard `Process`."""
-
-    type: str
     components: _t.Optional[list[ComponentSpec]] = None
     connectors: _t.Optional[list[ConnectorSpec]] = None
     parameters: _t.Optional[dict] = None
     state: _t.Optional[StateBackendSpec] = None
+
+
+class ProcessSpec(BaseModel):
+    """Specification of a Plugboard [`Process`][plugboard.process.Process].
+
+    Attributes:
+        type: The type of the `Process`.
+        args: The arguments for the `Process`.
+    """
+
+    type: str = "plugboard.process.Process"
+    args: ProcessArgsSpec
