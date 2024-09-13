@@ -1,6 +1,7 @@
 """Provides Pydantic models used for specifying Plugboard objects."""
 
 from .component import ComponentArgsSpec, ComponentSpec
+from .config import ConfigSpec, ProcessConfigSpec
 from .connector import (
     ConnectorBuilderArgsSpec,
     ConnectorBuilderSpec,
@@ -15,6 +16,7 @@ from .state import StateBackendArgsSpec, StateBackendSpec
 __all__ = [
     "ComponentSpec",
     "ComponentArgsSpec",
+    "ConfigSpec",
     "ConnectorMode",
     "ConnectorSpec",
     "ConnectorBuilderSpec",
@@ -22,6 +24,7 @@ __all__ = [
     "IODirection",
     "StateBackendSpec",
     "StateBackendArgsSpec",
+    "ProcessConfigSpec",
     "ProcessSpec",
     "ProcessArgsSpec",
 ]
