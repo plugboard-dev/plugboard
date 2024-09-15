@@ -2,12 +2,18 @@ SHELL := /bin/bash
 PROJECT := plugboard
 PYTHON_VERSION ?= 3.12
 PY := python$(PYTHON_VERSION)
+VENV_NAME := $(PROJECT)-$(PYTHON_VERSION)
 WITH_PYENV := $(shell which pyenv > /dev/null && echo true || echo false)
-VIRTUAL_ENV ?= $(shell $(WITH_PYENV) && echo $(shell pyenv root)/versions/$(PROJECT) || echo $(PWD)/.venv)
+VIRTUAL_ENV ?= $(shell $(WITH_PYENV) && echo $(shell pyenv root)/versions/$(VENV_NAME) || echo $(PWD)/.venv)
 VENV := $(VIRTUAL_ENV)
 BIN := $(VENV)/bin
 SRC := ./plugboard
 TESTS := ./tests
+
+# poetry settings
+POETRY_VIRTUALENVS_PREFER_ACTIVE_PYTHON := $(shell $(WITH_PYENV) && echo true || echo false)
+POETRY_VIRTUALENVS_CREATE := false
+POETRY_VIRTUALENVS_IN_PROJECT := true
 
 # Windows compatibility
 ifeq ($(OS), Windows_NT)
@@ -20,22 +26,28 @@ all: lint test
 
 .PHONY: clean
 clean:
-	$(WITH_PYENV) && pyenv virtualenv-delete -f $(PROJECT) || rm -rf $(VENV)
+	$(WITH_PYENV) && pyenv virtualenv-delete -f $(VENV_NAME) || rm -rf $(VENV)
+	$(WITH_PYENV) && pyenv local --unset || true
+	rm -f poetry.lock
 	find $(SRC) -type f -name *.pyc -delete
 	find $(SRC) -type d -name __pycache__ -delete
 
 $(VENV):
-	$(WITH_PYENV) && pyenv virtualenv $(PYTHON_VERSION) $(PROJECT) || $(PY) -m venv $(VENV)
+	$(WITH_PYENV) && pyenv install -s $(PYTHON_VERSION) || true
+	$(WITH_PYENV) && pyenv virtualenv $(PYTHON_VERSION) $(VENV_NAME) || $(PY) -m venv $(VENV)
+	$(WITH_PYENV) && pyenv local $(VENV_NAME) || true
 	@touch $@
 
-$(VENV)/.stamps/init-poetry: $(VENV)
+.PHONY: venv
+venv: $(VENV)
+	source $(VENV)/bin/activate
+
+$(VENV)/.stamps/init-poetry: $(VENV) venv
 	$(BIN)/$(PY) -m pip install --upgrade pip setuptools poetry poetry-dynamic-versioning[plugin]
-	$(BIN)/$(PY) -m poetry config virtualenvs.in-project true
-	$(BIN)/$(PY) -m poetry config virtualenvs.prompt venv
 	mkdir -p $(VENV)/.stamps
 	@touch $@
 
-$(VENV)/.stamps/install: pyproject.toml
+$(VENV)/.stamps/install: $(VENV)/.stamps/init-poetry pyproject.toml
 	$(BIN)/$(PY) -m poetry install
 	@touch $@
 
@@ -43,7 +55,7 @@ $(VENV)/.stamps/install: pyproject.toml
 install: $(VENV)/.stamps/install
 
 .PHONY: init
-init: $(VENV)/.stamps/init-poetry install
+init: install
 
 .PHONY: lint
 lint: init
