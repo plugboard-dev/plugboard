@@ -37,19 +37,35 @@ $(VENV):
 	@touch $@
 
 $(VENV)/.stamps/init-poetry: $(VENV)
-	$(PYTHON) -m pip install --upgrade pip setuptools poetry poetry-dynamic-versioning[plugin]
+	# How to install poetry for with and without pyenv cases?
+	$(PYTHON) -m pip install --upgrade pip setuptools poetry-dynamic-versioning[plugin]
 	mkdir -p $(VENV)/.stamps
 	@touch $@
 
 $(VENV)/.stamps/install: $(VENV)/.stamps/init-poetry pyproject.toml
-	$(PYTHON) -m poetry install
+	# This fails to install anything with the output: No dependencies to install or update
+	# Verbose output shows that poetry uses a cached venv on the first run:
+	# Found: /home/csk/.pyenv/versions/plugboard-3.12/bin/python
+	# Using virtualenv: /home/csk/.cache/pypoetry/virtualenvs/plugboard-OHr21XxN-py3.12
+	# Running poetry install a second time (outside of this makefile rule) then installs the dependencies
+	# Found: /home/csk/.pyenv/versions/plugboard-3.12/bin/python
+	# Using virtualenv: /home/csk/.pyenv/versions/3.12.6/envs/plugboard-3.12
+	env | grep POETRY_ || echo
+	# POETRY_VIRTUALENVS_CREATE=$(POETRY_VIRTUALENVS_CREATE) $(PYTHON) -m poetry install -v
+	poetry env use $(PYTHON) && poetry install -v
 	@touch $@
 
 .PHONY: install
 install: $(VENV)/.stamps/install
 
+.PHONY: install2
+install2:
+	env | grep POETRY_ || echo
+	# $(PYTHON) -m poetry install -v
+	poetry install -v
+
 .PHONY: init
-init: install
+init: install install2
 
 .PHONY: lint
 lint: init
