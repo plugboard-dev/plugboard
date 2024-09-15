@@ -26,8 +26,8 @@ class ConnectorSpec(BaseModel):
     """Specification of a Plugboard [`Connector`][plugboard.connector.Connector].
 
     Attributes:
-        source: An output from a `Component` in the form `component_name.port_name`.
-        target: An input to a `Component`  in the form `component_name.port_name`.
+        source: An output from a `Component` in the form `component_name.field_name`.
+        target: An input to a `Component`  in the form `component_name.field_name`.
         mode: The mode of the `Connector`.
     """
 
@@ -39,7 +39,7 @@ class ConnectorSpec(BaseModel):
     @classmethod
     def _validate_source_target(cls, v: str) -> str:
         if v.count(".") != 1:
-            raise ValueError("Source and target must be in the format 'component_name.port_name'")
+            raise ValueError("Source and target must be in the format 'component_name.field_name'")
         return v
 
 
