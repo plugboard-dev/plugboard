@@ -1,6 +1,7 @@
 """Provides spec classes related to `Connector`s."""
 
 from enum import StrEnum
+import re
 import typing as _t
 
 from pydantic import BaseModel, field_validator
@@ -41,6 +42,38 @@ class ConnectorSpec(BaseModel):
         if v.count(".") != 1:
             raise ValueError("Source and target must be in the format 'component_name.field_name'")
         return v
+
+
+class ComponentSocket(BaseModel):
+    """`ComponentSocket` defines a connection point for a component.
+
+    Attributes:
+        component: The name of the component.
+        field: The name of the I/O field on the component.
+    """
+
+    _PATTERN: _t.ClassVar[re.Pattern] = re.compile(
+        r"^([a-zA-Z_][a-zA-Z0-9_]*)\.([a-zA-Z_][a-zA-Z0-9_]*)$"
+    )
+
+    component: str
+    field: str
+
+    @classmethod
+    def from_ref(cls, ref: str) -> _t.Self:
+        """Creates a `ComponentSocket` from a reference string."""
+        match = cls._PATTERN.match(ref)
+        if not match:
+            raise ValueError(f"Reference must be of the form 'component.field', got {ref}")
+        component, field = match.groups()
+        return cls(component=component, field=field)
+
+    @property
+    def id(self) -> str:  # noqa: D102
+        return f"{self.component}.{self.field}"
+
+    def __str__(self) -> str:
+        return self.id
 
 
 class ConnectorBuilderArgsSpec(BaseModel, extra="allow"):

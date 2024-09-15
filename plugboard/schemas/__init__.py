@@ -3,6 +3,7 @@
 from .component import ComponentArgsSpec, ComponentSpec
 from .config import ConfigSpec, ProcessConfigSpec
 from .connector import (
+    ComponentSocket,
     ConnectorBuilderArgsSpec,
     ConnectorBuilderSpec,
     ConnectorMode,
@@ -16,6 +17,7 @@ from .state import StateBackendArgsSpec, StateBackendSpec
 __all__ = [
     "ComponentSpec",
     "ComponentArgsSpec",
+    "ComponentSocket",
     "ConfigSpec",
     "ConnectorMode",
     "ConnectorSpec",

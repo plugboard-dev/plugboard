@@ -2,14 +2,10 @@
 
 from __future__ import annotations
 
-import re
 import typing as _t
 
-from pydantic import BaseModel
-from pydantic.fields import ClassVar
-
 from plugboard.connector.channel import Channel
-from plugboard.schemas.connector import ConnectorMode
+from plugboard.schemas.connector import ComponentSocket, ConnectorMode
 from plugboard.utils import AsDictMixin
 
 
@@ -49,30 +45,3 @@ class ConnectorSpec:
             "target": str(self.target),
             "mode": self.mode,
         }
-
-
-class ComponentSocket(BaseModel):
-    """`ComponentSocket` defines a connection point for a component."""
-
-    _PATTERN: ClassVar[re.Pattern] = re.compile(
-        r"^([a-zA-Z_][a-zA-Z0-9_]*)\.([a-zA-Z_][a-zA-Z0-9_]*)$"
-    )
-
-    component: str
-    field: str
-
-    @classmethod
-    def from_ref(cls, ref: str) -> ComponentSocket:
-        """Creates a `ComponentSocket` from a reference string."""
-        match = cls._PATTERN.match(ref)
-        if not match:
-            raise ValueError(f"Reference must be of the form 'component.field', got {ref}")
-        component, field = match.groups()
-        return cls(component=component, field=field)
-
-    @property
-    def id(self) -> str:  # noqa: D102
-        return f"{self.component}.{self.field}"
-
-    def __str__(self) -> str:
-        return self.id
