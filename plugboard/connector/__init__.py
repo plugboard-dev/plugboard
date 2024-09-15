@@ -2,13 +2,11 @@
 
 from plugboard.connector.asyncio_channel import AsyncioChannel
 from plugboard.connector.channel import Channel, ChannelClosedError
-from plugboard.connector.connector import Connector, ConnectorMode, ConnectorSpec
+from plugboard.connector.connector import Connector
 
 
 __all__ = [
     "Connector",
-    "ConnectorSpec",
-    "ConnectorMode",
     "Channel",
     "AsyncioChannel",
     "ChannelClosedError",

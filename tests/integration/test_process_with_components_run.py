@@ -9,8 +9,9 @@ import aiofiles
 import pytest
 
 from plugboard.component import Component, IOController as IO
-from plugboard.connector import AsyncioChannel, Connector, ConnectorSpec
+from plugboard.connector import AsyncioChannel, Connector
 from plugboard.process import Process
+from plugboard.schemas import ConnectorSpec
 
 
 class ComponentTestHelper(Component):
