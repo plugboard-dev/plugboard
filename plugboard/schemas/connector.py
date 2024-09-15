@@ -23,27 +23,6 @@ class ConnectorMode(StrEnum):
     MANY_TO_MANY = "many-to-many"
 
 
-class ConnectorSpec(BaseModel):
-    """Specification of a Plugboard [`Connector`][plugboard.connector.Connector].
-
-    Attributes:
-        source: An output from a `Component` in the form `component_name.field_name`.
-        target: An input to a `Component`  in the form `component_name.field_name`.
-        mode: The mode of the `Connector`.
-    """
-
-    source: str
-    target: str
-    mode: ConnectorMode = ConnectorMode.ONE_TO_ONE
-
-    @field_validator("source", "target")
-    @classmethod
-    def _validate_source_target(cls, v: str) -> str:
-        if v.count(".") != 1:
-            raise ValueError("Source and target must be in the format 'component_name.field_name'")
-        return v
-
-
 class ComponentSocket(BaseModel):
     """`ComponentSocket` defines a connection point for a component.
 
@@ -71,6 +50,34 @@ class ComponentSocket(BaseModel):
     @property
     def id(self) -> str:  # noqa: D102
         return f"{self.component}.{self.field}"
+
+    def __str__(self) -> str:
+        return self.id
+
+
+class ConnectorSpec(BaseModel):
+    """`ConnectorSpec` defines a connection between two components.
+
+    Attributes:
+        source: The source component socket.
+        target: The target component socket.
+        mode: The mode of the connector.
+    """
+
+    source: ComponentSocket
+    target: ComponentSocket
+    mode: ConnectorMode = ConnectorMode.ONE_TO_ONE
+
+    @field_validator("source", "target", mode="before")
+    @classmethod
+    def _validate_source_target(cls, v: ComponentSocket | str) -> ComponentSocket:
+        if not isinstance(v, ComponentSocket):
+            return ComponentSocket.from_ref(v)
+        return v
+
+    @property
+    def id(self) -> str:  # noqa: D102
+        return f"{self.source.id}..{self.target.id}"
 
     def __str__(self) -> str:
         return self.id
