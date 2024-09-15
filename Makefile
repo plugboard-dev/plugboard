@@ -36,11 +36,7 @@ $(VENV):
 	$(WITH_PYENV) && pyenv local $(VENV_NAME) || true
 	@touch $@
 
-.PHONY: venv
-venv: $(VENV)
-	source $(VENV)/bin/activate
-
-$(VENV)/.stamps/init-poetry: $(VENV) venv
+$(VENV)/.stamps/init-poetry: $(VENV)
 	$(PYTHON) -m pip install --upgrade pip setuptools poetry poetry-dynamic-versioning[plugin]
 	mkdir -p $(VENV)/.stamps
 	@touch $@
