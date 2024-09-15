@@ -1,12 +1,10 @@
 SHELL := /bin/bash
 PROJECT := plugboard
 PYTHON_VERSION ?= 3.12
-PY := python$(PYTHON_VERSION)
 VENV_NAME := $(PROJECT)-$(PYTHON_VERSION)
 WITH_PYENV := $(shell which pyenv > /dev/null && echo true || echo false)
 VIRTUAL_ENV ?= $(shell $(WITH_PYENV) && echo $(shell pyenv root)/versions/$(VENV_NAME) || echo $(PWD)/.venv)
 VENV := $(VIRTUAL_ENV)
-BIN := $(VENV)/bin
 SRC := ./plugboard
 TESTS := ./tests
 
@@ -16,9 +14,9 @@ POETRY_VIRTUALENVS_CREATE := false
 POETRY_VIRTUALENVS_IN_PROJECT := true
 
 # Windows compatibility
+PYTHON := $(VENV)/bin/python
 ifeq ($(OS), Windows_NT)
-    BIN := $(VENV)/Scripts
-    PY := python
+    PYTHON := $(VENV)/Scripts/python
 endif
 
 .PHONY: all
@@ -34,7 +32,7 @@ clean:
 
 $(VENV):
 	$(WITH_PYENV) && pyenv install -s $(PYTHON_VERSION) || true
-	$(WITH_PYENV) && pyenv virtualenv $(PYTHON_VERSION) $(VENV_NAME) || $(PY) -m venv $(VENV)
+	$(WITH_PYENV) && pyenv virtualenv $(PYTHON_VERSION) $(VENV_NAME) || python$(PYTHON_VERSION) -m venv $(VENV)
 	$(WITH_PYENV) && pyenv local $(VENV_NAME) || true
 	@touch $@
 
@@ -43,12 +41,12 @@ venv: $(VENV)
 	source $(VENV)/bin/activate
 
 $(VENV)/.stamps/init-poetry: $(VENV) venv
-	$(BIN)/$(PY) -m pip install --upgrade pip setuptools poetry poetry-dynamic-versioning[plugin]
+	$(PYTHON) -m pip install --upgrade pip setuptools poetry poetry-dynamic-versioning[plugin]
 	mkdir -p $(VENV)/.stamps
 	@touch $@
 
 $(VENV)/.stamps/install: $(VENV)/.stamps/init-poetry pyproject.toml
-	$(BIN)/$(PY) -m poetry install
+	$(PYTHON) -m poetry install
 	@touch $@
 
 .PHONY: install
@@ -59,25 +57,25 @@ init: install
 
 .PHONY: lint
 lint: init
-	$(BIN)/$(PY) -m ruff check
-	$(BIN)/$(PY) -m mypy $(SRC)/ --explicit-package-bases
-	$(BIN)/$(PY) -m mypy $(TESTS)/
+	$(PYTHON) -m ruff check
+	$(PYTHON) -m mypy $(SRC)/ --explicit-package-bases
+	$(PYTHON) -m mypy $(TESTS)/
 
 .PHONY: test
 test: init
-	$(BIN)/$(PY) -m pytest -rs $(TESTS)/ --ignore=$(TESTS)/smoke
+	$(PYTHON) -m pytest -rs $(TESTS)/ --ignore=$(TESTS)/smoke
 
 .PHONY: docs
 docs: $(VENV)
-	$(BIN)/$(PY) -m mkdocs build
+	$(PYTHON) -m mkdocs build
 
 .PHONY: docs-serve
 docs-serve: $(VENV)
-	$(BIN)/$(PY) -m mkdocs serve
+	$(PYTHON) -m mkdocs serve
 
 .PHONY: build
 build: $(VENV) docs
-	$(BIN)/$(PY) -m poetry build
+	$(PYTHON) -m poetry build
 
 GIT_HASH_SHORT ?= $(shell git rev-parse --short HEAD)
 GIT_BRANCH ?= $(shell git rev-parse --abbrev-ref HEAD | tr / -)
@@ -91,7 +89,7 @@ DOCKER_IMAGE ?= plugboard
 DOCKER_REGISTRY_IMAGE=${DOCKER_REGISTRY}/plugboard-dev/${DOCKER_IMAGE}
 
 requirements.txt: $(VENV) pyproject.toml
-	$(BIN)/$(PY) -m poetry export -f requirements.txt -o requirements.txt --without-hashes
+	$(PYTHON) -m poetry export -f requirements.txt -o requirements.txt --without-hashes
 	@touch $@
 
 .PHONY: docker-build
