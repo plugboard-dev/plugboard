@@ -1,7 +1,7 @@
 """Provides `ProcessBuilder` to build `Process` objects."""
 
 
-class ConnectorBuilder:
-    """Builds `Connector` objects."""
+class ProcessBuilder:
+    """Builds `Process` objects."""
 
     pass
