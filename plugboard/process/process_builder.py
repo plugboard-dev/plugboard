@@ -1,11 +1,11 @@
 """Provides `ProcessBuilder` to build `Process` objects."""
 
-from pydoc import locate
 import typing as _t
 
 from plugboard.component.component import Component
 from plugboard.process.process import Process
 from plugboard.schemas.process import ProcessSpec
+from plugboard.utils.class_loader import ClassLoader
 
 
 class ProcessBuilder:
@@ -17,17 +17,10 @@ class ProcessBuilder:
         Args:
             types: A list of `Component` types to use in building `Process` objects.
         """
-        self._component_types = {ct.__name__: ct for ct in types}
-
-    def _load_type(self, type_name: str) -> _t.Type[Component]:
-        try:
-            return self._component_types[type_name]
-        except KeyError:
-            ct = locate(type_name)
-            if ct is None or not issubclass(ct, Component):
-                raise ValueError(f"Component type {type_name} not found.")
-            self._component_types[type_name] = ct
-            return ct
+        self._component_loader: ClassLoader[Component] = ClassLoader(
+            Component,  # type: ignore
+            types=[t for t in types],
+        )
 
     def build(self, spec: ProcessSpec) -> Process:
         """Build a `Process` object.
@@ -39,7 +32,10 @@ class ProcessBuilder:
             A `Process` object.
         """
         return Process(
-            components=[self._load_type(c.type)(**c.args) for c in spec.args.components],
+            components=[
+                self._component_loader.build(c.type, **c.args.model_dump())
+                for c in spec.args.components or []
+            ],
             # TODO: build connectors
             connectors=[],
             parameters=spec.args.parameters,

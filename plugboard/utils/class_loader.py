@@ -10,7 +10,7 @@ T = _t.TypeVar("T")
 class ClassLoader(_t.Generic[T]):
     """Utility to build Plugboard objects."""
 
-    def __init__(self, class_type: _t.Type[T], types: _t.Optional[list[_t.Type[T]]] = None):
+    def __init__(self, class_type: type[T], types: _t.Optional[list[type[T]]] = None):
         """Instantiates a `ClassLoader`.
 
         Args:
@@ -20,7 +20,7 @@ class ClassLoader(_t.Generic[T]):
         self._class_type = class_type
         self._types = {t.__name__: t for t in types} if types else {}
 
-    def load(self, type_name: str) -> _t.Type[T]:
+    def load(self, type_name: str) -> type[T]:
         """Load a class by name.
 
         Args:
