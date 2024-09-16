@@ -1,4 +1,4 @@
-"""Provides `ClassLoader` utility to load Plugboard classes."""
+"""Provides `ClassFactory` utility to build Plugboard objects."""
 
 from pydoc import locate
 import typing as _t
@@ -7,8 +7,8 @@ import typing as _t
 T = _t.TypeVar("T")
 
 
-class ClassLoader(_t.Generic[T]):
-    """Utility to build Plugboard objects."""
+class ClassFactory(_t.Generic[T]):
+    """Factory to build Plugboard objects."""
 
     def __init__(self, class_type: type[T], types: _t.Optional[list[type[T]]] = None):
         """Instantiates a `ClassLoader`.
