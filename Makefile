@@ -38,8 +38,13 @@ $(VENV):
 	$(WITH_PYENV) && pyenv local $(VENV_NAME) || true
 	@touch $@
 
-$(VENV)/.stamps/install: $(VENV) pyproject.toml
-	poetry install -v
+$(VENV)/.stamps/init-poetry: $(VENV)
+	$(PYTHON) -m pip install --upgrade pip setuptools poetry
+	@mkdir -p $(VENV)/.stamps
+	@touch $@
+
+$(VENV)/.stamps/install: $(VENV)/.stamps/init-poetry pyproject.toml
+	$(PYTHON) -m poetry install -v
 	@mkdir -p $(VENV)/.stamps
 	@touch $@
 
