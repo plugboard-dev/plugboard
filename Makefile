@@ -1,23 +1,24 @@
 SHELL := /bin/bash
 PROJECT := plugboard
-PYTHON_VERSION ?= 3.12
-VENV_NAME := $(PROJECT)-$(PYTHON_VERSION)
+PYTHON_VERSION ?= 3.11
 WITH_PYENV := $(shell which pyenv > /dev/null && echo true || echo false)
-VIRTUAL_ENV ?= $(shell $(WITH_PYENV) && echo $$(pyenv root)/versions/$(VENV_NAME) || echo $(PWD)/.venv)
-VENV := $(VIRTUAL_ENV)
+VENV_NAME := $(PROJECT)-$(PYTHON_VERSION)
+VENV ?= $(shell $(WITH_PYENV) && echo $(shell pyenv root)/versions/$(VENV_NAME) || echo $(PWD)/.venv)
 SRC := ./plugboard
 TESTS := ./tests
 
-# poetry settings
-POETRY_VIRTUALENVS_PREFER_ACTIVE_PYTHON := $(shell $(WITH_PYENV) && echo true || echo false)
-POETRY_VIRTUALENVS_CREATE := false
-POETRY_VIRTUALENVS_IN_PROJECT := true
-
-# Windows compatibility
 PYTHON := $(VENV)/bin/python
+# Windows compatibility
 ifeq ($(OS), Windows_NT)
     PYTHON := $(VENV)/Scripts/python
 endif
+
+.EXPORT_ALL_VARIABLES:
+VIRTUAL_ENV = $(VENV)
+PATH = $(VENV)/bin:$(shell echo $$PATH)
+POETRY_VIRTUALENVS_PREFER_ACTIVE_PYTHON = true
+POETRY_VIRTUALENVS_CREATE = false
+POETRY_VIRTUALENVS_IN_PROJECT = true
 
 .PHONY: all
 all: lint test
@@ -36,36 +37,16 @@ $(VENV):
 	$(WITH_PYENV) && pyenv local $(VENV_NAME) || true
 	@touch $@
 
-$(VENV)/.stamps/init-poetry: $(VENV)
-	# How to install poetry for with and without pyenv cases?
-	$(PYTHON) -m pip install --upgrade pip setuptools poetry-dynamic-versioning[plugin]
-	mkdir -p $(VENV)/.stamps
-	@touch $@
-
-$(VENV)/.stamps/install: $(VENV)/.stamps/init-poetry pyproject.toml
-	# This fails to install anything with the output: No dependencies to install or update
-	# Verbose output shows that poetry uses a cached venv on the first run:
-	# Found: /home/csk/.pyenv/versions/plugboard-3.12/bin/python
-	# Using virtualenv: /home/csk/.cache/pypoetry/virtualenvs/plugboard-OHr21XxN-py3.12
-	# Running poetry install a second time (outside of this makefile rule) then installs the dependencies
-	# Found: /home/csk/.pyenv/versions/plugboard-3.12/bin/python
-	# Using virtualenv: /home/csk/.pyenv/versions/3.12.6/envs/plugboard-3.12
-	env | grep POETRY_ || echo
-	# POETRY_VIRTUALENVS_CREATE=$(POETRY_VIRTUALENVS_CREATE) $(PYTHON) -m poetry install -v
-	poetry env use $(PYTHON) && poetry install -v
+$(VENV)/.stamps/install: $(VENV) pyproject.toml
+	poetry install -v
+	@mkdir -p $(VENV)/.stamps
 	@touch $@
 
 .PHONY: install
 install: $(VENV)/.stamps/install
 
-.PHONY: install2
-install2:
-	env | grep POETRY_ || echo
-	# $(PYTHON) -m poetry install -v
-	poetry install -v
-
 .PHONY: init
-init: install install2
+init: install
 
 .PHONY: lint
 lint: init
