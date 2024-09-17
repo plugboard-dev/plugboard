@@ -1,9 +1,10 @@
 SHELL := /bin/bash
 PROJECT := plugboard
-PYTHON_VERSION ?= 3.11
+PYTHON_VERSION ?= 3.12
 WITH_PYENV := $(shell which pyenv > /dev/null && echo true || echo false)
 VENV_NAME := $(PROJECT)-$(PYTHON_VERSION)
-VENV ?= $(shell $(WITH_PYENV) && echo $(shell pyenv root)/versions/$(VENV_NAME) || echo $(PWD)/.venv)
+VIRTUAL_ENV ?= $(shell $(WITH_PYENV) && echo $(shell pyenv root)/versions/$(VENV_NAME) || echo $(PWD)/.venv)
+VENV := $(VIRTUAL_ENV)
 SRC := ./plugboard
 TESTS := ./tests
 
