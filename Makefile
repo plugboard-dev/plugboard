@@ -39,7 +39,7 @@ $(VENV):
 	@touch $@
 
 $(VENV)/.stamps/init-poetry: $(VENV)
-	$(PYTHON) -m pip install --upgrade pip setuptools poetry
+	$(PYTHON) -m pip install --upgrade pip setuptools poetry poetry-dynamic-versioning[plugin]
 	@mkdir -p $(VENV)/.stamps
 	@touch $@
 
