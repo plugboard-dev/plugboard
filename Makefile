@@ -44,7 +44,7 @@ $(VENV)/.stamps/init-poetry: $(VENV)
 	@touch $@
 
 $(VENV)/.stamps/install: $(VENV)/.stamps/init-poetry pyproject.toml
-	$(PYTHON) -m poetry install -v
+	$(PYTHON) -m poetry install -v --with docs
 	@mkdir -p $(VENV)/.stamps
 	@touch $@
 
