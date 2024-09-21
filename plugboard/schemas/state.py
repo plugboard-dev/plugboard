@@ -1,7 +1,5 @@
 """Provides `StateBackendSpec` class."""
 
-import typing as _t
-
 from pydantic import BaseModel
 
 
@@ -9,10 +7,10 @@ class StateBackendArgsSpec(BaseModel, extra="allow"):
     """Specification of the [`StateBackend`][plugboard.state.StateBackend] constructor arguments.
 
     Attributes:
-        parameters: Optional; Parameters for the `StateBackend`.
+        parameters: Parameters for the `StateBackend`.
     """
 
-    parameters: _t.Optional[dict] = None
+    parameters: dict = {}
 
 
 class StateBackendSpec(BaseModel):

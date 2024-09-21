@@ -15,13 +15,13 @@ class ProcessArgsSpec(BaseModel, extra="allow"):
     Attributes:
         components: Specifies each `Component` in the `Process`.
         connectors: Specifies the connections between each `Component`.
-        parameters: Optional; Parameters for the `Process`.
+        parameters: Parameters for the `Process`.
         state: Optional; Specifies the `StateBackend` used for the `Process`.
     """
 
-    components: _t.Optional[list[ComponentSpec]] = None
-    connectors: _t.Optional[list[ConnectorSpec]] = None
-    parameters: _t.Optional[dict] = None
+    components: list[ComponentSpec] = []
+    connectors: list[ConnectorSpec] = []
+    parameters: dict = {}
     state: _t.Optional[StateBackendSpec] = None
 
 

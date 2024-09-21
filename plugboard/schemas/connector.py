@@ -87,10 +87,10 @@ class ChannelBuilderArgsSpec(BaseModel, extra="allow"):
     """Specification of the [`Channel`][plugboard.connector.Channel] constructor arguments.
 
     Attributes:
-        parameters: Optional; Parameters for the `Channel`.
+        parameters: Parameters for the `Channel`.
     """
 
-    parameters: _t.Optional[dict] = None
+    parameters: dict = {}
 
 
 class ChannelBuilderSpec(BaseModel):
@@ -102,4 +102,4 @@ class ChannelBuilderSpec(BaseModel):
     """
 
     type: str
-    args: _t.Optional[ChannelBuilderArgsSpec] = None
+    args: ChannelBuilderArgsSpec = ChannelBuilderArgsSpec()
