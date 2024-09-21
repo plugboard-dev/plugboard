@@ -7,8 +7,8 @@ import typing as _t
 T = _t.TypeVar("T")
 
 
-class ClassFactory(_t.Generic[T]):
-    """Factory to build Plugboard objects."""
+class ClassLoader(_t.Generic[T]):
+    """Loads Plugboard classes."""
 
     def __init__(self, class_type: type[T], types: _t.Optional[list[type[T]]] = None):
         """Instantiates a `ClassLoader`.
@@ -37,16 +37,3 @@ class ClassFactory(_t.Generic[T]):
                 raise ValueError(f"Type {type_name} not found.")
             self._types[type_name] = t
             return t
-
-    def build(self, type_name: str, *args: _t.Any, **kwargs: _t.Any) -> T:
-        """Build an instance of a class by name.
-
-        Args:
-            type_name: The name of the class to build.
-            *args: Positional arguments to pass to the class constructor.
-            **kwargs: Keyword arguments to pass to the class constructor.
-
-        Returns:
-            An instance of the class.
-        """
-        return self.load(type_name)(*args, **kwargs)
