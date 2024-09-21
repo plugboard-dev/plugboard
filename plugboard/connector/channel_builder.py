@@ -24,14 +24,12 @@ class ChannelBuilder(ABC):
 class ChannelBuilderRegistry(Registry[ChannelBuilder]):
     """A registry of known `ChannelBuilder` classes."""
 
-    classes = {}
-
     @classmethod
-    def register(cls, channel_builder: type[ChannelBuilder], channel_cls: type[Channel]) -> None:
+    def register(cls, plugboard_class: type[ChannelBuilder], key: type[Channel]) -> None:
         """Register a `ChannelBuilder` for a `Channel` class.
 
         Args:
-            channel_builder: The `ChannelBuilder` class.
-            channel_cls: The `Channel` class.
+            plugboard_class: The `ChannelBuilder` class.
+            key: The `Channel` class associated with the `ChannelBuilder`.
         """
-        super().register(channel_builder, key=channel_cls)
+        super().register(plugboard_class, key=key)

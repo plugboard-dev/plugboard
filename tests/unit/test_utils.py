@@ -31,10 +31,10 @@ def test_registry() -> None:
     """Tests the `Registry`."""
 
     class RegistryA(Registry[BaseA]):
-        classes = {}
+        pass
 
     class RegistryB(Registry[BaseB]):
-        classes = {}
+        pass
 
     RegistryA.register(A1, "a1")
     RegistryA.register(A2, "a2")

@@ -89,4 +89,4 @@ class Component(ABC, AsDictMixin):
 class ComponentRegistry(Registry[Component]):
     """A registry of all `Component` types."""
 
-    classes = {}
+    pass
