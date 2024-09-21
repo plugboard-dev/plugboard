@@ -7,7 +7,7 @@ from plugboard.connector.channel import Channel
 from plugboard.connector.channel_builder import ChannelBuilder, ChannelBuilderRegistry
 
 
-class TestChannel(Channel):
+class MyChannel(Channel):
     def __init__(self, a: int, **kwargs) -> None:
         self.a = a
         self.kwargs = kwargs
@@ -19,27 +19,27 @@ class TestChannel(Channel):
         pass
 
 
-class TestChannelBuilder(ChannelBuilder):
-    channel_cls = TestChannel
+class MyChannelBuilder(ChannelBuilder):
+    channel_cls = MyChannel
 
 
 def test_channel_builder_registry() -> None:
     """Tests the `ChannelBuilderRegistry`."""
     # Register the test channel builder
-    ChannelBuilderRegistry.register(TestChannelBuilder, TestChannel)
-    assert ChannelBuilderRegistry.get_class(TestChannel) == TestChannelBuilder
+    ChannelBuilderRegistry.register(MyChannelBuilder, MyChannel)
+    assert ChannelBuilderRegistry.get_class(MyChannel) == MyChannelBuilder
 
 
 @pytest.mark.anyio
 async def test_channel_builder() -> None:
     """Tests the `ChannelBuilder`."""
-    channel1 = await TestChannelBuilder().build(a=1)
+    channel1 = await MyChannelBuilder().build(a=1)
     # Check that the channel was built correctly
-    assert isinstance(channel1, TestChannel)
+    assert isinstance(channel1, MyChannel)
     assert channel1.a == 1
     assert channel1.kwargs == {}
-    channel2 = await TestChannelBuilder().build(a=2, b=3)
+    channel2 = await MyChannelBuilder().build(a=2, b=3)
     # Check that the channel was built correctly
-    assert isinstance(channel2, TestChannel)
+    assert isinstance(channel2, MyChannel)
     assert channel2.a == 2
     assert channel2.kwargs == {"b": 3}
