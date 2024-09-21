@@ -5,7 +5,7 @@ import typing as _t
 from pydantic import BaseModel
 
 from .component import ComponentSpec
-from .connector import ConnectorSpec
+from .connector import ChannelBuilderSpec, ConnectorSpec
 from .state import StateBackendSpec
 
 
@@ -30,6 +30,10 @@ class ProcessSpec(BaseModel):
 
     Attributes:
         args: The arguments for the `Process`.
+        channel_builder: The `ChannelBuilder` to use for the `Process`.
     """
 
     args: ProcessArgsSpec
+    channel_builder: ChannelBuilderSpec = ChannelBuilderSpec(
+        type="plugboard.connector.AsyncChannelBuilder"
+    )
