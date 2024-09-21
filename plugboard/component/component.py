@@ -4,9 +4,13 @@ from abc import ABC, abstractmethod
 from functools import wraps
 import typing as _t
 
-from plugboard.component.io_controller import IOController, IODirection, IOStreamClosedError
+from plugboard.component.io_controller import (
+    IOController,
+    IODirection,
+    IOStreamClosedError,
+)
 from plugboard.state import StateBackend
-from plugboard.utils import AsDictMixin
+from plugboard.utils import AsDictMixin, Registry
 
 
 class Component(ABC, AsDictMixin):
@@ -76,3 +80,9 @@ class Component(ABC, AsDictMixin):
         return {
             **self.io.data,
         }
+
+
+class ComponentRegistry(Registry[Component]):
+    """A registry of all `Component` types."""
+
+    classes = {}
