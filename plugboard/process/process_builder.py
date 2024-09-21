@@ -1,28 +1,19 @@
 """Provides `ProcessBuilder` to build `Process` objects."""
 
-import typing as _t
+from pydoc import locate
 
-from plugboard.component.component import Component
+from plugboard.component.component import Component, ComponentRegistry
+from plugboard.connector.channel_builder import ChannelBuilder
+from plugboard.connector.connector import Connector
 from plugboard.process.process import Process
 from plugboard.schemas.process import ProcessSpec
-from plugboard.utils.class_factory import ClassFactory
 
 
 class ProcessBuilder:
     """Builds `Process` objects."""
 
-    def __init__(self, types: list[_t.Type[Component]]):
-        """Instantiates a `ProcessBuilder`.
-
-        Args:
-            types: A list of `Component` types to use in building `Process` objects.
-        """
-        self._component_loader: ClassFactory[Component] = ClassFactory(
-            Component,  # type: ignore
-            types=[t for t in types],
-        )
-
-    def build(self, spec: ProcessSpec) -> Process:
+    @classmethod
+    def build(cls, spec: ProcessSpec) -> Process:
         """Build a `Process` object.
 
         Args:
@@ -31,12 +22,22 @@ class ProcessBuilder:
         Returns:
             A `Process` object.
         """
+        for c in spec.args.components or []:
+            component_class = locate(c.type)
+            if not component_class or not issubclass(component_class, Component):
+                raise ValueError(f"Component class {c.type} not found.")
+        channel_builder_class = locate(spec.channel_builder.type)
+        if not channel_builder_class or not issubclass(channel_builder_class, ChannelBuilder):
+            raise ValueError(f"ChannelBuilder class {spec.channel_builder.type} not found")
+        channel_builder = channel_builder_class(**dict(spec.channel_builder.args))
+
         return Process(
             components=[
-                self._component_loader.build(c.type, **c.args.model_dump())
+                ComponentRegistry.build_object(c.type, **dict(c.args))
                 for c in spec.args.components or []
             ],
-            # TODO: build connectors
-            connectors=[],
+            connectors=[
+                Connector(cs, channel_builder.build()) for cs in spec.args.connectors or []
+            ],
             parameters=spec.args.parameters,
         )
