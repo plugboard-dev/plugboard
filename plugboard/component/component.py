@@ -36,6 +36,10 @@ class Component(ABC, AsDictMixin):
         )
         self.step = self._handle_step_wrapper()  # type: ignore
 
+    def __init_subclass__(cls, *args: _t.Any, **kwargs: _t.Any) -> None:
+        super().__init_subclass__(*args, **kwargs)
+        ComponentRegistry.register(cls)
+
     async def init(self) -> None:
         """Performs component initialisation actions."""
         pass
