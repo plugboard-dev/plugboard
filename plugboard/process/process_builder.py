@@ -30,12 +30,15 @@ class ProcessBuilder:
         channel_builder_class: _t.Optional[_t.Any] = locate(spec.channel_builder.type)
         if not channel_builder_class or not issubclass(channel_builder_class, ChannelBuilder):
             raise ValueError(f"ChannelBuilder class {spec.channel_builder.type} not found")
-        channel_builder = channel_builder_class(**dict(spec.channel_builder.args))
+        channel_builder = channel_builder_class()
 
         return Process(
             components=[
                 ComponentRegistry.build_object(c.type, **dict(c.args)) for c in spec.args.components
             ],
-            connectors=[Connector(cs, channel_builder.build()) for cs in spec.args.connectors],
+            connectors=[
+                Connector(cs, channel_builder.build(**dict(spec.channel_builder.args)))
+                for cs in spec.args.connectors
+            ],
             parameters=spec.args.parameters,
         )

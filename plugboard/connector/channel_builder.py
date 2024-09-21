@@ -16,7 +16,7 @@ class ChannelBuilder(ABC):
         """Returns the `Channel` class that the builder builds."""
         pass
 
-    async def build(self, *args: _t.Any, **kwargs: _t.Any) -> Channel:
+    def build(self, *args: _t.Any, **kwargs: _t.Any) -> Channel:
         """Builds a `Channel` object."""
         return self.channel_cls(*args, **kwargs)
 
