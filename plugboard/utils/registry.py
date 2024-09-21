@@ -1,15 +1,20 @@
 """Provides a generic registry for Plugboard objects."""
 
+from abc import ABC, abstractmethod
 import typing as _t
 
 
 T = _t.TypeVar("T")
 
 
-class Registry(_t.Generic[T]):
+class Registry(ABC, _t.Generic[T]):
     """A registry of Plugboard classes."""
 
-    classes = {}
+    @property
+    @abstractmethod
+    def classes(self) -> dict[_t.Hashable, type[T]]:
+        """Returns the registry of classes."""
+        pass
 
     @classmethod
     def register(cls, plugboard_class: type[T], key: _t.Optional[_t.Hashable] = None) -> None:

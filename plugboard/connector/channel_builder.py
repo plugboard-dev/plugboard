@@ -4,6 +4,7 @@ from abc import ABC, abstractmethod
 import typing as _t
 
 from plugboard.connector.channel import Channel
+from plugboard.utils.registry import Registry
 
 
 class ChannelBuilder(ABC):
@@ -20,22 +21,17 @@ class ChannelBuilder(ABC):
         return self.channel_cls(*args, **kwargs)
 
 
-class ChannelBuilderRegistry:
+class ChannelBuilderRegistry(Registry[ChannelBuilder]):
     """A registry of known `ChannelBuilder` classes."""
 
-    channel_builders = {}
+    classes = {}
 
     @classmethod
-    def register(cls, channel_cls: type[Channel], channel_builder: type[ChannelBuilder]):
+    def register(cls, channel_builder: type[ChannelBuilder], channel_cls: type[Channel]) -> None:
         """Register a `ChannelBuilder` for a `Channel` class.
 
         Args:
-            channel_cls: The `Channel` class.
             channel_builder: The `ChannelBuilder` class.
+            channel_cls: The `Channel` class.
         """
-        cls.channel_builders[channel_cls] = channel_builder
-
-    @classmethod
-    def get_channel_builder(cls, channel_cls: type[Channel]):
-        """Returns a `ChannelBuilder` the specified `Channel` class."""
-        return cls.channel_builders[channel_cls]
+        super().register(channel_builder, key=channel_cls)
