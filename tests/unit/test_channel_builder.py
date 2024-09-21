@@ -35,12 +35,12 @@ def test_channel_builder_registry() -> None:
 @pytest.mark.anyio
 async def test_channel_builder() -> None:
     """Tests the `ChannelBuilder`."""
-    channel1 = await MyChannelBuilder().build(a=1)
+    channel1 = MyChannelBuilder().build(a=1)
     # Check that the channel was built correctly
     assert isinstance(channel1, MyChannel)
     assert channel1.a == 1
     assert channel1.kwargs == {}
-    channel2 = await MyChannelBuilder().build(a=2, b=3)
+    channel2 = MyChannelBuilder().build(a=2, b=3)
     # Check that the channel was built correctly
     assert isinstance(channel2, MyChannel)
     assert channel2.a == 2
