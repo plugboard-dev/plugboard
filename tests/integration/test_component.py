@@ -1,4 +1,5 @@
 """Integration tests for the `Component` and `ComponentRegistry`."""
+# ruff: noqa: D101,D102,D103
 
 import pytest
 
