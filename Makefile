@@ -1,71 +1,80 @@
 SHELL := /bin/bash
 PROJECT := plugboard
 PYTHON_VERSION ?= 3.12
-PY := python$(PYTHON_VERSION)
 WITH_PYENV := $(shell which pyenv > /dev/null && echo true || echo false)
-VIRTUAL_ENV ?= $(shell $(WITH_PYENV) && echo $(shell pyenv root)/versions/$(PROJECT) || echo $(PWD)/.venv)
+VENV_NAME := $(PROJECT)-$(PYTHON_VERSION)
+VIRTUAL_ENV ?= $(shell $(WITH_PYENV) && echo $(shell pyenv root)/versions/$(VENV_NAME) || echo $(PWD)/.venv)
 VENV := $(VIRTUAL_ENV)
-BIN := $(VENV)/bin
 SRC := ./plugboard
 TESTS := ./tests
 
+PYTHON := $(VENV)/bin/python
 # Windows compatibility
 ifeq ($(OS), Windows_NT)
-    BIN := $(VENV)/Scripts
-    PY := python
+    PYTHON := $(VENV)/Scripts/python
 endif
+
+.EXPORT_ALL_VARIABLES:
+VIRTUAL_ENV = $(VENV)
+PATH = $(VENV)/bin:$(shell echo $$PATH)
+POETRY_VIRTUALENVS_PREFER_ACTIVE_PYTHON = true
+POETRY_VIRTUALENVS_CREATE = false
+POETRY_VIRTUALENVS_IN_PROJECT = true
 
 .PHONY: all
 all: lint test
 
 .PHONY: clean
 clean:
-	$(WITH_PYENV) && pyenv virtualenv-delete -f $(PROJECT) || rm -rf $(VENV)
+	$(WITH_PYENV) && pyenv virtualenv-delete -f $(VENV_NAME) || rm -rf $(VENV)
+	$(WITH_PYENV) && pyenv local --unset || true
+	rm -f poetry.lock
 	find $(SRC) -type f -name *.pyc -delete
 	find $(SRC) -type d -name __pycache__ -delete
 
 $(VENV):
-	$(WITH_PYENV) && pyenv virtualenv $(PYTHON_VERSION) $(PROJECT) || $(PY) -m venv $(VENV)
+	$(WITH_PYENV) && pyenv install -s $(PYTHON_VERSION) || true
+	$(WITH_PYENV) && pyenv virtualenv $(PYTHON_VERSION) $(VENV_NAME) || python$(PYTHON_VERSION) -m venv $(VENV)
+	$(WITH_PYENV) && pyenv local $(VENV_NAME) || true
 	@touch $@
 
 $(VENV)/.stamps/init-poetry: $(VENV)
-	$(BIN)/$(PY) -m pip install --upgrade pip setuptools poetry poetry-dynamic-versioning[plugin]
-	$(BIN)/$(PY) -m poetry config virtualenvs.in-project true
-	$(BIN)/$(PY) -m poetry config virtualenvs.prompt venv
-	mkdir -p $(VENV)/.stamps
+	$(PYTHON) -m pip install --upgrade pip setuptools poetry poetry-dynamic-versioning[plugin]
+	@mkdir -p $(VENV)/.stamps
 	@touch $@
 
-$(VENV)/.stamps/install: pyproject.toml
-	$(BIN)/$(PY) -m poetry install
+$(VENV)/.stamps/install: $(VENV)/.stamps/init-poetry pyproject.toml
+	$(PYTHON) -m poetry install --with docs
+	@mkdir -p $(VENV)/.stamps
 	@touch $@
 
 .PHONY: install
 install: $(VENV)/.stamps/install
 
 .PHONY: init
-init: $(VENV)/.stamps/init-poetry install
+init: install
 
 .PHONY: lint
 lint: init
-	$(BIN)/$(PY) -m ruff check
-	$(BIN)/$(PY) -m mypy $(SRC)/ --explicit-package-bases
-	$(BIN)/$(PY) -m mypy $(TESTS)/
+	$(PYTHON) -m ruff check
+	$(PYTHON) -m mypy $(SRC)/ --explicit-package-bases
+	$(PYTHON) -m mypy $(TESTS)/
 
 .PHONY: test
 test: init
-	$(BIN)/$(PY) -m pytest -rs $(TESTS)/ --ignore=$(TESTS)/smoke
+	$(PYTHON) -m pytest -rs $(TESTS)/ --ignore=$(TESTS)/smoke
 
 .PHONY: docs
 docs: $(VENV)
-	$(BIN)/$(PY) -m mkdocs build
+	$(PYTHON) -m mkdocs build
 
 .PHONY: docs-serve
 docs-serve: $(VENV)
-	$(BIN)/$(PY) -m mkdocs serve
+	$(PYTHON) -m mkdocs serve
 
 .PHONY: build
 build: $(VENV) docs
-	$(BIN)/$(PY) -m poetry build
+	$(PYTHON) -m poetry build
 
 GIT_HASH_SHORT ?= $(shell git rev-parse --short HEAD)
 GIT_BRANCH ?= $(shell git rev-parse --abbrev-ref HEAD | tr / -)
@@ -79,7 +88,7 @@ DOCKER_IMAGE ?= plugboard
 DOCKER_REGISTRY_IMAGE=${DOCKER_REGISTRY}/plugboard-dev/${DOCKER_IMAGE}
 
 requirements.txt: $(VENV) pyproject.toml
-	$(BIN)/$(PY) -m poetry export -f requirements.txt -o requirements.txt --without-hashes
+	$(PYTHON) -m poetry export -f requirements.txt -o requirements.txt --without-hashes
 	@touch $@
 
 .PHONY: docker-build
