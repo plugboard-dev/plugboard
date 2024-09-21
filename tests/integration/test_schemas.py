@@ -22,3 +22,5 @@ def test_load(config: dict) -> None:
     assert len(process_spec.args.components or []) == 2
     # Must be one connector defined
     assert len(process_spec.args.connectors or []) == 1
+    # Must default to AsyncioChannelBuilder
+    assert process_spec.channel_builder.type == "plugboard.connector.AsyncioChannelBuilder"

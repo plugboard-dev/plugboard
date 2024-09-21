@@ -35,5 +35,5 @@ class ProcessSpec(BaseModel):
 
     args: ProcessArgsSpec
     channel_builder: ChannelBuilderSpec = ChannelBuilderSpec(
-        type="plugboard.connector.AsyncChannelBuilder"
+        type="plugboard.connector.AsyncioChannelBuilder"
     )
