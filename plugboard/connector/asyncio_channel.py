@@ -36,4 +36,4 @@ class AsyncioChannelBuilder(ChannelBuilder):
     channel_cls = AsyncioChannel
 
 
-ChannelBuilderRegistry.register(AsyncioChannel, AsyncioChannelBuilder)
+ChannelBuilderRegistry.register(AsyncioChannelBuilder, AsyncioChannel)
