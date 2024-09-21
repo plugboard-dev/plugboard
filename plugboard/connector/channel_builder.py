@@ -9,10 +9,15 @@ from plugboard.connector.channel import Channel
 class ChannelBuilder(ABC):
     """Base class for `ChannelBuilder` objects."""
 
+    @property
     @abstractmethod
+    def channel_cls(self) -> type[Channel]:
+        """Returns the `Channel` class that the builder builds."""
+        pass
+
     async def build(self, *args: _t.Any, **kwargs: _t.Any) -> Channel:
         """Builds a `Channel` object."""
-        pass
+        return self.channel_cls(*args, **kwargs)
 
 
 class ChannelBuilderRegistry:

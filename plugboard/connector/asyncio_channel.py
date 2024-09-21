@@ -33,11 +33,7 @@ class AsyncioChannel(Channel):
 class AsyncioChannelBuilder(ChannelBuilder):
     """`AsyncioChannelBuilder` builds `AsyncioChannel` objects."""
 
-    async def build(
-        self, *args: _t.Any, maxsize: int = CHAN_MAXSIZE, **kwargs: _t.Any
-    ) -> AsyncioChannel:  # noqa: D417
-        """Builds an `AsyncioChannel` object."""
-        return AsyncioChannel(*args, maxsize=maxsize, **kwargs)
+    channel_cls = AsyncioChannel
 
 
 ChannelBuilderRegistry.register(AsyncioChannel, AsyncioChannelBuilder)
