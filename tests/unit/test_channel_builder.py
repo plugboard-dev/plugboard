@@ -1,6 +1,8 @@
 """Unit tests for the `ChannelBuilder` and `ChannelBuilderRegistry` classes."""
 # ruff: noqa: D101,D102,D103
 
+import typing as _t
+
 import pytest
 
 from plugboard.connector.channel import Channel
@@ -8,15 +10,15 @@ from plugboard.connector.channel_builder import ChannelBuilder, ChannelBuilderRe
 
 
 class MyChannel(Channel):
-    def __init__(self, a: int, **kwargs) -> None:
+    def __init__(self, a: int, **kwargs: dict[str, _t.Any]) -> None:
         self.a = a
         self.kwargs = kwargs
 
     async def send(self, msg: int) -> None:
-        pass
+        return
 
     async def recv(self) -> int:
-        pass
+        return 0
 
 
 class MyChannelBuilder(ChannelBuilder):
