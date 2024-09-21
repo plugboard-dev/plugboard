@@ -1,4 +1,4 @@
-"""Integration tests for the `Component` and `ComponentRegistry`."""
+"""Unit tests of the `ComponentRegistry`."""
 # ruff: noqa: D101,D102,D103
 
 import pytest
@@ -7,8 +7,7 @@ from plugboard.component import ComponentRegistry
 from tests.integration.test_process_with_components_run import A, B
 
 
-@pytest.mark.anyio
-async def test_component_registry() -> None:
+def test_component_registry() -> None:
     """Tests the `ComponentRegistry`."""
     # Must load components from string name
     a = ComponentRegistry.get_class("tests.integration.test_process_with_components_run.A")
