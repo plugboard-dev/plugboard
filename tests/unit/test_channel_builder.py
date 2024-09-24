@@ -28,7 +28,6 @@ class MyChannelBuilder(ChannelBuilder):
 def test_channel_builder_registry() -> None:
     """Tests the `ChannelBuilderRegistry`."""
     # Register the test channel builder
-    ChannelBuilderRegistry.add(MyChannelBuilder, MyChannel)
     assert ChannelBuilderRegistry.get(MyChannel) == MyChannelBuilder
 
 
