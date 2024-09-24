@@ -3,14 +3,10 @@
 from abc import ABC
 import typing as _t
 
+from plugboard.exceptions import RegistryError
+
 
 T = _t.TypeVar("T")
-
-
-class RegistryError(Exception):
-    """Raised when an unknown class is requested from the ClassRegistry."""
-
-    pass
 
 
 class ClassRegistry(ABC, _t.Generic[T]):

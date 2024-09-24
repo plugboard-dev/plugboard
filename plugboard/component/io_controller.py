@@ -3,17 +3,12 @@
 import asyncio
 import typing as _t
 
-from plugboard.connector import Channel, ChannelClosedError, Connector
+from plugboard.connector import Channel, Connector
+from plugboard.exceptions import ChannelClosedError, IOStreamClosedError
 from plugboard.schemas.io import IODirection
 
 
 IO_NS_UNSET = "__UNSET__"
-
-
-class IOStreamClosedError(Exception):
-    """`IOStreamClosedError` is raised when an IO stream is closed."""
-
-    pass
 
 
 class IOController:

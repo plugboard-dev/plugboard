@@ -3,7 +3,8 @@
 
 import pytest
 
-from plugboard.utils import ClassRegistry, RegistryError
+from plugboard.exceptions import RegistryError
+from plugboard.utils import ClassRegistry
 
 
 class BaseA:

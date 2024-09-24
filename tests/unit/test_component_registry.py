@@ -4,7 +4,7 @@
 import pytest
 
 from plugboard.component import ComponentRegistry
-from plugboard.utils import RegistryError
+from plugboard.exceptions import RegistryError
 from tests.integration.test_process_with_components_run import A, B
 
 
