@@ -7,7 +7,7 @@ import typing as _t
 T = _t.TypeVar("T")
 
 
-class Registry(ABC, _t.Generic[T]):
+class ClassRegistry(ABC, _t.Generic[T]):
     """A registry of Plugboard classes."""
 
     classes: _t.Dict[_t.Hashable, type[T]]
@@ -17,8 +17,8 @@ class Registry(ABC, _t.Generic[T]):
         cls.classes = {}
 
     @classmethod
-    def register(cls, plugboard_class: type[T], key: _t.Optional[_t.Hashable] = None) -> None:
-        """Register a class.
+    def add(cls, plugboard_class: type[T], key: _t.Optional[_t.Hashable] = None) -> None:
+        """Add a class to the registry.
 
         Args:
             plugboard_class: The class to register.
@@ -28,7 +28,7 @@ class Registry(ABC, _t.Generic[T]):
         cls.classes[key] = plugboard_class
 
     @classmethod
-    def get_class(cls, plugboard_class: _t.Hashable) -> type[T]:
+    def get(cls, plugboard_class: _t.Hashable) -> type[T]:
         """Returns a class from the registry.
 
         Args:
@@ -40,7 +40,7 @@ class Registry(ABC, _t.Generic[T]):
         return cls.classes[plugboard_class]
 
     @classmethod
-    def build_object(cls, plugboard_class: _t.Hashable, *args: _t.Any, **kwargs: _t.Any) -> T:
+    def build(cls, plugboard_class: _t.Hashable, *args: _t.Any, **kwargs: _t.Any) -> T:
         """Builds a Plugboard object.
 
         Args:

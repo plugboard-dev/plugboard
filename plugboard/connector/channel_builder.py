@@ -4,7 +4,7 @@ from abc import ABC
 import typing as _t
 
 from plugboard.connector.channel import Channel
-from plugboard.utils.registry import Registry
+from plugboard.utils.registry import ClassRegistry
 
 
 class ChannelBuilder(ABC):
@@ -17,7 +17,7 @@ class ChannelBuilder(ABC):
         return self.channel_cls(*args, **kwargs)
 
 
-class ChannelBuilderRegistry(Registry[ChannelBuilder]):
+class ChannelBuilderRegistry(ClassRegistry[ChannelBuilder]):
     """A registry of known `ChannelBuilder` classes."""
 
     pass

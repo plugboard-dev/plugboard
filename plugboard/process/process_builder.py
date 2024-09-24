@@ -34,7 +34,7 @@ class ProcessBuilder:
 
         return Process(
             components=[
-                ComponentRegistry.build_object(c.type, **dict(c.args)) for c in spec.args.components
+                ComponentRegistry.build(c.type, **dict(c.args)) for c in spec.args.components
             ],
             connectors=[
                 Connector(cs, channel_builder.build(**dict(spec.channel_builder.args)))

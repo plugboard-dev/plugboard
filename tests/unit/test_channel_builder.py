@@ -28,8 +28,8 @@ class MyChannelBuilder(ChannelBuilder):
 def test_channel_builder_registry() -> None:
     """Tests the `ChannelBuilderRegistry`."""
     # Register the test channel builder
-    ChannelBuilderRegistry.register(MyChannelBuilder, MyChannel)
-    assert ChannelBuilderRegistry.get_class(MyChannel) == MyChannelBuilder
+    ChannelBuilderRegistry.add(MyChannelBuilder, MyChannel)
+    assert ChannelBuilderRegistry.get(MyChannel) == MyChannelBuilder
 
 
 @pytest.mark.anyio

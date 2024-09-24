@@ -3,7 +3,7 @@
 
 import pytest
 
-from plugboard.utils import Registry
+from plugboard.utils import ClassRegistry
 
 
 class BaseA:
@@ -30,30 +30,30 @@ class B(BaseB):
 def test_registry() -> None:
     """Tests the `Registry`."""
 
-    class RegistryA(Registry[BaseA]):
+    class RegistryA(ClassRegistry[BaseA]):
         pass
 
-    class RegistryB(Registry[BaseB]):
+    class RegistryB(ClassRegistry[BaseB]):
         pass
 
-    RegistryA.register(A1, "a1")
-    RegistryA.register(A2, "a2")
-    RegistryB.register(B, B)
+    RegistryA.add(A1, "a1")
+    RegistryA.add(A2, "a2")
+    RegistryB.add(B, B)
 
     # Check that the classes were registered correctly
-    assert RegistryA.get_class("a1") == A1
-    assert RegistryA.get_class("a2") == A2
-    assert RegistryB.get_class(B) == B
+    assert RegistryA.get("a1") == A1
+    assert RegistryA.get("a2") == A2
+    assert RegistryB.get(B) == B
     with pytest.raises(KeyError):
-        RegistryA.get_class(B)
+        RegistryA.get(B)
 
     # Check that classes can be built
-    a1 = RegistryA.build_object("a1", x="one")
+    a1 = RegistryA.build("a1", x="one")
     assert isinstance(a1, A1)
     assert a1.x == "one"
-    a2 = RegistryA.build_object("a2", x="two")
+    a2 = RegistryA.build("a2", x="two")
     assert isinstance(a2, A2)
     assert a2.x == "two"
-    assert isinstance(RegistryB.build_object(B), B)
+    assert isinstance(RegistryB.build(B), B)
     with pytest.raises(KeyError):
-        RegistryA.build_object(B)
+        RegistryA.build(B)

@@ -10,7 +10,7 @@ from plugboard.component.io_controller import (
     IOStreamClosedError,
 )
 from plugboard.state import StateBackend
-from plugboard.utils import AsDictMixin, Registry
+from plugboard.utils import AsDictMixin, ClassRegistry
 
 
 class Component(ABC, AsDictMixin):
@@ -38,7 +38,7 @@ class Component(ABC, AsDictMixin):
 
     def __init_subclass__(cls, *args: _t.Any, **kwargs: _t.Any) -> None:
         super().__init_subclass__(*args, **kwargs)
-        ComponentRegistry.register(cls)
+        ComponentRegistry.add(cls)
 
     async def init(self) -> None:
         """Performs component initialisation actions."""
@@ -86,7 +86,7 @@ class Component(ABC, AsDictMixin):
         }
 
 
-class ComponentRegistry(Registry[Component]):
+class ComponentRegistry(ClassRegistry[Component]):
     """A registry of all `Component` types."""
 
     pass
