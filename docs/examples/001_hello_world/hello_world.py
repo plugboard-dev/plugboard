@@ -6,10 +6,11 @@ import typing as _t
 
 import aiofiles
 
-from plugboard import Component
-from plugboard.connector import ConnectorSpec
-from plugboard.io import IOController as IO
-from plugboard.process import ProcessBuilder
+from plugboard.component import Component
+from plugboard.component import IOController as IO
+from plugboard.connector import AsyncioChannel, Connector
+from plugboard.process import Process
+from plugboard.schemas import ConnectorSpec
 
 
 class A(Component):
@@ -44,11 +45,15 @@ class B(Component):
 
 async def main() -> None:
     # --8<-- [start:main]
-    process = ProcessBuilder(
+    process = Process(
         components=[A(name="a", iters=10), B(name="b", path="./b.txt")],
-        connector_specs=[ConnectorSpec(source="a.out_1", target="b.in_1")],
+        connectors=[
+            Connector(
+                spec=ConnectorSpec(source="comp_a.out_1", target="comp_b.in_1"),
+                channel=AsyncioChannel(),
+            )
+        ],
     )
-
     await process.init()
     await process.run()
     # --8<-- [end:main]
