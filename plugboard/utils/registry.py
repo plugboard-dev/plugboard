@@ -13,6 +13,7 @@ class ClassRegistry(ABC, _t.Generic[T]):
     """A registry of Plugboard classes."""
 
     _classes: _t.Dict[_t.Hashable, type[T]]
+    _duplicate_aliases = set()
 
     @classmethod
     def __init_subclass__(cls) -> None:
@@ -27,7 +28,15 @@ class ClassRegistry(ABC, _t.Generic[T]):
             key: Optional; The key to register the class under.
         """
         key = key or f"{plugboard_class.__module__}.{plugboard_class.__qualname__}"
+        alias = plugboard_class.__qualname__
+        if alias in cls._classes.keys():
+            # Remove this alias to avoid ambiguity
+            cls._duplicate_aliases.add(alias)
+            cls._classes.pop(alias)
+
         cls._classes[key] = plugboard_class
+        if alias not in cls._duplicate_aliases and alias != key:
+            cls._classes[alias] = plugboard_class
 
     @classmethod
     def get(cls, plugboard_class: _t.Hashable) -> type[T]:

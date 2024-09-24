@@ -29,7 +29,7 @@ class B(BaseB):
 
 
 def test_registry() -> None:
-    """Tests the `Registry`."""
+    """Tests the `ClassRegistry`."""
 
     class RegistryA(ClassRegistry[BaseA]):
         pass
@@ -58,3 +58,31 @@ def test_registry() -> None:
     assert isinstance(RegistryB.build(B), B)
     with pytest.raises(RegistryError):
         RegistryA.build(B)
+
+
+def test_registry_default_key() -> None:
+    """Tests the default keys in the `ClassRegistry`."""
+
+    class RegistryA(ClassRegistry[BaseA]):
+        pass
+
+    RegistryA.add(A1)
+    RegistryA.add(A2)
+    # Full module path and class name is used as the key
+    assert RegistryA.get("tests.unit.test_utils.A1") == A1
+    assert RegistryA.get("tests.unit.test_utils.A2") == A2
+    # Class name is also an alias key
+    assert RegistryA.get("A1") == A1
+    assert RegistryA.get("A2") == A2
+
+    # Adding a class again will remove the alias key
+    RegistryA.add(A1)
+    with pytest.raises(RegistryError):
+        RegistryA.get("A1")
+    assert RegistryA.get("tests.unit.test_utils.A1") == A1
+    assert RegistryA.get("A2") == A2
+
+    # Adding the class again will still not add the alias key
+    RegistryA.add(A1)
+    with pytest.raises(RegistryError):
+        RegistryA.get("A1")
