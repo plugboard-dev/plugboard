@@ -1,6 +1,6 @@
 """Provides `ChannelBuilderRegistry` to build `Connector` objects."""
 
-from abc import ABC, abstractmethod
+from abc import ABC
 import typing as _t
 
 from plugboard.connector.channel import Channel
@@ -10,11 +10,7 @@ from plugboard.utils.registry import Registry
 class ChannelBuilder(ABC):
     """Base class for `ChannelBuilder` objects."""
 
-    @property
-    @abstractmethod
-    def channel_cls(self) -> type[Channel]:
-        """Returns the `Channel` class that the builder builds."""
-        pass
+    channel_cls: type[Channel]
 
     def build(self, *args: _t.Any, **kwargs: _t.Any) -> Channel:
         """Builds a `Channel` object."""
