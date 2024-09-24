@@ -7,11 +7,30 @@ from plugboard.component.component import Component, ComponentRegistry
 from plugboard.connector.channel_builder import ChannelBuilder
 from plugboard.connector.connector import Connector
 from plugboard.process.process import Process
-from plugboard.schemas.process import ProcessSpec
+from plugboard.schemas import ProcessSpec
 
 
 class ProcessBuilder:
     """Builds `Process` objects."""
+
+    @classmethod
+    def _build_components(cls, spec: ProcessSpec) -> list[Component]:
+        for c in spec.args.components:
+            component_class: _t.Optional[_t.Any] = locate(c.type)
+            if not component_class or not issubclass(component_class, Component):
+                raise ValueError(f"Component class {c.type} not found.")
+        return [ComponentRegistry.build(c.type, **dict(c.args)) for c in spec.args.components]
+
+    @classmethod
+    def _build_connectors(cls, spec: ProcessSpec) -> list[Connector]:
+        channel_builder_class: _t.Optional[_t.Any] = locate(spec.channel_builder.type)
+        if not channel_builder_class or not issubclass(channel_builder_class, ChannelBuilder):
+            raise ValueError(f"ChannelBuilder class {spec.channel_builder.type} not found")
+        channel_builder = channel_builder_class()
+        return [
+            Connector(cs, channel_builder.build(**dict(spec.channel_builder.args)))
+            for cs in spec.args.connectors
+        ]
 
     @classmethod
     def build(cls, spec: ProcessSpec) -> Process:
@@ -23,22 +42,9 @@ class ProcessBuilder:
         Returns:
             A `Process` object.
         """
-        for c in spec.args.components or []:
-            component_class: _t.Optional[_t.Any] = locate(c.type)
-            if not component_class or not issubclass(component_class, Component):
-                raise ValueError(f"Component class {c.type} not found.")
-        channel_builder_class: _t.Optional[_t.Any] = locate(spec.channel_builder.type)
-        if not channel_builder_class or not issubclass(channel_builder_class, ChannelBuilder):
-            raise ValueError(f"ChannelBuilder class {spec.channel_builder.type} not found")
-        channel_builder = channel_builder_class()
+        components = cls._build_components(spec)
+        connectors = cls._build_connectors(spec)
 
         return Process(
-            components=[
-                ComponentRegistry.build(c.type, **dict(c.args)) for c in spec.args.components
-            ],
-            connectors=[
-                Connector(cs, channel_builder.build(**dict(spec.channel_builder.args)))
-                for cs in spec.args.connectors
-            ],
-            parameters=spec.args.parameters,
+            components=components, connectors=connectors, parameters=spec.args.parameters
         )
