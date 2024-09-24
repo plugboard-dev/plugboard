@@ -20,6 +20,7 @@ authors = [
 
 [tool.poetry.dependencies]
 python = ">=3.12,<4.0"
+annotated-types = "^0.7.0"
 msgspec = {extras = ["yaml"], version = "^0.18.6"}
 pydantic = "^2.8.2"
 
