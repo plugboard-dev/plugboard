@@ -3,7 +3,7 @@
 
 import pytest
 
-from plugboard.utils import ClassRegistry
+from plugboard.utils import ClassRegistry, RegistryError
 
 
 class BaseA:
@@ -44,7 +44,7 @@ def test_registry() -> None:
     assert RegistryA.get("a1") == A1
     assert RegistryA.get("a2") == A2
     assert RegistryB.get(B) == B
-    with pytest.raises(KeyError):
+    with pytest.raises(RegistryError):
         RegistryA.get(B)
 
     # Check that classes can be built
@@ -55,5 +55,5 @@ def test_registry() -> None:
     assert isinstance(a2, A2)
     assert a2.x == "two"
     assert isinstance(RegistryB.build(B), B)
-    with pytest.raises(KeyError):
+    with pytest.raises(RegistryError):
         RegistryA.build(B)

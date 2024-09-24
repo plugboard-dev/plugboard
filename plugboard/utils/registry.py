@@ -7,6 +7,12 @@ import typing as _t
 T = _t.TypeVar("T")
 
 
+class RegistryError(Exception):
+    """Raised when an unknown class is requested from the ClassRegistry."""
+
+    pass
+
+
 class ClassRegistry(ABC, _t.Generic[T]):
     """A registry of Plugboard classes."""
 
@@ -37,7 +43,10 @@ class ClassRegistry(ABC, _t.Generic[T]):
         Returns:
             The class.
         """
-        return cls._classes[plugboard_class]
+        try:
+            return cls._classes[plugboard_class]
+        except KeyError as e:
+            raise RegistryError(f"Unrecognised class: {plugboard_class}") from e
 
     @classmethod
     def build(cls, plugboard_class: _t.Hashable, *args: _t.Any, **kwargs: _t.Any) -> T:
@@ -51,4 +60,4 @@ class ClassRegistry(ABC, _t.Generic[T]):
         Returns:
             An object of the required class.
         """
-        return cls._classes[plugboard_class](*args, **kwargs)
+        return cls.get(plugboard_class)(*args, **kwargs)
