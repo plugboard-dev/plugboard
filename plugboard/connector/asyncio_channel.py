@@ -4,7 +4,7 @@ from asyncio import Queue
 import typing as _t
 
 from plugboard.connector.channel import CHAN_MAXSIZE, Channel
-from plugboard.connector.channel_builder import ChannelBuilder, ChannelBuilderRegistry
+from plugboard.connector.channel_builder import ChannelBuilder
 
 
 class AsyncioChannel(Channel):
@@ -34,6 +34,3 @@ class AsyncioChannelBuilder(ChannelBuilder):
     """`AsyncioChannelBuilder` builds `AsyncioChannel` objects."""
 
     channel_cls = AsyncioChannel
-
-
-ChannelBuilderRegistry.add(AsyncioChannelBuilder, AsyncioChannel)
