@@ -1,7 +1,9 @@
 """Provides `ProcessSpec` class."""
 
 import typing as _t
+from typing import Annotated
 
+from annotated_types import Len
 from pydantic import BaseModel
 
 from .component import ComponentSpec
@@ -19,7 +21,7 @@ class ProcessArgsSpec(BaseModel, extra="allow"):
         state: Optional; Specifies the `StateBackend` used for the `Process`.
     """
 
-    components: list[ComponentSpec] = []
+    components: Annotated[list[ComponentSpec], Len(min_length=1)]
     connectors: list[ConnectorSpec] = []
     parameters: dict = {}
     state: _t.Optional[StateBackendSpec] = None
