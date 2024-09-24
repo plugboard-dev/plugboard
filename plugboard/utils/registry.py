@@ -13,7 +13,7 @@ class ClassRegistry(ABC, _t.Generic[T]):
     """A registry of Plugboard classes."""
 
     _classes: _t.Dict[_t.Hashable, type[T]]
-    _duplicate_aliases = set()
+    _duplicate_aliases: set[str] = set()
 
     @classmethod
     def __init_subclass__(cls) -> None:
