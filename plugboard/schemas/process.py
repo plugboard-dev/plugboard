@@ -2,10 +2,11 @@
 
 import typing as _t
 
+from annotated_types import Len
 from pydantic import BaseModel
 
 from .component import ComponentSpec
-from .connector import ConnectorSpec
+from .connector import ChannelBuilderSpec, ConnectorSpec
 from .state import StateBackendSpec
 
 
@@ -15,13 +16,13 @@ class ProcessArgsSpec(BaseModel, extra="allow"):
     Attributes:
         components: Specifies each `Component` in the `Process`.
         connectors: Specifies the connections between each `Component`.
-        parameters: Optional; Parameters for the `Process`.
+        parameters: Parameters for the `Process`.
         state: Optional; Specifies the `StateBackend` used for the `Process`.
     """
 
-    components: _t.Optional[list[ComponentSpec]] = None
-    connectors: _t.Optional[list[ConnectorSpec]] = None
-    parameters: _t.Optional[dict] = None
+    components: _t.Annotated[list[ComponentSpec], Len(min_length=1)]
+    connectors: list[ConnectorSpec] = []
+    parameters: dict = {}
     state: _t.Optional[StateBackendSpec] = None
 
 
@@ -30,6 +31,10 @@ class ProcessSpec(BaseModel):
 
     Attributes:
         args: The arguments for the `Process`.
+        channel_builder: The `ChannelBuilder` to use for the `Process`.
     """
 
     args: ProcessArgsSpec
+    channel_builder: ChannelBuilderSpec = ChannelBuilderSpec(
+        type="plugboard.connector.AsyncioChannelBuilder"
+    )

@@ -83,23 +83,23 @@ class ConnectorSpec(BaseModel):
         return self.id
 
 
-class ConnectorBuilderArgsSpec(BaseModel, extra="allow"):
-    """Specification of the [`Connector`][plugboard.connector.Connector] constructor arguments.
+class ChannelBuilderArgsSpec(BaseModel, extra="allow"):
+    """Specification of the [`Channel`][plugboard.connector.Channel] constructor arguments.
 
     Attributes:
-        parameters: Optional; Parameters for the `Connector`.
+        parameters: Parameters for the `Channel`.
     """
 
-    parameters: _t.Optional[dict] = None
+    parameters: dict = {}
 
 
-class ConnectorBuilderSpec(BaseModel):
-    """Specification of a `ConnectorBuilder`.
+class ChannelBuilderSpec(BaseModel):
+    """Specification of a `ChannelBuilder`.
 
     Attributes:
-        type: The type of the `ConnectorBuilder`.
-        args: The arguments for the `ConnectorBuilder`.
+        type: The type of the `ChannelBuilder`.
+        args: Optional; The arguments for the `ChannelBuilder`.
     """
 
     type: str
-    args: ConnectorBuilderArgsSpec
+    args: ChannelBuilderArgsSpec = ChannelBuilderArgsSpec()

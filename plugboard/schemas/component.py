@@ -1,7 +1,5 @@
 """Provides `ComponentSpec` class."""
 
-import typing as _t
-
 from pydantic import BaseModel
 
 
@@ -10,15 +8,15 @@ class ComponentArgsSpec(BaseModel, extra="allow"):
 
     Attributes:
         name: The name of the `Component`.
-        initial_values: Optional; Initial values for the `Component`.
-        parameters: Optional; Parameters for the `Component`.
-        constraints: Optional; Constraints for the `Component`.
+        initial_values: Initial values for the `Component`.
+        parameters: Parameters for the `Component`.
+        constraints: Constraints for the `Component`.
     """
 
     name: str
-    initial_values: _t.Optional[dict] = None
-    parameters: _t.Optional[dict] = None
-    constraints: _t.Optional[dict] = None
+    initial_values: dict = {}
+    parameters: dict = {}
+    constraints: dict = {}
 
 
 class ComponentSpec(BaseModel):

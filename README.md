@@ -32,7 +32,7 @@ A model is made up of one or more components, though Plugboard really shines whe
 import typing as _t
 import aiofiles
 from plugboard.component import Component
-from plugboard.io import IOController as IO
+from plugboard.component import IOController as IO
 
 class A(Component):
     io = IO(outputs=["out_1"])
@@ -63,15 +63,18 @@ class B(Component):
 Now we take these components, connect them up as a `Process`, and fire off the model. Calling `Process.run` triggers all the components to start iterating through all their inputs until a termination condition is reached. Simulations proceed in an event-driven manner: when inputs arrive, the components are triggered to step forward in time. The framework handles the details of the inter-component communication, you just need to specify the logic of your components, and the connections between them.
 ```python
 import asyncio
-from plugboard.process import ProcessBuilder
-from pluboard.connector import ConnectorSpec
+from plugboard.connector import AsyncioChannel, Connector
+from plugboard.process import Process
+from plugboard.schemas import ConnectorSpec
 
-process = ProcessBuilder(
+process = Process(
     components=[
         A(name="a", iters=10), B(name="b", path="./b.txt")
     ],
-    connector_specs=[
-        ConnectorSpec(source="a.out_1", target="b.in_1")
+    connectors=[
+        Connector(
+            spec=ConnectorSpec(source="comp_a.out_1", target="comp_b.in_1"), channel=AsyncioChannel()
+        )
     ]
 )
 

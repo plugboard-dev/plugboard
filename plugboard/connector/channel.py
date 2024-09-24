@@ -4,15 +4,11 @@ from abc import ABC, abstractmethod
 from functools import wraps
 import typing as _t
 
+from plugboard.exceptions import ChannelClosedError
+
 
 CHAN_MAXSIZE = 0  # Max number of items in the channel. Value <= 0 implies unlimited.
 CHAN_CLOSE_MSG = "__PLUGBOARD_CHAN_CLOSE_MSG__"
-
-
-class ChannelClosedError(Exception):
-    """Raised when a closed channel is accessed."""
-
-    pass
 
 
 class Channel(ABC):

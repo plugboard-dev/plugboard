@@ -4,9 +4,13 @@ from abc import ABC, abstractmethod
 from functools import wraps
 import typing as _t
 
-from plugboard.component.io_controller import IOController, IODirection, IOStreamClosedError
+from plugboard.component.io_controller import (
+    IOController,
+    IODirection,
+    IOStreamClosedError,
+)
 from plugboard.state import StateBackend
-from plugboard.utils import AsDictMixin
+from plugboard.utils import AsDictMixin, ClassRegistry
 
 
 class Component(ABC, AsDictMixin):
@@ -31,6 +35,10 @@ class Component(ABC, AsDictMixin):
             inputs=type(self).io.inputs, outputs=type(self).io.outputs, namespace=name
         )
         self.step = self._handle_step_wrapper()  # type: ignore
+
+    def __init_subclass__(cls, *args: _t.Any, **kwargs: _t.Any) -> None:
+        super().__init_subclass__(*args, **kwargs)
+        ComponentRegistry.add(cls)
 
     async def init(self) -> None:
         """Performs component initialisation actions."""
@@ -76,3 +84,9 @@ class Component(ABC, AsDictMixin):
         return {
             **self.io.data,
         }
+
+
+class ComponentRegistry(ClassRegistry[Component]):
+    """A registry of all `Component` types."""
+
+    pass

@@ -19,6 +19,8 @@ def test_load(config: dict) -> None:
     spec = ConfigSpec.model_validate(config)
     process_spec = spec.plugboard.process
     # Must be two components defined
-    assert len(process_spec.args.components or []) == 2
+    assert len(process_spec.args.components) == 2
     # Must be one connector defined
-    assert len(process_spec.args.connectors or []) == 1
+    assert len(process_spec.args.connectors) == 1
+    # Must default to AsyncioChannelBuilder
+    assert process_spec.channel_builder.type == "plugboard.connector.AsyncioChannelBuilder"
