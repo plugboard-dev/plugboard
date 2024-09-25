@@ -22,6 +22,8 @@ authors = [
 python = ">=3.12,<4.0"
 annotated-types = "^0.7.0"
 msgspec = {extras = ["yaml"], version = "^0.18.6"}
+pandas = "^1.0.0"
+polars = "^1.8.0"
 pydantic = "^2.8.2"
 
 [tool.poetry.group.dev.dependencies]
