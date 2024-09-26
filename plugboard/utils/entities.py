@@ -17,7 +17,7 @@ class EntityIdGen:
         Returns:
             str: The generated id.
         """
-        return entity.id_prefix() + gen_rand_str()
+        return entity.id_prefix + gen_rand_str()
 
     @classmethod
     def job_id(cls) -> str:

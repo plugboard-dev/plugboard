@@ -30,4 +30,4 @@ class StateBackendSpec(BaseModel):
 class StateSchema(BaseModel):
     """Schema for Plugboard state data."""
 
-    job_id: str = Field(pattern=rf"{Entity.Job.id_prefix()}[a-zA-Z0-9]{{8,}}")
+    job_id: str = Field(pattern=Entity.Job.id_regex)
