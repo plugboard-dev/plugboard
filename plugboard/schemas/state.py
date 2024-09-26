@@ -1,6 +1,8 @@
 """Provides `StateBackendSpec` class."""
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
+
+from plugboard.schemas.entities import Entity
 
 
 class StateBackendArgsSpec(BaseModel, extra="allow"):
@@ -23,3 +25,9 @@ class StateBackendSpec(BaseModel):
 
     type: str
     args: StateBackendArgsSpec
+
+
+class StateSchema(BaseModel):
+    """Schema for Plugboard state data."""
+
+    job_id: str = Field(pattern=rf"{Entity.Job.id_prefix()}[a-zA-Z0-9]{{8,}}")
