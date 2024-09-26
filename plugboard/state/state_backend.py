@@ -16,6 +16,8 @@ class StateBackend(ABC, AsDictMixin):
             job_id: The unique id for the job.
         """
         self._job_id = job_id or EntityIdGen.job_id()
+        if not EntityIdGen.is_job_id(self._job_id):
+            raise ValueError(f"Invalid job id: {self._job_id}")
 
     @property
     def job_id(self) -> str:

@@ -25,3 +25,6 @@ class Entity(StrEnum):
     def id_regex(self) -> str:
         """Returns regex for validating entity ids."""
         return rf"^(?P<entity>{self})" + _ENTITY_ID_SUFFIX_REGEX
+
+
+ENTITY_ID_REGEX = rf"^(?P<entity>{'|'.join([e.name for e in Entity])})" + _ENTITY_ID_SUFFIX_REGEX
