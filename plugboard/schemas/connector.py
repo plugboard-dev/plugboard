@@ -48,7 +48,8 @@ class ComponentSocket(BaseModel):
         return cls(component=component, field=field)
 
     @property
-    def id(self) -> str:  # noqa: D102
+    def id(self) -> str:
+        """Unique ID for `ComponentSocket`."""
         return f"{self.component}.{self.field}"
 
     def __str__(self) -> str:
@@ -76,7 +77,8 @@ class ConnectorSpec(BaseModel):
         return v
 
     @property
-    def id(self) -> str:  # noqa: D102
+    def id(self) -> str:
+        """Unique ID for `ConnectorSpec`."""
         return f"{self.source.id}..{self.target.id}"
 
     def __str__(self) -> str:

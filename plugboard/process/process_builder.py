@@ -61,6 +61,7 @@ class ProcessBuilder:
         return Process(
             components=components,
             connectors=connectors,
+            name=spec.args.name,
             parameters=spec.args.parameters,
             state=state,
         )

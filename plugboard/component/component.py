@@ -42,6 +42,11 @@ class Component(ABC, AsDictMixin):
             raise NotImplementedError(f"{cls.__name__} must define an `io` attribute.")
         ComponentRegistry.add(cls)
 
+    @property
+    def id(self) -> str:
+        """Unique ID for `Component`."""
+        return self.name
+
     async def init(self) -> None:
         """Performs component initialisation actions."""
         pass
