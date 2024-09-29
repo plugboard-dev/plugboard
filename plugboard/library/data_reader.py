@@ -1,4 +1,4 @@
-"""Provides components for reading and writing data to and from a DataFrame."""
+"""Provides components for reading data and feeding into a process model."""
 
 from abc import ABC, abstractmethod
 import asyncio
@@ -12,7 +12,7 @@ from plugboard.exceptions import IOStreamClosedError, NoMoreDataException
 
 
 class DataReader(Component, ABC):
-    """Reads data from a DataFrame."""
+    """Abstract base class for reading data."""
 
     def __init__(
         self,
@@ -33,7 +33,6 @@ class DataReader(Component, ABC):
         """
         super().__init__(name=name, *args, **kwargs)
         self._buffer = dict()
-        self._buffer_idx = 0
         self._chunk_size = chunk_size
         self.io = IOController(inputs=None, outputs=field_names, namespace=name)
         self._task: _t.Optional[Task] = None
