@@ -49,10 +49,6 @@ class DataWriter(Component, ABC):
         self._task = asyncio.create_task(self._save(chunk))
         self._buffer = defaultdict(deque)
 
-    async def init(self) -> None:
-        """Initialises the `DataWriter`."""
-        await self._fetch_chunk()
-
     async def step(self) -> None:
         """Takes data from inputs and saves to internal buffer."""
         for field in self.io.inputs:
