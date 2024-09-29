@@ -23,7 +23,7 @@ class ProcessArgsSpec(BaseModel, extra="allow"):
     components: _t.Annotated[list[ComponentSpec], Len(min_length=1)]
     connectors: list[ConnectorSpec] = []
     parameters: dict = {}
-    state: _t.Optional[StateBackendSpec] = None
+    state: StateBackendSpec = StateBackendSpec()
 
 
 class ProcessSpec(BaseModel):

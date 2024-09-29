@@ -8,6 +8,9 @@ from pydantic import BaseModel, Field
 from plugboard.schemas.entities import Entity
 
 
+DEFAULT_STATE_BACKEND_CLS_PATH: str = "plugboard.state.DictStateBackend"
+
+
 class StateBackendArgsSpec(BaseModel, extra="allow"):
     """Specification of the [`StateBackend`][plugboard.state.StateBackend] constructor arguments.
 
@@ -27,8 +30,8 @@ class StateBackendSpec(BaseModel):
         args: The arguments for the `StateBackend`.
     """
 
-    type: str
-    args: StateBackendArgsSpec
+    type: str = DEFAULT_STATE_BACKEND_CLS_PATH
+    args: StateBackendArgsSpec = StateBackendArgsSpec()
 
 
 class StateSchema(BaseModel):
