@@ -1,6 +1,7 @@
 """Provides `StateBackendSpec` class."""
 
 from datetime import datetime, timezone
+import typing as _t
 
 from pydantic import BaseModel, Field
 
@@ -14,6 +15,7 @@ class StateBackendArgsSpec(BaseModel, extra="allow"):
         parameters: Parameters for the `StateBackend`.
     """
 
+    job_id: _t.Optional[str] = Field(default=None, pattern=Entity.Job.id_regex)
     parameters: dict = {}
 
 
