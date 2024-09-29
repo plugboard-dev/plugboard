@@ -13,7 +13,7 @@ class DictStateBackend(StateBackend):
         self._state: dict = {}
         super().__init__(*args, **kwargs)
 
-    async def _get(self, key: str | tuple[str], value: _t.Optional[_t.Any] = None) -> _t.Any:
+    async def _get(self, key: str | tuple[str, ...], value: _t.Optional[_t.Any] = None) -> _t.Any:
         _state, _key = self._state, key
         if isinstance(key, tuple):
             for k in key[:-1]:  # type: str
@@ -23,7 +23,7 @@ class DictStateBackend(StateBackend):
             _key = key[-1]
         return _state.get(_key, value)
 
-    async def _set(self, key: str | tuple[str], value: _t.Any) -> None:  # noqa: A003
+    async def _set(self, key: str | tuple[str, ...], value: _t.Any) -> None:  # noqa: A003
         _state, _key = self._state, key
         if isinstance(key, tuple):
             for k in key[:-1]:  # type: str

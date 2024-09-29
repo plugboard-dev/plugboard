@@ -42,12 +42,12 @@ class StateBackend(ABC, AsDictMixin):
         loop.run_until_complete(self._set("metadata", _metadata))
 
     @abstractmethod
-    async def _get(self, key: str | tuple[str], value: _t.Optional[_t.Any] = None) -> _t.Any:
+    async def _get(self, key: str | tuple[str, ...], value: _t.Optional[_t.Any] = None) -> _t.Any:
         """Returns a value from the state."""
         pass
 
     @abstractmethod
-    async def _set(self, key: str | tuple[str], value: _t.Any) -> None:
+    async def _set(self, key: str | tuple[str, ...], value: _t.Any) -> None:
         """Sets a value in the state."""
         pass
 
