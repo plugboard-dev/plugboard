@@ -17,11 +17,12 @@ if _t.TYPE_CHECKING:
 class StateBackend(ABC, AsDictMixin):
     """`StateBackend` defines an interface for managing process state."""
 
-    def __init__(self, job_id: _t.Optional[str] = None):
+    def __init__(self, job_id: _t.Optional[str] = None, metadata: _t.Optional[dict] = None):
         """Instantiates `StateBackend`.
 
         Args:
             job_id: The unique id for the job.
+            metadata: Metadata key value pairs.
         """
         loop = asyncio.get_event_loop()
 
@@ -36,6 +37,9 @@ class StateBackend(ABC, AsDictMixin):
             # TODO : Retrieve information for existing state.
             _created_at = "unset"
         loop.run_until_complete(self._set("created_at", _created_at))
+
+        _metadata = metadata or dict()
+        loop.run_until_complete(self._set("metadata", _metadata))
 
     @abstractmethod
     async def _get(self, key: str | tuple[str], value: _t.Optional[_t.Any] = None) -> _t.Any:
@@ -56,6 +60,11 @@ class StateBackend(ABC, AsDictMixin):
     async def created_at(self) -> str:
         """Returns date and time of job creation."""
         return await self._get("created_at")
+
+    @property
+    async def metadata(self) -> dict:
+        """Returns metadata attached to the job."""
+        return await self._get("metadata")
 
     async def upsert_process(self, process: Process) -> None:
         """Upserts a process into the state."""
