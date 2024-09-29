@@ -6,9 +6,9 @@ import typing as _t
 import pandas as pd
 import pytest
 
-from plugboard.component.io_controller import IOController
+from plugboard.component.io_controller import IOController, IODirection
 from plugboard.exceptions import IOStreamClosedError, NoMoreDataException
-from plugboard.library import DataReader
+from plugboard.library import DataReader, DataWriter
 
 
 @pytest.fixture
@@ -45,6 +45,24 @@ class MockDataReader(DataReader):
         return {field_name: deque(s) for field_name, s in data.items()}
 
 
+class MockDataWriter(DataWriter):
+    """Mock DataWriter class for testing purposes."""
+
+    io: IOController = IOController(inputs=["x", "y", "z"], outputs=None)
+
+    def __init__(self, *args: _t.Any, **kwargs: _t.Any) -> None:
+        super().__init__(*args, **kwargs)
+        self.df = pd.DataFrame()
+        self.total_saves = 0
+
+    async def _save(self, data: pd.DataFrame) -> None:
+        self.df = pd.concat([self.df, data])
+        self.total_saves += 1
+
+    async def _adapt(self, data: dict[str, deque]) -> pd.DataFrame:
+        return pd.DataFrame(data)
+
+
 @pytest.mark.anyio
 @pytest.mark.parametrize("chunk_size", [None, 2, 10])
 @pytest.mark.parametrize("field_names", [["x", "z"], ["x", "y", "z"]])
@@ -70,3 +88,22 @@ async def test_data_reader(
     pd.testing.assert_frame_equal(df_results, df[field_names])
     # Total fetches must match number of chunks + 1 for the final empty chunk
     assert reader.total_fetches == -(len(df) // -(chunk_size or len(df))) + 1
+
+
+@pytest.mark.anyio
+@pytest.mark.parametrize("chunk_size", [None, 2, 10])
+async def test_data_writer(
+    df: pd.DataFrame,
+    chunk_size: _t.Optional[int],
+) -> None:
+    """Test the DataWriter class."""
+    writer = MockDataWriter(name="data-writer", chunk_size=chunk_size)
+    await writer.init()
+
+    for _, row in df.iterrows():
+        for field in df.columns:
+            writer.io.data[IODirection.INPUT][field] = row[field]
+        await writer.step()
+
+    await writer.io.close()
+    await writer.step()

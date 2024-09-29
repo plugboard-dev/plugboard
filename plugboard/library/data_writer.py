@@ -26,7 +26,7 @@ class DataWriter(Component, ABC):
             **kwargs: Additional keyword arguments.
         """
         super().__init__(*args, **kwargs)
-        self._buffer = defaultdict()
+        self._buffer = defaultdict(deque)
         self._chunk_size = chunk_size
         self._task: _t.Optional[Task] = None
 
@@ -54,7 +54,7 @@ class DataWriter(Component, ABC):
         for field in self.io.inputs:
             self._buffer[field].append(getattr(self, field))
 
-        if len(self._buffer[self.io.inputs[0]]) >= self._chunk_size:
+        if self._chunk_size and len(self._buffer[self.io.inputs[0]]) >= self._chunk_size:
             await self._save_chunk()
 
     async def run(self) -> None:
