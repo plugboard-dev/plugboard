@@ -26,7 +26,7 @@ class MockDataReader(DataReader):
         if self._chunk_size:
             df_chunk = self._df.iloc[self._idx : self._idx + self._chunk_size]
         else:
-            df_chunk = self._df
+            df_chunk = self._df[self._idx :]
         self._idx += len(df_chunk)
         self.total_fetches += 1
         if df_chunk.empty:

@@ -3,7 +3,7 @@
 from abc import ABC, abstractmethod
 import asyncio
 from asyncio.tasks import Task
-from collections import defaultdict, deque
+from collections import deque
 import typing as _t
 
 from plugboard.component import Component
@@ -24,7 +24,7 @@ class DataReader(Component, ABC):
     ) -> None:
         """Instantiates the DataReader."""
         super().__init__(name=name, *args, **kwargs)
-        self._buff = defaultdict(deque)
+        self._buffer = dict()
         self._buffer_idx = 0
         self._chunk_size = chunk_size
         self.io = IOController(inputs=None, outputs=field_names, namespace=name)
