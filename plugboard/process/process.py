@@ -5,7 +5,7 @@ import typing as _t
 
 from plugboard.component import Component
 from plugboard.connector import Connector
-from plugboard.state import StateBackend
+from plugboard.state import DictStateBackend, StateBackend
 from plugboard.utils import AsDictMixin
 
 
@@ -22,7 +22,7 @@ class Process(AsDictMixin):
         self.components: dict[str, Component] = {c.name: c for c in components}
         self.connectors: list[Connector] = list(connectors)
         self.parameters: dict = parameters or {}
-        self.state: StateBackend = state or StateBackend()
+        self.state: StateBackend = state or DictStateBackend()
         self._connect_components()
 
     def _connect_components(self) -> None:
