@@ -68,28 +68,40 @@ class StateBackend(ABC, AsDictMixin):
 
     async def upsert_process(self, process: Process) -> None:
         """Upserts a process into the state."""
-        pass
+        await self._set(("process", process.id), process.dict())
 
     async def get_process(self, process_id: str) -> dict:
         """Returns a process from the state."""
-        return {}
+        return await self._get(("process", process_id))
 
     async def upsert_component(
         self, component: Component, process_id: _t.Optional[str] = None
     ) -> None:
         """Upserts a component into the state."""
-        pass
+        _process_id = await self._resolve_process_id(process_id)
+        await self._set(("_component_process_mapping", component.id), _process_id)
+        await self._set(("component", component.id), component.dict())
 
     async def get_component(self, component_id: str) -> dict:
         """Returns a component from the state."""
-        return {}
+        return await self._get(("component", component_id))
 
     async def upsert_connector(
         self, connector: Connector, process_id: _t.Optional[str] = None
     ) -> None:
         """Upserts a connector into the state."""
-        pass
+        _process_id = await self._resolve_process_id(process_id)
+        await self._set(("_connector_process_mapping", connector.id), _process_id)
+        await self._set(("connector", connector.id), connector.dict())
 
     async def get_connector(self, connector_id: str) -> dict:
         """Returns a connector from the state."""
-        return {}
+        return await self._get(("connector", connector_id))
+
+    async def _resolve_process_id(self, process_id: _t.Optional[str]) -> str:
+        if process_id is not None:
+            return process_id
+        process_data = await self._get("process")
+        if len(process_data) != 1:
+            raise RuntimeError("Ambiguous `Process` for upsert.")
+        return list(process_data.keys())[0]
