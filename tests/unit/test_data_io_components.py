@@ -11,6 +11,14 @@ from plugboard.exceptions import IOStreamClosedError, NoMoreDataException
 from plugboard.library import DataReader
 
 
+@pytest.fixture
+def df() -> pd.DataFrame:
+    """Dataframe for testing."""
+    return pd.DataFrame(
+        {"x": [1, 2, 3, 4, 5], "y": [6, 7, 8, 9, 10], "z": ["a", "b", "c", "d", "e"]}
+    )
+
+
 class MockDataReader(DataReader):
     """Mock DataReader class for testing purposes."""
 
@@ -40,9 +48,10 @@ class MockDataReader(DataReader):
 @pytest.mark.anyio
 @pytest.mark.parametrize("chunk_size", [None, 2, 10])
 @pytest.mark.parametrize("field_names", [["x", "z"], ["x", "y", "z"]])
-async def test_data_reader(chunk_size: _t.Optional[int], field_names: list[str]) -> None:
+async def test_data_reader(
+    df: pd.DataFrame, chunk_size: _t.Optional[int], field_names: list[str]
+) -> None:
     """Test the DataReader class."""
-    df = pd.DataFrame({"x": [1, 2, 3, 4, 5], "y": [6, 7, 8, 9, 10], "z": ["a", "b", "c", "d", "e"]})
     reader = MockDataReader(
         name="data-reader", field_names=field_names, chunk_size=chunk_size, df=df
     )
