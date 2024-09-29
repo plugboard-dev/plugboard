@@ -22,7 +22,15 @@ class DataReader(Component, ABC):
         chunk_size: _t.Optional[int],
         **kwargs: _t.Any,
     ) -> None:
-        """Instantiates the DataReader."""
+        """Instantiates the `DataReader`.
+
+        Args:
+            name: The name of the `DataReader`.
+            field_names: The names of the fields to read from the DataFrame.
+            chunk_size: The size of the data chunk to read from the DataFrame.
+            *args: Additional positional arguments.
+            **kwargs: Additional keyword arguments.
+        """
         super().__init__(name=name, *args, **kwargs)
         self._buffer = dict()
         self._buffer_idx = 0
@@ -41,7 +49,7 @@ class DataReader(Component, ABC):
 
     @abstractmethod
     async def _adapt(self, data: _t.Any) -> dict[str, deque]:
-        """Adapts the fetched data into a DataFrame."""
+        """Adapts the fetched data into a `dict[str, deque]` type used as buffer."""
         pass
 
     async def _fetch_chunk(self) -> None:
@@ -59,7 +67,7 @@ class DataReader(Component, ABC):
         await self._fetch_chunk()
 
     async def step(self) -> None:
-        """Reads data from the DataFrame."""
+        """Reads data from the source and updates outputs."""
 
         def _consume_record() -> None:
             for field in self.io.outputs:
