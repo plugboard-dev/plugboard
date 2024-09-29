@@ -22,8 +22,8 @@ class DataReader(Component, ABC):
         chunk_size: _t.Optional[int],
         **kwargs: _t.Any,
     ) -> None:
-        """Instantiates the DataFrameReader."""
-        super().__init__(*args, **kwargs)
+        """Instantiates the DataReader."""
+        super().__init__(name=name, *args, **kwargs)
         self._buff = defaultdict(deque)
         self._buffer_idx = 0
         self._chunk_size = chunk_size
@@ -31,7 +31,7 @@ class DataReader(Component, ABC):
         self._task: _t.Optional[Task] = None
 
     @abstractmethod
-    async def _fetch(self) -> None:
+    async def _fetch(self) -> _t.Any:
         """Fetches a chunk of data from the underlying source.
 
         Raises:
@@ -40,7 +40,7 @@ class DataReader(Component, ABC):
         pass
 
     @abstractmethod
-    async def _adapt(self) -> dict[str, deque]:
+    async def _adapt(self, data: _t.Any) -> dict[str, deque]:
         """Adapts the fetched data into a DataFrame."""
         pass
 
