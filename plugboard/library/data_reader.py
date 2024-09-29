@@ -26,8 +26,8 @@ class DataReader(Component, ABC):
 
         Args:
             name: The name of the `DataReader`.
-            field_names: The names of the fields to read from the DataFrame.
-            chunk_size: The size of the data chunk to read from the DataFrame.
+            field_names: The names of the fields to read from the data source.
+            chunk_size: The size of the data chunk to read from the data source.
             *args: Additional positional arguments.
             **kwargs: Additional keyword arguments.
         """
