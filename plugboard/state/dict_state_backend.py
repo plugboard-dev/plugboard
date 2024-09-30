@@ -8,10 +8,12 @@ from plugboard.state.state_backend import StateBackend
 class DictStateBackend(StateBackend):
     """`DictStateBackend` provides state persistence for single process runs."""
 
-    def __init__(self, *args: _t.Any, **kwargs: _t.Any) -> None:
-        """Initialises `DictStateBackend`."""
-        self._state: dict = {}
-        super().__init__(*args, **kwargs)
+    _state: dict
+
+    def _initialise_backend(self, **kwargs: _t.Any) -> dict:
+        """Initialises dict backend."""
+        state: dict = {}
+        return state
 
     async def _get(self, key: str | tuple[str, ...], value: _t.Optional[_t.Any] = None) -> _t.Any:
         _state, _key = self._state, key

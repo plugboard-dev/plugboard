@@ -17,13 +17,30 @@ if _t.TYPE_CHECKING:
 class StateBackend(ABC, AsDictMixin):
     """`StateBackend` defines an interface for managing process state."""
 
-    def __init__(self, job_id: _t.Optional[str] = None, metadata: _t.Optional[dict] = None):
+    _state: _t.Any
+
+    def __init__(
+        self, job_id: _t.Optional[str] = None, metadata: _t.Optional[dict] = None, **kwargs: _t.Any
+    ) -> None:
         """Instantiates `StateBackend`.
 
         Args:
             job_id: The unique id for the job.
             metadata: Metadata key value pairs.
+            kwargs: Additional keyword arguments.
         """
+        self._state = self._initialise_backend(**kwargs)
+        self._initialise_data(job_id=job_id, metadata=metadata, **kwargs)
+
+    @abstractmethod
+    def _initialise_backend(self, **kwargs: _t.Any) -> _t.Any:
+        """Initialises the backend for state management."""
+        pass
+
+    def _initialise_data(
+        self, job_id: _t.Optional[str], metadata: _t.Optional[dict], **kwargs: _t.Any
+    ) -> None:
+        """Initialises the state data."""
         loop = asyncio.get_event_loop()
 
         _job_id = job_id or EntityIdGen.job_id()
