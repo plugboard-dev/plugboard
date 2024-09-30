@@ -122,5 +122,5 @@ async def test_data_writer(
 
     # Saved data must match the original dataframe
     pd.testing.assert_frame_equal(writer.df, df)
-    # Total fetches must match number of complete chunks + 1 for the final flush
+    # Total saves must match number of complete chunks + 1 for the final flush
     assert writer.total_saves == (len(df) // (chunk_size or len(df) + 1)) + 1
