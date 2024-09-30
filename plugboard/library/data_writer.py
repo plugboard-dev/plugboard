@@ -31,12 +31,12 @@ class DataWriter(Component, ABC):
         self._task: _t.Optional[Task] = None
 
     @abstractmethod
-    async def _save(self, data: _t.Any) -> None:
+    async def save(self, data: _t.Any) -> None:
         """Saves a chunk of data to the underlying source."""
         pass
 
     @abstractmethod
-    async def _adapt(self, data: dict[str, deque]) -> _t.Any:
+    async def adapt(self, data: dict[str, deque]) -> _t.Any:
         """Adapts the data from `dict[str, deque]` into a format required for saving."""
         pass
 
@@ -45,8 +45,8 @@ class DataWriter(Component, ABC):
         if self._task is not None:
             await self._task
         # Create task to save next chunk of data
-        chunk = await self._adapt(self._buffer)
-        self._task = asyncio.create_task(self._save(chunk))
+        chunk = await self.adapt(self._buffer)
+        self._task = asyncio.create_task(self.save(chunk))
         self._buffer = defaultdict(deque)
 
     async def step(self) -> None:
