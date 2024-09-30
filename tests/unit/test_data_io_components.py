@@ -6,9 +6,11 @@ import typing as _t
 import pandas as pd
 import pytest
 
-from plugboard.component.io_controller import IOController, IODirection
+from plugboard.component.io_controller import IOController
+from plugboard.connector import AsyncioChannel, Connector
 from plugboard.exceptions import IOStreamClosedError, NoMoreDataException
 from plugboard.library import DataReader, DataWriter
+from plugboard.schemas import ConnectorSpec
 
 
 @pytest.fixture
@@ -71,7 +73,7 @@ async def test_data_reader(
 ) -> None:
     """Test the DataReader class."""
     reader = MockDataReader(
-        name="data-reader", field_names=field_names, chunk_size=chunk_size, df=df
+        name="data_reader", field_names=field_names, chunk_size=chunk_size, df=df
     )
     await reader.init()
     # Init must trigger first data fetch
@@ -97,13 +99,22 @@ async def test_data_writer(
     chunk_size: _t.Optional[int],
 ) -> None:
     """Test the DataWriter class."""
-    writer = MockDataWriter(name="data-writer", chunk_size=chunk_size)
+    writer = MockDataWriter(name="data_writer", chunk_size=chunk_size)
+    connectors = {
+        field: Connector(
+            spec=ConnectorSpec(source="none.none", target=f"data_writer.{field}"),
+            channel=AsyncioChannel(),
+        )
+        for field in df.columns
+    }
+    writer.io.connect(connectors.values())
+
     await writer.init()
 
     for _, row in df.iterrows():
         for field in df.columns:
-            writer.io.data[IODirection.INPUT][field] = row[field]
+            await connectors[field].channel.send(row[field])
         await writer.step()
 
     await writer.io.close()
-    await writer.step()
+    await writer.run()
