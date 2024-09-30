@@ -13,7 +13,7 @@ class ComponentArgsSpec(BaseModel, extra="allow"):
         constraints: Constraints for the `Component`.
     """
 
-    name: str = Field(pattern=r"^([a-zA-Z_][a-zA-Z0-9_]*)$")
+    name: str = Field(pattern=r"^([a-zA-Z_][a-zA-Z0-9_-]*)$")
     initial_values: dict = {}
     parameters: dict = {}
     constraints: dict = {}

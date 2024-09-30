@@ -74,7 +74,7 @@ async def test_data_reader(
 ) -> None:
     """Test the DataReader class."""
     reader = MockDataReader(
-        name="data_reader", field_names=field_names, chunk_size=chunk_size, df=df
+        name="data-reader", field_names=field_names, chunk_size=chunk_size, df=df
     )
     await reader.init()
     # Init must trigger first data fetch
@@ -100,10 +100,10 @@ async def test_data_writer(
     chunk_size: _t.Optional[int],
 ) -> None:
     """Test the DataWriter class."""
-    writer = MockDataWriter(name="data_writer", chunk_size=chunk_size)
+    writer = MockDataWriter(name="data-writer", chunk_size=chunk_size)
     connectors = {
         field: Connector(
-            spec=ConnectorSpec(source="none.none", target=f"data_writer.{field}"),
+            spec=ConnectorSpec(source="none.none", target=f"data-writer.{field}"),
             channel=AsyncioChannel(),
         )
         for field in df.columns
