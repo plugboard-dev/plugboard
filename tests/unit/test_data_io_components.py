@@ -58,7 +58,7 @@ class MockDataWriter(DataWriter):
         self.total_saves = 0
 
     async def _save(self, data: pd.DataFrame) -> None:
-        self.df = pd.concat([self.df, data])
+        self.df = pd.concat([self.df, data], ignore_index=True)
         self.total_saves += 1
 
     async def _adapt(self, data: dict[str, deque]) -> pd.DataFrame:
@@ -118,3 +118,8 @@ async def test_data_writer(
 
     await writer.io.close()
     await writer.run()
+
+    # Saved data must match the original dataframe
+    pd.testing.assert_frame_equal(writer.df, df)
+    # Total fetches must match number of complete chunks + 1 for the final flush
+    assert writer.total_saves == (len(df) // (chunk_size or len(df) + 1)) + 1
