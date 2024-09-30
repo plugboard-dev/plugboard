@@ -108,7 +108,7 @@ async def test_data_writer(
         )
         for field in df.columns
     }
-    writer.io.connect(connectors.values())
+    writer.io.connect(list(connectors.values()))
 
     await writer.init()
 

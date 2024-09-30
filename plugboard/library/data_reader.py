@@ -31,8 +31,8 @@ class DataReader(Component, ABC):
             *args: Additional positional arguments.
             **kwargs: Additional keyword arguments.
         """
-        super().__init__(name=name, *args, **kwargs)
-        self._buffer = dict()
+        super().__init__(name, *args, **kwargs)
+        self._buffer: dict[str, deque] = dict()
         self._chunk_size = chunk_size
         self.io = IOController(inputs=None, outputs=field_names, namespace=name)
         self._task: _t.Optional[Task] = None

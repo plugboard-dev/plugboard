@@ -26,7 +26,7 @@ class DataWriter(Component, ABC):
             **kwargs: Additional keyword arguments.
         """
         super().__init__(*args, **kwargs)
-        self._buffer = defaultdict(deque)
+        self._buffer: dict[str, deque] = defaultdict(deque)
         self._chunk_size = chunk_size
         self._task: _t.Optional[Task] = None
 
@@ -62,4 +62,4 @@ class DataWriter(Component, ABC):
         await super().run()
         # Flush any remaining data in the buffer after completion
         await self._save_chunk()
-        await self._task
+        await self._task  # type: ignore
