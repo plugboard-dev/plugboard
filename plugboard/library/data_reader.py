@@ -65,19 +65,18 @@ class DataReader(Component, ABC):
         """Initialises the `DataReader`."""
         await self._fetch_chunk()
 
+    def _consume_record(self) -> None:
+        for field in self.io.outputs:
+            setattr(self, field, self._buffer[field].popleft())
+
     async def step(self) -> None:
         """Reads data from the source and updates outputs."""
-
-        def _consume_record() -> None:
-            for field in self.io.outputs:
-                setattr(self, field, self._buffer[field].popleft())
-
         try:
-            _consume_record()
+            self.consume_record()
         except IndexError:
             # Buffer is empty, fetch next chunk and try again
             try:
                 await self._fetch_chunk()
-                _consume_record()
+                self._consume_record()
             except NoMoreDataException as e:
                 raise IOStreamClosedError("No more data to read.") from e
