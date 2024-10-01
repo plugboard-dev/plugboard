@@ -4,6 +4,7 @@ from collections import deque
 from pathlib import Path
 import typing as _t
 
+import fsspec
 import pandas as pd
 
 from plugboard.exceptions import NoMoreDataException
@@ -33,15 +34,14 @@ class FileReader(DataReader):
 
     async def _fetch(self) -> pd.DataFrame:
         if self._reader is None:
-            if self._extension == ".parquet":
-                self._reader = self._df_chunks(
-                    pd.read_parquet(self._file_path), chunk_size=self._chunk_size
-                )
-            else:
-                self._reader = pd.read_csv(
-                    self._file_path,
-                    chunksize=self._chunk_size,
-                )
+            with fsspec.open(self._file_path) as f:
+                if self._extension == ".parquet":
+                    self._reader = self._df_chunks(pd.read_parquet(f), chunk_size=self._chunk_size)
+                else:
+                    self._reader = pd.read_csv(
+                        f,
+                        chunksize=self._chunk_size,
+                    )
         try:
             return next(self._reader)
         except StopIteration as e:
