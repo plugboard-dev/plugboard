@@ -33,7 +33,7 @@ class MockDataReader(DataReader):
         self._idx = 0
         self.total_fetches = 0
 
-    async def fetch(self) -> pd.DataFrame:
+    async def _fetch(self) -> pd.DataFrame:
         if self._chunk_size:
             df_chunk = self._df.iloc[self._idx : self._idx + self._chunk_size]
         else:
@@ -44,7 +44,7 @@ class MockDataReader(DataReader):
             raise NoMoreDataException
         return df_chunk
 
-    async def adapt(self, data: pd.DataFrame) -> dict[str, deque]:
+    async def _convert(self, data: pd.DataFrame) -> dict[str, deque]:
         return {field_name: deque(s) for field_name, s in data.items()}
 
 
@@ -58,11 +58,11 @@ class MockDataWriter(DataWriter):
         self.df = pd.DataFrame()
         self.total_saves = 0
 
-    async def save(self, data: pd.DataFrame) -> None:
+    async def _save(self, data: pd.DataFrame) -> None:
         self.df = pd.concat([self.df, data], ignore_index=True)
         self.total_saves += 1
 
-    async def adapt(self, data: dict[str, deque]) -> pd.DataFrame:
+    async def _convert(self, data: dict[str, deque]) -> pd.DataFrame:
         return pd.DataFrame(data)
 
 

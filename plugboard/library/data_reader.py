@@ -38,7 +38,7 @@ class DataReader(Component, ABC):
         self._task: _t.Optional[Task] = None
 
     @abstractmethod
-    async def fetch(self) -> _t.Any:
+    async def _fetch(self) -> _t.Any:
         """Fetches a chunk of data from the underlying source.
 
         Raises:
@@ -47,18 +47,18 @@ class DataReader(Component, ABC):
         pass
 
     @abstractmethod
-    async def adapt(self, data: _t.Any) -> dict[str, deque]:
-        """Adapts the fetched data into a `dict[str, deque]` type used as buffer."""
+    async def _convert(self, data: _t.Any) -> dict[str, deque]:
+        """Converts the fetched data into a `dict[str, deque]` type used as buffer."""
         pass
 
     async def _fetch_chunk(self) -> None:
         """Reads data from the buffer."""
         if self._task is None:
-            self._task = asyncio.create_task(self.fetch())
+            self._task = asyncio.create_task(self._fetch())
         chunk = await self._task
         # Create task to fetch next chunk of data
-        self._task = asyncio.create_task(self.fetch())
-        new_buffer = await self.adapt(chunk)
+        self._task = asyncio.create_task(self._fetch())
+        new_buffer = await self._convert(chunk)
         self._buffer = {field_name: new_buffer[field_name] for field_name in self.io.outputs}
 
     async def init(self) -> None:
