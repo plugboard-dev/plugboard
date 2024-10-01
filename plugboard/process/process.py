@@ -24,13 +24,30 @@ class Process(AsDictMixin):
         self.components: dict[str, Component] = {c.name: c for c in components}
         self.connectors: list[Connector] = list(connectors)
         self.parameters: dict = parameters or {}
-        self.state: StateBackend = state or DictStateBackend()
+        self._state: StateBackend = state or DictStateBackend()
         self._connect_components()
 
     @property
     def id(self) -> str:
         """Unique ID for `Process`."""
         return self.name
+
+    @property
+    def state(self) -> StateBackend:
+        """State backend for the process."""
+        return self._state
+
+    async def connect_state(self, state: _t.Optional[StateBackend] = None) -> None:
+        """Connects the `Process` to the StateBackend."""
+        self._state = state or self._state
+        if self._state is None:
+            return
+        async with asyncio.TaskGroup() as tg:
+            await self._state.upsert_process(self)
+            for component in self.components.values():
+                tg.create_task(component.connect_state(self._state))
+            for connector in self.connectors:
+                tg.create_task(self._state.upsert_connector(connector))
 
     def _connect_components(self) -> None:
         for component in self.components.values():
@@ -39,6 +56,7 @@ class Process(AsDictMixin):
     async def init(self) -> None:
         """Performs component initialisation actions."""
         async with asyncio.TaskGroup() as tg:
+            await self.connect_state()
             for component in self.components.values():
                 tg.create_task(component.init())
 

@@ -24,13 +24,11 @@ class Component(ABC, AsDictMixin):
         initial_values: _t.Optional[dict] = None,
         parameters: _t.Optional[dict] = None,
         constraints: _t.Optional[dict] = None,
-        state: _t.Optional[StateBackend] = None,
     ) -> None:
         self.name = name
         self._initial_values = initial_values or {}
         self._constraints = constraints or {}
         self._parameters = parameters or {}
-        self.state = state
         self.io = IOController(
             inputs=type(self).io.inputs, outputs=type(self).io.outputs, namespace=name
         )
@@ -46,6 +44,18 @@ class Component(ABC, AsDictMixin):
     def id(self) -> str:
         """Unique ID for `Component`."""
         return self.name
+
+    @property
+    def state(self) -> _t.Optional[StateBackend]:
+        """State backend for the process."""
+        return self._state
+
+    async def connect_state(self, state: _t.Optional[StateBackend] = None) -> None:
+        """Connects the `Component` to the `StateBackend`."""
+        self._state = state
+        if self._state is None:
+            return
+        await self._state.upsert_component(self)
 
     async def init(self) -> None:
         """Performs component initialisation actions."""
