@@ -19,9 +19,12 @@ class DictStateBackend(StateBackend):
         _state, _key = self._state, key
         if isinstance(key, tuple):
             for k in key[:-1]:  # type: str
-                _state = _state.get(k, {})
-                if k not in _state:
-                    break
+                try:
+                    _state = _state[k]
+                except KeyError:
+                    return value
+                except TypeError:
+                    raise ValueError(f"Invalid key: {key}")
             _key = key[-1]
         return _state.get(_key, value)
 
