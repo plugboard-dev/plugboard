@@ -72,3 +72,11 @@ class Process(AsDictMixin):
         async with asyncio.TaskGroup() as tg:
             for component in self.components.values():
                 tg.create_task(component.run())
+
+    def dict(self) -> dict[str, _t.Any]:  # noqa: D102
+        return {
+            "name": self.name,
+            "components": {k: v.dict() for k, v in self.components.items()},
+            "connectors": {k: v.dict() for k, v in self.connectors.items()},
+            "parameters": self.parameters,
+        }
