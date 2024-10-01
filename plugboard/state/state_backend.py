@@ -58,6 +58,12 @@ class StateBackend(ABC, AsDictMixin):
         _metadata = metadata or dict()
         loop.run_until_complete(self._set("metadata", _metadata))
 
+        comp_proc_map: dict = dict()
+        loop.run_until_complete(self._set("_comp_proc_map", comp_proc_map))
+
+        conn_proc_map: dict = dict()
+        loop.run_until_complete(self._set("_conn_proc_map", conn_proc_map))
+
     @abstractmethod
     async def _get(self, key: str | tuple[str, ...], value: _t.Optional[_t.Any] = None) -> _t.Any:
         """Returns a value from the state."""
@@ -86,39 +92,35 @@ class StateBackend(ABC, AsDictMixin):
     async def upsert_process(self, process: Process) -> None:
         """Upserts a process into the state."""
         await self._set(("process", process.id), process.dict())
+        # TODO : Need to make this transactional.
+        comp_proc_map = await self._get("_comp_proc_map")
+        comp_proc_map.update({c.id: process.id for c in process.components.values()})
+        await self._set("_comp_proc_map", comp_proc_map)
+        # TODO : Need to make this transactional.
+        conn_proc_map = await self._get("_conn_proc_map")
+        conn_proc_map.update({c.id: process.id for c in process.connectors.values()})
+        await self._set("_conn_proc_map", conn_proc_map)
 
     async def get_process(self, process_id: str) -> dict:
         """Returns a process from the state."""
         return await self._get(("process", process_id))
 
-    async def upsert_component(
-        self, component: Component, process_id: _t.Optional[str] = None
-    ) -> None:
+    async def upsert_component(self, component: Component) -> None:
         """Upserts a component into the state."""
-        _process_id = await self._resolve_process_id(process_id)
-        await self._set(("_component_process_mapping", component.id), _process_id)
-        await self._set(("component", component.id), component.dict())
+        process_id = await self._get(("_comp_proc_map", component.id))
+        key = ("process", process_id, "component", component.id)
+        await self._set(key, component.dict())
 
     async def get_component(self, component_id: str) -> dict:
         """Returns a component from the state."""
         return await self._get(("component", component_id))
 
-    async def upsert_connector(
-        self, connector: Connector, process_id: _t.Optional[str] = None
-    ) -> None:
+    async def upsert_connector(self, connector: Connector) -> None:
         """Upserts a connector into the state."""
-        _process_id = await self._resolve_process_id(process_id)
-        await self._set(("_connector_process_mapping", connector.id), _process_id)
-        await self._set(("connector", connector.id), connector.dict())
+        process_id = await self._get(("_conn_proc_map", connector.id))
+        key = ("process", process_id, "connector", connector.id)
+        await self._set(key, connector.dict())
 
     async def get_connector(self, connector_id: str) -> dict:
         """Returns a connector from the state."""
         return await self._get(("connector", connector_id))
-
-    async def _resolve_process_id(self, process_id: _t.Optional[str]) -> str:
-        if process_id is not None:
-            return process_id
-        process_data = await self._get("process")
-        if len(process_data) != 1:
-            raise RuntimeError("Ambiguous `Process` for upsert.")
-        return list(process_data.keys())[0]
