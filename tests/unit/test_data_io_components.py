@@ -7,7 +7,6 @@ import typing as _t
 import pandas as pd
 import pytest
 
-from plugboard.component.io_controller import IOController
 from plugboard.connector import AsyncioChannel, Connector
 from plugboard.exceptions import IOStreamClosedError, NoMoreDataException
 from plugboard.library import DataReader, DataWriter
@@ -24,8 +23,6 @@ def df() -> pd.DataFrame:
 
 class MockDataReader(DataReader):
     """Mock DataReader class for testing purposes."""
-
-    io: IOController = IOController(inputs=None, outputs=["x", "z"])
 
     def __init__(self, *args: _t.Any, df: pd.DataFrame, **kwargs: _t.Any) -> None:
         super().__init__(*args, **kwargs)
@@ -50,8 +47,6 @@ class MockDataReader(DataReader):
 
 class MockDataWriter(DataWriter):
     """Mock DataWriter class for testing purposes."""
-
-    io: IOController = IOController(inputs=["x", "y", "z"], outputs=None)
 
     def __init__(self, *args: _t.Any, **kwargs: _t.Any) -> None:
         super().__init__(*args, **kwargs)
@@ -100,7 +95,7 @@ async def test_data_writer(
     chunk_size: _t.Optional[int],
 ) -> None:
     """Test the DataWriter class."""
-    writer = MockDataWriter(name="data-writer", chunk_size=chunk_size)
+    writer = MockDataWriter(name="data-writer", field_names=list(df.columns), chunk_size=chunk_size)
     connectors = {
         field: Connector(
             spec=ConnectorSpec(source="none.none", target=f"data-writer.{field}"),

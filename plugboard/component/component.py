@@ -38,6 +38,8 @@ class Component(ABC, AsDictMixin):
 
     def __init_subclass__(cls, *args: _t.Any, **kwargs: _t.Any) -> None:
         super().__init_subclass__(*args, **kwargs)
+        if not hasattr(cls, "io"):
+            raise NotImplementedError(f"{cls.__name__} must define an `io` attribute.")
         ComponentRegistry.add(cls)
 
     async def init(self) -> None:

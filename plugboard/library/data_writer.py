@@ -7,27 +7,35 @@ from collections import defaultdict, deque
 import typing as _t
 
 from plugboard.component import Component
+from plugboard.component.io_controller import IOController
 
 
 class DataWriter(Component, ABC):
     """Abstract base class for writing data."""
 
+    io = IOController()
+
     def __init__(
         self,
         *args: _t.Any,
+        name: str,
+        field_names: list[str],
         chunk_size: _t.Optional[int],
         **kwargs: _t.Any,
     ) -> None:
         """Instantiates the `DataWriter`.
 
         Args:
+            name: The name of the `DataWriter`.
+            field_names: The names of the fields to write to the data source.
             chunk_size: The size of the data chunk to read from the DataFrame.
             *args: Additional positional arguments.
             **kwargs: Additional keyword arguments.
         """
-        super().__init__(*args, **kwargs)
+        super().__init__(name, *args, **kwargs)
         self._buffer: dict[str, deque] = defaultdict(deque)
         self._chunk_size = chunk_size
+        self.io = IOController(inputs=field_names, outputs=None, namespace=name)
         self._task: _t.Optional[Task] = None
 
     @abstractmethod

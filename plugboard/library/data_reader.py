@@ -14,6 +14,8 @@ from plugboard.exceptions import IOStreamClosedError, NoMoreDataException
 class DataReader(Component, ABC):
     """Abstract base class for reading data."""
 
+    io = IOController()
+
     def __init__(
         self,
         *args: _t.Any,
@@ -72,7 +74,7 @@ class DataReader(Component, ABC):
     async def step(self) -> None:
         """Reads data from the source and updates outputs."""
         try:
-            self.consume_record()
+            self._consume_record()
         except IndexError:
             # Buffer is empty, fetch next chunk and try again
             try:
