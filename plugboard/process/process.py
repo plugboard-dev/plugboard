@@ -21,8 +21,8 @@ class Process(AsDictMixin):
         state: _t.Optional[StateBackend] = None,
     ) -> None:
         self.name = name or f"{self.__class__.__name__}_{gen_rand_str(8)}"
-        self.components: dict[str, Component] = {c.name: c for c in components}
-        self.connectors: list[Connector] = list(connectors)
+        self.components: dict[str, Component] = {c.id: c for c in components}
+        self.connectors: dict[str, Connector] = {c.id: c for c in connectors}
         self.parameters: dict = parameters or {}
         self._state: StateBackend = state or DictStateBackend()
         self._connect_components()
@@ -46,12 +46,13 @@ class Process(AsDictMixin):
             await self._state.upsert_process(self)
             for component in self.components.values():
                 tg.create_task(component.connect_state(self._state))
-            for connector in self.connectors:
+            for connector in self.connectors.values():
                 tg.create_task(self._state.upsert_connector(connector))
 
     def _connect_components(self) -> None:
+        connectors = list(self.connectors.values())
         for component in self.components.values():
-            component.io.connect(self.connectors)
+            component.io.connect(connectors)
 
     async def init(self) -> None:
         """Performs component initialisation actions."""
