@@ -3,15 +3,12 @@
 from pydoc import locate
 import typing as _t
 
+from plugboard.component.component import Component, ComponentRegistry
+from plugboard.connector.channel_builder import ChannelBuilder
+from plugboard.connector.connector import Connector
+from plugboard.process.process import Process
 from plugboard.schemas import ProcessSpec
-
-
-if _t.TYPE_CHECKING:
-    from plugboard.component.component import Component, ComponentRegistry
-    from plugboard.connector.channel_builder import ChannelBuilder
-    from plugboard.connector.connector import Connector
-    from plugboard.process.process import Process
-    from plugboard.state import StateBackend
+from plugboard.state import StateBackend
 
 
 class ProcessBuilder:
