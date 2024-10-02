@@ -62,4 +62,6 @@ async def test_process_builder_build(process_spec: ProcessSpec) -> None:
     # Must build a process with the correct component names
     assert process.components.keys() == {"A", "B", "C"}
     # Must build connectors with the correct channel types
-    assert all(con.channel.__class__.__name__ == "AsyncioChannel" for con in process.connectors)
+    assert all(
+        con.channel.__class__.__name__ == "AsyncioChannel" for con in process.connectors.values()
+    )
