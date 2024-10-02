@@ -18,10 +18,19 @@ class FileReader(DataReader):
     The file can be stored locally or on an fsspec-compatible cloud storage service.
     """
 
-    def __init__(self, *args: _t.Any, path: str | Path, **kwargs: _t.Any) -> None:
+    def __init__(
+        self,
+        *args: _t.Any,
+        path: str | Path,
+        storage_options: _t.Optional[dict[str, _t.Any]] = None,
+        **kwargs: _t.Any,
+    ) -> None:
         super().__init__(*args, **kwargs)
         self._file_path = Path(path)
         self._extension = "".join(self._file_path.suffixes).lower()
+        if self._extension not in [".csv", ".csv.gz", ".parquet"]:
+            raise ValueError(f"Unsupported file format: {self._extension}")
+        self._storage_options = storage_options or {}
         self._reader: _t.Optional[pd.io.parsers.TextFileReader | _t.Iterator[pd.DataFrame]] = None
 
     @classmethod
@@ -34,14 +43,11 @@ class FileReader(DataReader):
 
     async def _fetch(self) -> pd.DataFrame:
         if self._reader is None:
-            with fsspec.open(self._file_path) as f:
+            with fsspec.open(self._file_path, **self._storage_options) as f:
                 if self._extension == ".parquet":
                     self._reader = self._df_chunks(pd.read_parquet(f), chunk_size=self._chunk_size)
                 else:
-                    self._reader = pd.read_csv(
-                        f,
-                        chunksize=self._chunk_size,
-                    )
+                    self._reader = pd.read_csv(f, chunksize=self._chunk_size)
         try:
             return next(self._reader)
         except StopIteration as e:
