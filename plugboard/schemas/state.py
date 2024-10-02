@@ -15,11 +15,12 @@ class StateBackendArgsSpec(BaseModel, extra="allow"):
     """Specification of the [`StateBackend`][plugboard.state.StateBackend] constructor arguments.
 
     Attributes:
-        parameters: Parameters for the `StateBackend`.
+        job_id: The unique id for the job.
+        metadata: Metadata for a run.
     """
 
     job_id: _t.Optional[str] = Field(default=None, pattern=Entity.Job.id_regex)
-    parameters: dict = {}
+    metadata: dict = {}
 
 
 class StateBackendSpec(BaseModel):
@@ -39,3 +40,4 @@ class StateSchema(BaseModel):
 
     job_id: str = Field(pattern=Entity.Job.id_regex)
     created_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+    metadata: dict = {}
