@@ -11,11 +11,19 @@ from plugboard.schemas import (
     ConnectorSpec,
     ProcessArgsSpec,
     ProcessSpec,
+    StateBackendSpec,
 )
+from plugboard.utils import EntityIdGen
 
 
 @pytest.fixture
-def process_spec() -> ProcessSpec:
+def job_id() -> str:
+    """Returns a job ID for testing."""
+    return EntityIdGen.job_id()
+
+
+@pytest.fixture
+def process_spec(job_id: str) -> ProcessSpec:
     """Returns a `ProcessSpec` for testing."""
     return ProcessSpec(
         args=ProcessArgsSpec(
@@ -44,6 +52,10 @@ def process_spec() -> ProcessSpec:
                 ),
             ],
             parameters={},
+            state=StateBackendSpec(
+                type="plugboard.state.DictStateBackend",
+                args={"job_id": job_id, "metadata": {"hello": "world"}},
+            ),
         ),
         channel_builder=ChannelBuilderSpec(
             type="plugboard.connector.AsyncioChannelBuilder",
@@ -53,7 +65,7 @@ def process_spec() -> ProcessSpec:
 
 
 @pytest.mark.anyio
-async def test_process_builder_build(process_spec: ProcessSpec) -> None:
+async def test_process_builder_build(job_id: str, process_spec: ProcessSpec) -> None:
     """Tests building a process."""
     process = ProcessBuilder.build(process_spec)
     # Must build a process with the correct components and connectors
@@ -65,3 +77,7 @@ async def test_process_builder_build(process_spec: ProcessSpec) -> None:
     assert all(
         con.channel.__class__.__name__ == "AsyncioChannel" for con in process.connectors.values()
     )
+    # Must build a process with the correct state backend
+    await process.init()
+    assert await process.state.job_id == job_id
+    assert await process.state.metadata == {"hello": "world"}
