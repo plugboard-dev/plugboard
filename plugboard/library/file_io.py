@@ -59,10 +59,13 @@ class FileReader(DataReader):
                 if self._extension == ".parquet":
                     self._reader = self._df_chunks(pd.read_parquet(f), chunk_size=self._chunk_size)
                 else:
-                    self._reader = pd.read_csv(
+                    df_or_reader = pd.read_csv(
                         f,
                         chunksize=self._chunk_size,
                         compression="gzip" if self._extension.endswith("gz") else None,
+                    )
+                    self._reader = (
+                        df_or_reader if self._chunk_size else self._df_chunks(df_or_reader)
                     )
         try:
             return next(self._reader)
