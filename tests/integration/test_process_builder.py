@@ -78,6 +78,6 @@ async def test_process_builder_build(job_id: str, process_spec: ProcessSpec) -> 
         con.channel.__class__.__name__ == "AsyncioChannel" for con in process.connectors.values()
     )
     # Must build a process with the correct state backend
-    await process.init()
-    assert await process.state.job_id == job_id
-    assert await process.state.metadata == {"hello": "world"}
+    async with process:
+        assert await process.state.job_id == job_id
+        assert await process.state.metadata == {"hello": "world"}

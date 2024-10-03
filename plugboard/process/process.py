@@ -1,6 +1,9 @@
 """Provides the `Process` class for managing components in a process model."""
 
+from __future__ import annotations
+
 import asyncio
+from types import TracebackType
 import typing as _t
 
 from plugboard.component import Component
@@ -84,6 +87,20 @@ class Process(AsDictMixin):
             for component in self.components.values():
                 tg.create_task(component.destroy())
             await self._state.destroy()
+
+    async def __aenter__(self) -> Process:
+        """Enters the context manager."""
+        await self.init()
+        return self
+
+    async def __aexit__(
+        self,
+        exc_type: _t.Optional[_t.Type[BaseException]],
+        exc_value: _t.Optional[BaseException],
+        traceback: _t.Optional[TracebackType],
+    ) -> None:
+        """Exits the context manager."""
+        await self.destroy()
 
     def dict(self) -> dict[str, _t.Any]:  # noqa: D102
         return {
