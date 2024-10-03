@@ -25,6 +25,7 @@ class Process(AsDictMixin):
         self.connectors: dict[str, Connector] = {c.id: c for c in connectors}
         self.parameters: dict = parameters or {}
         self._state: StateBackend = state or DictStateBackend()
+        self._state_is_connected: bool = False
         self._connect_components()
 
     @property
@@ -39,15 +40,19 @@ class Process(AsDictMixin):
 
     async def connect_state(self, state: _t.Optional[StateBackend] = None) -> None:
         """Connects the `Process` to the StateBackend."""
+        if self._state_is_connected:
+            return
         self._state = state or self._state
         if self._state is None:
             return
         async with asyncio.TaskGroup() as tg:
+            await self._state.init()
             await self._state.upsert_process(self)
             for component in self.components.values():
                 tg.create_task(component.connect_state(self._state))
             for connector in self.connectors.values():
                 tg.create_task(self._state.upsert_connector(connector))
+        self._state_is_connected = True
 
     def _connect_components(self) -> None:
         connectors = list(self.connectors.values())

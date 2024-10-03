@@ -23,12 +23,15 @@ class Component(ABC, AsDictMixin):
         name: str,
         initial_values: _t.Optional[dict] = None,
         parameters: _t.Optional[dict] = None,
+        state: _t.Optional[StateBackend] = None,
         constraints: _t.Optional[dict] = None,
     ) -> None:
         self.name = name
         self._initial_values = initial_values or {}
         self._constraints = constraints or {}
         self._parameters = parameters or {}
+        self._state: _t.Optional[StateBackend] = state
+        self._state_is_connected = False
         self.io = IOController(
             inputs=type(self).io.inputs, outputs=type(self).io.outputs, namespace=name
         )
@@ -52,10 +55,13 @@ class Component(ABC, AsDictMixin):
 
     async def connect_state(self, state: _t.Optional[StateBackend] = None) -> None:
         """Connects the `Component` to the `StateBackend`."""
-        self._state = state
+        if self._state_is_connected:
+            return
+        self._state = state or self._state
         if self._state is None:
             return
         await self._state.upsert_component(self)
+        self._state_is_connected = True
 
     async def init(self) -> None:
         """Performs component initialisation actions."""
