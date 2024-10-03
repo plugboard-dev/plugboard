@@ -3,14 +3,17 @@
 import os
 import tempfile
 import typing as _t
+import uuid
 
 import fsspec
 from moto.moto_server.threaded_moto_server import ThreadedMotoServer
 import pandas as pd
 import pytest
 
+from plugboard.connector import AsyncioChannel, Connector
 from plugboard.exceptions import IOStreamClosedError
-from plugboard.library.file_io import FileReader
+from plugboard.library.file_io import FileReader, FileWriter
+from plugboard.schemas import ConnectorSpec
 
 
 S3_IP_ADDRESS = "127.0.0.1"
@@ -61,10 +64,10 @@ def temp_location(request: pytest.FixtureRequest) -> _t.Generator[str, None, Non
 
 
 @pytest.fixture(params=[".csv", ".csv.gz", ".parquet"])
-def path(
+def read_path(
     df: pd.DataFrame, temp_location: str, request: pytest.FixtureRequest
 ) -> _t.Generator[str, None, None]:
-    """File format for testing."""
+    """File path for reading."""
     path = f"{temp_location}test{request.param}"
     if request.param == ".csv":
         df.to_csv(path, index=False)
@@ -77,12 +80,19 @@ def path(
     yield path
 
 
+@pytest.fixture(params=[".csv", ".csv.gz", ".parquet"])
+def write_path(temp_location: str, request: pytest.FixtureRequest) -> _t.Generator[str, None, None]:
+    """File path for reading."""
+    path = f"{temp_location}{uuid.uuid4().hex}{request.param}"
+    yield path
+
+
 @pytest.mark.anyio
-@pytest.mark.parametrize("chunk_size", [None, 2, 8])
-async def test_file_reader(df: pd.DataFrame, path: str, chunk_size: _t.Optional[int]) -> None:
+@pytest.mark.parametrize("chunk_size", [None, 2, 4, 10])
+async def test_file_reader(df: pd.DataFrame, read_path: str, chunk_size: _t.Optional[int]) -> None:
     """Test the `FileReader` component."""
     reader = FileReader(
-        name="file-reader", path=path, field_names=list(df.columns), chunk_size=chunk_size
+        name="file-reader", path=read_path, field_names=list(df.columns), chunk_size=chunk_size
     )
     await reader.init()
 
@@ -95,3 +105,41 @@ async def test_file_reader(df: pd.DataFrame, path: str, chunk_size: _t.Optional[
     # There must be no more data to read
     with pytest.raises(IOStreamClosedError):
         await reader.step()
+
+
+@pytest.mark.anyio
+@pytest.mark.parametrize("chunk_size", [None, 2, 4, 10])
+async def test_file_writer(df: pd.DataFrame, write_path: str, chunk_size: _t.Optional[int]) -> None:
+    """Test the `FileReader` component."""
+    if write_path.endswith(".parquet") and chunk_size:
+        pytest.skip("Parquet does not support chunked writing")
+    writer = FileWriter(
+        name="file-writer",
+        path=write_path,
+        field_names=list(df.columns),
+        chunk_size=chunk_size,
+    )
+    connectors = {
+        field: Connector(
+            spec=ConnectorSpec(source="none.none", target=f"file-writer.{field}"),
+            channel=AsyncioChannel(),
+        )
+        for field in df.columns
+    }
+    writer.io.connect(list(connectors.values()))
+
+    await writer.init()
+
+    for _, row in df.iterrows():
+        for field in df.columns:
+            await connectors[field].channel.send(row[field])
+        await writer.step()
+
+    await writer.io.close()
+    await writer.run()
+
+    # Saved data must match the original dataframe
+    df_saved = (
+        pd.read_parquet(write_path) if write_path.endswith(".parquet") else pd.read_csv(write_path)
+    )
+    pd.testing.assert_frame_equal(df_saved, df)

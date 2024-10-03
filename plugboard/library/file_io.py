@@ -116,7 +116,7 @@ class FileWriter(DataWriter):
         self._header_written = False
 
     async def _save(self, data: pd.DataFrame) -> None:
-        with fsspec.open(self._file_path, **self._storage_options) as f:
+        with fsspec.open(self._file_path, mode="ab", **self._storage_options) as f:
             if self._extension == ".parquet":
                 data.to_parquet(f, index=False)
             else:
