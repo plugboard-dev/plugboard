@@ -8,16 +8,14 @@ from plugboard.state.state_backend import StateBackend
 class DictStateBackend(StateBackend):
     """`DictStateBackend` provides state persistence for single process runs."""
 
-    _state: dict
-
-    def _initialise_backend(self, **kwargs: _t.Any) -> dict:
-        """Initialises dict backend."""
-        state: dict = {}
-        return state
+    def __init__(self, *args: _t.Any, **kwargs: _t.Any) -> None:
+        """Instantiates `DictStateBackend`."""
+        super().__init__(*args, **kwargs)
+        self._state: dict[str, _t.Any] = {}
 
     async def _get(self, key: str | tuple[str, ...], value: _t.Optional[_t.Any] = None) -> _t.Any:
         _state, _key = self._state, key
-        if isinstance(key, tuple):
+        if isinstance(_key, tuple):
             for k in key[:-1]:  # type: str
                 try:
                     _state = _state[k]
@@ -30,7 +28,7 @@ class DictStateBackend(StateBackend):
 
     async def _set(self, key: str | tuple[str, ...], value: _t.Any) -> None:  # noqa: A003
         _state, _key = self._state, key
-        if isinstance(key, tuple):
+        if isinstance(_key, tuple):
             for k in key[:-1]:  # type: str
                 _state = _state.setdefault(k, {})
             _key = key[-1]
