@@ -44,6 +44,7 @@ class FileReader(DataReader):
             raise ValueError(f"Unsupported file format: {self._extension}")
         self._storage_options = storage_options or {}
         self._reader: _t.Optional[pd.io.parsers.TextFileReader | _t.Iterator[pd.DataFrame]] = None
+        self._file_handle = None
 
     @classmethod
     def _df_chunks(
@@ -55,21 +56,24 @@ class FileReader(DataReader):
 
     async def _fetch(self) -> pd.DataFrame:
         if self._reader is None:
-            with fsspec.open(self._file_path, **self._storage_options) as f:
-                if self._extension == ".parquet":
-                    self._reader = self._df_chunks(pd.read_parquet(f), chunk_size=self._chunk_size)
-                else:
-                    df_or_reader = pd.read_csv(
-                        f,
-                        chunksize=self._chunk_size,
-                        compression="gzip" if self._extension.endswith("gz") else None,
-                    )
-                    self._reader = (
-                        df_or_reader if self._chunk_size else self._df_chunks(df_or_reader)
-                    )
+            of = fsspec.open(self._file_path, **self._storage_options)
+            self._file_handle = of.open()
+            if self._extension == ".parquet":
+                self._reader = self._df_chunks(
+                    pd.read_parquet(self._file_handle), chunk_size=self._chunk_size
+                )
+            else:
+                df_or_reader = pd.read_csv(
+                    self._file_handle,
+                    chunksize=self._chunk_size,
+                    compression="gzip" if self._extension.endswith("gz") else None,
+                )
+                self._reader = df_or_reader if self._chunk_size else self._df_chunks(df_or_reader)
         try:
             return next(self._reader)
         except StopIteration as e:
+            if self._file_handle:
+                self._file_handle.close()
             raise NoMoreDataException from e
 
     async def _convert(self, data: pd.DataFrame) -> dict[str, deque]:
