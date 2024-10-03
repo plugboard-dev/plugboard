@@ -37,8 +37,8 @@ class FileReader(DataReader):
             **kwargs: Additional keyword arguments.
         """
         super().__init__(*args, **kwargs)
-        self._file_path = Path(path)
-        self._extension = "".join(self._file_path.suffixes).lower()
+        self._file_path = str(path)
+        self._extension = "".join(Path(path).suffixes).lower()
         if self._extension not in {".csv", ".csv.gz", ".parquet"}:
             raise ValueError(f"Unsupported file format: {self._extension}")
         self._storage_options = storage_options or {}
@@ -97,8 +97,8 @@ class FileWriter(DataWriter):
             **kwargs: Additional keyword arguments.
         """
         super().__init__(*args, **kwargs)
-        self._file_path = Path(path)
-        self._extension = "".join(self._file_path.suffixes).lower()
+        self._file_path = str(path)
+        self._extension = "".join(Path(path).suffixes).lower()
         if self._extension not in {".csv", ".csv.gz", ".parquet"}:
             raise ValueError(f"Unsupported file format: {self._extension}")
         if self._extension not in {".csv", ".csv.gz"} and self._chunk_size:
