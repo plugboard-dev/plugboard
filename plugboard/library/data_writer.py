@@ -20,7 +20,7 @@ class DataWriter(Component, ABC):
         *args: _t.Any,
         name: str,
         field_names: list[str],
-        chunk_size: _t.Optional[int],
+        chunk_size: _t.Optional[int] = None,
         **kwargs: _t.Any,
     ) -> None:
         """Instantiates the `DataWriter`.
