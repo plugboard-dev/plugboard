@@ -31,8 +31,9 @@ class FileReader(DataReader):
         Args:
             name: The name of the `FileReader`.
             path: The path to the file to read.
-            storage_options: Optional; Additional options for the fsspec-compatible filesystem.
+            field_names: The names of the fields to write to the data source.
             chunk_size: Optional; The size of the data chunks to read from the file.
+            storage_options: Optional; Additional options for the fsspec-compatible filesystem.
             *args: Additional positional arguments.
             **kwargs: Additional keyword arguments.
         """
@@ -91,8 +92,9 @@ class FileWriter(DataWriter):
         Args:
             name: The name of the `FileWriter`.
             path: The path to the file to read.
-            storage_options: Optional; Additional options for the fsspec-compatible filesystem.
+            field_names: The names of the fields to write to the data source.
             chunk_size: Optional; The size of the data chunks to read from the file.
+            storage_options: Optional; Additional options for the fsspec-compatible filesystem.
             *args: Additional positional arguments.
             **kwargs: Additional keyword arguments.
         """
