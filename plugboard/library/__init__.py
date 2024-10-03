@@ -2,6 +2,7 @@
 
 from .data_reader import DataReader
 from .data_writer import DataWriter
+from .file_io import FileReader, FileWriter
 
 
-__all__ = ["DataReader", "DataWriter"]
+__all__ = ["DataReader", "DataWriter", "FileReader", "FileWriter"]
