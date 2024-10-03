@@ -110,7 +110,7 @@ async def test_file_reader(df: pd.DataFrame, read_path: str, chunk_size: _t.Opti
 @pytest.mark.anyio
 @pytest.mark.parametrize("chunk_size", [None, 2, 4, 10])
 async def test_file_writer(df: pd.DataFrame, write_path: str, chunk_size: _t.Optional[int]) -> None:
-    """Test the `FileReader` component."""
+    """Test the `FileWriter` component."""
     if write_path.endswith(".parquet") and chunk_size:
         pytest.skip("Parquet does not support chunked writing")
     writer = FileWriter(
