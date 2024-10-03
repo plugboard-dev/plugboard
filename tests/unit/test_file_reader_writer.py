@@ -1,7 +1,6 @@
 """Unit tests for the `FileReader` and `FileWriter` components."""
 
 import os
-from pathlib import Path
 import tempfile
 import typing as _t
 
@@ -10,9 +9,12 @@ from moto.moto_server.threaded_moto_server import ThreadedMotoServer
 import pandas as pd
 import pytest
 
+from plugboard.exceptions import IOStreamClosedError
+from plugboard.library.file_io import FileReader
+
 
 S3_IP_ADDRESS = "127.0.0.1"
-S3_PORT = 12345
+S3_PORT = 45454
 S3_URL = f"http://{S3_IP_ADDRESS}:{S3_PORT}"
 
 
@@ -45,7 +47,7 @@ def df() -> pd.DataFrame:
 
 
 @pytest.fixture(scope="module", params=["local", "s3"])
-def temp_location(request) -> _t.Generator[str, None, None]:
+def temp_location(request: pytest.FixtureRequest) -> _t.Generator[str, None, None]:
     """Temporary file location."""
     if request.param == "local":
         with tempfile.TemporaryDirectory() as temp_dir:
@@ -59,7 +61,9 @@ def temp_location(request) -> _t.Generator[str, None, None]:
 
 
 @pytest.fixture(params=[".csv", ".csv.gz", ".parquet"])
-def path(df: pd.DataFrame, temp_location: str, request) -> _t.Generator[str, None, None]:
+def path(
+    df: pd.DataFrame, temp_location: str, request: pytest.FixtureRequest
+) -> _t.Generator[str, None, None]:
     """File format for testing."""
     path = f"{temp_location}test{request.param}"
     if request.param == ".csv":
@@ -74,6 +78,20 @@ def path(df: pd.DataFrame, temp_location: str, request) -> _t.Generator[str, Non
 
 
 @pytest.mark.anyio
-async def test_file_reader(df: pd.DataFrame, path: Path) -> None:
+@pytest.mark.parametrize("chunk_size", [None, 2, 8])
+async def test_file_reader(df: pd.DataFrame, path: str, chunk_size: _t.Optional[int]) -> None:
     """Test the `FileReader` component."""
-    pass
+    reader = FileReader(
+        name="file-reader", path=path, field_names=list(df.columns), chunk_size=chunk_size
+    )
+    await reader.init()
+
+    # Each row of data must be read correctly
+    for _, row in df.iterrows():
+        await reader.step()
+        for field in df.columns:
+            assert getattr(reader, field) == row[field]
+
+    # There must be no more data to read
+    with pytest.raises(IOStreamClosedError):
+        await reader.step()
