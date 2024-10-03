@@ -31,8 +31,12 @@ class StateBackend(ABC, AsDictMixin):
         self._local_state = {"job_id": job_id, "metadata": metadata, **kwargs}
 
     async def init(self) -> None:
-        """Initialises the state backend."""
+        """Initialises the `StateBackend`."""
         await self._initialise_data(**self._local_state)
+
+    async def destroy(self) -> None:
+        """Destroys the `StateBackend`."""
+        pass
 
     async def _initialise_data(
         self, job_id: _t.Optional[str] = None, metadata: _t.Optional[dict] = None, **kwargs: _t.Any

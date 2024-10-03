@@ -78,6 +78,13 @@ class Process(AsDictMixin):
             for component in self.components.values():
                 tg.create_task(component.run())
 
+    async def destroy(self) -> None:
+        """Performs tear-down actions for the `Process` and its `Component`s."""
+        async with asyncio.TaskGroup() as tg:
+            for component in self.components.values():
+                tg.create_task(component.destroy())
+            await self._state.destroy()
+
     def dict(self) -> dict[str, _t.Any]:  # noqa: D102
         return {
             "name": self.name,

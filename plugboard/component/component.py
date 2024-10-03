@@ -103,6 +103,10 @@ class Component(ABC, AsDictMixin):
             except IOStreamClosedError:
                 break
 
+    async def destroy(self) -> None:
+        """Performs tear-down actions for `Component`."""
+        pass
+
     def dict(self) -> dict[str, _t.Any]:  # noqa: D102
         return {
             **self.io.data,
