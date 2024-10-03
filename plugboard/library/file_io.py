@@ -81,7 +81,7 @@ class FileReader(DataReader):
 
 
 class FileWriter(DataWriter):
-    """Writes data to a file.
+    """Writes data to a file. If the file already exists, it will be overwritten.
 
     Support formats: CSV, GZIP-compressed CSV, Parquet.
     The file can be stored locally or on an fsspec-compatible cloud storage service.
@@ -114,6 +114,11 @@ class FileWriter(DataWriter):
             raise ValueError("Only CSV files support chunked writing.")
         self._storage_options = storage_options or {}
         self._header_written = False
+        self._check_file()
+
+    def _check_file(self) -> None:
+        with fsspec.open(self._file_path, mode="w", **self._storage_options):
+            pass
 
     async def _save(self, data: pd.DataFrame) -> None:
         with fsspec.open(self._file_path, mode="ab", **self._storage_options) as f:
