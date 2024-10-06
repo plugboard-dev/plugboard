@@ -72,6 +72,7 @@ async def test_state_backend_init(
     assert await state_backend.metadata == (metadata or dict())
 
 
+@pytest.mark.asyncio
 async def test_state_backend_get() -> None:
     """Tests `StateBackend` get method."""
     state_backend = DictStateBackend()
@@ -99,6 +100,7 @@ async def test_state_backend_get() -> None:
     assert result is None
 
 
+@pytest.mark.asyncio
 async def test_state_backend_set() -> None:
     """Tests `StateBackend` set method."""
     state_backend = DictStateBackend()
