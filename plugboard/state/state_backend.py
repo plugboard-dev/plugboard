@@ -90,6 +90,7 @@ class StateBackend(ABC, AsDictMixin):
 
     async def upsert_process(self, process: Process) -> None:
         """Upserts a process into the state."""
+        # TODO : Book keeping for dynamic process components and connectors.
         await self._set(("process", process.id), process.dict())
         # TODO : Need to make this transactional.
         comp_proc_map = await self._get("_comp_proc_map")
