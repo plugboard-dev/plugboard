@@ -37,7 +37,7 @@ def connectors() -> list[Connector]:
 
 @pytest.mark.asyncio
 async def test_state_backend_upsert_component(components: list[Component]) -> None:
-    """Tests `StateBackend` upsert component."""
+    """Tests `StateBackend.upsert_component` method."""
     state_backend = DictStateBackend()
 
     comp_a1, comp_a2 = components
@@ -76,7 +76,7 @@ async def test_state_backend_upsert_component(components: list[Component]) -> No
 
 @pytest.mark.asyncio
 async def test_state_backend_upsert_connector(connectors: list[Connector]) -> None:
-    """Tests `StateBackend` upsert connector."""
+    """Tests `StateBackend.upsert_connector` method."""
     state_backend = DictStateBackend()
 
     conn_1, conn_2 = connectors
@@ -92,7 +92,7 @@ async def test_state_backend_upsert_connector(connectors: list[Connector]) -> No
 async def test_state_backend_upsert_process(
     components: list[Component], connectors: list[Connector]
 ) -> None:
-    """Tests `StateBackend` upsert process."""
+    """Tests `StateBackend.upsert_process` method."""
     state_backend = DictStateBackend()
 
     comp_a1, comp_a2 = components
@@ -116,7 +116,7 @@ async def test_state_backend_upsert_process(
 async def test_state_backend_process_init(
     components: list[Component], connectors: list[Connector]
 ) -> None:
-    """Tests `StateBackend` process run."""
+    """Tests `StateBackend` connected up correctly on `Process.init`."""
     state_backend = DictStateBackend()
 
     comp_a1, comp_a2 = components
