@@ -2,6 +2,7 @@
 
 import typing as _t
 
+from plugboard.exceptions import StateBackendError
 from plugboard.state.state_backend import StateBackend
 
 
@@ -12,6 +13,13 @@ class DictStateBackend(StateBackend):
         """Instantiates `DictStateBackend`."""
         super().__init__(*args, **kwargs)
         self._state: dict[str, _t.Any] = {}
+
+    async def _initialise_data(
+        self, job_id: _t.Optional[str] = None, metadata: _t.Optional[dict] = None, **kwargs: _t.Any
+    ) -> None:
+        if job_id is not None:
+            raise StateBackendError("Cannot reuse job ID for non-persistent backend.")
+        return await super()._initialise_data(job_id, metadata, **kwargs)
 
     async def _get(self, key: str | tuple[str, ...], value: _t.Optional[_t.Any] = None) -> _t.Any:
         _state, _key = self._state, key

@@ -6,7 +6,8 @@ import typing as _t
 import pytest
 import time_machine
 
-from plugboard.state import DictStateBackend
+from plugboard.exceptions import StateBackendError
+from plugboard.state import DictStateBackend, StateBackend
 from plugboard.utils.entities import EntityIdGen
 
 
@@ -36,15 +37,17 @@ def invalid_job_id() -> str:
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
-    "job_id_fixture, metadata, exc_ctx",
+    "state_backend_cls, job_id_fixture, metadata, exc_ctx",
     [
-        ("null_job_id", None, None),
-        ("valid_job_id", {"key": "value"}, None),
-        ("invalid_job_id", None, pytest.raises(ValueError)),
+        (DictStateBackend, "null_job_id", None, None),
+        (DictStateBackend, "null_job_id", {"key": "value"}, None),
+        (DictStateBackend, "valid_job_id", {"key": "value"}, pytest.raises(StateBackendError)),
+        (DictStateBackend, "invalid_job_id", None, pytest.raises(StateBackendError)),
     ],
 )
 async def test_state_backend_init(
     datetime_now: str,
+    state_backend_cls: _t.Type[StateBackend],
     job_id_fixture: str,
     metadata: _t.Optional[dict],
     exc_ctx: AbstractContextManager,
@@ -53,7 +56,7 @@ async def test_state_backend_init(
     """Tests `StateBackend` initialisation."""
     job_id: _t.Optional[str] = request.getfixturevalue(job_id_fixture)
 
-    state_backend = DictStateBackend(job_id=job_id, metadata=metadata)
+    state_backend = state_backend_cls(job_id=job_id, metadata=metadata)
 
     with exc_ctx or nullcontext():
         with time_machine.travel(datetime_now, tick=False):
