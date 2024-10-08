@@ -88,10 +88,22 @@ class StateBackend(ABC, AsDictMixin):
         """Returns metadata attached to the job."""
         return await self._get("metadata")
 
+    @classmethod
+    def _process_key(cls, process_id: str) -> tuple[str, ...]:
+        return ("processes", process_id)
+
+    @classmethod
+    def _component_key(cls, process_id: str, component_id: str) -> tuple[str, ...]:
+        return cls._process_key(process_id) + ("components", component_id)
+
+    @classmethod
+    def _connector_key(cls, process_id: str, component_id: str) -> tuple[str, ...]:
+        return cls._process_key(process_id) + ("connectors", component_id)
+
     async def upsert_process(self, process: Process) -> None:
         """Upserts a process into the state."""
         # TODO : Book keeping for dynamic process components and connectors.
-        await self._set(("process", process.id), process.dict())
+        await self._set(self._process_key(process.id), process.dict())
         # TODO : Need to make this transactional.
         comp_proc_map = await self._get("_comp_proc_map")
         comp_proc_map.update({c.id: process.id for c in process.components.values()})
@@ -103,28 +115,28 @@ class StateBackend(ABC, AsDictMixin):
 
     async def get_process(self, process_id: str) -> dict:
         """Returns a process from the state."""
-        return await self._get(("process", process_id))
+        return await self._get(self._process_key(process_id))
 
     async def upsert_component(self, component: Component) -> None:
         """Upserts a component into the state."""
         process_id = await self._get(("_comp_proc_map", component.id))
-        key = ("process", process_id, "component", component.id)
+        key = self._component_key(process_id, component.id)
         await self._set(key, component.dict())
 
     async def get_component(self, component_id: str) -> dict:
         """Returns a component from the state."""
         process_id = await self._get(("_comp_proc_map", component_id))
-        key = ("process", process_id, "component", component_id)
+        key = self._component_key(process_id, component_id)
         return await self._get(key)
 
     async def upsert_connector(self, connector: Connector) -> None:
         """Upserts a connector into the state."""
         process_id = await self._get(("_conn_proc_map", connector.id))
-        key = ("process", process_id, "connector", connector.id)
+        key = self._connector_key(process_id, connector.id)
         await self._set(key, connector.dict())
 
     async def get_connector(self, connector_id: str) -> dict:
         """Returns a connector from the state."""
         process_id = await self._get(("_conn_proc_map", connector_id))
-        key = ("process", process_id, "connector", connector_id)
+        key = self._connector_key(process_id, connector_id)
         return await self._get(key)
