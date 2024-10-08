@@ -113,7 +113,9 @@ class StateBackend(ABC, AsDictMixin):
 
     async def get_component(self, component_id: str) -> dict:
         """Returns a component from the state."""
-        return await self._get(("component", component_id))
+        process_id = await self._get(("_comp_proc_map", component_id))
+        key = ("process", process_id, "component", component_id)
+        return await self._get(key)
 
     async def upsert_connector(self, connector: Connector) -> None:
         """Upserts a connector into the state."""
@@ -123,4 +125,6 @@ class StateBackend(ABC, AsDictMixin):
 
     async def get_connector(self, connector_id: str) -> dict:
         """Returns a connector from the state."""
-        return await self._get(("connector", connector_id))
+        process_id = await self._get(("_conn_proc_map", connector_id))
+        key = ("process", process_id, "connector", connector_id)
+        return await self._get(key)

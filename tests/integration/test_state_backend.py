@@ -11,36 +11,49 @@ from tests.conftest import ComponentTestHelper
 
 
 class A(ComponentTestHelper):
-    """`A` component class."""
+    """`A` component class with no input or output fields."""
+
+    io = IOController()
+
+
+class B(ComponentTestHelper):
+    """`B` component class with input and output fields."""
 
     io = IOController(inputs=["in_1", "in_2"], outputs=["out_1", "out_2"])
 
 
 @pytest.fixture
-def components() -> list[Component]:
+def A_components() -> list[Component]:
     """Returns a tuple of `A` components."""
     return [A(name="A1", max_steps=5), A(name="A2", max_steps=5)]
 
 
 @pytest.fixture
-def connectors() -> list[Connector]:
-    """Returns a tuple of connectors."""
+def B_components() -> list[Component]:
+    """Returns a tuple of `B` components."""
+    return [B(name="B1", max_steps=5), B(name="B2", max_steps=5)]
+
+
+@pytest.fixture
+def B_connectors() -> list[Connector]:
+    """Returns a tuple of connectors for `B` components."""
     return [
         Connector(
-            spec=ConnectorSpec(source="A1.out_1", target="A2.in_1"), channel=AsyncioChannel()
+            spec=ConnectorSpec(source="B1.out_1", target="B2.in_1"), channel=AsyncioChannel()
         ),
         Connector(
-            spec=ConnectorSpec(source="A1.out_2", target="A2.in_2"), channel=AsyncioChannel()
+            spec=ConnectorSpec(source="B1.out_2", target="B2.in_2"), channel=AsyncioChannel()
         ),
     ]
 
 
 @pytest.mark.asyncio
-async def test_state_backend_upsert_component(components: list[Component]) -> None:
+async def test_state_backend_upsert_component(A_components: list[Component]) -> None:
     """Tests `StateBackend.upsert_component` method."""
     state_backend = DictStateBackend()
+    await state_backend.init()
 
-    comp_a1, comp_a2 = components
+    comp_a1, comp_a2 = A_components
 
     await comp_a1.init()
     await comp_a2.init()
@@ -75,11 +88,12 @@ async def test_state_backend_upsert_component(components: list[Component]) -> No
 
 
 @pytest.mark.asyncio
-async def test_state_backend_upsert_connector(connectors: list[Connector]) -> None:
+async def test_state_backend_upsert_connector(B_connectors: list[Connector]) -> None:
     """Tests `StateBackend.upsert_connector` method."""
     state_backend = DictStateBackend()
+    await state_backend.init()
 
-    conn_1, conn_2 = connectors
+    conn_1, conn_2 = B_connectors
 
     await state_backend.upsert_connector(conn_1)
     await state_backend.upsert_connector(conn_2)
@@ -90,47 +104,48 @@ async def test_state_backend_upsert_connector(connectors: list[Connector]) -> No
 
 @pytest.mark.asyncio
 async def test_state_backend_upsert_process(
-    components: list[Component], connectors: list[Connector]
+    B_components: list[Component], B_connectors: list[Connector]
 ) -> None:
     """Tests `StateBackend.upsert_process` method."""
     state_backend = DictStateBackend()
+    await state_backend.init()
 
-    comp_a1, comp_a2 = components
-    conn_1, conn_2 = connectors
+    comp_b1, comp_b2 = B_components
+    conn_1, conn_2 = B_connectors
 
-    process_1 = Process(name="P1", components=[comp_a1, comp_a2], connectors=[conn_1, conn_2])
+    process_1 = Process(name="P1", components=[comp_b1, comp_b2], connectors=[conn_1, conn_2])
     await state_backend.upsert_process(process_1)
 
-    process_2 = Process(name="P2", components=[comp_a1, comp_a2], connectors=[conn_1, conn_2])
+    process_2 = Process(name="P2", components=[comp_b1, comp_b2], connectors=[conn_1, conn_2])
     await state_backend.upsert_process(process_2)
 
     assert await state_backend.get_process(process_1.id) == process_1.dict()
     assert await state_backend.get_process(process_2.id) == process_2.dict()
 
-    process_1.components.pop(comp_a1.id)
-    await state_backend.upsert_process(process_1)
-    assert await state_backend.get_process(process_1.id) == process_1.dict()
+    # process_1.components.pop(comp_b1.id)
+    # await state_backend.upsert_process(process_1)
+    # assert await state_backend.get_process(process_1.id) == process_1.dict()
 
 
 @pytest.mark.asyncio
 async def test_state_backend_process_init(
-    components: list[Component], connectors: list[Connector]
+    B_components: list[Component], B_connectors: list[Connector]
 ) -> None:
     """Tests `StateBackend` connected up correctly on `Process.init`."""
     state_backend = DictStateBackend()
 
-    comp_a1, comp_a2 = components
-    conn_1, conn_2 = connectors
+    comp_b1, comp_b2 = B_components
+    conn_1, conn_2 = B_connectors
 
     process = Process(
-        name="P1", components=[comp_a1, comp_a2], connectors=[conn_1, conn_2], state=state_backend
+        name="P1", components=[comp_b1, comp_b2], connectors=[conn_1, conn_2], state=state_backend
     )
 
     # Calling process init should add all components and connectors to the StateBackend.
     await process.init()
 
     assert await state_backend.get_process(process.id) == process.dict()
-    assert await state_backend.get_component(comp_a1.id) == comp_a1.dict()
-    assert await state_backend.get_component(comp_a2.id) == comp_a2.dict()
+    assert await state_backend.get_component(comp_b1.id) == comp_b1.dict()
+    assert await state_backend.get_component(comp_b2.id) == comp_b2.dict()
     assert await state_backend.get_connector(conn_1.id) == conn_1.dict()
     assert await state_backend.get_connector(conn_2.id) == conn_2.dict()

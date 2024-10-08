@@ -65,7 +65,8 @@ class Component(ABC, AsDictMixin):
 
     async def init(self) -> None:
         """Performs component initialisation actions."""
-        pass
+        if self._state is not None and self._state_is_connected:
+            await self._state.upsert_component(self)
 
     @abstractmethod
     async def step(self) -> None:
