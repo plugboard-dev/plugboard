@@ -41,7 +41,7 @@ async def _run_process(process: Process) -> None:
 def run(
     config: Annotated[
         Path,
-        typer.Option(
+        typer.Argument(
             exists=True,
             file_okay=True,
             dir_okay=False,
