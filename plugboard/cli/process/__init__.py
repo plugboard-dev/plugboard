@@ -4,8 +4,8 @@ import asyncio
 from pathlib import Path
 
 import msgspec
-from rich import print
 from rich.console import Console
+from rich.progress import Progress, SpinnerColumn, TextColumn
 import typer
 from typing_extensions import Annotated
 
@@ -54,8 +54,13 @@ def run(
 ):
     """Run a Plugboard process."""
     config_spec = _read_yaml(config)
-    print(f"[blue]Building process[/blue] from {config}")
-    process = _build_process(config_spec)
-    print(f"[blue]Running process[/blue] from {config}")
-    asyncio.run(_run_process(process))
-    print(f"[bold green]Process completed[/bold green]")
+
+    with Progress(
+        SpinnerColumn("arrow3"),
+        TextColumn("[progress.description]{task.description}"),
+    ) as progress:
+        task = progress.add_task(f"[blue]Building process[/blue] from {config}", total=None)
+        process = _build_process(config_spec)
+        progress.update(task, description=f"[blue]Running process...[/blue]")
+        asyncio.run(_run_process(process))
+        progress.update(task, description=f"[green]Process complete[/green]")
