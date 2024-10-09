@@ -51,7 +51,7 @@ def run(
             help="Path to the YAML configuration file.",
         ),
     ],
-):
+) -> None:
     """Run a Plugboard process."""
     config_spec = _read_yaml(config)
 
