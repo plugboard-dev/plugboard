@@ -122,10 +122,6 @@ async def test_state_backend_upsert_process(
     assert await state_backend.get_process(process_1.id) == process_1.dict()
     assert await state_backend.get_process(process_2.id) == process_2.dict()
 
-    # process_1.components.pop(comp_b1.id)
-    # await state_backend.upsert_process(process_1)
-    # assert await state_backend.get_process(process_1.id) == process_1.dict()
-
 
 @pytest.mark.asyncio
 async def test_state_backend_process_init(
