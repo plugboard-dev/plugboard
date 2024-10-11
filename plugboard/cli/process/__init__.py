@@ -59,8 +59,8 @@ def run(
         SpinnerColumn("arrow3"),
         TextColumn("[progress.description]{task.description}"),
     ) as progress:
-        task = progress.add_task(f"[blue]Building process[/blue] from {config}", total=None)
+        task = progress.add_task(f"Building process from {config}", total=None)
         process = _build_process(config_spec)
-        progress.update(task, description=f"[blue]Running process...[/blue]")
+        progress.update(task, description=f"Running process...")
         asyncio.run(_run_process(process))
         progress.update(task, description=f"[green]Process complete[/green]")

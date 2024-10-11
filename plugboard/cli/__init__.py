@@ -9,7 +9,7 @@ from plugboard.cli.process import app as process_app
 app = typer.Typer(
     rich_markup_mode="rich",
     no_args_is_help=True,
-    help=f"[bold blue]Plugboard CLI[/bold blue]\n\nVersion {__version__}",
+    help=f"[bold]Plugboard CLI[/bold]\n\nVersion {__version__}",
 )
 app.add_typer(process_app, name="process")
 
