@@ -13,7 +13,9 @@ from plugboard.process import Process, ProcessBuilder
 from plugboard.schemas import ConfigSpec
 
 
-app = typer.Typer(rich_markup_mode="rich", no_args_is_help=True)
+app = typer.Typer(
+    rich_markup_mode="rich", no_args_is_help=True, pretty_exceptions_show_locals=False
+)
 stderr = Console(stderr=True)
 
 
