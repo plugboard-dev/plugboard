@@ -17,13 +17,7 @@ from plugboard.utils import EntityIdGen
 
 
 @pytest.fixture
-def job_id() -> str:
-    """Returns a job ID for testing."""
-    return EntityIdGen.job_id()
-
-
-@pytest.fixture
-def process_spec(job_id: str) -> ProcessSpec:
+def process_spec() -> ProcessSpec:
     """Returns a `ProcessSpec` for testing."""
     return ProcessSpec(
         args=ProcessArgsSpec(
@@ -54,7 +48,7 @@ def process_spec(job_id: str) -> ProcessSpec:
             parameters={},
             state=StateBackendSpec(
                 type="plugboard.state.DictStateBackend",
-                args={"job_id": job_id, "metadata": {"hello": "world"}},
+                args={"job_id": None, "metadata": {"hello": "world"}},
             ),
         ),
         channel_builder=ChannelBuilderSpec(
@@ -65,7 +59,7 @@ def process_spec(job_id: str) -> ProcessSpec:
 
 
 @pytest.mark.anyio
-async def test_process_builder_build(job_id: str, process_spec: ProcessSpec) -> None:
+async def test_process_builder_build(process_spec: ProcessSpec) -> None:
     """Tests building a process."""
     process = ProcessBuilder.build(process_spec)
     # Must build a process with the correct components and connectors
@@ -79,5 +73,8 @@ async def test_process_builder_build(job_id: str, process_spec: ProcessSpec) -> 
     )
     # Must build a process with the correct state backend
     async with process:
-        assert await process.state.job_id == job_id
+        input_job_id = process_spec.args.state.args.model_dump().get("job_id")
+        if input_job_id is not None:
+            assert await process.state.job_id == input_job_id
+        assert EntityIdGen.is_job_id(await process.state.job_id)
         assert await process.state.metadata == {"hello": "world"}
