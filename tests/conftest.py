@@ -40,6 +40,7 @@ class ComponentTestHelper(Component):
 
     async def init(self) -> None:  # noqa: D102
         self._is_initialised = True
+        await super().init()
 
     async def step(self) -> None:  # noqa: D102
         self._step_count += 1
