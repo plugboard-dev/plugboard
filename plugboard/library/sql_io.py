@@ -47,10 +47,10 @@ class SQLReader(DataReader):
         self._query = query
         self._params = params or {}
         self._reader: _t.Optional[_t.AsyncIterator | _t.Iterator] = None
-        self.connect_args = connect_args or {}
+        self._connect_args = connect_args or {}
 
     async def _run_query_async(self) -> _t.AsyncIterator[_t.Sequence[Row]]:
-        engine = create_async_engine(self._connection_string, **self.connect_args)
+        engine = create_async_engine(self._connection_string, **self._connect_args)
         async with engine.connect() as conn:
             if self._chunk_size:
                 # Use server-side cursor for large datasets
@@ -67,7 +67,7 @@ class SQLReader(DataReader):
             raise NoMoreDataException
 
     def _run_query_sync(self) -> _t.Iterator[_t.Sequence[Row]]:
-        engine = create_engine(self._connection_string, **self.connect_args)
+        engine = create_engine(self._connection_string, **self._connect_args)
         with engine.connect() as conn:
             if self._chunk_size:
                 # Use server-side cursor for large datasets
@@ -134,7 +134,7 @@ class SQLWriter(DataWriter):
         super().__init__(*args, **kwargs)
         self._connection_string = connection_string
         self._table_name = table
-        self.connect_args = {"isolation_level": "AUTOCOMMIT", **(connect_args or {})}
+        self._connect_args = {"isolation_level": "AUTOCOMMIT", **(connect_args or {})}
         self._metadata = MetaData()
         self._table: _t.Optional[Table] = None
         self._engine: _t.Optional[AsyncEngine | Engine] = None
@@ -163,10 +163,10 @@ class SQLWriter(DataWriter):
     async def _save(self, data: list[dict[str, _t.Any]]) -> None:
         if not self._engine:
             try:
-                self._engine = create_async_engine(self._connection_string, **self.connect_args)
+                self._engine = create_async_engine(self._connection_string, **self._connect_args)
             except InvalidRequestError:
                 # Fall back on synchronous connection
-                self._engine = create_engine(self._connection_string, **self.connect_args)
+                self._engine = create_engine(self._connection_string, **self._connect_args)
         if isinstance(self._engine, AsyncEngine):
             await self._save_rows_async(data)
         else:
