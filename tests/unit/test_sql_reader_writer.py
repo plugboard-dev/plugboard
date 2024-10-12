@@ -18,7 +18,7 @@ class SQLReaderHelper(SQLReader):
 
     def __init__(self, *args: _t.Any, **kwargs: _t.Any) -> None:
         super().__init__(*args, **kwargs)
-        self.chunk_sizes = []
+        self.chunk_sizes: list[int] = []
 
     async def _fetch(self) -> _t.Any:
         result = await super()._fetch()
