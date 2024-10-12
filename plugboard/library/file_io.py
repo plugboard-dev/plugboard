@@ -21,10 +21,11 @@ class FileReader(DataReader):
 
     def __init__(
         self,
-        *args: _t.Any,
+        name: str,
         path: str | Path,
+        field_names: list[str],
+        chunk_size: _t.Optional[int] = None,
         storage_options: _t.Optional[dict[str, _t.Any]] = None,
-        **kwargs: _t.Any,
     ) -> None:
         """Instantiates the `FileReader`.
 
@@ -34,10 +35,8 @@ class FileReader(DataReader):
             field_names: The names of the fields to read from the file.
             chunk_size: Optional; The size of the data chunks to read from the file.
             storage_options: Optional; Additional options for the fsspec-compatible filesystem.
-            *args: Additional positional arguments.
-            **kwargs: Additional keyword arguments.
         """
-        super().__init__(*args, **kwargs)
+        super().__init__(name=name, field_names=field_names, chunk_size=chunk_size)
         self._file_path = str(path)
         self._extension = "".join(Path(path).suffixes).lower()
         if self._extension not in {".csv", ".csv.gz", ".parquet"}:
@@ -89,10 +88,11 @@ class FileWriter(DataWriter):
 
     def __init__(
         self,
-        *args: _t.Any,
+        name: str,
         path: str | Path,
+        field_names: list[str],
+        chunk_size: _t.Optional[int] = None,
         storage_options: _t.Optional[dict[str, _t.Any]] = None,
-        **kwargs: _t.Any,
     ) -> None:
         """Instantiates the `FileWriter`.
 
@@ -102,10 +102,8 @@ class FileWriter(DataWriter):
             field_names: The names of the fields to write to the file.
             chunk_size: Optional; The size of the data chunks to read from the file.
             storage_options: Optional; Additional options for the fsspec-compatible filesystem.
-            *args: Additional positional arguments.
-            **kwargs: Additional keyword arguments.
         """
-        super().__init__(*args, **kwargs)
+        super().__init__(name=name, field_names=field_names, chunk_size=chunk_size)
         self._file_path = str(path)
         self._extension = "".join(Path(path).suffixes).lower()
         if self._extension not in {".csv", ".csv.gz", ".parquet"}:
