@@ -1,4 +1,4 @@
-"""Unit tests for the `FileReader` and `FileWriter` components."""
+"""Unit tests for the `SQLReader` and `SQLWriter` components."""
 
 import tempfile
 import typing as _t
