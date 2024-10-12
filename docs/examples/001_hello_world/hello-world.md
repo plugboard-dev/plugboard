@@ -19,5 +19,5 @@ In many cases, we want to define components once, with suitable parameters, and 
 
 We can now run this model using the plugboard CLI with the command:
 ```shell
-plugboard process run --yaml-input model.yaml
+plugboard process run model.yaml
 ```

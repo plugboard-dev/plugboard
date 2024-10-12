@@ -107,7 +107,7 @@ plugboard:
 
 We can now run this model using the plugboard CLI with the command:
 ```shell
-plugboard process run --yaml-input my-model.yaml
+plugboard process run my-model.yaml
 ```
 
 ## Documentation
