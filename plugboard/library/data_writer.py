@@ -7,7 +7,7 @@ from collections import defaultdict, deque
 import typing as _t
 
 from plugboard.component import Component
-from plugboard.component.io_controller import IOController
+from plugboard.component.io_controller import IOController, IODirection
 
 
 class DataWriter(Component, ABC):
@@ -48,6 +48,13 @@ class DataWriter(Component, ABC):
         """Converts the data from `dict[str, deque]` into a format required for saving."""
         pass
 
+    def _bind_inputs(self) -> None:
+        """Binds input fields to component fields and append to internal buffer."""
+        for field in self.io.inputs:
+            data = self.io.data[IODirection.INPUT][field]
+            setattr(self, field, data)
+            self._buffer[field].append(data)
+
     async def _save_chunk(self) -> None:
         """Write data from the buffer."""
         if self._task is not None:
@@ -58,10 +65,7 @@ class DataWriter(Component, ABC):
         self._buffer = defaultdict(deque)
 
     async def step(self) -> None:
-        """Takes data from inputs and saves to internal buffer."""
-        for field in self.io.inputs:
-            self._buffer[field].append(getattr(self, field))
-
+        """Trigger save when buffer is at target size."""
         if self._chunk_size and len(self._buffer[self.io.inputs[0]]) >= self._chunk_size:
             await self._save_chunk()
 
