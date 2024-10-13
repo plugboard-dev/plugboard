@@ -132,7 +132,11 @@ class SQLWriter(DataWriter):
         super().__init__(name=name, field_names=field_names, chunk_size=chunk_size)
         self._connection_string = connection_string
         self._table_name = table
-        self._connect_args = {"isolation_level": "AUTOCOMMIT", **(connect_args or {})}
+        self._connect_args = {
+            "isolation_level": "AUTOCOMMIT",
+            "pool_pre_ping": True,
+            **(connect_args or {}),
+        }
         self._metadata = MetaData()
         self._table: _t.Optional[Table] = None
         self._engine: _t.Optional[AsyncEngine | Engine] = None
