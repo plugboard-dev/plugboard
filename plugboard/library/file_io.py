@@ -38,6 +38,7 @@ class FileReader(DataReader):
         """
         super().__init__(name=name, field_names=field_names, chunk_size=chunk_size)
         self._file_path = str(path)
+        # Use .suffixes to handle files with multiple extensions (e.g. .csv.gz)
         self._extension = "".join(Path(path).suffixes).lower()
         if self._extension not in {".csv", ".csv.gz", ".parquet"}:
             raise ValueError(f"Unsupported file format: {self._extension}")
@@ -105,6 +106,7 @@ class FileWriter(DataWriter):
         """
         super().__init__(name=name, field_names=field_names, chunk_size=chunk_size)
         self._file_path = str(path)
+        # Use .suffixes to handle files with multiple extensions (e.g. .csv.gz)
         self._extension = "".join(Path(path).suffixes).lower()
         if self._extension not in {".csv", ".csv.gz", ".parquet"}:
             raise ValueError(f"Unsupported file format: {self._extension}")
