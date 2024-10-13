@@ -1,4 +1,6 @@
-# plugboard
+# Plugboard
+![example workflow](https://github.com/plugboard-dev/plugboard/actions/workflows/lint-test.yaml/badge.svg)
+
 Plugboard is an event-driven modelling and orchestration framework in Python for simulating complex processes with many interconnected components.
 
 The code was originally developed to create digital twins of complex heavy industrial processes involving material recirculation, enabling scenario analysis, yield optimisation, and operational improvements. At its heart, plugboard is an abstract and general purpose modelling and orchestration tool for distributed simulations which can be applied to problems in many domains.

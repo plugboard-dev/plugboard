@@ -32,7 +32,7 @@ class ComponentSocket(BaseModel):
     """
 
     _PATTERN: _t.ClassVar[re.Pattern] = re.compile(
-        r"^([a-zA-Z_][a-zA-Z0-9_]*)\.([a-zA-Z_][a-zA-Z0-9_]*)$"
+        r"^([a-zA-Z_][a-zA-Z0-9_-]*)\.([a-zA-Z_][a-zA-Z0-9_]*)$"
     )
 
     component: str

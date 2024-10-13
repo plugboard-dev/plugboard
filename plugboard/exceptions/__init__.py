@@ -13,6 +13,12 @@ class IOStreamClosedError(Exception):
     pass
 
 
+class NoMoreDataException(Exception):
+    """Raised when there is no more data to fetch."""
+
+    pass
+
+
 class RegistryError(Exception):
     """Raised when an unknown class is requested from the ClassRegistry."""
 
