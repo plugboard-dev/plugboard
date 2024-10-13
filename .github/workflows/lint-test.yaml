@@ -1,6 +1,16 @@
-name: CI
+name: Lint and Test
 
-on: push
+on:
+  push:
+    branches:
+      - 'main'
+  pull_request:
+    types:
+      - opened
+      - edited
+      - synchronize
+      - reopened
+
 env:
   POETRY_VERSION: '1.8'
 
