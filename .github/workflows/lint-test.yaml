@@ -54,7 +54,7 @@ jobs:
       - name: Notebook output cleared
         run: |
           poetry run pre-commit install
-          poetry run pre-commit run --all-files
+          poetry run pre-commit run nbstripout --all-files
         if: always()
 
       - name: Build docs
