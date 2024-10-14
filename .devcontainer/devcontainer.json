@@ -24,7 +24,6 @@
 			],
 			"settings": {
 				"python.terminal.activateEnvInCurrentTerminal": true,
-				"python.defaultInterpreterPath": ".venv/bin/python",
 				"python.testing.pytestArgs": [
 					"tests"
 				],
