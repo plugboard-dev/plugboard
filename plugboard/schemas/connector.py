@@ -7,6 +7,9 @@ import typing as _t
 from pydantic import BaseModel, field_validator
 
 
+DEFAULT_CHANNEL_CLS_PATH: str = "plugboard.connector.AsyncioChannelBuilder"
+
+
 class ConnectorMode(StrEnum):
     """Defines the mode of a connector.
 
@@ -103,5 +106,5 @@ class ChannelBuilderSpec(BaseModel):
         args: Optional; The arguments for the `ChannelBuilder`.
     """
 
-    type: str
+    type: str = DEFAULT_CHANNEL_CLS_PATH
     args: ChannelBuilderArgsSpec = ChannelBuilderArgsSpec()
