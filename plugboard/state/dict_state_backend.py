@@ -31,7 +31,7 @@ class DictStateBackend(StateBackend):
                     return value
                 except TypeError:
                     raise ValueError(f"Invalid key: {key}")
-            _key = key[-1]
+            _key = key[-1]  # Return nested value from final key component below
         return _state.get(_key, value)
 
     async def _set(self, key: str | tuple[str, ...], value: _t.Any) -> None:  # noqa: A003
@@ -39,5 +39,5 @@ class DictStateBackend(StateBackend):
         if isinstance(_key, tuple):
             for k in key[:-1]:  # type: str
                 _state = _state.setdefault(k, {})
-            _key = key[-1]
+            _key = key[-1]  # Set nested value with final key component below
         _state[_key] = value
