@@ -69,9 +69,10 @@ test: init
 docs: $(VENV)
 	$(PYTHON) -m mkdocs build
 
+MKDOCS_PORT ?= 8000
 .PHONY: docs-serve
-docs-serve: $(VENV)
-	$(PYTHON) -m mkdocs serve
+docs-serve: $(VENV) docs
+	$(PYTHON) -m mkdocs serve -a localhost:$(MKDOCS_PORT)
 
 .PHONY: build
 build: $(VENV) docs
