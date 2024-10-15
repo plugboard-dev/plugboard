@@ -1,5 +1,6 @@
 """Simple hello world example."""
 
+# fmt: off
 # --8<-- [start:components]
 import asyncio
 from contextlib import AsyncExitStack
@@ -37,7 +38,9 @@ class B(Component):
         self._ctx = AsyncExitStack()
 
     async def init(self) -> None:
-        self._f = await self._ctx.enter_async_context(async_open(self._path, "w"))
+        self._f = await self._ctx.enter_async_context(
+            async_open(self._path, "w")
+        )
 
     async def step(self) -> None:
         out = 2 * self.in_1
@@ -45,8 +48,6 @@ class B(Component):
 
     async def destroy(self) -> None:
         await self._ctx.aclose()
-
-
 # --8<-- [end:components]
 
 
