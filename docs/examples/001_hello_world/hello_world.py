@@ -2,9 +2,10 @@
 
 # --8<-- [start:components]
 import asyncio
+from contextlib import AsyncExitStack
 import typing as _t
 
-import aiofiles
+from aiofile import async_open
 
 from plugboard.component import Component
 from plugboard.component import IOController as IO
@@ -33,11 +34,17 @@ class B(Component):
     def __init__(self, path: str, *args: _t.Any, **kwargs: _t.Any) -> None:
         super().__init__(*args, **kwargs)
         self._path = path
+        self._ctx = AsyncExitStack()
+
+    async def init(self) -> None:
+        self._f = await self._ctx.enter_async_context(async_open(self._path, "w"))
 
     async def step(self) -> None:
         out = 2 * self.in_1
-        async with aiofiles.open(self._path, "a") as f:
-            f.write(f"{out}\n")
+        self._f.write(f"{out}\n")
+
+    async def destroy(self) -> None:
+        await self._ctx.aclose()
 
 
 # --8<-- [end:components]
@@ -54,8 +61,8 @@ async def main() -> None:
             )
         ],
     )
-    await process.init()
-    await process.run()
+    async with process:
+        await process.run()
     # --8<-- [end:main]
 
 
