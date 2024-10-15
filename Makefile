@@ -57,6 +57,7 @@ init: install
 .PHONY: lint
 lint: init
 	$(PYTHON) -m ruff check
+	$(PYTHON) -m ruff format --check
 	$(PYTHON) -m mypy $(SRC)/ --explicit-package-bases
 	$(PYTHON) -m mypy $(TESTS)/
 
