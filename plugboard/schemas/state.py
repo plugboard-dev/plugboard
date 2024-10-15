@@ -1,16 +1,26 @@
 """Provides `StateBackendSpec` class."""
 
-from pydantic import BaseModel
+from datetime import datetime, timezone
+import typing as _t
+
+from pydantic import BaseModel, Field
+
+from plugboard.schemas.entities import Entity
+
+
+DEFAULT_STATE_BACKEND_CLS_PATH: str = "plugboard.state.DictStateBackend"
 
 
 class StateBackendArgsSpec(BaseModel, extra="allow"):
     """Specification of the [`StateBackend`][plugboard.state.StateBackend] constructor arguments.
 
     Attributes:
-        parameters: Parameters for the `StateBackend`.
+        job_id: The unique id for the job.
+        metadata: Metadata for a run.
     """
 
-    parameters: dict = {}
+    job_id: _t.Optional[str] = Field(default=None, pattern=Entity.Job.id_regex)
+    metadata: dict = {}
 
 
 class StateBackendSpec(BaseModel):
@@ -21,5 +31,13 @@ class StateBackendSpec(BaseModel):
         args: The arguments for the `StateBackend`.
     """
 
-    type: str
-    args: StateBackendArgsSpec
+    type: str = DEFAULT_STATE_BACKEND_CLS_PATH
+    args: StateBackendArgsSpec = StateBackendArgsSpec()
+
+
+class StateSchema(BaseModel):
+    """Schema for Plugboard state data."""
+
+    job_id: str = Field(pattern=Entity.Job.id_regex)
+    created_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+    metadata: dict = {}

@@ -8,10 +8,41 @@ from plugboard.connector.channel_builder import ChannelBuilder
 from plugboard.connector.connector import Connector
 from plugboard.process.process import Process
 from plugboard.schemas import ProcessSpec
+from plugboard.state import StateBackend
 
 
 class ProcessBuilder:
     """Builds `Process` objects."""
+
+    @classmethod
+    def build(cls, spec: ProcessSpec) -> Process:
+        """Build a `Process` object.
+
+        Args:
+            spec: A `ProcessSpec` object defining the `Process`.
+
+        Returns:
+            A `Process` object.
+        """
+        state = cls._build_statebackend(spec)
+        components = cls._build_components(spec)
+        connectors = cls._build_connectors(spec)
+
+        return Process(
+            components=components,
+            connectors=connectors,
+            name=spec.args.name,
+            parameters=spec.args.parameters,
+            state=state,
+        )
+
+    @classmethod
+    def _build_statebackend(cls, spec: ProcessSpec) -> StateBackend:
+        state_spec = spec.args.state
+        statebackend_class: _t.Any = locate(state_spec.type)
+        if not statebackend_class or not issubclass(statebackend_class, StateBackend):
+            raise ValueError(f"StateBackend class {spec.args.state.type} not found.")
+        return statebackend_class(**dict(spec.args.state.args))
 
     @classmethod
     def _build_components(cls, spec: ProcessSpec) -> list[Component]:
@@ -31,20 +62,3 @@ class ProcessBuilder:
             Connector(cs, channel_builder.build(**dict(spec.channel_builder.args)))
             for cs in spec.args.connectors
         ]
-
-    @classmethod
-    def build(cls, spec: ProcessSpec) -> Process:
-        """Build a `Process` object.
-
-        Args:
-            spec: A `ProcessSpec` object defining the `Process`.
-
-        Returns:
-            A `Process` object.
-        """
-        components = cls._build_components(spec)
-        connectors = cls._build_connectors(spec)
-
-        return Process(
-            components=components, connectors=connectors, parameters=spec.args.parameters
-        )

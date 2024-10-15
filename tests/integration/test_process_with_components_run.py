@@ -5,45 +5,14 @@ from pathlib import Path
 from tempfile import NamedTemporaryFile
 import typing as _t
 
-import aiofiles
+from aiofile import async_open
 import pytest
 
-from plugboard.component import Component, IOController as IO
+from plugboard.component import IOController as IO
 from plugboard.connector import AsyncioChannel, Connector
 from plugboard.process import Process
 from plugboard.schemas import ConnectorSpec
-
-
-class ComponentTestHelper(Component):
-    io = IO(inputs=[], outputs=[])
-
-    @property
-    def is_initialised(self) -> bool:
-        return self._is_initialised
-
-    @property
-    def is_finished(self) -> bool:
-        return self._is_finished
-
-    @property
-    def step_count(self) -> int:
-        return self._step_count
-
-    def __init__(self, *args: _t.Any, **kwargs: _t.Any) -> None:
-        super().__init__(*args, **kwargs)
-        self._is_initialised = False
-        self._is_finished = False
-        self._step_count = 0
-
-    async def init(self) -> None:
-        self._is_initialised = True
-
-    async def step(self) -> None:
-        self._step_count += 1
-
-    async def run(self) -> None:
-        await super().run()
-        self._is_finished = True
+from tests.conftest import ComponentTestHelper
 
 
 class A(ComponentTestHelper):
@@ -87,7 +56,7 @@ class C(ComponentTestHelper):
 
     async def step(self) -> None:
         out = self.in_1  # type: ignore
-        async with aiofiles.open(self._path, "a") as f:
+        async with async_open(self._path, "a") as f:
             await f.write(f"{out}\n")
         await super().step()
 

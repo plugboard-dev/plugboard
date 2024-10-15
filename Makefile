@@ -57,6 +57,7 @@ init: install
 .PHONY: lint
 lint: init
 	$(PYTHON) -m ruff check
+	$(PYTHON) -m ruff format --check
 	$(PYTHON) -m mypy $(SRC)/ --explicit-package-bases
 	$(PYTHON) -m mypy $(TESTS)/
 
@@ -68,9 +69,10 @@ test: init
 docs: $(VENV)
 	$(PYTHON) -m mkdocs build
 
+MKDOCS_PORT ?= 8000
 .PHONY: docs-serve
-docs-serve: $(VENV)
-	$(PYTHON) -m mkdocs serve
+docs-serve: $(VENV) docs
+	$(PYTHON) -m mkdocs serve -a localhost:$(MKDOCS_PORT)
 
 .PHONY: build
 build: $(VENV) docs

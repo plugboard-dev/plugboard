@@ -23,17 +23,19 @@ class Component(ABC, AsDictMixin):
         name: str,
         initial_values: _t.Optional[dict] = None,
         parameters: _t.Optional[dict] = None,
-        constraints: _t.Optional[dict] = None,
         state: _t.Optional[StateBackend] = None,
+        constraints: _t.Optional[dict] = None,
     ) -> None:
         self.name = name
         self._initial_values = initial_values or {}
         self._constraints = constraints or {}
         self._parameters = parameters or {}
-        self.state = state
+        self._state: _t.Optional[StateBackend] = state
+        self._state_is_connected = False
         self.io = IOController(
             inputs=type(self).io.inputs, outputs=type(self).io.outputs, namespace=name
         )
+        self.init = self._handle_init_wrapper()  # type: ignore
         self.step = self._handle_step_wrapper()  # type: ignore
 
     def __init_subclass__(cls, *args: _t.Any, **kwargs: _t.Any) -> None:
@@ -42,9 +44,40 @@ class Component(ABC, AsDictMixin):
             raise NotImplementedError(f"{cls.__name__} must define an `io` attribute.")
         ComponentRegistry.add(cls)
 
+    @property
+    def id(self) -> str:
+        """Unique ID for `Component`."""
+        return self.name
+
+    @property
+    def state(self) -> _t.Optional[StateBackend]:
+        """State backend for the process."""
+        return self._state
+
+    async def connect_state(self, state: _t.Optional[StateBackend] = None) -> None:
+        """Connects the `Component` to the `StateBackend`."""
+        if self._state_is_connected:
+            return
+        self._state = state or self._state
+        if self._state is None:
+            return
+        await self._state.upsert_component(self)
+        self._state_is_connected = True
+
     async def init(self) -> None:
         """Performs component initialisation actions."""
         pass
+
+    def _handle_init_wrapper(self) -> _t.Callable:
+        self._init = self.init
+
+        @wraps(self.init)
+        async def _wrapper() -> None:
+            await self._init()
+            if self._state is not None and self._state_is_connected:
+                await self._state.upsert_component(self)
+
+        return _wrapper
 
     @abstractmethod
     async def step(self) -> None:
@@ -81,6 +114,10 @@ class Component(ABC, AsDictMixin):
                 await self.step()
             except IOStreamClosedError:
                 break
+
+    async def destroy(self) -> None:
+        """Performs tear-down actions for `Component`."""
+        pass
 
     def dict(self) -> dict[str, _t.Any]:  # noqa: D102
         return {

@@ -23,3 +23,9 @@ class RegistryError(Exception):
     """Raised when an unknown class is requested from the ClassRegistry."""
 
     pass
+
+
+class StateBackendError(Exception):
+    """Raised for `StateBackend` related errors."""
+
+    pass

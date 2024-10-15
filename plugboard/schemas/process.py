@@ -16,14 +16,16 @@ class ProcessArgsSpec(BaseModel, extra="allow"):
     Attributes:
         components: Specifies each `Component` in the `Process`.
         connectors: Specifies the connections between each `Component`.
+        name: Unique identifier for `Process`.
         parameters: Parameters for the `Process`.
         state: Optional; Specifies the `StateBackend` used for the `Process`.
     """
 
     components: _t.Annotated[list[ComponentSpec], Len(min_length=1)]
     connectors: list[ConnectorSpec] = []
+    name: _t.Optional[str] = None
     parameters: dict = {}
-    state: _t.Optional[StateBackendSpec] = None
+    state: StateBackendSpec = StateBackendSpec()
 
 
 class ProcessSpec(BaseModel):
@@ -35,6 +37,4 @@ class ProcessSpec(BaseModel):
     """
 
     args: ProcessArgsSpec
-    channel_builder: ChannelBuilderSpec = ChannelBuilderSpec(
-        type="plugboard.connector.AsyncioChannelBuilder"
-    )
+    channel_builder: ChannelBuilderSpec = ChannelBuilderSpec()

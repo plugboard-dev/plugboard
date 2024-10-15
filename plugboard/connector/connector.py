@@ -16,6 +16,11 @@ class Connector(AsDictMixin):
         self.spec: ConnectorSpec = spec
         self.channel: Channel = channel
 
+    @property
+    def id(self) -> str:
+        """Unique ID for `Connector`."""
+        return self.spec.id
+
     def dict(self) -> dict[str, _t.Any]:  # noqa: D102
         return {
             "spec": self.spec.model_dump(),

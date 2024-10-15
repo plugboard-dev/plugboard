@@ -1,0 +1,43 @@
+"""Provides `DictStateBackend` class for single process state management."""
+
+import typing as _t
+
+from plugboard.exceptions import StateBackendError
+from plugboard.state.state_backend import StateBackend
+
+
+class DictStateBackend(StateBackend):
+    """`DictStateBackend` provides state persistence for single process runs."""
+
+    def __init__(self, *args: _t.Any, **kwargs: _t.Any) -> None:
+        """Instantiates `DictStateBackend`."""
+        super().__init__(*args, **kwargs)
+        self._state: dict[str, _t.Any] = {}
+
+    async def _initialise_data(
+        self, job_id: _t.Optional[str] = None, metadata: _t.Optional[dict] = None, **kwargs: _t.Any
+    ) -> None:
+        if job_id is not None:
+            raise StateBackendError("Cannot reuse job ID for non-persistent backend.")
+        return await super()._initialise_data(job_id, metadata, **kwargs)
+
+    async def _get(self, key: str | tuple[str, ...], value: _t.Optional[_t.Any] = None) -> _t.Any:
+        _state, _key = self._state, key
+        if isinstance(_key, tuple):
+            for k in key[:-1]:  # type: str
+                try:
+                    _state = _state[k]
+                except KeyError:
+                    return value
+                except TypeError:
+                    raise ValueError(f"Invalid key: {key}")
+            _key = key[-1]  # Return nested value from final key component below
+        return _state.get(_key, value)
+
+    async def _set(self, key: str | tuple[str, ...], value: _t.Any) -> None:  # noqa: A003
+        _state, _key = self._state, key
+        if isinstance(_key, tuple):
+            for k in key[:-1]:  # type: str
+                _state = _state.setdefault(k, {})
+            _key = key[-1]  # Set nested value with final key component below
+        _state[_key] = value
