@@ -53,7 +53,7 @@ ruff = "^0.5.6"
 types-aiofiles = "^24.1.0.20240626"
 
 [tool.poetry.group.test.dependencies]
-aiofiles = "^24.1.0"
+aiofile = "^3.9.0"
 aiosqlite = "^0.20.0"
 anyio = ">=4.3.0,<4.4.0"  # FIXME: Pinned due to hanging tests when running with anyio==4.4.0 on 2024-07-01
 pytest = "^8.3.2"

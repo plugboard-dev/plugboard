@@ -5,7 +5,7 @@ from pathlib import Path
 from tempfile import NamedTemporaryFile
 import typing as _t
 
-import aiofiles
+from aiofile import async_open
 import pytest
 
 from plugboard.component import IOController as IO
@@ -56,7 +56,7 @@ class C(ComponentTestHelper):
 
     async def step(self) -> None:
         out = self.in_1  # type: ignore
-        async with aiofiles.open(self._path, "a") as f:
+        async with async_open(self._path, "a") as f:
             await f.write(f"{out}\n")
         await super().step()
 
