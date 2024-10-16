@@ -2,11 +2,11 @@ name: Release
 
 on:
   workflow_dispatch:
-    branches: main
-    
+
 jobs:
   release:
     name: Perform release
+    runs-on: ubuntu-latest
     permissions:
       contents: write
     steps:
