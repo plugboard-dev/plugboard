@@ -6,7 +6,7 @@ import zmq
 import zmq.asyncio
 from zmq.devices import ProcessDevice
 
-from plugboard.connector.channel import SerdeChannel
+from plugboard.connector.serde_channel import SerdeChannel
 
 
 ZMQ_ADDR = r"tcp://127.0.0.1"
