@@ -21,7 +21,7 @@ def _deserialise(msg: bytes) -> _t.Any:
 
 
 class SerdeChannel(Channel, ABC):
-    """`SerdeChannel` base class for serializing and deserializing messages."""
+    """`SerdeChannel` base class for channels that use serialised messages."""
 
     @abstractmethod
     async def send(self, msg: bytes) -> None:
