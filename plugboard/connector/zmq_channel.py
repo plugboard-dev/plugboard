@@ -18,7 +18,7 @@ class ZMQChannel(SerdeChannel):
     def __init__(self, *args: _t.Any, **kwargs: _t.Any) -> None:
         """Instantiates `ZMQChannel`."""
         super().__init__(*args, **kwargs)
-        device = ProcessDevice(zmq.FORWARDER, zmq.PULL, zmq.PUSH)
+        device = ProcessDevice(zmq.QUEUE, zmq.PULL, zmq.PUSH)
         self._port_send = device.bind_in_to_random_port(ZMQ_ADDR)
         self._port_recv = device.bind_out_to_random_port(ZMQ_ADDR)
         self._context: _t.Optional[zmq.asyncio.Context] = None
