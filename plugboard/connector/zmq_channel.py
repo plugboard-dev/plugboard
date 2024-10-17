@@ -33,7 +33,7 @@ class ZMQChannel(SerdeChannel):
         if not self._send_socket:
             self._context = zmq.asyncio.Context()
             self._send_socket = self._context.socket(zmq.PUSH)
-            self._send_socket.connect(f"{self.addr}:{self._port_send}")
+            self._send_socket.connect(f"{ZMQ_ADDR}:{self._port_send}")
         return self._send_socket
 
     @property
@@ -42,7 +42,7 @@ class ZMQChannel(SerdeChannel):
         if not self._recv_socket:
             self._context = zmq.asyncio.Context()
             self._recv_socket = self._context.socket(zmq.PULL)
-            self._recv_socket.connect(f"{self.addr}:{self._port_recv}")
+            self._recv_socket.connect(f"{ZMQ_ADDR}:{self._port_recv}")
         return self._recv_socket
 
     async def send(self, msg: bytes) -> None:
