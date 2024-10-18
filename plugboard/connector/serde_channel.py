@@ -55,10 +55,10 @@ class SerdeChannel(Channel, ABC):
         async def _wrapper() -> _t.Any:
             if self._close_msg_received:
                 raise ChannelClosedError("Attempted recv on closed channel.")
-            msg = await self._recv()
+            msg = _deserialise(await self._recv())
             if msg == CHAN_CLOSE_MSG:
                 self._close_msg_received = True
                 raise ChannelClosedError("Attempted recv on closed channel.")
-            return _deserialise(msg)
+            return msg
 
         return _wrapper
