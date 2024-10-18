@@ -7,6 +7,12 @@ class ChannelClosedError(Exception):
     pass
 
 
+class ChannelSetupError(Exception):
+    """Raised when a channel is setup incorrectly."""
+
+    pass
+
+
 class IOStreamClosedError(Exception):
     """`IOStreamClosedError` is raised when an IO stream is closed."""
 

@@ -7,10 +7,14 @@ import typing as _t
 import zmq
 import zmq.asyncio
 
-from plugboard.connector.channel import SerdeChannel
+from plugboard.exceptions import ChannelSetupError
+from plugboard.connector.serde_channel import SerdeChannel
+from plugboard.connector.channel_builder import ChannelBuilder
+from plugboard.utils import gen_rand_str
 
 
 ZMQ_ADDR = r"tcp://127.0.0.1"
+ZMQ_CONFIRM_MSG = "__PLUGBOARD_CHAN_CONFIRM_MSG__"
 
 
 class ZMQChannel(SerdeChannel):
@@ -23,6 +27,7 @@ class ZMQChannel(SerdeChannel):
         self._context: _t.Optional[zmq.asyncio.Context] = None
         self._send_socket: _t.Optional[zmq.asyncio.Socket] = None
         self._recv_socket: _t.Optional[zmq.asyncio.Socket] = None
+        self._confirm_msg = f"{ZMQ_CONFIRM_MSG}:{gen_rand_str()}"
 
     async def send(self, msg: bytes) -> None:
         """Sends a message through the `ZMQChannel`.
@@ -36,6 +41,8 @@ class ZMQChannel(SerdeChannel):
             self._send_socket.bind(self.addr)
             port = self._send_socket.bind_to_random_port(ZMQ_ADDR)
             self._port.value = port
+            await self._socket.send(self._confirm_msg)
+
         await self._socket.send(msg)
 
     async def recv(self) -> bytes:
@@ -46,4 +53,16 @@ class ZMQChannel(SerdeChannel):
             while not self._port.value:
                 await asyncio.sleep(0.1)
             self._recv_socket.connect(f"{ZMQ_ADDR}:{self._port.value}")
+            # First message should confirm channel setup
+            msg = await self._socket.recv()
+            if msg != self._confirm_msg:
+                raise ChannelSetupError(
+                    f"Channel setup not confirmed: got {msg}, expected {self._confirm_msg}."
+                )
         return await self._socket.recv()
+
+
+class ZMQChannelBuilder(ChannelBuilder):
+    """`ZMQChannelBuilder` builds `ZMQChannel` objects."""
+
+    channel_cls = ZMQChannel
