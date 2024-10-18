@@ -8,6 +8,7 @@ import zmq
 import zmq.asyncio
 
 from plugboard.exceptions import ChannelSetupError
+from plugboard.connector.channel import CHAN_MAXSIZE
 from plugboard.connector.serde_channel import SerdeChannel
 from plugboard.connector.channel_builder import ChannelBuilder
 from plugboard.utils import gen_rand_str
@@ -20,8 +21,16 @@ ZMQ_CONFIRM_MSG = "__PLUGBOARD_CHAN_CONFIRM_MSG__"
 class ZMQChannel(SerdeChannel):
     """`ZMQChannel` enables data exchange between processes using ZeroMQ."""
 
-    def __init__(self, *args: _t.Any, **kwargs: _t.Any) -> None:
-        """Instantiates `ZMQChannel`."""
+    def __init__(self, *args: _t.Any, maxsize: int = CHAN_MAXSIZE, **kwargs: _t.Any) -> None:  # noqa: D417
+        """Instantiates `ZMQChannel`.
+
+        Uses ZeroMQ to provide communication between components on different
+        processes. Note that maxsize is not a hard limit because the operating
+        system will buffer TCP messages before they reach the channel.
+
+        Args:
+            maxsize: Optional; Queue maximum item capacity.
+        """
         super().__init__(*args, **kwargs)
         self._port = mp.Value("i", 0)
         self._context: _t.Optional[zmq.asyncio.Context] = None
