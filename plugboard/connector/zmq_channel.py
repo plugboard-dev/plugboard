@@ -9,7 +9,7 @@ import zmq.asyncio
 
 from plugboard.connector.channel_builder import ChannelBuilder
 from plugboard.connector.serde_channel import SerdeChannel
-from plugboard.exceptions import ChannelNotConnectedError
+from plugboard.exceptions import ChannelNotConnectedError, ChannelSetupError
 from plugboard.schemas.io import IODirection
 from plugboard.utils import gen_rand_str
 
@@ -51,6 +51,7 @@ class ZMQChannel(SerdeChannel):
             self._send_socket.setsockopt(zmq.SNDHWM, send_hwm)
             port = self._send_socket.bind_to_random_port(ZMQ_ADDR)
             self._port.value = port
+            await self._send_socket.send(self._confirm_msg)
         else:
             self._recv_socket = context.socket(zmq.PULL)
             self._recv_socket.setsockopt(zmq.RCVHWM, recv_hwm)
@@ -58,6 +59,9 @@ class ZMQChannel(SerdeChannel):
             while not self._port.value:
                 await asyncio.sleep(0.1)
             self._recv_socket.connect(f"{ZMQ_ADDR}:{self._port.value}")
+            msg = await self._recv_socket.recv()
+            if msg != self._confirm_msg:
+                raise ChannelSetupError("Channel confirmation message mismatch")
         self._connected = True
 
     async def send(self, msg: bytes) -> None:
