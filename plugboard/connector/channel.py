@@ -4,8 +4,8 @@ from abc import ABC, abstractmethod
 from functools import wraps
 import typing as _t
 
-from plugboard.component.io_controller import IODirection
 from plugboard.exceptions import ChannelClosedError
+from plugboard.schemas.io import IODirection
 
 
 CHAN_MAXSIZE = 0  # Max number of items in the channel. Value <= 0 implies unlimited.
@@ -43,7 +43,7 @@ class Channel(ABC):
         """
         return self._is_closed
 
-    def connect(self, direction: IODirection) -> None:
+    async def connect(self, direction: IODirection) -> None:
         """Connects the `Channel`."""
         pass
 
