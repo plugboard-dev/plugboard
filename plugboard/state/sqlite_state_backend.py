@@ -1,8 +1,9 @@
 """Provides `SqliteStateBackend` for single host persistent state handling."""
 
 from pathlib import Path
-import sqlite3
 from textwrap import dedent
+
+import aiosqlite
 
 from plugboard.state.state_backend import StateBackend
 
@@ -46,11 +47,9 @@ class SqliteStateBackend(StateBackend):
     async def _initialise_db(self) -> None:
         """Initializes the database."""
         # Create database with a table storing json data
-        conn = sqlite3.connect(self.db_path)
-        cur = conn.cursor()
-        cur.execute(STATE_CREATE_TABLE_SQL)
-        conn.commit()
-        conn.close()
+        async with aiosqlite.connect(self.db_path) as db:
+            await db.execute(STATE_CREATE_TABLE_SQL)
+            await db.commit()
 
     async def init(self) -> None:
         """Initializes the `SqliteStateBackend`."""
