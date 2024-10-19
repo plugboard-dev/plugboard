@@ -42,6 +42,10 @@ class Channel(ABC):
         """
         return self._is_closed
 
+    def connect(self) -> None:
+        """Connects the `Channel`."""
+        pass
+
     @abstractmethod
     async def send(self, msg: _t.Any) -> None:
         """Sends an item through the `Channel`.

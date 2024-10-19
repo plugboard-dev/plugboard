@@ -91,6 +91,7 @@ class IOController:
             raise ValueError(f"Unrecognised {direction} field {field}.")
         io_channels = getattr(self, f"_{direction}_channels")
         io_channels[field] = channel
+        channel.connect()
 
     def _add_channel(self, conn: Connector) -> None:
         if conn.spec.source.component == self.namespace:
