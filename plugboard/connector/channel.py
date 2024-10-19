@@ -4,6 +4,7 @@ from abc import ABC, abstractmethod
 from functools import wraps
 import typing as _t
 
+from plugboard.component.io_controller import IODirection
 from plugboard.exceptions import ChannelClosedError
 
 
@@ -42,7 +43,7 @@ class Channel(ABC):
         """
         return self._is_closed
 
-    def connect(self) -> None:
+    def connect(self, direction: IODirection) -> None:
         """Connects the `Channel`."""
         pass
 
