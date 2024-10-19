@@ -5,7 +5,7 @@ import asyncio
 from multiprocess import Process
 import pytest
 
-from plugboard.connector import AsyncioChannel, Channel, ZMQChannel
+from plugboard.connector import AsyncioChannelBuilder, Channel, ChannelBuilder, ZMQChannelBuilder
 from plugboard.exceptions import ChannelClosedError
 from plugboard.schemas.io import IODirection
 
@@ -22,10 +22,10 @@ TEST_ITEMS = [
 
 
 @pytest.mark.anyio
-@pytest.mark.parametrize("channel_cls", [AsyncioChannel, ZMQChannel])
-async def test_channel(channel_cls: type[Channel]) -> None:
+@pytest.mark.parametrize("channel_builder_cls", [AsyncioChannelBuilder, ZMQChannelBuilder])
+async def test_channel(channel_builder_cls: type[ChannelBuilder]) -> None:
     """Tests the various `Channel` classes."""
-    channel = channel_cls()
+    channel = channel_builder_cls().build()
     await asyncio.gather(channel.connect(IODirection.INPUT), channel.connect(IODirection.OUTPUT))
 
     for item in TEST_ITEMS:
@@ -43,10 +43,10 @@ async def test_channel(channel_cls: type[Channel]) -> None:
     assert channel.is_closed
 
 
-@pytest.mark.parametrize("channel_cls", [ZMQChannel])
-def test_multiprocessing_channel(channel_cls: type[Channel]) -> None:
+@pytest.mark.parametrize("channel_builder_cls", [ZMQChannelBuilder])
+def test_multiprocessing_channel(channel_builder_cls: type[ChannelBuilder]) -> None:
     """Tests the various `Channel` classes in a multiprocess environment."""
-    channel = channel_cls()
+    channel = channel_builder_cls().build()
 
     async def _send_proc_async(channel: Channel) -> None:
         await channel.connect(IODirection.OUTPUT)

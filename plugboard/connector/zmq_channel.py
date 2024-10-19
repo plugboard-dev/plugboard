@@ -2,11 +2,13 @@
 
 import asyncio
 import multiprocessing as mp
+from multiprocessing.managers import SyncManager
 import typing as _t
 
 import zmq
 import zmq.asyncio
 
+from plugboard.connector.channel import Channel
 from plugboard.connector.channel_builder import ChannelBuilder
 from plugboard.connector.serde_channel import SerdeChannel
 from plugboard.exceptions import ChannelNotConnectedError, ChannelSetupError
@@ -21,7 +23,9 @@ ZMQ_CONFIRM_MSG = "__PLUGBOARD_CHAN_CONFIRM_MSG__"
 class ZMQChannel(SerdeChannel):
     """`ZMQChannel` enables data exchange between processes using ZeroMQ."""
 
-    def __init__(self, *args: _t.Any, maxsize: int = 2000, **kwargs: _t.Any) -> None:  # noqa: D417
+    def __init__(  # noqa: D417
+        self, *args: _t.Any, manager: SyncManager, maxsize: int = 2000, **kwargs: _t.Any
+    ) -> None:
         """Instantiates `ZMQChannel`.
 
         Uses ZeroMQ to provide communication between components on different
@@ -29,10 +33,11 @@ class ZMQChannel(SerdeChannel):
         system will buffer TCP messages before they reach the channel.
 
         Args:
+            manager: A multiprocessing manager.
             maxsize: Queue maximum item capacity, defaults to 2000.
         """
         super().__init__(*args, **kwargs)
-        self._port = mp.Value("i", 0)
+        self._port = manager.Value("i", 0)
         self._send_socket: _t.Optional[zmq.asyncio.Socket] = None
         self._recv_socket: _t.Optional[zmq.asyncio.Socket] = None
         self._maxsize = maxsize
@@ -86,4 +91,10 @@ class ZMQChannel(SerdeChannel):
 class ZMQChannelBuilder(ChannelBuilder):
     """`ZMQChannelBuilder` builds `ZMQChannel` objects."""
 
+    manager = mp.Manager()
+
     channel_cls = ZMQChannel
+
+    def build(self, *args: _t.Any, **kwargs: _t.Any) -> Channel:
+        """Builds a `Channel` object."""
+        return self.channel_cls(*args, manager=self.manager, **kwargs)
