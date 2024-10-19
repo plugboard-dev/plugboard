@@ -2,8 +2,38 @@
 
 from pathlib import Path
 import sqlite3
+from textwrap import dedent
 
 from plugboard.state.state_backend import StateBackend
+
+
+STATE_CREATE_TABLE_SQL: str = dedent(
+    """\
+    CREATE TABLE job (
+        data TEXT,
+        id TEXT GENERATED ALWAYS AS (json_extract(data, '$.job_id')) VIRTUAL UNIQUE,
+        created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        ttl INTEGER DEFAULT NULL,
+        metadata TEXT GENERATED ALWAYS AS (json_extract(data, '$.metadata')) VIRTUAL,
+        status TEXT GENERATED ALWAYS AS (json_extract(data, '$.status')) VIRTUAL,
+    );
+    CREATE TABLE process (
+        data TEXT,
+        id TEXT GENERATED ALWAYS AS (json_extract(data, '$.id')) VIRTUAL UNIQUE,
+        status TEXT GENERATED ALWAYS AS (json_extract(data, '$.status')) VIRTUAL,
+    );
+    CREATE TABLE component (
+        data TEXT,
+        id TEXT GENERATED ALWAYS AS (json_extract(data, '$.id')) VIRTUAL UNIQUE,
+        status TEXT GENERATED ALWAYS AS (json_extract(data, '$.status')) VIRTUAL,
+    );
+    CREATE TABLE connector (
+        data TEXT,
+        id TEXT GENERATED ALWAYS AS (json_extract(data, '$.id')) VIRTUAL UNIQUE,
+        status TEXT GENERATED ALWAYS AS (json_extract(data, '$.status')) VIRTUAL,
+    );
+    """
+)
 
 
 class SqliteStateBackend(StateBackend):
@@ -17,15 +47,8 @@ class SqliteStateBackend(StateBackend):
         """Initializes the database."""
         # Create database with a table storing json data
         conn = sqlite3.connect(self.db_path)
-        c = conn.cursor()
-        c.execute(
-            """CREATE TABLE state (
-                json TEXT,
-                created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                id TEXT GENERATED ALWAYS AS (json_extract(json, '$.job_id')) VIRTUAL
-            );
-            """
-        )
+        cur = conn.cursor()
+        cur.execute(STATE_CREATE_TABLE_SQL)
         conn.commit()
         conn.close()
 
