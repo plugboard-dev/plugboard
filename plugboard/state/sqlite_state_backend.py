@@ -17,7 +17,7 @@ if _t.TYPE_CHECKING:
 
 STATE_CREATE_TABLE_SQL: str = dedent(
     """\
-    CREATE TABLE job (
+    CREATE TABLE IF NOT EXISTS job (
         data TEXT,
         id TEXT GENERATED ALWAYS AS (json_extract(data, '$.job_id')) VIRTUAL UNIQUE,
         created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -25,17 +25,17 @@ STATE_CREATE_TABLE_SQL: str = dedent(
         metadata TEXT GENERATED ALWAYS AS (json_extract(data, '$.metadata')) VIRTUAL,
         status TEXT GENERATED ALWAYS AS (json_extract(data, '$.status')) VIRTUAL,
     );
-    CREATE TABLE process (
+    CREATE TABLE IF NOT EXISTS process (
         data TEXT,
         id TEXT GENERATED ALWAYS AS (json_extract(data, '$.id')) VIRTUAL UNIQUE,
         status TEXT GENERATED ALWAYS AS (json_extract(data, '$.status')) VIRTUAL,
     );
-    CREATE TABLE component (
+    CREATE TABLE IF NOT EXISTS component (
         data TEXT,
         id TEXT GENERATED ALWAYS AS (json_extract(data, '$.id')) VIRTUAL UNIQUE,
         status TEXT GENERATED ALWAYS AS (json_extract(data, '$.status')) VIRTUAL,
     );
-    CREATE TABLE connector (
+    CREATE TABLE IF NOT EXISTS connector (
         data TEXT,
         id TEXT GENERATED ALWAYS AS (json_extract(data, '$.id')) VIRTUAL UNIQUE,
         status TEXT GENERATED ALWAYS AS (json_extract(data, '$.status')) VIRTUAL,
