@@ -1,14 +1,15 @@
 """Provides `SqliteStateBackend` for single host persistent state handling."""
 
-import typing as _t
-
 from pathlib import Path
 from textwrap import dedent
+import typing as _t
 
 import aiosqlite
 import orjson
 
+from plugboard.exceptions import NotFoundError
 from plugboard.state.state_backend import StateBackend
+
 
 if _t.TYPE_CHECKING:
     from plugboard.component import Component
@@ -42,12 +43,16 @@ STATE_CREATE_TABLE_SQL: str = dedent(
     """
 )
 
-STATE_UPSERT_COMPONENT: str = dedent(
-    """INSERT OR REPLACE INTO component (data) VALUES (?);"""
+STATE_UPSERT_COMPONENT_SQL: str = dedent(
+    """\
+    INSERT OR REPLACE INTO component (data) VALUES (?);
+    """
 )
 
-STATE_GET_COMPONENT: str = dedent(
-    """SELECT data FROM component WHERE id = ?;"""
+STATE_GET_COMPONENT_SQL: str = dedent(
+    """\
+    SELECT data FROM component WHERE id = ?;
+    """
 )
 
 
@@ -80,17 +85,20 @@ class SqliteStateBackend(StateBackend):
         await super().init()
 
     async def upsert_component(self, component: Component) -> None:
-        data = component.dict()
-        json = orjson.dumps(data)
+        """Upserts a component into the state."""
+        component_data = component.dict()
+        data_json = orjson.dumps(component_data)
         async with aiosqlite.connect(self.db_path) as db:
-            await db.execute(STATE_UPSERT_COMPONENT, (json,))
+            await db.execute(STATE_UPSERT_COMPONENT_SQL, (data_json,))
             await db.commit()
 
-    async def get_component(self, component_id) -> dict:
+    async def get_component(self, component_id: str) -> dict:
+        """Returns a component from the state."""
         async with aiosqlite.connect(self.db_path) as db:
-            cursor = await db.execute(STATE_GET_COMPONENT)
+            cursor = await db.execute(STATE_GET_COMPONENT_SQL, (component_id,))
             row = await cursor.fetchone()
-            data = row["data"]
-        component = orjson.loads(data)
-        return component
-        
+            if row is None:
+                raise NotFoundError(f"Component with id {component_id} not found.")
+            data_json = row["data"]
+        component_data = orjson.loads(data_json)
+        return component_data
