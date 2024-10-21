@@ -148,11 +148,12 @@ STATE_GET_PROCESS_FOR_CONNECTOR_SQL: str = dedent(
 class SqliteStateBackend(StateBackend):
     """`SqliteStateBackend` handles single host persistent state."""
 
-    def __init__(self, db_path: str = "plugboard.db") -> None:
+    def __init__(self, db_path: str = "plugboard.db", *args: _t.Any, **kwargs: _t.Any) -> None:
         """Initializes `SqliteStateBackend` with `db_path`."""
         self._db_path: str = db_path
         self._db_conn: _t.Optional[aiosqlite.Connection] = None
         self._ctx: AsyncExitStack = AsyncExitStack()
+        super().__init__(*args, **kwargs)
 
     @property
     def _db(self) -> aiosqlite.Connection:
