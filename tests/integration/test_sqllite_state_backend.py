@@ -2,22 +2,26 @@
 
 import pytest
 
-from plugboard.state import SqliteStateBackend
 from plugboard.component import Component
-
-from .test_state_backend import A_components
+from plugboard.state import SqliteStateBackend
+from .test_state_backend import A_components  # noqa: F401
 
 
 @pytest.fixture
 def db_path() -> str:
+    """Returns the path to the SQLite database file."""
     return "plugboard-testing.db"
 
 
 @pytest.mark.anyio
-async def test_state_backend_upsert_component(A_components: list[Component], db_path: str) -> None:
+async def test_state_backend_upsert_component(
+    A_components: list[Component],  # noqa: F811
+    db_path: str,
+) -> None:
+    """Tests `SqliteStateBackend.upsert_component` method."""
     state_backend = SqliteStateBackend(db_path=db_path)
     await state_backend.init()
-    
+
     comp_a1, comp_a2 = A_components
 
     await comp_a1.init()
