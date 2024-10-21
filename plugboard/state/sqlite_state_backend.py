@@ -1,5 +1,7 @@
 """Provides `SqliteStateBackend` for single host persistent state handling."""
 
+from __future__ import annotations
+
 from contextlib import AsyncExitStack
 from textwrap import dedent
 import typing as _t
