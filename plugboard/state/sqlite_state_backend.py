@@ -5,6 +5,7 @@ from textwrap import dedent
 import typing as _t
 
 import aiosqlite
+from async_lru import alru_cache
 import orjson
 
 from plugboard.exceptions import NotFoundError
@@ -213,6 +214,7 @@ class SqliteStateBackend(StateBackend):
         process_data = orjson.loads(data_json)
         return process_data
 
+    @alru_cache(maxsize=128)
     async def _get_process_for_component(self, component_id: str) -> str:
         """Returns the process id for a component."""
         # TODO : Cache result
@@ -244,6 +246,7 @@ class SqliteStateBackend(StateBackend):
         component_data = orjson.loads(data_json)
         return component_data
 
+    @alru_cache(maxsize=128)
     async def _get_process_for_connector(self, connector_id: str) -> str:
         """Returns the process id for a connector."""
         # TODO : Cache result

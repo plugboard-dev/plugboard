@@ -6458,4 +6458,4 @@ gcp = ["gcsfs"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.12,<4.0"
-content-hash = "f7f2317a0e28fb71fb9535a85c9ab40c3bbc88c9ef11627b9c7bd1b41a43f2d0"
+content-hash = "460349a17cd7b4e47456806707295f351e34d9152e21a777c0587a0d47fd09b7"
