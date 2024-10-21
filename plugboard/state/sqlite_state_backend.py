@@ -28,7 +28,7 @@ STATE_CREATE_TABLE_SQL: str = dedent(
         created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
         ttl INTEGER DEFAULT NULL,
         metadata TEXT GENERATED ALWAYS AS (json_extract(data, '$.metadata')) VIRTUAL,
-        status TEXT GENERATED ALWAYS AS (json_extract(data, '$.status')) VIRTUAL,
+        status TEXT GENERATED ALWAYS AS (json_extract(data, '$.status')) VIRTUAL
     );
     CREATE TABLE IF NOT EXISTS process (
         data TEXT,
@@ -174,7 +174,7 @@ class SqliteStateBackend(StateBackend):
         # Create database with a table storing json data
         db = await self._ctx.enter_async_context(aiosqlite.connect(self._db_path))
         self._db_conn = db
-        await db.execute(STATE_CREATE_TABLE_SQL)
+        await db.executescript(STATE_CREATE_TABLE_SQL)
         await db.commit()
 
     async def init(self) -> None:
