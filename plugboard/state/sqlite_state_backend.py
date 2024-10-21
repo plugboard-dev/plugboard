@@ -220,7 +220,6 @@ class SqliteStateBackend(StateBackend):
     @alru_cache(maxsize=128)
     async def _get_process_for_component(self, component_id: str) -> str:
         """Returns the process id for a component."""
-        # TODO : Cache result
         async with aiosqlite.connect(self._db_path) as db:
             cursor = await db.execute(STATE_GET_PROCESS_FOR_COMPONENT_SQL, (component_id,))
             row = await cursor.fetchone()
@@ -252,7 +251,6 @@ class SqliteStateBackend(StateBackend):
     @alru_cache(maxsize=128)
     async def _get_process_for_connector(self, connector_id: str) -> str:
         """Returns the process id for a connector."""
-        # TODO : Cache result
         async with aiosqlite.connect(self._db_path) as db:
             cursor = await db.execute(STATE_GET_PROCESS_FOR_CONNECTOR_SQL, (connector_id,))
             row = await cursor.fetchone()
