@@ -24,7 +24,7 @@ STATE_CREATE_TABLE_SQL: str = dedent(
     """\
     CREATE TABLE IF NOT EXISTS job (
         data TEXT,
-        id TEXT GENERATED ALWAYS AS (json_extract(data, '$.job_id')) VIRTUAL UNIQUE,
+        id TEXT NOT NULL GENERATED ALWAYS AS (json_extract(data, '$.job_id')) VIRTUAL UNIQUE,
         created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
         ttl INTEGER DEFAULT NULL,
         metadata TEXT GENERATED ALWAYS AS (json_extract(data, '$.metadata')) VIRTUAL,
@@ -32,40 +32,40 @@ STATE_CREATE_TABLE_SQL: str = dedent(
     );
     CREATE TABLE IF NOT EXISTS process (
         data TEXT,
-        id TEXT GENERATED ALWAYS AS (json_extract(data, '$.id')) VIRTUAL UNIQUE,
+        id TEXT NOT NULL GENERATED ALWAYS AS (json_extract(data, '$.id')) VIRTUAL UNIQUE,
         status TEXT GENERATED ALWAYS AS (json_extract(data, '$.status')) VIRTUAL,
         job_id TEXT,
         FOREIGN KEY (job_id) REFERENCES job(id) ON DELETE CASCADE
     );
     CREATE TABLE IF NOT EXISTS component (
         data TEXT,
-        id TEXT GENERATED ALWAYS AS (json_extract(data, '$.id')) VIRTUAL UNIQUE,
+        id TEXT NOT NULL GENERATED ALWAYS AS (json_extract(data, '$.id')) VIRTUAL UNIQUE,
         status TEXT GENERATED ALWAYS AS (json_extract(data, '$.status')) VIRTUAL,
         process_id TEXT,
         FOREIGN KEY (process_id) REFERENCES process(id) ON DELETE CASCADE
     );
     CREATE TABLE IF NOT EXISTS connector (
         data TEXT,
-        id TEXT GENERATED ALWAYS AS (json_extract(data, '$.id')) VIRTUAL UNIQUE,
+        id TEXT NOT NULL GENERATED ALWAYS AS (json_extract(data, '$.id')) VIRTUAL UNIQUE,
         status TEXT GENERATED ALWAYS AS (json_extract(data, '$.status')) VIRTUAL,
         process_id TEXT,
         FOREIGN KEY (process_id) REFERENCES process(id) ON DELETE CASCADE
     );
     CREATE TABLE IF NOT EXISTS job_process (
-        job_id TEXT,
-        process_id TEXT,
+        job_id TEXT NOT NULL,
+        process_id TEXT NOT NULL,
         FOREIGN KEY (job_id) REFERENCES job(id) ON DELETE CASCADE,
         FOREIGN KEY (process_id) REFERENCES process(id) ON DELETE CASCADE
     );
     CREATE TABLE IF NOT EXISTS process_component (
-        process_id TEXT,
-        component_id TEXT,
+        process_id TEXT NOT NULL,
+        component_id TEXT NOT NULL,
         FOREIGN KEY (process_id) REFERENCES process(id) ON DELETE CASCADE,
         FOREIGN KEY (component_id) REFERENCES component(id) ON DELETE CASCADE
     );
     CREATE TABLE IF NOT EXISTS process_connector (
-        process_id TEXT,
-        connector_id TEXT,
+        process_id TEXT NOT NULL,
+        connector_id TEXT NOT NULL,
         FOREIGN KEY (process_id) REFERENCES process(id) ON DELETE CASCADE,
         FOREIGN KEY (connector_id) REFERENCES connector(id) ON DELETE CASCADE
     );
