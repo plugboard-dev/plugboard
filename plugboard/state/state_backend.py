@@ -46,6 +46,7 @@ class StateBackend(ABC, AsDictMixin):
         if not EntityIdGen.is_job_id(_job_id):
             raise ValueError(f"Invalid job id: {_job_id}")
         await self._set("job_id", _job_id)
+        self._local_state["job_id"] = _job_id
 
         if job_id is None:
             _created_at = datetime.now(timezone.utc).isoformat()
@@ -53,9 +54,11 @@ class StateBackend(ABC, AsDictMixin):
             # TODO : Retrieve information for existing state.
             _created_at = "unset"
         await self._set("created_at", _created_at)
+        self._local_state["created_at"] = _created_at
 
         _metadata = metadata or dict()
         await self._set("metadata", _metadata)
+        self._local_state["metadata"] = _metadata
 
         comp_proc_map: dict = dict()
         await self._set("_comp_proc_map", comp_proc_map)
@@ -74,19 +77,19 @@ class StateBackend(ABC, AsDictMixin):
         pass
 
     @property
-    async def job_id(self) -> str:
+    def job_id(self) -> str:
         """Returns the job id for the state."""
-        return await self._get("job_id")
+        return self._local_state["job_id"]
 
     @property
-    async def created_at(self) -> str:
+    def created_at(self) -> str:
         """Returns date and time of job creation."""
-        return await self._get("created_at")
+        return self._local_state["created_at"]
 
     @property
-    async def metadata(self) -> dict:
+    def metadata(self) -> dict:
         """Returns metadata attached to the job."""
-        return await self._get("metadata")
+        return self._local_state["metadata"]
 
     @classmethod
     def _process_key(cls, process_id: str) -> tuple[str, ...]:
