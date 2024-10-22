@@ -193,6 +193,8 @@ class SqliteStateBackend(StateBackend):
     async def upsert_process(self, process: Process) -> None:
         """Upserts a process into the state."""
         process_data = process.dict()
+        # TODO : What to do about export data? Problematic due to unserialised python objects.
+        process_data.pop("__export")
         component_data = process_data.pop("components")
         connector_data = process_data.pop("connectors")
         process_json = orjson.dumps(process_data)
@@ -235,9 +237,11 @@ class SqliteStateBackend(StateBackend):
         """Upserts a component into the state."""
         process_id = await self._get_process_for_component(component.id)
         component_data = component.dict()
-        data_json = orjson.dumps(component_data)
+        # TODO : What to do about export data? Problematic due to unserialised python objects.
+        component_data.pop("__export")
+        component_json = orjson.dumps(component_data)
         async with aiosqlite.connect(self._db_path) as db:
-            await db.execute(STATE_UPSERT_COMPONENT_SQL, (data_json, process_id))
+            await db.execute(STATE_UPSERT_COMPONENT_SQL, (component_json, process_id))
             await db.commit()
 
     async def get_component(self, component_id: str) -> dict:
@@ -266,9 +270,11 @@ class SqliteStateBackend(StateBackend):
         """Upserts a connector into the state."""
         process_id = await self._get_process_for_connector(connector.id)
         connector_data = connector.dict()
-        data_json = orjson.dumps(connector_data)
+        # TODO : What to do about export data? Problematic due to unserialised python objects.
+        connector_data.pop("__export")
+        connector_json = orjson.dumps(connector_data)
         async with aiosqlite.connect(self._db_path) as db:
-            await db.execute(STATE_UPSERT_CONNECTOR_SQL, (data_json, process_id))
+            await db.execute(STATE_UPSERT_CONNECTOR_SQL, (connector_json, process_id))
             await db.commit()
 
     async def get_connector(self, connector_id: str) -> dict:
