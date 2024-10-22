@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from contextlib import AsyncExitStack
+# from contextlib import AsyncExitStack
 from textwrap import dedent
 import typing as _t
 
@@ -151,16 +151,16 @@ class SqliteStateBackend(StateBackend):
     def __init__(self, db_path: str = "plugboard.db", *args: _t.Any, **kwargs: _t.Any) -> None:
         """Initializes `SqliteStateBackend` with `db_path`."""
         self._db_path: str = db_path
-        self._db_conn: _t.Optional[aiosqlite.Connection] = None
-        self._ctx: AsyncExitStack = AsyncExitStack()
+        # self._db_conn: _t.Optional[aiosqlite.Connection] = None
+        # self._ctx: AsyncExitStack = AsyncExitStack()
         super().__init__(*args, **kwargs)
 
-    @property
-    def _db(self) -> aiosqlite.Connection:
-        """Returns the database connection."""
-        if self._db_conn is None:
-            raise ValueError("Database connection not initialized.")
-        return self._db_conn
+    # @property
+    # def _db(self) -> aiosqlite.Connection:
+    #     """Returns the database connection."""
+    #     if self._db_conn is None:
+    #         raise ValueError("Database connection not initialized.")
+    #     return self._db_conn
 
     async def _get(self, key: str | tuple[str, ...], value: _t.Optional[_t.Any] = None) -> _t.Any:
         """Returns a value from the state."""
@@ -173,10 +173,11 @@ class SqliteStateBackend(StateBackend):
     async def _initialise_db(self) -> None:
         """Initializes the database."""
         # Create database with a table storing json data
-        db = await self._ctx.enter_async_context(aiosqlite.connect(self._db_path))
-        self._db_conn = db
-        await db.executescript(STATE_CREATE_TABLE_SQL)
-        await db.commit()
+        # db = await self._ctx.enter_async_context(aiosqlite.connect(self._db_path))
+        # self._db_conn = db
+        async with aiosqlite.connect(self._db_path) as db:
+            await db.executescript(STATE_CREATE_TABLE_SQL)
+            await db.commit()
 
     async def init(self) -> None:
         """Initializes the `SqliteStateBackend`."""
@@ -185,7 +186,9 @@ class SqliteStateBackend(StateBackend):
 
     async def destroy(self) -> None:
         """Destroys the `SqliteStateBackend`."""
-        await self._ctx.aclose()
+        # NOTE : Persistent connection causes process to hang on exit if not closed.
+        # await self._ctx.aclose()
+        pass
 
     async def upsert_process(self, process: Process) -> None:
         """Upserts a process into the state."""
@@ -230,7 +233,7 @@ class SqliteStateBackend(StateBackend):
 
     async def upsert_component(self, component: Component) -> None:
         """Upserts a component into the state."""
-        process_id = self._get_process_for_component(component.id)
+        process_id = await self._get_process_for_component(component.id)
         component_data = component.dict()
         data_json = orjson.dumps(component_data)
         async with aiosqlite.connect(self._db_path) as db:
@@ -261,7 +264,7 @@ class SqliteStateBackend(StateBackend):
 
     async def upsert_connector(self, connector: Connector) -> None:
         """Upserts a connector into the state."""
-        process_id = self._get_process_for_connector(connector.id)
+        process_id = await self._get_process_for_connector(connector.id)
         connector_data = connector.dict()
         data_json = orjson.dumps(connector_data)
         async with aiosqlite.connect(self._db_path) as db:
