@@ -100,12 +100,12 @@ class Component(ABC, AsDictMixin):
     def _bind_inputs(self) -> None:
         """Binds input fields to component fields."""
         for field in self.io.inputs:
-            setattr(self, field, self.io.data[IODirection.INPUT][field])
+            setattr(self, field, self.io.data[str(IODirection.INPUT)][field])
 
     def _bind_outputs(self) -> None:
         """Binds component fields to output fields."""
         for field in self.io.outputs:
-            self.io.data[IODirection.OUTPUT][field] = getattr(self, field)
+            self.io.data[str(IODirection.OUTPUT)][field] = getattr(self, field)
 
     async def run(self) -> None:
         """Executes component logic for all steps to completion."""
