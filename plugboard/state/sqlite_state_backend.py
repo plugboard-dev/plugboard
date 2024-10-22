@@ -190,7 +190,7 @@ class SqliteStateBackend(StateBackend):
         # await self._ctx.aclose()
         pass
 
-    async def upsert_process(self, process: Process) -> None:
+    async def upsert_process(self, process: Process, with_components: bool = False) -> None:
         """Upserts a process into the state."""
         process_data = process.dict()
         # TODO : What to do about export data? Problematic due to unserialised python objects.
@@ -201,19 +201,26 @@ class SqliteStateBackend(StateBackend):
         async with aiosqlite.connect(self._db_path) as db:
             await db.execute(STATE_UPSERT_PROCESS_SQL, (process_json, self.job_id))
             await db.execute(STATE_SET_JOB_FOR_PROCESS_SQL, (self.job_id, process.id))
-            for component in component_data:
-                component_json = orjson.dumps(component)
-                await db.execute(STATE_UPSERT_COMPONENT_SQL, (component_json, process.id))
-                await db.execute(STATE_SET_PROCESS_FOR_COMPONENT_SQL, (process.id, component["id"]))
-            for connector in connector_data:
-                connector_json = orjson.dumps(connector)
-                await db.execute(STATE_UPSERT_CONNECTOR_SQL, (connector_json, process.id))
-                await db.execute(STATE_SET_PROCESS_FOR_CONNECTOR_SQL, (process.id, connector["id"]))
+            for component_id, component in component_data.items():
+                await db.execute(STATE_SET_PROCESS_FOR_COMPONENT_SQL, (process.id, component_id))
+                if with_components:
+                    # TODO : What to do about export data? Problematic due to unserialised python objects.  # noqa: E501,W505
+                    component.pop("__export")
+                    component_json = orjson.dumps(component)
+                    await db.execute(STATE_UPSERT_COMPONENT_SQL, (component_json, process.id))
+            for connector_id, connector in connector_data.items():
+                await db.execute(STATE_SET_PROCESS_FOR_CONNECTOR_SQL, (process.id, connector_id))
+                if with_components:
+                    # TODO : What to do about export data? Problematic due to unserialised python objects.  # noqa: E501,W505
+                    connector.pop("__export")
+                    connector_json = orjson.dumps(connector)
+                    await db.execute(STATE_UPSERT_CONNECTOR_SQL, (connector_json, process.id))
             await db.commit()
 
     async def get_process(self, process_id: str) -> dict:
         """Returns a process from the state."""
         async with aiosqlite.connect(self._db_path) as db:
+            db.row_factory = aiosqlite.Row
             cursor = await db.execute(STATE_GET_PROCESS_SQL, (process_id,))
             row = await cursor.fetchone()
             if row is None:
@@ -226,6 +233,7 @@ class SqliteStateBackend(StateBackend):
     async def _get_process_for_component(self, component_id: str) -> str:
         """Returns the process id for a component."""
         async with aiosqlite.connect(self._db_path) as db:
+            db.row_factory = aiosqlite.Row
             cursor = await db.execute(STATE_GET_PROCESS_FOR_COMPONENT_SQL, (component_id,))
             row = await cursor.fetchone()
             if row is None:
@@ -247,6 +255,7 @@ class SqliteStateBackend(StateBackend):
     async def get_component(self, component_id: str) -> dict:
         """Returns a component from the state."""
         async with aiosqlite.connect(self._db_path) as db:
+            db.row_factory = aiosqlite.Row
             cursor = await db.execute(STATE_GET_COMPONENT_SQL, (component_id,))
             row = await cursor.fetchone()
             if row is None:
@@ -259,6 +268,7 @@ class SqliteStateBackend(StateBackend):
     async def _get_process_for_connector(self, connector_id: str) -> str:
         """Returns the process id for a connector."""
         async with aiosqlite.connect(self._db_path) as db:
+            db.row_factory = aiosqlite.Row
             cursor = await db.execute(STATE_GET_PROCESS_FOR_CONNECTOR_SQL, (connector_id,))
             row = await cursor.fetchone()
             if row is None:
@@ -280,6 +290,7 @@ class SqliteStateBackend(StateBackend):
     async def get_connector(self, connector_id: str) -> dict:
         """Returns a connector from the state."""
         async with aiosqlite.connect(self._db_path) as db:
+            db.row_factory = aiosqlite.Row
             cursor = await db.execute(STATE_GET_CONNECTOR_SQL, (connector_id,))
             row = await cursor.fetchone()
             if row is None:
