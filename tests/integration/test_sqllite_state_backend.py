@@ -69,7 +69,6 @@ async def test_state_backend_multiprocess(
 ) -> None:
     """Tests `StateBackend.upsert_process` method."""
     state_backend = SqliteStateBackend(db_path=db_path)
-    await state_backend.init()
 
     comp_b1, comp_b2 = B_components
     conn_1, conn_2 = B_connectors
@@ -77,7 +76,7 @@ async def test_state_backend_multiprocess(
     process_1 = Process(name="P1", components=[comp_b1, comp_b2], connectors=[conn_1, conn_2])
     # process_2 = Process(name="P2", components=[comp_b1, comp_b2], connectors=[conn_1, conn_2])
 
-    await process_1.connect_state()
+    await process_1.connect_state(state=state_backend)
 
     assert await state_backend.get_process(process_1.id) == process_1.dict()
     # assert await state_backend.get_process(process_2.id) == process_2.dict()
