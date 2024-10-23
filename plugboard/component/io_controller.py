@@ -102,11 +102,3 @@ class IOController:
         """Connects the input/output fields to input/output channels."""
         for conn in connectors:
             self._add_channel(conn)
-
-    async def init(self) -> None:
-        """Initialises the `IOController`."""
-        async with asyncio.TaskGroup() as tg:
-            for _, chan in self._input_channels.items():
-                tg.create_task(chan.connect(IODirection.INPUT))
-            for _, chan in self._output_channels.items():
-                tg.create_task(chan.connect(IODirection.OUTPUT))

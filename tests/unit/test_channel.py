@@ -7,7 +7,6 @@ import pytest
 
 from plugboard.connector import AsyncioChannelBuilder, Channel, ChannelBuilder, ZMQChannelBuilder
 from plugboard.exceptions import ChannelClosedError
-from plugboard.schemas.io import IODirection
 
 
 TEST_ITEMS = [
@@ -26,15 +25,15 @@ TEST_ITEMS = [
 async def test_channel(channel_builder_cls: type[ChannelBuilder]) -> None:
     """Tests the various `Channel` classes."""
     channel = channel_builder_cls().build()
-    await asyncio.gather(channel.connect(IODirection.INPUT), channel.connect(IODirection.OUTPUT))
 
-    for item in TEST_ITEMS:
-        await channel.send(item)
+    send_coros = [channel.send(item) for item in TEST_ITEMS]
+    recv_coros = [channel.recv() for _ in TEST_ITEMS]
 
+    results = await asyncio.gather(*send_coros, *recv_coros)
     await channel.close()
 
-    for item in TEST_ITEMS:
-        assert await channel.recv() == item
+    # Ensure that the sent and received items are the same.
+    assert results[len(TEST_ITEMS) :] == TEST_ITEMS
 
     with pytest.raises(ChannelClosedError):
         await channel.recv()
@@ -49,14 +48,12 @@ def test_multiprocessing_channel(channel_builder_cls: type[ChannelBuilder]) -> N
     channel = channel_builder_cls().build()
 
     async def _send_proc_async(channel: Channel) -> None:
-        await channel.connect(IODirection.OUTPUT)
         for item in TEST_ITEMS:
             await channel.send(item)
         await channel.close()
         assert channel.is_closed
 
     async def _recv_proc_async(channel: Channel) -> None:
-        await channel.connect(IODirection.INPUT)
         for item in TEST_ITEMS:
             assert await channel.recv() == item
         with pytest.raises(ChannelClosedError):

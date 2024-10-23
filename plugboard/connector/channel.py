@@ -5,7 +5,6 @@ from functools import wraps
 import typing as _t
 
 from plugboard.exceptions import ChannelClosedError
-from plugboard.schemas.io import IODirection
 
 
 CHAN_MAXSIZE = 0  # Max number of items in the channel. Value <= 0 implies unlimited.
@@ -42,10 +41,6 @@ class Channel(ABC):
         though there may still be some messages waiting to be read.
         """
         return self._is_closed
-
-    async def connect(self, direction: IODirection) -> None:
-        """Connects the `Channel`."""
-        pass
 
     @abstractmethod
     async def send(self, msg: _t.Any) -> None:

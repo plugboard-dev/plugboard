@@ -76,7 +76,6 @@ class Component(ABC, AsDictMixin):
             await self._init()
             if self._state is not None and self._state_is_connected:
                 await self._state.upsert_component(self)
-            await self.io.init()
 
         return _wrapper
 
