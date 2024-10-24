@@ -1931,6 +1931,17 @@ files = [
 ]
 
 [[package]]
+name = "inject"
+version = "5.2.1"
+description = "Python dependency injection framework."
+optional = false
+python-versions = "*"
+files = [
+    {file = "inject-5.2.1-py2.py3-none-any.whl", hash = "sha256:e40a5b1bebd8a4050b6f98f3396f3de6e9e2e411ad2a2145f16f351cb6f54e51"},
+    {file = "inject-5.2.1.tar.gz", hash = "sha256:f7c305a75cc4e3a331d248e996f25783ba784b88d5a9b9f73c53eacaa6d76985"},
+]
+
+[[package]]
 name = "installer"
 version = "0.7.0"
 description = "A library for installing Python wheels."
@@ -6239,4 +6250,4 @@ gcp = ["gcsfs"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.12,<4.0"
-content-hash = "04e219b335a67f17a9c27a5f1e1098a90b0bdb2e9c71e3b4cee827c08d5d9ca9"
+content-hash = "cc90060fd5b2f1486754d629dfc9a94e355d53e4f16969be45c277e5108c2f04"
