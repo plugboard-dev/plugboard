@@ -1,9 +1,9 @@
 """Provides ZMQChannel for use in multiprocessing environments."""
 
 import asyncio
-import multiprocessing as mp
 from multiprocessing.managers import SyncManager
 import typing as _t
+
 import inject
 import zmq
 import zmq.asyncio
