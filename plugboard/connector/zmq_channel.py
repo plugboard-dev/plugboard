@@ -4,7 +4,7 @@ import asyncio
 import multiprocessing as mp
 from multiprocessing.managers import SyncManager
 import typing as _t
-
+import inject
 import zmq
 import zmq.asyncio
 
@@ -79,10 +79,13 @@ class ZMQChannel(SerdeChannel):
 class ZMQChannelBuilder(ChannelBuilder):
     """`ZMQChannelBuilder` builds `ZMQChannel` objects."""
 
-    manager = mp.Manager()
-
     channel_cls = ZMQChannel
 
-    def build(self, *args: _t.Any, **kwargs: _t.Any) -> Channel:
-        """Builds a `Channel` object."""
-        return self.channel_cls(*args, manager=self.manager, **kwargs)
+    @inject.params(manager=SyncManager)
+    def build(self, *args: _t.Any, manager: SyncManager, **kwargs: _t.Any) -> Channel:  # noqa: D417
+        """Builds a `Channel` object.
+
+        Args:
+            manager: A multiprocessing manager.
+        """
+        return self.channel_cls(*args, manager=manager, **kwargs)
