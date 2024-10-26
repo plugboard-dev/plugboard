@@ -18,14 +18,14 @@ class Exportable(_t.Protocol):
         ...
 
 
-class AsDictMixin:
+class ExportMixin:
     """`AsDictMixin` provides functionality for converting objects to dict."""
 
     @staticmethod
     def _save_args_wrapper(method: _t.Callable, key: str) -> _t.Callable:
         @wraps(method)
         def _wrapper(self: _t.Any, *args: _t.Any, **kwargs: _t.Any) -> None:
-            saved_kwargs = AsDictMixin._convert_exportable_objs(kwargs)
+            saved_kwargs = ExportMixin._convert_exportable_objs(kwargs)
             setattr(self, key, {**getattr(self, key, {}), **saved_kwargs})
             method(self, *args, **kwargs)
 
@@ -39,7 +39,7 @@ class AsDictMixin:
             if isinstance(v, Exportable):
                 saved_kwargs[k] = v.export()
             elif isinstance(v, dict):
-                saved_kwargs[k] = AsDictMixin._convert_exportable_objs(v)
+                saved_kwargs[k] = ExportMixin._convert_exportable_objs(v)
             elif isinstance(v, list):
                 # TODO : Why does mypy complain about the following line? The below example
                 #      : seems to be equivalent in terms of types and mypy doesn't complain...
@@ -50,7 +50,7 @@ class AsDictMixin:
                 #             v = [x for x in v]
                 #             saved_kwargs[k] = v
                 #     return saved_kwargs
-                saved_kwargs[k] = [AsDictMixin._convert_exportable_objs(x) for x in v]
+                saved_kwargs[k] = [ExportMixin._convert_exportable_objs(x) for x in v]
             else:
                 saved_kwargs[k] = v
         return saved_kwargs
@@ -59,15 +59,15 @@ class AsDictMixin:
     def _dict_inject_wrapper(method: _t.Callable) -> _t.Callable:
         @wraps(method)
         def _wrapper(self: _t.Any) -> dict:
-            inject_data = AsDictMixin.dict(self)
+            inject_data = ExportMixin.dict(self)
             data = method(self)
             return {**inject_data, **data}
 
         return _wrapper
 
     def __init_subclass__(cls, *args: _t.Any, **kwargs: _t.Any) -> None:
-        cls.__init__ = AsDictMixin._save_args_wrapper(cls.__init__, _SAVE_ARGS_INIT_KEY)  # type: ignore # noqa: E501,W505
-        cls.dict = AsDictMixin._dict_inject_wrapper(cls.dict)  # type: ignore
+        cls.__init__ = ExportMixin._save_args_wrapper(cls.__init__, _SAVE_ARGS_INIT_KEY)  # type: ignore # noqa: E501,W505
+        cls.dict = ExportMixin._dict_inject_wrapper(cls.dict)  # type: ignore
 
     def export(self) -> dict:
         """Returns dict representation of object for later reconstruction."""

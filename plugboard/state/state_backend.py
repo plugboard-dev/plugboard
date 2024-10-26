@@ -6,7 +6,7 @@ from abc import ABC, abstractmethod
 from datetime import datetime, timezone
 import typing as _t
 
-from plugboard.utils import AsDictMixin, EntityIdGen
+from plugboard.utils import EntityIdGen, ExportMixin
 
 
 if _t.TYPE_CHECKING:
@@ -15,7 +15,7 @@ if _t.TYPE_CHECKING:
     from plugboard.process import Process
 
 
-class StateBackend(ABC, AsDictMixin):
+class StateBackend(ABC, ExportMixin):
     """`StateBackend` defines an interface for managing process state."""
 
     def __init__(

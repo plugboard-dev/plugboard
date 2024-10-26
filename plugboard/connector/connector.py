@@ -6,10 +6,10 @@ import typing as _t
 
 from plugboard.connector.channel import Channel
 from plugboard.schemas.connector import ConnectorSpec
-from plugboard.utils import AsDictMixin
+from plugboard.utils import ExportMixin
 
 
-class Connector(AsDictMixin):
+class Connector(ExportMixin):
     """`Connector` contains a `Channel` connecting two components."""
 
     def __init__(self, spec: ConnectorSpec, channel: Channel) -> None:

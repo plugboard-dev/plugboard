@@ -9,10 +9,10 @@ import typing as _t
 from plugboard.component import Component
 from plugboard.connector import Connector
 from plugboard.state import DictStateBackend, StateBackend
-from plugboard.utils import AsDictMixin, gen_rand_str
+from plugboard.utils import ExportMixin, gen_rand_str
 
 
-class Process(AsDictMixin):
+class Process(ExportMixin):
     """`Process` manages components in a process model."""
 
     def __init__(

@@ -10,10 +10,10 @@ from plugboard.component.io_controller import (
     IOStreamClosedError,
 )
 from plugboard.state import StateBackend
-from plugboard.utils import AsDictMixin, ClassRegistry
+from plugboard.utils import ClassRegistry, ExportMixin
 
 
-class Component(ABC, AsDictMixin):
+class Component(ABC, ExportMixin):
     """`Component` base class for all components in a process model."""
 
     io: IOController
