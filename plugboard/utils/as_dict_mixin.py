@@ -4,6 +4,7 @@ from functools import wraps
 import typing as _t
 
 import msgspec
+from pydantic import BaseModel
 
 
 _SAVE_ARGS_INIT_KEY: str = "__save_args_init__"
@@ -36,6 +37,8 @@ class ExportMixin:
         """Recursively converts `Exportable` objects to their `export` representation."""
         if isinstance(obj, Exportable):
             return obj.export()
+        elif isinstance(obj, BaseModel):
+            return obj.model_dump()
         elif isinstance(obj, dict):
             return {k: ExportMixin._convert_exportable_objs(v) for k, v in obj.items()}
         elif isinstance(obj, list):
