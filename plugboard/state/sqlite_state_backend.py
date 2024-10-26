@@ -8,7 +8,7 @@ import typing as _t
 
 import aiosqlite
 from async_lru import alru_cache
-import orjson
+import msgspec
 
 from plugboard.exceptions import NotFoundError
 from plugboard.state.state_backend import StateBackend
@@ -193,27 +193,21 @@ class SqliteStateBackend(StateBackend):
     async def upsert_process(self, process: Process, with_components: bool = False) -> None:
         """Upserts a process into the state."""
         process_data = process.dict()
-        # TODO : What to do about export data? Problematic due to unserialised python objects.
-        process_data.pop("__export")
         component_data = process_data.pop("components")
         connector_data = process_data.pop("connectors")
-        process_json = orjson.dumps(process_data)
+        process_json = msgspec.json.encode(process_data)
         async with aiosqlite.connect(self._db_path) as db:
             await db.execute(STATE_UPSERT_PROCESS_SQL, (process_json, self.job_id))
             await db.execute(STATE_SET_JOB_FOR_PROCESS_SQL, (self.job_id, process.id))
             for component_id, component in component_data.items():
                 await db.execute(STATE_SET_PROCESS_FOR_COMPONENT_SQL, (process.id, component_id))
                 if with_components:
-                    # TODO : What to do about export data? Problematic due to unserialised python objects.  # noqa: E501,W505
-                    component.pop("__export")
-                    component_json = orjson.dumps(component)
+                    component_json = msgspec.json.encode(component)
                     await db.execute(STATE_UPSERT_COMPONENT_SQL, (component_json, process.id))
             for connector_id, connector in connector_data.items():
                 await db.execute(STATE_SET_PROCESS_FOR_CONNECTOR_SQL, (process.id, connector_id))
                 if with_components:
-                    # TODO : What to do about export data? Problematic due to unserialised python objects.  # noqa: E501,W505
-                    connector.pop("__export")
-                    connector_json = orjson.dumps(connector)
+                    connector_json = msgspec.json.encode(connector)
                     await db.execute(STATE_UPSERT_CONNECTOR_SQL, (connector_json, process.id))
             await db.commit()
 
@@ -226,7 +220,7 @@ class SqliteStateBackend(StateBackend):
             if row is None:
                 raise NotFoundError(f"Process with id {process_id} not found.")
             data_json = row["data"]
-        process_data = orjson.loads(data_json)
+        process_data = msgspec.json.decode(data_json)
         return process_data
 
     @alru_cache(maxsize=128)
@@ -245,9 +239,7 @@ class SqliteStateBackend(StateBackend):
         """Upserts a component into the state."""
         process_id = await self._get_process_for_component(component.id)
         component_data = component.dict()
-        # TODO : What to do about export data? Problematic due to unserialised python objects.
-        component_data.pop("__export")
-        component_json = orjson.dumps(component_data)
+        component_json = msgspec.json.encode(component_data)
         async with aiosqlite.connect(self._db_path) as db:
             await db.execute(STATE_UPSERT_COMPONENT_SQL, (component_json, process_id))
             await db.commit()
@@ -261,7 +253,7 @@ class SqliteStateBackend(StateBackend):
             if row is None:
                 raise NotFoundError(f"Component with id {component_id} not found.")
             data_json = row["data"]
-        component_data = orjson.loads(data_json)
+        component_data = msgspec.json.decode(data_json)
         return component_data
 
     @alru_cache(maxsize=128)
@@ -280,9 +272,7 @@ class SqliteStateBackend(StateBackend):
         """Upserts a connector into the state."""
         process_id = await self._get_process_for_connector(connector.id)
         connector_data = connector.dict()
-        # TODO : What to do about export data? Problematic due to unserialised python objects.
-        connector_data.pop("__export")
-        connector_json = orjson.dumps(connector_data)
+        connector_json = msgspec.json.encode(connector_data)
         async with aiosqlite.connect(self._db_path) as db:
             await db.execute(STATE_UPSERT_CONNECTOR_SQL, (connector_json, process_id))
             await db.commit()
@@ -296,5 +286,5 @@ class SqliteStateBackend(StateBackend):
             if row is None:
                 raise NotFoundError(f"Connector with id {connector_id} not found.")
             data_json = row["data"]
-        connector_data = orjson.loads(data_json)
+        connector_data = msgspec.json.decode(data_json)
         return connector_data

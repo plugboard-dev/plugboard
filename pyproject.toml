@@ -29,7 +29,6 @@ gcsfs = {version = "^2024.9.0.post1", optional = true}
 inject = "^5.2.1"
 moto = {extras = ["server"], version = "^5.0.16"}
 msgspec = {extras = ["yaml"], version = "^0.18.6"}
-orjson = "^3.10.9"
 pandas = ">=1.0,<3"
 pyarrow = "^17.0.0"
 pydantic = "^2.8.2"
