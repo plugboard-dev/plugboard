@@ -104,6 +104,7 @@ class Process(AsDictMixin):
 
     def dict(self) -> dict[str, _t.Any]:  # noqa: D102
         return {
+            "id": self.id,
             "name": self.name,
             "components": {k: v.dict() for k, v in self.components.items()},
             "connectors": {k: v.dict() for k, v in self.connectors.items()},

@@ -121,6 +121,8 @@ class Component(ABC, AsDictMixin):
 
     def dict(self) -> dict[str, _t.Any]:  # noqa: D102
         return {
+            "id": self.id,
+            "name": self.name,
             **self.io.data,
         }
 

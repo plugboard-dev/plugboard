@@ -23,5 +23,6 @@ class Connector(AsDictMixin):
 
     def dict(self) -> dict[str, _t.Any]:  # noqa: D102
         return {
+            "id": self.id,
             "spec": self.spec.model_dump(),
         }
