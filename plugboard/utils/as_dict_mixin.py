@@ -32,28 +32,16 @@ class ExportMixin:
         return _wrapper
 
     @staticmethod
-    def _convert_exportable_objs(kwargs: dict) -> dict:
+    def _convert_exportable_objs(obj: _t.Any) -> _t.Any:
         """Recursively converts `Exportable` objects to their `export` representation."""
-        saved_kwargs = {}
-        for k, v in kwargs.items():
-            if isinstance(v, Exportable):
-                saved_kwargs[k] = v.export()
-            elif isinstance(v, dict):
-                saved_kwargs[k] = ExportMixin._convert_exportable_objs(v)
-            elif isinstance(v, list):
-                # TODO : Why does mypy complain about the following line? The below example
-                #      : seems to be equivalent in terms of types and mypy doesn't complain...
-                # def _convert(kwargs: dict) -> dict:
-                #     saved_kwargs = {}
-                #     for k, v in kwargs.items():
-                #         if isinstance(v, list):
-                #             v = [x for x in v]
-                #             saved_kwargs[k] = v
-                #     return saved_kwargs
-                saved_kwargs[k] = [ExportMixin._convert_exportable_objs(x) for x in v]
-            else:
-                saved_kwargs[k] = v
-        return saved_kwargs
+        if isinstance(obj, Exportable):
+            return obj.export()
+        elif isinstance(obj, dict):
+            return {k: ExportMixin._convert_exportable_objs(v) for k, v in obj.items()}
+        elif isinstance(obj, list):
+            return [ExportMixin._convert_exportable_objs(x) for x in obj]
+        else:
+            return obj
 
     @staticmethod
     def _dict_inject_wrapper(method: _t.Callable) -> _t.Callable:
