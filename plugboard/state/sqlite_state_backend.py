@@ -120,6 +120,14 @@ STATE_GET_PROCESS_FOR_COMPONENT_SQL: str = dedent(
     """
 )
 
+STATE_GET_COMPONENTS_FOR_PROCESS_SQL: str = dedent(
+    """
+    SELECT id, data FROM component WHERE id IN (
+        SELECT component_id FROM process_component WHERE process_id = ?
+    );
+    """
+)
+
 STATE_UPSERT_CONNECTOR_SQL: str = dedent(
     """\
     INSERT OR REPLACE INTO connector (data, process_id) VALUES (?, ?);
@@ -141,6 +149,14 @@ STATE_SET_PROCESS_FOR_CONNECTOR_SQL: str = dedent(
 STATE_GET_PROCESS_FOR_CONNECTOR_SQL: str = dedent(
     """\
     SELECT process_id FROM process_connector WHERE connector_id = ?;
+    """
+)
+
+STATE_GET_CONNECTORS_FOR_PROCESS_SQL: str = dedent(
+    """
+    SELECT id, data FROM connector WHERE id IN (
+        SELECT connector_id FROM process_connector WHERE process_id = ?
+    );
     """
 )
 
@@ -220,7 +236,15 @@ class SqliteStateBackend(StateBackend):
             if row is None:
                 raise NotFoundError(f"Process with id {process_id} not found.")
             data_json = row["data"]
+            cursor = await db.execute(STATE_GET_COMPONENTS_FOR_PROCESS_SQL, (process_id,))
+            component_rows = await cursor.fetchall()
+            cursor = await db.execute(STATE_GET_CONNECTORS_FOR_PROCESS_SQL, (process_id,))
+            connector_rows = await cursor.fetchall()
         process_data = msgspec.json.decode(data_json)
+        process_components = {row["id"]: msgspec.json.decode(row["data"]) for row in component_rows}
+        process_connectors = {row["id"]: msgspec.json.decode(row["data"]) for row in connector_rows}
+        process_data["components"] = process_components
+        process_data["connectors"] = process_connectors
         return process_data
 
     @alru_cache(maxsize=128)
