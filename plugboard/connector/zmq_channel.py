@@ -43,8 +43,16 @@ class ZMQChannel(SerdeChannel):
         self._send_hwm = max(self._maxsize // 2, 1)
         self._recv_hwm = max(self._maxsize - self._send_hwm, 1)
         self._confirm_msg = f"{ZMQ_CONFIRM_MSG}:{gen_rand_str()}".encode()
-        # Random poll interval to avoid spikes in activity when multiple channels are created
-        self._poll_interval = random.uniform(0.09, 0.11)
+
+    @staticmethod
+    def _create_socket(
+        socket_type: int, socket_opts: list[tuple[int, int | bytes | str]]
+    ) -> zmq.asyncio.Socket:
+        ctx = zmq.asyncio.Context.instance()
+        socket = ctx.socket(socket_type)
+        for opt, value in socket_opts:
+            socket.setsockopt(opt, value)
+        return socket
 
     async def send(self, msg: bytes) -> None:
         """Sends a message through the `ZMQChannel`.
@@ -53,9 +61,7 @@ class ZMQChannel(SerdeChannel):
             msg: The message to be sent through the `ZMQChannel`.
         """
         if self._send_socket is None:
-            context = zmq.asyncio.Context.instance()
-            self._send_socket = context.socket(zmq.PUSH)
-            self._send_socket.setsockopt(zmq.SNDHWM, self._send_hwm)
+            self._send_socket = self._create_socket(zmq.PUSH, [(zmq.SNDHWM, self._send_hwm)])
             port = self._send_socket.bind_to_random_port(ZMQ_ADDR)
             self._port.value = port
             await self._send_socket.send(self._confirm_msg)
@@ -65,12 +71,11 @@ class ZMQChannel(SerdeChannel):
     async def recv(self) -> bytes:
         """Receives a message from the `ZMQChannel` and returns it."""
         if self._recv_socket is None:
-            context = zmq.asyncio.Context.instance()
-            self._recv_socket = context.socket(zmq.PULL)
-            self._recv_socket.setsockopt(zmq.RCVHWM, self._recv_hwm)
-            # Wait for the port to be set by the send socket
+            self._recv_socket = self._create_socket(zmq.PULL, [(zmq.RCVHWM, self._recv_hwm)])
+            # Wait for port from the send socket, use random poll interval to avoid spikes
+            _poll_interval = random.uniform(0.09, 0.11)
             while not self._port.value:
-                await asyncio.sleep(self._poll_interval)
+                await asyncio.sleep(_poll_interval)
             self._recv_socket.connect(f"{ZMQ_ADDR}:{self._port.value}")
             msg = await self._recv_socket.recv()
             if msg != self._confirm_msg:
