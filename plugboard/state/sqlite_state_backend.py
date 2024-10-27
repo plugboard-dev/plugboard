@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 # from contextlib import AsyncExitStack
-from textwrap import dedent
 import typing as _t
 
 import aiosqlite
@@ -11,6 +10,7 @@ from async_lru import alru_cache
 import msgspec
 
 from plugboard.exceptions import NotFoundError
+from plugboard.state import sqlite_queries as q
 from plugboard.state.state_backend import StateBackend
 
 
@@ -18,147 +18,6 @@ if _t.TYPE_CHECKING:
     from plugboard.component import Component
     from plugboard.connector import Connector
     from plugboard.process import Process
-
-
-STATE_CREATE_TABLE_SQL: str = dedent(
-    """\
-    CREATE TABLE IF NOT EXISTS job (
-        data TEXT,
-        id TEXT NOT NULL GENERATED ALWAYS AS (json_extract(data, '$.job_id')) VIRTUAL UNIQUE,
-        created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-        ttl INTEGER DEFAULT NULL,
-        metadata TEXT GENERATED ALWAYS AS (json_extract(data, '$.metadata')) VIRTUAL,
-        status TEXT GENERATED ALWAYS AS (json_extract(data, '$.status')) VIRTUAL
-    );
-    CREATE TABLE IF NOT EXISTS process (
-        data TEXT,
-        id TEXT NOT NULL GENERATED ALWAYS AS (json_extract(data, '$.id')) VIRTUAL UNIQUE,
-        status TEXT GENERATED ALWAYS AS (json_extract(data, '$.status')) VIRTUAL,
-        job_id TEXT,
-        FOREIGN KEY (job_id) REFERENCES job(id) ON DELETE CASCADE
-    );
-    CREATE TABLE IF NOT EXISTS component (
-        data TEXT,
-        id TEXT NOT NULL GENERATED ALWAYS AS (json_extract(data, '$.id')) VIRTUAL UNIQUE,
-        status TEXT GENERATED ALWAYS AS (json_extract(data, '$.status')) VIRTUAL,
-        process_id TEXT,
-        FOREIGN KEY (process_id) REFERENCES process(id) ON DELETE CASCADE
-    );
-    CREATE TABLE IF NOT EXISTS connector (
-        data TEXT,
-        id TEXT NOT NULL GENERATED ALWAYS AS (json_extract(data, '$.id')) VIRTUAL UNIQUE,
-        status TEXT GENERATED ALWAYS AS (json_extract(data, '$.status')) VIRTUAL,
-        process_id TEXT,
-        FOREIGN KEY (process_id) REFERENCES process(id) ON DELETE CASCADE
-    );
-    CREATE TABLE IF NOT EXISTS job_process (
-        job_id TEXT NOT NULL,
-        process_id TEXT NOT NULL,
-        FOREIGN KEY (job_id) REFERENCES job(id) ON DELETE CASCADE,
-        FOREIGN KEY (process_id) REFERENCES process(id) ON DELETE CASCADE
-    );
-    CREATE TABLE IF NOT EXISTS process_component (
-        process_id TEXT NOT NULL,
-        component_id TEXT NOT NULL,
-        FOREIGN KEY (process_id) REFERENCES process(id) ON DELETE CASCADE,
-        FOREIGN KEY (component_id) REFERENCES component(id) ON DELETE CASCADE
-    );
-    CREATE TABLE IF NOT EXISTS process_connector (
-        process_id TEXT NOT NULL,
-        connector_id TEXT NOT NULL,
-        FOREIGN KEY (process_id) REFERENCES process(id) ON DELETE CASCADE,
-        FOREIGN KEY (connector_id) REFERENCES connector(id) ON DELETE CASCADE
-    );
-    """
-)
-
-STATE_UPSERT_PROCESS_SQL: str = dedent(
-    """\
-    INSERT OR REPLACE INTO process (data, job_id) VALUES (?, ?);
-    """
-)
-
-STATE_GET_PROCESS_SQL: str = dedent(
-    """\
-    SELECT data FROM process WHERE id = ?;
-    """
-)
-
-STATE_SET_JOB_FOR_PROCESS_SQL: str = dedent(
-    """\
-    INSERT INTO job_process (job_id, process_id) VALUES (?, ?);
-    """
-)
-
-STATE_GET_JOB_FOR_PROCESS_SQL: str = dedent(
-    """\
-    SELECT job_id FROM job_process WHERE process_id = ?;
-    """
-)
-
-STATE_UPSERT_COMPONENT_SQL: str = dedent(
-    """\
-    INSERT OR REPLACE INTO component (data, process_id) VALUES (?, ?);
-    """
-)
-
-STATE_GET_COMPONENT_SQL: str = dedent(
-    """\
-    SELECT data FROM component WHERE id = ?;
-    """
-)
-
-STATE_SET_PROCESS_FOR_COMPONENT_SQL: str = dedent(
-    """\
-    INSERT INTO process_component (process_id, component_id) VALUES (?, ?);
-    """
-)
-
-STATE_GET_PROCESS_FOR_COMPONENT_SQL: str = dedent(
-    """\
-    SELECT process_id FROM process_component WHERE component_id = ?;
-    """
-)
-
-STATE_GET_COMPONENTS_FOR_PROCESS_SQL: str = dedent(
-    """
-    SELECT id, data FROM component WHERE id IN (
-        SELECT component_id FROM process_component WHERE process_id = ?
-    );
-    """
-)
-
-STATE_UPSERT_CONNECTOR_SQL: str = dedent(
-    """\
-    INSERT OR REPLACE INTO connector (data, process_id) VALUES (?, ?);
-    """
-)
-
-STATE_GET_CONNECTOR_SQL: str = dedent(
-    """\
-    SELECT data FROM connector WHERE id = ?;
-    """
-)
-
-STATE_SET_PROCESS_FOR_CONNECTOR_SQL: str = dedent(
-    """\
-    INSERT INTO process_connector (process_id, connector_id) VALUES (?, ?);
-    """
-)
-
-STATE_GET_PROCESS_FOR_CONNECTOR_SQL: str = dedent(
-    """\
-    SELECT process_id FROM process_connector WHERE connector_id = ?;
-    """
-)
-
-STATE_GET_CONNECTORS_FOR_PROCESS_SQL: str = dedent(
-    """
-    SELECT id, data FROM connector WHERE id IN (
-        SELECT connector_id FROM process_connector WHERE process_id = ?
-    );
-    """
-)
 
 
 class SqliteStateBackend(StateBackend):
@@ -192,7 +51,7 @@ class SqliteStateBackend(StateBackend):
         # db = await self._ctx.enter_async_context(aiosqlite.connect(self._db_path))
         # self._db_conn = db
         async with aiosqlite.connect(self._db_path) as db:
-            await db.executescript(STATE_CREATE_TABLE_SQL)
+            await db.executescript(q.STATE_CREATE_TABLE_SQL)
             await db.commit()
 
     async def init(self) -> None:
@@ -213,32 +72,32 @@ class SqliteStateBackend(StateBackend):
         connector_data = process_data.pop("connectors")
         process_json = msgspec.json.encode(process_data)
         async with aiosqlite.connect(self._db_path) as db:
-            await db.execute(STATE_UPSERT_PROCESS_SQL, (process_json, self.job_id))
-            await db.execute(STATE_SET_JOB_FOR_PROCESS_SQL, (self.job_id, process.id))
+            await db.execute(q.STATE_UPSERT_PROCESS_SQL, (process_json, self.job_id))
+            await db.execute(q.STATE_SET_JOB_FOR_PROCESS_SQL, (self.job_id, process.id))
             for component_id, component in component_data.items():
-                await db.execute(STATE_SET_PROCESS_FOR_COMPONENT_SQL, (process.id, component_id))
+                await db.execute(q.STATE_SET_PROCESS_FOR_COMPONENT_SQL, (process.id, component_id))
                 if with_components:
                     component_json = msgspec.json.encode(component)
-                    await db.execute(STATE_UPSERT_COMPONENT_SQL, (component_json, process.id))
+                    await db.execute(q.STATE_UPSERT_COMPONENT_SQL, (component_json, process.id))
             for connector_id, connector in connector_data.items():
-                await db.execute(STATE_SET_PROCESS_FOR_CONNECTOR_SQL, (process.id, connector_id))
+                await db.execute(q.STATE_SET_PROCESS_FOR_CONNECTOR_SQL, (process.id, connector_id))
                 if with_components:
                     connector_json = msgspec.json.encode(connector)
-                    await db.execute(STATE_UPSERT_CONNECTOR_SQL, (connector_json, process.id))
+                    await db.execute(q.STATE_UPSERT_CONNECTOR_SQL, (connector_json, process.id))
             await db.commit()
 
     async def get_process(self, process_id: str) -> dict:
         """Returns a process from the state."""
         async with aiosqlite.connect(self._db_path) as db:
             db.row_factory = aiosqlite.Row
-            cursor = await db.execute(STATE_GET_PROCESS_SQL, (process_id,))
+            cursor = await db.execute(q.STATE_GET_PROCESS_SQL, (process_id,))
             row = await cursor.fetchone()
             if row is None:
                 raise NotFoundError(f"Process with id {process_id} not found.")
             data_json = row["data"]
-            cursor = await db.execute(STATE_GET_COMPONENTS_FOR_PROCESS_SQL, (process_id,))
+            cursor = await db.execute(q.STATE_GET_COMPONENTS_FOR_PROCESS_SQL, (process_id,))
             component_rows = await cursor.fetchall()
-            cursor = await db.execute(STATE_GET_CONNECTORS_FOR_PROCESS_SQL, (process_id,))
+            cursor = await db.execute(q.STATE_GET_CONNECTORS_FOR_PROCESS_SQL, (process_id,))
             connector_rows = await cursor.fetchall()
         process_data = msgspec.json.decode(data_json)
         process_components = {row["id"]: msgspec.json.decode(row["data"]) for row in component_rows}
@@ -252,7 +111,7 @@ class SqliteStateBackend(StateBackend):
         """Returns the process id for a component."""
         async with aiosqlite.connect(self._db_path) as db:
             db.row_factory = aiosqlite.Row
-            cursor = await db.execute(STATE_GET_PROCESS_FOR_COMPONENT_SQL, (component_id,))
+            cursor = await db.execute(q.STATE_GET_PROCESS_FOR_COMPONENT_SQL, (component_id,))
             row = await cursor.fetchone()
             if row is None:
                 raise NotFoundError(f"Process for component with id {component_id} not found.")
@@ -265,14 +124,14 @@ class SqliteStateBackend(StateBackend):
         component_data = component.dict()
         component_json = msgspec.json.encode(component_data)
         async with aiosqlite.connect(self._db_path) as db:
-            await db.execute(STATE_UPSERT_COMPONENT_SQL, (component_json, process_id))
+            await db.execute(q.STATE_UPSERT_COMPONENT_SQL, (component_json, process_id))
             await db.commit()
 
     async def get_component(self, component_id: str) -> dict:
         """Returns a component from the state."""
         async with aiosqlite.connect(self._db_path) as db:
             db.row_factory = aiosqlite.Row
-            cursor = await db.execute(STATE_GET_COMPONENT_SQL, (component_id,))
+            cursor = await db.execute(q.STATE_GET_COMPONENT_SQL, (component_id,))
             row = await cursor.fetchone()
             if row is None:
                 raise NotFoundError(f"Component with id {component_id} not found.")
@@ -285,7 +144,7 @@ class SqliteStateBackend(StateBackend):
         """Returns the process id for a connector."""
         async with aiosqlite.connect(self._db_path) as db:
             db.row_factory = aiosqlite.Row
-            cursor = await db.execute(STATE_GET_PROCESS_FOR_CONNECTOR_SQL, (connector_id,))
+            cursor = await db.execute(q.STATE_GET_PROCESS_FOR_CONNECTOR_SQL, (connector_id,))
             row = await cursor.fetchone()
             if row is None:
                 raise NotFoundError(f"Process for connector with id {connector_id} not found.")
@@ -298,14 +157,14 @@ class SqliteStateBackend(StateBackend):
         connector_data = connector.dict()
         connector_json = msgspec.json.encode(connector_data)
         async with aiosqlite.connect(self._db_path) as db:
-            await db.execute(STATE_UPSERT_CONNECTOR_SQL, (connector_json, process_id))
+            await db.execute(q.STATE_UPSERT_CONNECTOR_SQL, (connector_json, process_id))
             await db.commit()
 
     async def get_connector(self, connector_id: str) -> dict:
         """Returns a connector from the state."""
         async with aiosqlite.connect(self._db_path) as db:
             db.row_factory = aiosqlite.Row
-            cursor = await db.execute(STATE_GET_CONNECTOR_SQL, (connector_id,))
+            cursor = await db.execute(q.STATE_GET_CONNECTOR_SQL, (connector_id,))
             row = await cursor.fetchone()
             if row is None:
                 raise NotFoundError(f"Connector with id {connector_id} not found.")
