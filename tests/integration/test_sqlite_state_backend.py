@@ -89,8 +89,15 @@ async def test_state_backend_multiprocess(
     # Run components in separate processes with multiprocessing
     mp_processes = []
 
+    def init_component(comp: Component) -> None:
+        async def _inner() -> None:
+            await comp.init()
+            print("Component initialised.")
+
+        asyncio.run(_inner())
+
     for comp in process_1.components.values():
-        p = mp.Process(target=comp.init)
+        p = mp.Process(target=init_component, args=(comp,))
         mp_processes.append(p)
         p.start()
 
