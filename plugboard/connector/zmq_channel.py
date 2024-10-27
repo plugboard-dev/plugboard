@@ -2,6 +2,7 @@
 
 import asyncio
 from multiprocessing.managers import SyncManager
+import random
 import typing as _t
 
 import inject
@@ -42,6 +43,8 @@ class ZMQChannel(SerdeChannel):
         self._send_hwm = max(self._maxsize // 2, 1)
         self._recv_hwm = max(self._maxsize - self._send_hwm, 1)
         self._confirm_msg = f"{ZMQ_CONFIRM_MSG}:{gen_rand_str()}".encode()
+        # Random poll interval to avoid spikes in activity when multiple channels are created
+        self._poll_interval = random.uniform(0.09, 0.11)
 
     async def send(self, msg: bytes) -> None:
         """Sends a message through the `ZMQChannel`.
@@ -67,7 +70,7 @@ class ZMQChannel(SerdeChannel):
             self._recv_socket.setsockopt(zmq.RCVHWM, self._recv_hwm)
             # Wait for the port to be set by the send socket
             while not self._port.value:
-                await asyncio.sleep(0.1)
+                await asyncio.sleep(self._poll_interval)
             self._recv_socket.connect(f"{ZMQ_ADDR}:{self._port.value}")
             msg = await self._recv_socket.recv()
             if msg != self._confirm_msg:
