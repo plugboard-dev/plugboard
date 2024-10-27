@@ -21,6 +21,9 @@ class Connector(ExportMixin):
         """Unique ID for `Connector`."""
         return self.spec.id
 
+    def export(self) -> dict:  # noqa: D102
+        return self.spec.model_dump()
+
     def dict(self) -> dict[str, _t.Any]:  # noqa: D102
         return {
             "id": self.id,
