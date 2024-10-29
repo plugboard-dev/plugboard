@@ -65,6 +65,30 @@ class SqliteStateBackend(StateBackend):
         # await self._ctx.aclose()
         pass
 
+    async def _fetchone(
+        self, statement: str, params: _t.Tuple[_t.Any, ...]
+    ) -> aiosqlite.Row | None:
+        async with aiosqlite.connect(self._db_path) as db:
+            db.row_factory = aiosqlite.Row
+            cursor = await db.execute(statement, params)
+            row = await cursor.fetchone()
+            return row
+
+    async def _get_object(self, statement: str, params: _t.Tuple[_t.Any, ...]) -> dict | None:
+        """Returns an object from the state."""
+        row = await self._fetchone(statement, params)
+        if row is None:
+            return None
+        data_json = row["data"]
+        object_data = msgspec.json.decode(data_json)
+        return object_data
+
+    async def _execute(self, statement: str, params: _t.Tuple[_t.Any, ...]) -> None:
+        """Executes a statement in the state."""
+        async with aiosqlite.connect(self._db_path) as db:
+            await db.execute(statement, params)
+            await db.commit()
+
     async def upsert_process(self, process: Process, with_components: bool = False) -> None:
         """Upserts a process into the state."""
         process_data = process.dict()
@@ -124,13 +148,10 @@ class SqliteStateBackend(StateBackend):
     @alru_cache(maxsize=128)
     async def _get_process_for_component(self, component_id: str) -> str:
         """Returns the process id for a component."""
-        async with aiosqlite.connect(self._db_path) as db:
-            db.row_factory = aiosqlite.Row
-            cursor = await db.execute(q.GET_PROCESS_FOR_COMPONENT, (component_id,))
-            row = await cursor.fetchone()
-            if row is None:
-                raise NotFoundError(f"Process for component with id {component_id} not found.")
-            process_id = row["process_id"]
+        row = await self._fetchone(q.GET_PROCESS_FOR_COMPONENT, (component_id,))
+        if row is None:
+            raise NotFoundError(f"Process for component with id {component_id} not found.")
+        process_id = row["process_id"]
         return process_id
 
     async def upsert_component(self, component: Component) -> None:
@@ -138,32 +159,22 @@ class SqliteStateBackend(StateBackend):
         process_id = await self._get_process_for_component(component.id)
         component_data = component.dict()
         component_json = msgspec.json.encode(component_data)
-        async with aiosqlite.connect(self._db_path) as db:
-            await db.execute(q.UPSERT_COMPONENT, (component_json, process_id))
-            await db.commit()
+        await self._execute(q.UPSERT_COMPONENT, (component_json, process_id))
 
     async def get_component(self, component_id: str) -> dict:
         """Returns a component from the state."""
-        async with aiosqlite.connect(self._db_path) as db:
-            db.row_factory = aiosqlite.Row
-            cursor = await db.execute(q.GET_COMPONENT, (component_id,))
-            row = await cursor.fetchone()
-            if row is None:
-                raise NotFoundError(f"Component with id {component_id} not found.")
-            data_json = row["data"]
-        component_data = msgspec.json.decode(data_json)
-        return component_data
+        component = await self._get_object(q.GET_COMPONENT, (component_id,))
+        if component is None:
+            raise NotFoundError(f"Component with id {component_id} not found.")
+        return component
 
     @alru_cache(maxsize=128)
     async def _get_process_for_connector(self, connector_id: str) -> str:
         """Returns the process id for a connector."""
-        async with aiosqlite.connect(self._db_path) as db:
-            db.row_factory = aiosqlite.Row
-            cursor = await db.execute(q.GET_PROCESS_FOR_CONNECTOR, (connector_id,))
-            row = await cursor.fetchone()
-            if row is None:
-                raise NotFoundError(f"Process for connector with id {connector_id} not found.")
-            process_id = row["process_id"]
+        row = await self._fetchone(q.GET_PROCESS_FOR_CONNECTOR, (connector_id,))
+        if row is None:
+            raise NotFoundError(f"Process for connector with id {connector_id} not found.")
+        process_id = row["process_id"]
         return process_id
 
     async def upsert_connector(self, connector: Connector) -> None:
@@ -171,18 +182,11 @@ class SqliteStateBackend(StateBackend):
         process_id = await self._get_process_for_connector(connector.id)
         connector_data = connector.dict()
         connector_json = msgspec.json.encode(connector_data)
-        async with aiosqlite.connect(self._db_path) as db:
-            await db.execute(q.UPSERT_CONNECTOR, (connector_json, process_id))
-            await db.commit()
+        await self._execute(q.UPSERT_CONNECTOR, (connector_json, process_id))
 
     async def get_connector(self, connector_id: str) -> dict:
         """Returns a connector from the state."""
-        async with aiosqlite.connect(self._db_path) as db:
-            db.row_factory = aiosqlite.Row
-            cursor = await db.execute(q.GET_CONNECTOR, (connector_id,))
-            row = await cursor.fetchone()
-            if row is None:
-                raise NotFoundError(f"Connector with id {connector_id} not found.")
-            data_json = row["data"]
-        connector_data = msgspec.json.decode(data_json)
-        return connector_data
+        connector = await self._get_object(q.GET_CONNECTOR, (connector_id,))
+        if connector is None:
+            raise NotFoundError(f"Connector with id {connector_id} not found.")
+        return connector
