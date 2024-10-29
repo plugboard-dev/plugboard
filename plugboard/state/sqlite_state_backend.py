@@ -74,16 +74,31 @@ class SqliteStateBackend(StateBackend):
         async with aiosqlite.connect(self._db_path) as db:
             await db.execute(q.UPSERT_PROCESS, (process_json, self.job_id))
             await db.execute(q.SET_JOB_FOR_PROCESS, (self.job_id, process.id))
+
+            process_component_ids = []
+            components_json = []
             for component_id, component in component_data.items():
-                await db.execute(q.SET_PROCESS_FOR_COMPONENT, (process.id, component_id))
+                process_component_ids.append((process.id, component_id))
                 if with_components:
                     component_json = msgspec.json.encode(component)
-                    await db.execute(q.UPSERT_COMPONENT, (component_json, process.id))
+                    components_json.append((component_json, process.id))
+
+            await db.executemany(q.SET_PROCESS_FOR_COMPONENT, process_component_ids)
+            if with_components:
+                await db.executemany(q.UPSERT_COMPONENT, components_json)
+
+            process_connector_ids = []
+            connectors_json = []
             for connector_id, connector in connector_data.items():
-                await db.execute(q.SET_PROCESS_FOR_CONNECTOR, (process.id, connector_id))
+                process_connector_ids.append((process.id, connector_id))
                 if with_components:
                     connector_json = msgspec.json.encode(connector)
-                    await db.execute(q.UPSERT_CONNECTOR, (connector_json, process.id))
+                    connectors_json.append((connector_json, process.id))
+
+            await db.executemany(q.SET_PROCESS_FOR_CONNECTOR, process_connector_ids)
+            if with_components:
+                await db.executemany(q.UPSERT_CONNECTOR, connectors_json)
+
             await db.commit()
 
     async def get_process(self, process_id: str) -> dict:
