@@ -65,14 +65,14 @@ async def test_state_backend_init(
     if exc_ctx is not None:
         return
 
-    assert await state_backend.created_at == datetime_now
+    assert state_backend.created_at == datetime_now
 
-    assert await state_backend.job_id is not None
-    assert EntityIdGen.is_job_id(await state_backend.job_id)
+    assert state_backend.job_id is not None
+    assert EntityIdGen.is_job_id(state_backend.job_id)
     if job_id is not None:
-        assert await state_backend.job_id == job_id
+        assert state_backend.job_id == job_id
 
-    assert await state_backend.metadata == (metadata or dict())
+    assert state_backend.metadata == (metadata or dict())
 
 
 @pytest.mark.asyncio
