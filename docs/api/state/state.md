@@ -2,3 +2,5 @@
     options:
       members:
       - StateBackend
+      - DictStateBackend
+      - SqliteStateBackend
