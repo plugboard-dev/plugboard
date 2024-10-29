@@ -3,7 +3,7 @@
 from textwrap import dedent
 
 
-STATE_CREATE_TABLE_SQL: str = dedent(
+CREATE_TABLE: str = dedent(
     """\
     CREATE TABLE IF NOT EXISTS job (
         data TEXT,
@@ -55,55 +55,55 @@ STATE_CREATE_TABLE_SQL: str = dedent(
     """
 )
 
-STATE_UPSERT_PROCESS_SQL: str = dedent(
+UPSERT_PROCESS: str = dedent(
     """\
     INSERT OR REPLACE INTO process (data, job_id) VALUES (?, ?);
     """
 )
 
-STATE_GET_PROCESS_SQL: str = dedent(
+GET_PROCESS: str = dedent(
     """\
     SELECT data FROM process WHERE id = ?;
     """
 )
 
-STATE_SET_JOB_FOR_PROCESS_SQL: str = dedent(
+SET_JOB_FOR_PROCESS: str = dedent(
     """\
     INSERT INTO job_process (job_id, process_id) VALUES (?, ?);
     """
 )
 
-STATE_GET_JOB_FOR_PROCESS_SQL: str = dedent(
+GET_JOB_FOR_PROCESS: str = dedent(
     """\
     SELECT job_id FROM job_process WHERE process_id = ?;
     """
 )
 
-STATE_UPSERT_COMPONENT_SQL: str = dedent(
+UPSERT_COMPONENT: str = dedent(
     """\
     INSERT OR REPLACE INTO component (data, process_id) VALUES (?, ?);
     """
 )
 
-STATE_GET_COMPONENT_SQL: str = dedent(
+GET_COMPONENT: str = dedent(
     """\
     SELECT data FROM component WHERE id = ?;
     """
 )
 
-STATE_SET_PROCESS_FOR_COMPONENT_SQL: str = dedent(
+SET_PROCESS_FOR_COMPONENT: str = dedent(
     """\
     INSERT INTO process_component (process_id, component_id) VALUES (?, ?);
     """
 )
 
-STATE_GET_PROCESS_FOR_COMPONENT_SQL: str = dedent(
+GET_PROCESS_FOR_COMPONENT: str = dedent(
     """\
     SELECT process_id FROM process_component WHERE component_id = ?;
     """
 )
 
-STATE_GET_COMPONENTS_FOR_PROCESS_SQL: str = dedent(
+GET_COMPONENTS_FOR_PROCESS: str = dedent(
     """
     SELECT id, data FROM component WHERE id IN (
         SELECT component_id FROM process_component WHERE process_id = ?
@@ -111,31 +111,31 @@ STATE_GET_COMPONENTS_FOR_PROCESS_SQL: str = dedent(
     """
 )
 
-STATE_UPSERT_CONNECTOR_SQL: str = dedent(
+UPSERT_CONNECTOR: str = dedent(
     """\
     INSERT OR REPLACE INTO connector (data, process_id) VALUES (?, ?);
     """
 )
 
-STATE_GET_CONNECTOR_SQL: str = dedent(
+GET_CONNECTOR: str = dedent(
     """\
     SELECT data FROM connector WHERE id = ?;
     """
 )
 
-STATE_SET_PROCESS_FOR_CONNECTOR_SQL: str = dedent(
+SET_PROCESS_FOR_CONNECTOR: str = dedent(
     """\
     INSERT INTO process_connector (process_id, connector_id) VALUES (?, ?);
     """
 )
 
-STATE_GET_PROCESS_FOR_CONNECTOR_SQL: str = dedent(
+GET_PROCESS_FOR_CONNECTOR: str = dedent(
     """\
     SELECT process_id FROM process_connector WHERE connector_id = ?;
     """
 )
 
-STATE_GET_CONNECTORS_FOR_PROCESS_SQL: str = dedent(
+GET_CONNECTORS_FOR_PROCESS: str = dedent(
     """
     SELECT id, data FROM connector WHERE id IN (
         SELECT connector_id FROM process_connector WHERE process_id = ?

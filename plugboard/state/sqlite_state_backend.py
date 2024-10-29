@@ -51,7 +51,7 @@ class SqliteStateBackend(StateBackend):
         # db = await self._ctx.enter_async_context(aiosqlite.connect(self._db_path))
         # self._db_conn = db
         async with aiosqlite.connect(self._db_path) as db:
-            await db.executescript(q.STATE_CREATE_TABLE_SQL)
+            await db.executescript(q.CREATE_TABLE)
             await db.commit()
 
     async def init(self) -> None:
@@ -72,32 +72,32 @@ class SqliteStateBackend(StateBackend):
         connector_data = process_data.pop("connectors")
         process_json = msgspec.json.encode(process_data)
         async with aiosqlite.connect(self._db_path) as db:
-            await db.execute(q.STATE_UPSERT_PROCESS_SQL, (process_json, self.job_id))
-            await db.execute(q.STATE_SET_JOB_FOR_PROCESS_SQL, (self.job_id, process.id))
+            await db.execute(q.UPSERT_PROCESS, (process_json, self.job_id))
+            await db.execute(q.SET_JOB_FOR_PROCESS, (self.job_id, process.id))
             for component_id, component in component_data.items():
-                await db.execute(q.STATE_SET_PROCESS_FOR_COMPONENT_SQL, (process.id, component_id))
+                await db.execute(q.SET_PROCESS_FOR_COMPONENT, (process.id, component_id))
                 if with_components:
                     component_json = msgspec.json.encode(component)
-                    await db.execute(q.STATE_UPSERT_COMPONENT_SQL, (component_json, process.id))
+                    await db.execute(q.UPSERT_COMPONENT, (component_json, process.id))
             for connector_id, connector in connector_data.items():
-                await db.execute(q.STATE_SET_PROCESS_FOR_CONNECTOR_SQL, (process.id, connector_id))
+                await db.execute(q.SET_PROCESS_FOR_CONNECTOR, (process.id, connector_id))
                 if with_components:
                     connector_json = msgspec.json.encode(connector)
-                    await db.execute(q.STATE_UPSERT_CONNECTOR_SQL, (connector_json, process.id))
+                    await db.execute(q.UPSERT_CONNECTOR, (connector_json, process.id))
             await db.commit()
 
     async def get_process(self, process_id: str) -> dict:
         """Returns a process from the state."""
         async with aiosqlite.connect(self._db_path) as db:
             db.row_factory = aiosqlite.Row
-            cursor = await db.execute(q.STATE_GET_PROCESS_SQL, (process_id,))
+            cursor = await db.execute(q.GET_PROCESS, (process_id,))
             row = await cursor.fetchone()
             if row is None:
                 raise NotFoundError(f"Process with id {process_id} not found.")
             data_json = row["data"]
-            cursor = await db.execute(q.STATE_GET_COMPONENTS_FOR_PROCESS_SQL, (process_id,))
+            cursor = await db.execute(q.GET_COMPONENTS_FOR_PROCESS, (process_id,))
             component_rows = await cursor.fetchall()
-            cursor = await db.execute(q.STATE_GET_CONNECTORS_FOR_PROCESS_SQL, (process_id,))
+            cursor = await db.execute(q.GET_CONNECTORS_FOR_PROCESS, (process_id,))
             connector_rows = await cursor.fetchall()
         process_data = msgspec.json.decode(data_json)
         process_components = {row["id"]: msgspec.json.decode(row["data"]) for row in component_rows}
@@ -111,7 +111,7 @@ class SqliteStateBackend(StateBackend):
         """Returns the process id for a component."""
         async with aiosqlite.connect(self._db_path) as db:
             db.row_factory = aiosqlite.Row
-            cursor = await db.execute(q.STATE_GET_PROCESS_FOR_COMPONENT_SQL, (component_id,))
+            cursor = await db.execute(q.GET_PROCESS_FOR_COMPONENT, (component_id,))
             row = await cursor.fetchone()
             if row is None:
                 raise NotFoundError(f"Process for component with id {component_id} not found.")
@@ -124,14 +124,14 @@ class SqliteStateBackend(StateBackend):
         component_data = component.dict()
         component_json = msgspec.json.encode(component_data)
         async with aiosqlite.connect(self._db_path) as db:
-            await db.execute(q.STATE_UPSERT_COMPONENT_SQL, (component_json, process_id))
+            await db.execute(q.UPSERT_COMPONENT, (component_json, process_id))
             await db.commit()
 
     async def get_component(self, component_id: str) -> dict:
         """Returns a component from the state."""
         async with aiosqlite.connect(self._db_path) as db:
             db.row_factory = aiosqlite.Row
-            cursor = await db.execute(q.STATE_GET_COMPONENT_SQL, (component_id,))
+            cursor = await db.execute(q.GET_COMPONENT, (component_id,))
             row = await cursor.fetchone()
             if row is None:
                 raise NotFoundError(f"Component with id {component_id} not found.")
@@ -144,7 +144,7 @@ class SqliteStateBackend(StateBackend):
         """Returns the process id for a connector."""
         async with aiosqlite.connect(self._db_path) as db:
             db.row_factory = aiosqlite.Row
-            cursor = await db.execute(q.STATE_GET_PROCESS_FOR_CONNECTOR_SQL, (connector_id,))
+            cursor = await db.execute(q.GET_PROCESS_FOR_CONNECTOR, (connector_id,))
             row = await cursor.fetchone()
             if row is None:
                 raise NotFoundError(f"Process for connector with id {connector_id} not found.")
@@ -157,14 +157,14 @@ class SqliteStateBackend(StateBackend):
         connector_data = connector.dict()
         connector_json = msgspec.json.encode(connector_data)
         async with aiosqlite.connect(self._db_path) as db:
-            await db.execute(q.STATE_UPSERT_CONNECTOR_SQL, (connector_json, process_id))
+            await db.execute(q.UPSERT_CONNECTOR, (connector_json, process_id))
             await db.commit()
 
     async def get_connector(self, connector_id: str) -> dict:
         """Returns a connector from the state."""
         async with aiosqlite.connect(self._db_path) as db:
             db.row_factory = aiosqlite.Row
-            cursor = await db.execute(q.STATE_GET_CONNECTOR_SQL, (connector_id,))
+            cursor = await db.execute(q.GET_CONNECTOR, (connector_id,))
             row = await cursor.fetchone()
             if row is None:
                 raise NotFoundError(f"Connector with id {connector_id} not found.")
