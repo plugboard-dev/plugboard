@@ -104,10 +104,8 @@ GET_PROCESS_FOR_COMPONENT: str = dedent(
 )
 
 GET_COMPONENTS_FOR_PROCESS: str = dedent(
-    """
-    SELECT id, data FROM component WHERE id IN (
-        SELECT component_id FROM process_component WHERE process_id = ?
-    );
+    """\
+    SELECT id, data FROM component WHERE process_id = ?;
     """
 )
 
@@ -136,9 +134,7 @@ GET_PROCESS_FOR_CONNECTOR: str = dedent(
 )
 
 GET_CONNECTORS_FOR_PROCESS: str = dedent(
-    """
-    SELECT id, data FROM connector WHERE id IN (
-        SELECT connector_id FROM process_connector WHERE process_id = ?
-    );
+    """\
+    SELECT id, data FROM connector WHERE process_id = ?;
     """
 )
