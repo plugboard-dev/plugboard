@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-# from contextlib import AsyncExitStack
 import typing as _t
 
 import aiosqlite
@@ -26,16 +25,7 @@ class SqliteStateBackend(StateBackend):
     def __init__(self, db_path: str = "plugboard.db", *args: _t.Any, **kwargs: _t.Any) -> None:
         """Initializes `SqliteStateBackend` with `db_path`."""
         self._db_path: str = db_path
-        # self._db_conn: _t.Optional[aiosqlite.Connection] = None
-        # self._ctx: AsyncExitStack = AsyncExitStack()
         super().__init__(*args, **kwargs)
-
-    # @property
-    # def _db(self) -> aiosqlite.Connection:
-    #     """Returns the database connection."""
-    #     if self._db_conn is None:
-    #         raise ValueError("Database connection not initialized.")
-    #     return self._db_conn
 
     async def _get(self, key: str | tuple[str, ...], value: _t.Optional[_t.Any] = None) -> _t.Any:
         """Returns a value from the state."""
@@ -47,9 +37,6 @@ class SqliteStateBackend(StateBackend):
 
     async def _initialise_db(self) -> None:
         """Initializes the database."""
-        # Create database with a table storing json data
-        # db = await self._ctx.enter_async_context(aiosqlite.connect(self._db_path))
-        # self._db_conn = db
         async with aiosqlite.connect(self._db_path) as db:
             await db.executescript(q.CREATE_TABLE)
             await db.commit()
@@ -61,8 +48,6 @@ class SqliteStateBackend(StateBackend):
 
     async def destroy(self) -> None:
         """Destroys the `SqliteStateBackend`."""
-        # NOTE : Persistent connection causes process to hang on exit if not closed.
-        # await self._ctx.aclose()
         pass
 
     async def _fetchone(
