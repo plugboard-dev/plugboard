@@ -3,6 +3,8 @@
 import asyncio
 import multiprocessing as mp
 from multiprocessing.managers import SyncManager
+from tempfile import NamedTemporaryFile
+import typing as _t
 
 import inject
 import pytest
@@ -63,9 +65,10 @@ def connectors() -> list[Connector]:
 
 
 @pytest.fixture
-def db_path() -> str:
+def db_path() -> _t.Iterator[str]:
     """Returns the path to the SQLite database file."""
-    return "plugboard-testing.db"
+    with NamedTemporaryFile() as file:
+        yield file.name
 
 
 # @pytest.mark.anyio
