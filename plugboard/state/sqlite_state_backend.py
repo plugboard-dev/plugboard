@@ -22,6 +22,8 @@ if _t.TYPE_CHECKING:
 class SqliteStateBackend(StateBackend):
     """`SqliteStateBackend` handles single host persistent state."""
 
+    _id_separator: str = ":"
+
     def __init__(self, db_path: str = "plugboard.db", *args: _t.Any, **kwargs: _t.Any) -> None:
         """Initializes `SqliteStateBackend` with `db_path`."""
         self._db_path: str = db_path
@@ -81,9 +83,9 @@ class SqliteStateBackend(StateBackend):
         If the provided entity id includes the job id, it is returned as is;
         otherwise, the job id is prefixed to the entity id.
         """
-        id_parts = entity_id.split(".")
+        id_parts = entity_id.split(self._id_separator)
         if len(id_parts) == 1:
-            return f"{self.job_id}.{entity_id}"
+            return f"{self.job_id}{self._id_separator}{entity_id}"
         if len(id_parts) != 2:
             raise ValueError(f"Invalid entity id: {entity_id}")
         if id_parts[0] != self.job_id:
@@ -143,8 +145,12 @@ class SqliteStateBackend(StateBackend):
             cursor = await db.execute(q.GET_CONNECTORS_FOR_PROCESS, (process_db_id,))
             connector_rows = await cursor.fetchall()
         process_data = msgspec.json.decode(data_json)
-        process_components = {row["id"]: msgspec.json.decode(row["data"]) for row in component_rows}
-        process_connectors = {row["id"]: msgspec.json.decode(row["data"]) for row in connector_rows}
+        process_components = {
+            data["id"]: data for row in component_rows if (data := msgspec.json.decode(row["data"]))
+        }
+        process_connectors = {
+            data["id"]: data for row in connector_rows if (data := msgspec.json.decode(row["data"]))
+        }
         process_data["components"] = process_components
         process_data["connectors"] = process_connectors
         return process_data
