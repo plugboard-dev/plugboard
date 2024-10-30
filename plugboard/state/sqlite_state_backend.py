@@ -114,31 +114,21 @@ class SqliteStateBackend(StateBackend):
         async with aiosqlite.connect(self._db_path) as db:
             await db.execute(q.UPSERT_PROCESS, (process_json, process_db_id, self.job_id))
 
-            process_component_ids = []
-            components_json = []
-            for component_id, component in component_data.items():
-                component_db_id = self._get_db_id(component_id)
-                process_component_ids.append((process_db_id, component_db_id))
+            async def _upsert_children(children: dict, q_set_id: str, q_upsert_child: str) -> None:
+                children_ids = []
+                children_json = []
+                for child_id, child in children.items():
+                    child_db_id = self._get_db_id(child_id)
+                    children_ids.append((process_db_id, child_db_id))
+                    if with_components:
+                        child_json = msgspec.json.encode(child)
+                        children_json.append((child_json, child_db_id, process_db_id))
+                await db.executemany(q_set_id, children_ids)
                 if with_components:
-                    component_json = msgspec.json.encode(component)
-                    components_json.append((component_json, component_db_id, process_db_id))
+                    await db.executemany(q_upsert_child, children_json)
 
-            await db.executemany(q.SET_PROCESS_FOR_COMPONENT, process_component_ids)
-            if with_components:
-                await db.executemany(q.UPSERT_COMPONENT, components_json)
-
-            process_connector_ids = []
-            connectors_json = []
-            for connector_id, connector in connector_data.items():
-                connector_db_id = self._get_db_id(connector_id)
-                process_connector_ids.append((process_db_id, connector_db_id))
-                if with_components:
-                    connector_json = msgspec.json.encode(connector)
-                    connectors_json.append((connector_json, connector_db_id, process_db_id))
-
-            await db.executemany(q.SET_PROCESS_FOR_CONNECTOR, process_connector_ids)
-            if with_components:
-                await db.executemany(q.UPSERT_CONNECTOR, connectors_json)
+            await _upsert_children(component_data, q.SET_PROCESS_FOR_COMPONENT, q.UPSERT_COMPONENT)
+            await _upsert_children(connector_data, q.SET_PROCESS_FOR_CONNECTOR, q.UPSERT_CONNECTOR)
 
             await db.commit()
 
