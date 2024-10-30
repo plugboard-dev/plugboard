@@ -92,6 +92,18 @@ class SqliteStateBackend(StateBackend):
             raise ValueError(f"Entity id {entity_id} does not belong to job {self.job_id}")
         return entity_id
 
+    async def _upsert_job(self, job_data: dict) -> None:
+        """Upserts a job into the state."""
+        job_json = msgspec.json.encode(job_data)
+        await self._execute(q.UPSERT_JOB, (job_json,))
+
+    async def _get_job(self, job_id: str) -> dict:
+        """Returns a job from the state."""
+        job = await self._get_object(q.GET_JOB, (job_id,))
+        if job is None:
+            raise NotFoundError(f"Job with id {job_id} not found.")
+        return job
+
     async def upsert_process(self, process: Process, with_components: bool = False) -> None:
         """Upserts a process into the state."""
         process_data = process.dict()

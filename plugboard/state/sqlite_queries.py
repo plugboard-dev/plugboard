@@ -49,6 +49,18 @@ CREATE_TABLE: str = dedent(
     """
 )
 
+UPSERT_JOB: str = dedent(
+    """\
+    INSERT OR REPLACE INTO job (data) VALUES (?);
+    """
+)
+
+GET_JOB: str = dedent(
+    """\
+    SELECT data FROM job WHERE id = ?;
+    """
+)
+
 UPSERT_PROCESS: str = dedent(
     """\
     INSERT OR REPLACE INTO process (data, id, job_id) VALUES (?, ?, ?);

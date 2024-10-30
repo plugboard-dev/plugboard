@@ -17,9 +17,14 @@ class DictStateBackend(StateBackend):
     async def _initialise_data(
         self, job_id: _t.Optional[str] = None, metadata: _t.Optional[dict] = None, **kwargs: _t.Any
     ) -> None:
-        if job_id is not None:
-            raise StateBackendError("Cannot reuse job ID for non-persistent backend.")
-        return await super()._initialise_data(job_id, metadata, **kwargs)
+        await super()._initialise_data(job_id, metadata, **kwargs)
+        comp_proc_map: dict = dict()
+        await self._set("_comp_proc_map", comp_proc_map)
+        conn_proc_map: dict = dict()
+        await self._set("_conn_proc_map", conn_proc_map)
+
+    async def _get_job(self, job_id: str) -> dict:
+        raise StateBackendError("Cannot reuse job ID for non-persistent backend.")
 
     async def _get(self, key: str | tuple[str, ...], value: _t.Optional[_t.Any] = None) -> _t.Any:
         _state, _key = self._state, key

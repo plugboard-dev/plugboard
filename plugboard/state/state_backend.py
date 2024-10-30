@@ -42,29 +42,16 @@ class StateBackend(ABC, ExportMixin):
         self, job_id: _t.Optional[str] = None, metadata: _t.Optional[dict] = None, **kwargs: _t.Any
     ) -> None:
         """Initialises the state data."""
-        _job_id = job_id or EntityIdGen.job_id()
-        if not EntityIdGen.is_job_id(_job_id):
-            raise ValueError(f"Invalid job id: {_job_id}")
-        await self._set("job_id", _job_id)
-        self._local_state["job_id"] = _job_id
-
-        if job_id is None:
-            _created_at = datetime.now(timezone.utc).isoformat()
+        if job_id is not None:
+            _job_data = await self._get_job(job_id)
         else:
-            # TODO : Retrieve information for existing state.
-            _created_at = "unset"
-        await self._set("created_at", _created_at)
-        self._local_state["created_at"] = _created_at
-
-        _metadata = metadata or dict()
-        await self._set("metadata", _metadata)
-        self._local_state["metadata"] = _metadata
-
-        comp_proc_map: dict = dict()
-        await self._set("_comp_proc_map", comp_proc_map)
-
-        conn_proc_map: dict = dict()
-        await self._set("_conn_proc_map", conn_proc_map)
+            _job_data = {
+                "job_id": EntityIdGen.job_id(),
+                "created_at": datetime.now(timezone.utc).isoformat(),
+                "metadata": metadata or dict(),
+            }
+            await self._upsert_job(_job_data)
+        self._local_state.update(_job_data)
 
     @abstractmethod
     async def _get(self, key: str | tuple[str, ...], value: _t.Optional[_t.Any] = None) -> _t.Any:
@@ -102,6 +89,14 @@ class StateBackend(ABC, ExportMixin):
     @classmethod
     def _connector_key(cls, process_id: str, component_id: str) -> tuple[str, ...]:
         return cls._process_key(process_id) + ("connectors", component_id)
+
+    async def _upsert_job(self, job_data: dict) -> None:
+        """Upserts a job into the state."""
+        pass
+
+    async def _get_job(self, job_id: str) -> dict:
+        """Returns a job from the state."""
+        raise NotImplementedError()
 
     async def upsert_process(self, process: Process) -> None:
         """Upserts a process into the state."""
