@@ -15,29 +15,23 @@ CREATE_TABLE: str = dedent(
     );
     CREATE TABLE IF NOT EXISTS process (
         data TEXT,
-        id TEXT NOT NULL GENERATED ALWAYS AS (json_extract(data, '$.id')) VIRTUAL UNIQUE,
+        id TEXT NOT NULL UNIQUE,
         status TEXT GENERATED ALWAYS AS (json_extract(data, '$.status')) VIRTUAL,
         job_id TEXT,
         FOREIGN KEY (job_id) REFERENCES job(id) ON DELETE CASCADE
     );
     CREATE TABLE IF NOT EXISTS component (
         data TEXT,
-        id TEXT NOT NULL GENERATED ALWAYS AS (json_extract(data, '$.id')) VIRTUAL UNIQUE,
+        id TEXT NOT NULL UNIQUE,
         status TEXT GENERATED ALWAYS AS (json_extract(data, '$.status')) VIRTUAL,
         process_id TEXT,
         FOREIGN KEY (process_id) REFERENCES process(id) ON DELETE CASCADE
     );
     CREATE TABLE IF NOT EXISTS connector (
         data TEXT,
-        id TEXT NOT NULL GENERATED ALWAYS AS (json_extract(data, '$.id')) VIRTUAL UNIQUE,
+        id TEXT NOT NULL UNIQUE,
         status TEXT GENERATED ALWAYS AS (json_extract(data, '$.status')) VIRTUAL,
         process_id TEXT,
-        FOREIGN KEY (process_id) REFERENCES process(id) ON DELETE CASCADE
-    );
-    CREATE TABLE IF NOT EXISTS job_process (
-        job_id TEXT NOT NULL,
-        process_id TEXT NOT NULL,
-        FOREIGN KEY (job_id) REFERENCES job(id) ON DELETE CASCADE,
         FOREIGN KEY (process_id) REFERENCES process(id) ON DELETE CASCADE
     );
     CREATE TABLE IF NOT EXISTS process_component (
@@ -57,7 +51,7 @@ CREATE_TABLE: str = dedent(
 
 UPSERT_PROCESS: str = dedent(
     """\
-    INSERT OR REPLACE INTO process (data, job_id) VALUES (?, ?);
+    INSERT OR REPLACE INTO process (data, id, job_id) VALUES (?, ?, ?);
     """
 )
 
@@ -67,21 +61,9 @@ GET_PROCESS: str = dedent(
     """
 )
 
-SET_JOB_FOR_PROCESS: str = dedent(
-    """\
-    INSERT INTO job_process (job_id, process_id) VALUES (?, ?);
-    """
-)
-
-GET_JOB_FOR_PROCESS: str = dedent(
-    """\
-    SELECT job_id FROM job_process WHERE process_id = ?;
-    """
-)
-
 UPSERT_COMPONENT: str = dedent(
     """\
-    INSERT OR REPLACE INTO component (data, process_id) VALUES (?, ?);
+    INSERT OR REPLACE INTO component (data, id, process_id) VALUES (?, ?, ?);
     """
 )
 
@@ -111,7 +93,7 @@ GET_COMPONENTS_FOR_PROCESS: str = dedent(
 
 UPSERT_CONNECTOR: str = dedent(
     """\
-    INSERT OR REPLACE INTO connector (data, process_id) VALUES (?, ?);
+    INSERT OR REPLACE INTO connector (data, id, process_id) VALUES (?, ?, ?);
     """
 )
 
