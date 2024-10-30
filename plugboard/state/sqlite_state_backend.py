@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from functools import cache
 import typing as _t
 
 import aiosqlite
@@ -76,6 +77,7 @@ class SqliteStateBackend(StateBackend):
             await db.execute(statement, params)
             await db.commit()
 
+    @cache
     def _get_db_id(self, entity_id: str) -> str:
         """Returns the database id for a given entity id.
 
