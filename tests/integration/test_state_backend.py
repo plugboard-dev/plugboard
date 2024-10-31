@@ -1,12 +1,16 @@
 """Integration tests for `StateBackend`."""
 
+from contextlib import contextmanager
+from tempfile import NamedTemporaryFile
+import typing as _t
+
 import pytest
 
 from plugboard.component import Component, IOController
 from plugboard.connector import AsyncioChannel, Connector
 from plugboard.process import Process
 from plugboard.schemas import ConnectorSpec
-from plugboard.state import DictStateBackend
+from plugboard.state import DictStateBackend, SqliteStateBackend, StateBackend
 from tests.conftest import ComponentTestHelper
 
 
@@ -47,12 +51,34 @@ def B_connectors() -> list[Connector]:
     ]
 
 
-@pytest.mark.asyncio
-async def test_state_backend_upsert_component(A_components: list[Component]) -> None:
-    """Tests `StateBackend.upsert_component` method."""
-    state_backend = DictStateBackend()
-    await state_backend.init()
+@contextmanager
+def setup_DictStateBackend() -> _t.Iterator[DictStateBackend]:
+    """Returns a `DictStateBackend` instance."""
+    yield DictStateBackend()
 
+
+@contextmanager
+def setup_SqliteStateBackend() -> _t.Iterator[SqliteStateBackend]:
+    """Returns a `SqliteStateBackend` instance."""
+    with NamedTemporaryFile() as file:
+        yield SqliteStateBackend(file.name)
+
+
+@pytest.fixture(params=[setup_DictStateBackend, setup_SqliteStateBackend])
+async def state_backend(request: pytest.FixtureRequest) -> _t.AsyncIterator[StateBackend]:
+    """Returns a `StateBackend` instance."""
+    state_backend_setup = request.param
+    with state_backend_setup() as state_backend:
+        await state_backend.init()
+        yield state_backend
+        await state_backend.destroy()
+
+
+@pytest.mark.asyncio
+async def test_state_backend_upsert_component(
+    state_backend: StateBackend, A_components: list[Component]
+) -> None:
+    """Tests `StateBackend.upsert_component` method."""
     comp_a1, comp_a2 = A_components
 
     await state_backend.upsert_component(comp_a1)
@@ -85,11 +111,10 @@ async def test_state_backend_upsert_component(A_components: list[Component]) -> 
 
 
 @pytest.mark.asyncio
-async def test_state_backend_upsert_connector(B_connectors: list[Connector]) -> None:
+async def test_state_backend_upsert_connector(
+    state_backend: StateBackend, B_connectors: list[Connector]
+) -> None:
     """Tests `StateBackend.upsert_connector` method."""
-    state_backend = DictStateBackend()
-    await state_backend.init()
-
     conn_1, conn_2 = B_connectors
 
     await state_backend.upsert_connector(conn_1)
@@ -101,12 +126,9 @@ async def test_state_backend_upsert_connector(B_connectors: list[Connector]) -> 
 
 @pytest.mark.asyncio
 async def test_state_backend_upsert_process(
-    B_components: list[Component], B_connectors: list[Connector]
+    state_backend: StateBackend, B_components: list[Component], B_connectors: list[Connector]
 ) -> None:
     """Tests `StateBackend.upsert_process` method."""
-    state_backend = DictStateBackend()
-    await state_backend.init()
-
     comp_b1, comp_b2 = B_components
     conn_1, conn_2 = B_connectors
 
@@ -122,11 +144,9 @@ async def test_state_backend_upsert_process(
 
 @pytest.mark.asyncio
 async def test_state_backend_process_init(
-    B_components: list[Component], B_connectors: list[Connector]
+    state_backend: StateBackend, B_components: list[Component], B_connectors: list[Connector]
 ) -> None:
     """Tests `StateBackend` connected up correctly on `Process.init`."""
-    state_backend = DictStateBackend()
-
     comp_b1, comp_b2 = B_components
     conn_1, conn_2 = B_connectors
 
