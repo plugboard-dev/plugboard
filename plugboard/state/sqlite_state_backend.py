@@ -24,6 +24,7 @@ class SqliteStateBackend(StateBackend):
     """`SqliteStateBackend` handles single host persistent state."""
 
     _id_separator: str = ":"
+    _null_process_id: str = "__null_process__"
 
     def __init__(self, db_path: str = "plugboard.db", *args: _t.Any, **kwargs: _t.Any) -> None:
         """Initializes `SqliteStateBackend` with `db_path`."""
@@ -161,11 +162,14 @@ class SqliteStateBackend(StateBackend):
 
     @alru_cache(maxsize=128)
     async def _get_process_id_for_component(self, component_id: str) -> str:
-        """Returns the database id of the process which a component belongs to."""
+        """Returns the database id of the process which a component belongs to.
+
+        If a component does not belong to any process, it is associated with a null process.
+        """
         component_db_id = self._get_db_id(component_id)
         row = await self._fetchone(q.GET_PROCESS_FOR_COMPONENT, (component_db_id,))
         if row is None:
-            raise NotFoundError(f"Process for component with id {component_id} not found.")
+            return self._get_db_id(self._null_process_id)
         process_id = row["process_id"]
         return process_id
 
@@ -187,11 +191,14 @@ class SqliteStateBackend(StateBackend):
 
     @alru_cache(maxsize=128)
     async def _get_process_id_for_connector(self, connector_id: str) -> str:
-        """Returns the database id of the process which a connector belongs to."""
+        """Returns the database id of the process which a connector belongs to.
+
+        If a connector does not belong to any process, it is associated with a null process.
+        """
         connector_db_id = self._get_db_id(connector_id)
         row = await self._fetchone(q.GET_PROCESS_FOR_CONNECTOR, (connector_db_id,))
         if row is None:
-            raise NotFoundError(f"Process for connector with id {connector_id} not found.")
+            return self._get_db_id(self._null_process_id)
         process_id = row["process_id"]
         return process_id
 
