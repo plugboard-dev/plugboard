@@ -125,8 +125,12 @@ async def test_state_backend_upsert_connector(
 
 
 @pytest.mark.asyncio
+@pytest.mark.parametrize("with_components", [True, False])
 async def test_state_backend_upsert_process(
-    state_backend: StateBackend, B_components: list[Component], B_connectors: list[Connector]
+    state_backend: StateBackend,
+    B_components: list[Component],
+    B_connectors: list[Connector],
+    with_components: bool,
 ) -> None:
     """Tests `StateBackend.upsert_process` method."""
     comp_b1, comp_b2 = B_components
@@ -134,13 +138,21 @@ async def test_state_backend_upsert_process(
 
     async with state_backend:
         process_1 = Process(name="P1", components=[comp_b1, comp_b2], connectors=[conn_1, conn_2])
-        await state_backend.upsert_process(process_1)
+        await state_backend.upsert_process(process_1, with_components=with_components)
 
         process_2 = Process(name="P2", components=[comp_b1, comp_b2], connectors=[conn_1, conn_2])
-        await state_backend.upsert_process(process_2)
+        await state_backend.upsert_process(process_2, with_components=with_components)
 
-        assert await state_backend.get_process(process_1.id) == process_1.dict()
-        assert await state_backend.get_process(process_2.id) == process_2.dict()
+        process_1_dict = process_1.dict()
+        process_2_dict = process_2.dict()
+        if not with_components:
+            process_1_dict["components"] = {}
+            process_1_dict["connectors"] = {}
+            process_2_dict["components"] = {}
+            process_2_dict["connectors"] = {}
+
+        assert await state_backend.get_process(process_1.id) == process_1_dict
+        assert await state_backend.get_process(process_2.id) == process_2_dict
 
 
 @pytest.mark.asyncio

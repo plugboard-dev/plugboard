@@ -113,6 +113,8 @@ class SqliteStateBackend(StateBackend):
         process_db_id = self._get_db_id(process.id)
         component_data = process_data.pop("components")
         connector_data = process_data.pop("connectors")
+        process_data["components"] = {}
+        process_data["connectors"] = {}
         process_json = msgspec.json.encode(process_data)
         async with aiosqlite.connect(self._db_path) as db:
             await db.execute(q.UPSERT_PROCESS, (process_json, process_db_id, self.job_id))

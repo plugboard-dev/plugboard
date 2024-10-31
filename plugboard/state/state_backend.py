@@ -118,8 +118,8 @@ class StateBackend(ABC, ExportMixin):
         # TODO : Book keeping for dynamic process components and connectors.
         process_data = process.dict()
         if with_components is False:
-            process_data.pop("components")
-            process_data.pop("connectors")
+            process_data["components"] = {}
+            process_data["connectors"] = {}
         await self._set(self._process_key(process.id), process_data)
         # TODO : Need to make this transactional.
         comp_proc_map = await self._get("_comp_proc_map")
