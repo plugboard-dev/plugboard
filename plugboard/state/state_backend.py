@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from datetime import datetime, timezone
+from types import TracebackType
 import typing as _t
 
 from plugboard.utils import EntityIdGen, ExportMixin
@@ -37,6 +38,20 @@ class StateBackend(ABC, ExportMixin):
     async def destroy(self) -> None:
         """Destroys the `StateBackend`."""
         pass
+
+    async def __aenter__(self) -> StateBackend:
+        """Enters the context manager."""
+        await self.init()
+        return self
+
+    async def __aexit__(
+        self,
+        exc_type: _t.Optional[_t.Type[BaseException]],
+        exc_value: _t.Optional[BaseException],
+        traceback: _t.Optional[TracebackType],
+    ) -> None:
+        """Exits the context manager."""
+        await self.destroy()
 
     async def _initialise_data(
         self, job_id: _t.Optional[str] = None, metadata: _t.Optional[dict] = None, **kwargs: _t.Any

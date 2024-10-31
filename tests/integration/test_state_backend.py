@@ -69,9 +69,7 @@ async def state_backend(request: pytest.FixtureRequest) -> _t.AsyncIterator[Stat
     """Returns a `StateBackend` instance."""
     state_backend_setup = request.param
     with state_backend_setup() as state_backend:
-        await state_backend.init()
         yield state_backend
-        await state_backend.destroy()
 
 
 @pytest.mark.asyncio
@@ -81,33 +79,34 @@ async def test_state_backend_upsert_component(
     """Tests `StateBackend.upsert_component` method."""
     comp_a1, comp_a2 = A_components
 
-    await state_backend.upsert_component(comp_a1)
-    await state_backend.upsert_component(comp_a2)
-
-    assert await state_backend.get_component(comp_a1.id) == comp_a1.dict()
-    assert await state_backend.get_component(comp_a2.id) == comp_a2.dict()
-
-    comp_a1_dict_prev, comp_a2_dict_prev = comp_a1.dict(), comp_a2.dict()
-    for i in range(5):
-        await comp_a1.step()
-        state_data_a2_stale = await state_backend.get_component(comp_a1.id)
-        assert state_data_a2_stale == comp_a1_dict_prev
-        assert state_data_a2_stale["step_count"] == i
+    async with state_backend:
         await state_backend.upsert_component(comp_a1)
-        state_data_a2_fresh = await state_backend.get_component(comp_a1.id)
-        assert state_data_a2_fresh == comp_a1.dict()
-        assert state_data_a2_fresh["step_count"] == i + 1
-
-        await comp_a2.step()
-        state_data_a2_stale = await state_backend.get_component(comp_a2.id)
-        assert state_data_a2_stale == comp_a2_dict_prev
-        assert state_data_a2_stale["step_count"] == i
         await state_backend.upsert_component(comp_a2)
-        state_data_a2_fresh = await state_backend.get_component(comp_a2.id)
-        assert state_data_a2_fresh == comp_a2.dict()
-        assert state_data_a2_fresh["step_count"] == i + 1
+
+        assert await state_backend.get_component(comp_a1.id) == comp_a1.dict()
+        assert await state_backend.get_component(comp_a2.id) == comp_a2.dict()
 
         comp_a1_dict_prev, comp_a2_dict_prev = comp_a1.dict(), comp_a2.dict()
+        for i in range(5):
+            await comp_a1.step()
+            state_data_a2_stale = await state_backend.get_component(comp_a1.id)
+            assert state_data_a2_stale == comp_a1_dict_prev
+            assert state_data_a2_stale["step_count"] == i
+            await state_backend.upsert_component(comp_a1)
+            state_data_a2_fresh = await state_backend.get_component(comp_a1.id)
+            assert state_data_a2_fresh == comp_a1.dict()
+            assert state_data_a2_fresh["step_count"] == i + 1
+
+            await comp_a2.step()
+            state_data_a2_stale = await state_backend.get_component(comp_a2.id)
+            assert state_data_a2_stale == comp_a2_dict_prev
+            assert state_data_a2_stale["step_count"] == i
+            await state_backend.upsert_component(comp_a2)
+            state_data_a2_fresh = await state_backend.get_component(comp_a2.id)
+            assert state_data_a2_fresh == comp_a2.dict()
+            assert state_data_a2_fresh["step_count"] == i + 1
+
+            comp_a1_dict_prev, comp_a2_dict_prev = comp_a1.dict(), comp_a2.dict()
 
 
 @pytest.mark.asyncio
@@ -117,11 +116,12 @@ async def test_state_backend_upsert_connector(
     """Tests `StateBackend.upsert_connector` method."""
     conn_1, conn_2 = B_connectors
 
-    await state_backend.upsert_connector(conn_1)
-    await state_backend.upsert_connector(conn_2)
+    async with state_backend:
+        await state_backend.upsert_connector(conn_1)
+        await state_backend.upsert_connector(conn_2)
 
-    assert await state_backend.get_connector(conn_1.id) == conn_1.dict()
-    assert await state_backend.get_connector(conn_2.id) == conn_2.dict()
+        assert await state_backend.get_connector(conn_1.id) == conn_1.dict()
+        assert await state_backend.get_connector(conn_2.id) == conn_2.dict()
 
 
 @pytest.mark.asyncio
@@ -132,14 +132,15 @@ async def test_state_backend_upsert_process(
     comp_b1, comp_b2 = B_components
     conn_1, conn_2 = B_connectors
 
-    process_1 = Process(name="P1", components=[comp_b1, comp_b2], connectors=[conn_1, conn_2])
-    await state_backend.upsert_process(process_1)
+    async with state_backend:
+        process_1 = Process(name="P1", components=[comp_b1, comp_b2], connectors=[conn_1, conn_2])
+        await state_backend.upsert_process(process_1)
 
-    process_2 = Process(name="P2", components=[comp_b1, comp_b2], connectors=[conn_1, conn_2])
-    await state_backend.upsert_process(process_2)
+        process_2 = Process(name="P2", components=[comp_b1, comp_b2], connectors=[conn_1, conn_2])
+        await state_backend.upsert_process(process_2)
 
-    assert await state_backend.get_process(process_1.id) == process_1.dict()
-    assert await state_backend.get_process(process_2.id) == process_2.dict()
+        assert await state_backend.get_process(process_1.id) == process_1.dict()
+        assert await state_backend.get_process(process_2.id) == process_2.dict()
 
 
 @pytest.mark.asyncio
@@ -162,3 +163,5 @@ async def test_state_backend_process_init(
     assert await state_backend.get_component(comp_b2.id) == comp_b2.dict()
     assert await state_backend.get_connector(conn_1.id) == conn_1.dict()
     assert await state_backend.get_connector(conn_2.id) == conn_2.dict()
+
+    await process.destroy()
