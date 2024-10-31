@@ -26,6 +26,12 @@ class B(ComponentTestHelper):
     io = IOController(inputs=["in_1", "in_2"], outputs=["out_1", "out_2"])
 
 
+class C(ComponentTestHelper):
+    """`C` component class with input and output fields."""
+
+    io = IOController(inputs=["in_1", "in_2"], outputs=["out_1", "out_2"])
+
+
 @pytest.fixture
 def A_components() -> list[Component]:
     """Returns a tuple of `A` components."""
@@ -47,6 +53,25 @@ def B_connectors() -> list[Connector]:
         ),
         Connector(
             spec=ConnectorSpec(source="B1.out_2", target="B2.in_2"), channel=AsyncioChannel()
+        ),
+    ]
+
+
+@pytest.fixture
+def C_components() -> list[Component]:
+    """Returns a tuple of `C` components."""
+    return [C(name="C1", max_steps=5), C(name="C2", max_steps=5)]
+
+
+@pytest.fixture
+def C_connectors() -> list[Connector]:
+    """Returns a tuple of connectors for `C` components."""
+    return [
+        Connector(
+            spec=ConnectorSpec(source="C1.out_1", target="C2.in_1"), channel=AsyncioChannel()
+        ),
+        Connector(
+            spec=ConnectorSpec(source="C1.out_2", target="C2.in_2"), channel=AsyncioChannel()
         ),
     ]
 
@@ -130,17 +155,22 @@ async def test_state_backend_upsert_process(
     state_backend: StateBackend,
     B_components: list[Component],
     B_connectors: list[Connector],
+    C_components: list[Component],
+    C_connectors: list[Connector],
     with_components: bool,
 ) -> None:
     """Tests `StateBackend.upsert_process` method."""
     comp_b1, comp_b2 = B_components
     conn_1, conn_2 = B_connectors
 
+    comp_c1, comp_c2 = C_components
+    conn_3, conn_4 = C_connectors
+
     async with state_backend:
         process_1 = Process(name="P1", components=[comp_b1, comp_b2], connectors=[conn_1, conn_2])
         await state_backend.upsert_process(process_1, with_components=with_components)
 
-        process_2 = Process(name="P2", components=[comp_b1, comp_b2], connectors=[conn_1, conn_2])
+        process_2 = Process(name="P2", components=[comp_c1, comp_c2], connectors=[conn_3, conn_4])
         await state_backend.upsert_process(process_2, with_components=with_components)
 
         process_1_dict = process_1.dict()
