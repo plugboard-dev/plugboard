@@ -31,7 +31,7 @@ class B(ComponentTestHelper):
 
 @pytest.fixture
 def components() -> list[Component]:
-    """Returns a tuple of components."""
+    """Returns a list of components."""
     return [
         A(name="A1", max_steps=5),
         A(name="A2", max_steps=5),
@@ -54,7 +54,7 @@ class ConnectorTestHelper(Connector):
 
 
 class SqliteStateBackendTestHelper(SqliteStateBackend):
-    """`SqliteStateBackendTestHelper` provides additional methods for testing."""
+    """`SqliteStateBackendTestHelper` overrides methods to assist test assertions."""
 
     async def upsert_connector(self, connector: Connector) -> None:
         """Upserts a connector into the state."""
@@ -66,7 +66,7 @@ class SqliteStateBackendTestHelper(SqliteStateBackend):
 
 @pytest.fixture
 def connectors() -> list[Connector]:
-    """Returns a tuple of connectors."""
+    """Returns a list of connectors."""
     manager = inject.instance(SyncManager)
     return [
         ConnectorTestHelper(
