@@ -55,9 +55,6 @@ async def test_state_backend_upsert_component(A_components: list[Component]) -> 
 
     comp_a1, comp_a2 = A_components
 
-    await comp_a1.init()
-    await comp_a2.init()
-
     await state_backend.upsert_component(comp_a1)
     await state_backend.upsert_component(comp_a2)
 
