@@ -113,10 +113,14 @@ class StateBackend(ABC, ExportMixin):
         """Returns a job from the state."""
         raise NotImplementedError()
 
-    async def upsert_process(self, process: Process) -> None:
+    async def upsert_process(self, process: Process, with_components: bool = False) -> None:
         """Upserts a process into the state."""
         # TODO : Book keeping for dynamic process components and connectors.
-        await self._set(self._process_key(process.id), process.dict())
+        process_data = process.dict()
+        if with_components is False:
+            process_data.pop("components")
+            process_data.pop("connectors")
+        await self._set(self._process_key(process.id), process_data)
         # TODO : Need to make this transactional.
         comp_proc_map = await self._get("_comp_proc_map")
         comp_proc_map.update({c.id: process.id for c in process.components.values()})
