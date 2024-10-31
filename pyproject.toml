@@ -84,6 +84,7 @@ plugboard = "plugboard.cli:app"
 # Note: pytest toml key subject to change:
 # https://docs.pytest.org/en/stable/reference/customize.html#pyproject-toml
 env = []
+asyncio_mode = "auto"
 
 [tool.mypy]  # Static type checking
 exclude = [".git", "__pycache__", ".venv", "venv", "docs"]
