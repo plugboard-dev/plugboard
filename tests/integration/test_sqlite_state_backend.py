@@ -1,11 +1,11 @@
 """Tests for the `SqliteStateBackend` class."""
 
 import asyncio
-import multiprocessing as mp
 from multiprocessing.managers import SyncManager
 import typing as _t
 
 import inject
+from mpire import WorkerPool
 import pytest
 
 from plugboard.component import Component, IOController
@@ -138,12 +138,12 @@ async def test_state_backend_multiprocess(
     # At the end of `Component.init` the component upserts itself into the state
     # backend, so we expect the state backend to have up to date component data afterwards
     mp_processes = []
-    for comp in [*process_1.components.values(), *process_2.components.values()]:
-        p = mp.Process(target=init_component, args=(comp,))
-        mp_processes.append(p)
-        p.start()
-    for p in mp_processes:
-        p.join()
+    with WorkerPool(n_jobs=2, use_dill=True) as pool:
+        for comp in [*process_1.components.values(), *process_2.components.values()]:
+            p = pool.apply_async(init_component, args=(comp,))
+            mp_processes.append(p)
+        for p in mp_processes:
+            p.get()
 
     # Check state data is as expected for components after component init in child os processes
     for comp in [comp_a1, comp_a2, comp_b1, comp_b2]:
@@ -158,12 +158,12 @@ async def test_state_backend_multiprocess(
         asyncio.run(_inner())
 
     mp_processes = []
-    for conn in [*process_1.connectors.values(), *process_2.connectors.values()]:
-        p = mp.Process(target=upsert_connector, args=(conn,))
-        mp_processes.append(p)
-        p.start()
-    for p in mp_processes:
-        p.join()
+    with WorkerPool(n_jobs=2, use_dill=True) as pool:
+        for conn in [*process_1.connectors.values(), *process_2.connectors.values()]:
+            p = pool.apply_async(upsert_connector, args=(conn,))
+            mp_processes.append(p)
+        for p in mp_processes:
+            p.get()
 
     # Check state data is as expected for connectors after upsert in child os processes
     for conn in [conn_1, conn_2, conn_3, conn_4]:
