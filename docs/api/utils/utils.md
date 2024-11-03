@@ -1,4 +1,8 @@
 ::: plugboard.utils
     options:
       members:
-      - AsDictMixin
+      - Exportable
+      - ExportMixin
+      - ClassRegistry
+      - EntityIdGen
+      - gen_rand_str

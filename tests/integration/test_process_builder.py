@@ -75,6 +75,6 @@ async def test_process_builder_build(process_spec: ProcessSpec) -> None:
     async with process:
         input_job_id = process_spec.args.state.args.model_dump().get("job_id")
         if input_job_id is not None:
-            assert await process.state.job_id == input_job_id
-        assert EntityIdGen.is_job_id(await process.state.job_id)
-        assert await process.state.metadata == {"hello": "world"}
+            assert process.state.job_id == input_job_id
+        assert EntityIdGen.is_job_id(process.state.job_id)
+        assert process.state.metadata == {"hello": "world"}

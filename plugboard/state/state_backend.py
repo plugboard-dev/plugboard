@@ -4,9 +4,10 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from datetime import datetime, timezone
+from types import TracebackType
 import typing as _t
 
-from plugboard.utils import AsDictMixin, EntityIdGen
+from plugboard.utils import EntityIdGen, ExportMixin
 
 
 if _t.TYPE_CHECKING:
@@ -15,7 +16,7 @@ if _t.TYPE_CHECKING:
     from plugboard.process import Process
 
 
-class StateBackend(ABC, AsDictMixin):
+class StateBackend(ABC, ExportMixin):
     """`StateBackend` defines an interface for managing process state."""
 
     def __init__(
@@ -38,30 +39,34 @@ class StateBackend(ABC, AsDictMixin):
         """Destroys the `StateBackend`."""
         pass
 
+    async def __aenter__(self) -> StateBackend:
+        """Enters the context manager."""
+        await self.init()
+        return self
+
+    async def __aexit__(
+        self,
+        exc_type: _t.Optional[_t.Type[BaseException]],
+        exc_value: _t.Optional[BaseException],
+        traceback: _t.Optional[TracebackType],
+    ) -> None:
+        """Exits the context manager."""
+        await self.destroy()
+
     async def _initialise_data(
         self, job_id: _t.Optional[str] = None, metadata: _t.Optional[dict] = None, **kwargs: _t.Any
     ) -> None:
         """Initialises the state data."""
-        _job_id = job_id or EntityIdGen.job_id()
-        if not EntityIdGen.is_job_id(_job_id):
-            raise ValueError(f"Invalid job id: {_job_id}")
-        await self._set("job_id", _job_id)
-
-        if job_id is None:
-            _created_at = datetime.now(timezone.utc).isoformat()
+        if job_id is not None:
+            _job_data = await self._get_job(job_id)
         else:
-            # TODO : Retrieve information for existing state.
-            _created_at = "unset"
-        await self._set("created_at", _created_at)
-
-        _metadata = metadata or dict()
-        await self._set("metadata", _metadata)
-
-        comp_proc_map: dict = dict()
-        await self._set("_comp_proc_map", comp_proc_map)
-
-        conn_proc_map: dict = dict()
-        await self._set("_conn_proc_map", conn_proc_map)
+            _job_data = {
+                "job_id": EntityIdGen.job_id(),
+                "created_at": datetime.now(timezone.utc).isoformat(),
+                "metadata": metadata or dict(),
+            }
+            await self._upsert_job(_job_data)
+        self._local_state.update(_job_data)
 
     @abstractmethod
     async def _get(self, key: str | tuple[str, ...], value: _t.Optional[_t.Any] = None) -> _t.Any:
@@ -74,19 +79,19 @@ class StateBackend(ABC, AsDictMixin):
         pass
 
     @property
-    async def job_id(self) -> str:
+    def job_id(self) -> str:
         """Returns the job id for the state."""
-        return await self._get("job_id")
+        return self._local_state["job_id"]
 
     @property
-    async def created_at(self) -> str:
+    def created_at(self) -> str:
         """Returns date and time of job creation."""
-        return await self._get("created_at")
+        return self._local_state["created_at"]
 
     @property
-    async def metadata(self) -> dict:
+    def metadata(self) -> dict:
         """Returns metadata attached to the job."""
-        return await self._get("metadata")
+        return self._local_state["metadata"]
 
     @classmethod
     def _process_key(cls, process_id: str) -> tuple[str, ...]:
@@ -100,10 +105,22 @@ class StateBackend(ABC, AsDictMixin):
     def _connector_key(cls, process_id: str, component_id: str) -> tuple[str, ...]:
         return cls._process_key(process_id) + ("connectors", component_id)
 
-    async def upsert_process(self, process: Process) -> None:
+    async def _upsert_job(self, job_data: dict) -> None:
+        """Upserts a job into the state."""
+        pass
+
+    async def _get_job(self, job_id: str) -> dict:
+        """Returns a job from the state."""
+        raise NotImplementedError()
+
+    async def upsert_process(self, process: Process, with_components: bool = False) -> None:
         """Upserts a process into the state."""
         # TODO : Book keeping for dynamic process components and connectors.
-        await self._set(self._process_key(process.id), process.dict())
+        process_data = process.dict()
+        if with_components is False:
+            process_data["components"] = {}
+            process_data["connectors"] = {}
+        await self._set(self._process_key(process.id), process_data)
         # TODO : Need to make this transactional.
         comp_proc_map = await self._get("_comp_proc_map")
         comp_proc_map.update({c.id: process.id for c in process.components.values()})

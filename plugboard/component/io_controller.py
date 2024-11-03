@@ -24,8 +24,8 @@ class IOController:
         self.inputs = inputs or []
         self.outputs = outputs or []
         self.data: dict[str, dict[str, _t.Any]] = {
-            IODirection.INPUT: {},
-            IODirection.OUTPUT: {},
+            str(IODirection.INPUT): {},
+            str(IODirection.OUTPUT): {},
         }
         self._input_channels: dict[str, Channel] = {}
         self._output_channels: dict[str, Channel] = {}
@@ -50,7 +50,7 @@ class IOController:
 
     async def _read_channel_handler(self, field: str, chan: Channel) -> None:
         try:
-            self.data[IODirection.INPUT][field] = await chan.recv()
+            self.data[str(IODirection.INPUT)][field] = await chan.recv()
         except ChannelClosedError as e:
             raise ChannelClosedError(f"Channel closed for field: {field}.") from e
 
@@ -66,7 +66,7 @@ class IOController:
             raise self._build_io_stream_error(IODirection.OUTPUT, eg) from eg
 
     async def _write_channel_handler(self, field: str, chan: Channel) -> None:
-        item = self.data[IODirection.OUTPUT][field]
+        item = self.data[str(IODirection.OUTPUT)][field]
         try:
             await chan.send(item)
         except ChannelClosedError as e:

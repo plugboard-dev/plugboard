@@ -5,3 +5,4 @@
       - ConnectorSpec
       - Channel
       - AsyncioChannel
+      - SerdeChannel

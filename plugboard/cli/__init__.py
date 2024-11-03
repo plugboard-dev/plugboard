@@ -13,6 +13,3 @@ app = typer.Typer(
     pretty_exceptions_show_locals=False,
 )
 app.add_typer(process_app, name="process")
-
-if __name__ == "__main__":
-    app()

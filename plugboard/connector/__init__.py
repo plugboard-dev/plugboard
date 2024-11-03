@@ -4,6 +4,8 @@ from plugboard.connector.asyncio_channel import AsyncioChannel, AsyncioChannelBu
 from plugboard.connector.channel import Channel
 from plugboard.connector.channel_builder import ChannelBuilder, ChannelBuilderRegistry
 from plugboard.connector.connector import Connector
+from plugboard.connector.serde_channel import SerdeChannel
+from plugboard.connector.zmq_channel import ZMQChannel, ZMQChannelBuilder
 
 
 __all__ = [
@@ -13,4 +15,7 @@ __all__ = [
     "Channel",
     "ChannelBuilder",
     "ChannelBuilderRegistry",
+    "SerdeChannel",
+    "ZMQChannel",
+    "ZMQChannelBuilder",
 ]

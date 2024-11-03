@@ -21,14 +21,18 @@ authors = [
 [tool.poetry.dependencies]
 python = ">=3.12,<4.0"
 adlfs = {version = "^2024.7.0", optional = true}
+aiosqlite = "^0.20.0"
 annotated-types = "^0.7.0"
+async-lru = "^2.0.4"
 fsspec = "^2024.9.0"
 gcsfs = {version = "^2024.9.0.post1", optional = true}
+inject = "^5.2.1"
 moto = {extras = ["server"], version = "^5.0.16"}
 msgspec = {extras = ["yaml"], version = "^0.18.6"}
 pandas = ">=1.0,<3"
 pyarrow = "^17.0.0"
 pydantic = "^2.8.2"
+pyzmq = "^26.2.0"
 rich = "^13.9.2"
 s3fs = {version = "^2024.9.0", optional = true}
 sqlalchemy = {version = ">=2.0.0,<3", extras = ["asyncio"]}
@@ -42,6 +46,7 @@ gcp = ["gcsfs"]
 [tool.poetry.group.dev.dependencies]
 ipython = "^8.26.0"
 jupyterlab = "^4.2.4"
+mpire = {extras = ["dill"], version = "^2.10.2"}
 mypy = "^1.11.2"
 nbstripout = "^0.7.1"
 poetry-dynamic-versioning = "^1.4.0"
@@ -79,6 +84,7 @@ plugboard = "plugboard.cli:app"
 # Note: pytest toml key subject to change:
 # https://docs.pytest.org/en/stable/reference/customize.html#pyproject-toml
 env = []
+asyncio_mode = "auto"
 
 [tool.mypy]  # Static type checking
 exclude = [".git", "__pycache__", ".venv", "venv", "docs"]
