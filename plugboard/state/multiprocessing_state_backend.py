@@ -1,7 +1,6 @@
 """Provides `MultiprocessingStateBackend` class for local multiprocessing state."""
 
-from multiprocessing import DictProxy
-from multiprocessing.managers import SyncManager
+from multiprocessing.managers import DictProxy, SyncManager
 import typing as _t
 
 import inject
