@@ -10,10 +10,10 @@ from plugboard.component.io_controller import (
     IOStreamClosedError,
 )
 from plugboard.state import StateBackend
-from plugboard.utils import AsDictMixin, ClassRegistry
+from plugboard.utils import ClassRegistry, ExportMixin
 
 
-class Component(ABC, AsDictMixin):
+class Component(ABC, ExportMixin):
     """`Component` base class for all components in a process model."""
 
     io: IOController
@@ -100,12 +100,12 @@ class Component(ABC, AsDictMixin):
     def _bind_inputs(self) -> None:
         """Binds input fields to component fields."""
         for field in self.io.inputs:
-            setattr(self, field, self.io.data[IODirection.INPUT][field])
+            setattr(self, field, self.io.data[str(IODirection.INPUT)][field])
 
     def _bind_outputs(self) -> None:
         """Binds component fields to output fields."""
         for field in self.io.outputs:
-            self.io.data[IODirection.OUTPUT][field] = getattr(self, field)
+            self.io.data[str(IODirection.OUTPUT)][field] = getattr(self, field)
 
     async def run(self) -> None:
         """Executes component logic for all steps to completion."""
@@ -121,6 +121,8 @@ class Component(ABC, AsDictMixin):
 
     def dict(self) -> dict[str, _t.Any]:  # noqa: D102
         return {
+            "id": self.id,
+            "name": self.name,
             **self.io.data,
         }
 

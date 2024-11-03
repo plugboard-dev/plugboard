@@ -41,3 +41,9 @@ class StateBackendError(Exception):
     """Raised for `StateBackend` related errors."""
 
     pass
+
+
+class NotFoundError(StateBackendError):
+    """Raised when a resource is not found."""
+
+    pass

@@ -21,7 +21,9 @@ authors = [
 [tool.poetry.dependencies]
 python = ">=3.12,<4.0"
 adlfs = {version = "^2024.7.0", optional = true}
+aiosqlite = "^0.20.0"
 annotated-types = "^0.7.0"
+async-lru = "^2.0.4"
 fsspec = "^2024.9.0"
 gcsfs = {version = "^2024.9.0.post1", optional = true}
 inject = "^5.2.1"
@@ -82,6 +84,7 @@ plugboard = "plugboard.cli:app"
 # Note: pytest toml key subject to change:
 # https://docs.pytest.org/en/stable/reference/customize.html#pyproject-toml
 env = []
+asyncio_mode = "auto"
 
 [tool.mypy]  # Static type checking
 exclude = [".git", "__pycache__", ".venv", "venv", "docs"]
