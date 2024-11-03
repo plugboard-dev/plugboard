@@ -1,7 +1,5 @@
 """Integration tests for `StateBackend`."""
 
-from contextlib import contextmanager
-from tempfile import NamedTemporaryFile
 import typing as _t
 
 import pytest
@@ -10,8 +8,9 @@ from plugboard.component import Component, IOController
 from plugboard.connector import AsyncioChannel, Connector
 from plugboard.process import Process
 from plugboard.schemas import ConnectorSpec
-from plugboard.state import DictStateBackend, SqliteStateBackend, StateBackend
+from plugboard.state import StateBackend
 from tests.conftest import ComponentTestHelper
+from tests.integration.conftest import setup_DictStateBackend, setup_SqliteStateBackend
 
 
 class A(ComponentTestHelper):
@@ -74,19 +73,6 @@ def C_connectors() -> list[Connector]:
             spec=ConnectorSpec(source="C1.out_2", target="C2.in_2"), channel=AsyncioChannel()
         ),
     ]
-
-
-@contextmanager
-def setup_DictStateBackend() -> _t.Iterator[DictStateBackend]:
-    """Returns a `DictStateBackend` instance."""
-    yield DictStateBackend()
-
-
-@contextmanager
-def setup_SqliteStateBackend() -> _t.Iterator[SqliteStateBackend]:
-    """Returns a `SqliteStateBackend` instance."""
-    with NamedTemporaryFile() as file:
-        yield SqliteStateBackend(file.name)
 
 
 @pytest.fixture(params=[setup_DictStateBackend, setup_SqliteStateBackend])

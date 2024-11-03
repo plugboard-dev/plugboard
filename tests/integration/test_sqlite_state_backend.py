@@ -3,7 +3,6 @@
 import asyncio
 import multiprocessing as mp
 from multiprocessing.managers import SyncManager
-from tempfile import NamedTemporaryFile
 import typing as _t
 
 import inject
@@ -13,8 +12,9 @@ from plugboard.component import Component, IOController
 from plugboard.connector import Connector, ZMQChannel
 from plugboard.process import Process
 from plugboard.schemas.connector import ConnectorSpec
-from plugboard.state import SqliteStateBackend
+from plugboard.state import StateBackend
 from tests.conftest import ComponentTestHelper
+from tests.integration.conftest import setup_SqliteStateBackend
 
 
 class A(ComponentTestHelper):
@@ -53,17 +53,6 @@ class ConnectorTestHelper(Connector):
         return output
 
 
-class SqliteStateBackendTestHelper(SqliteStateBackend):
-    """`SqliteStateBackendTestHelper` overrides methods to assist test assertions."""
-
-    async def upsert_connector(self, connector: Connector) -> None:
-        """Upserts a connector into the state."""
-        if not isinstance(connector, ConnectorTestHelper):
-            raise RuntimeError("`Connector` must be an instance of `ConnectorTestHelper`.")
-        connector.times_upserted += 1
-        await super().upsert_connector(connector)
-
-
 @pytest.fixture
 def connectors() -> list[Connector]:
     """Returns a list of connectors."""
@@ -88,22 +77,31 @@ def connectors() -> list[Connector]:
     ]
 
 
-@pytest.fixture
-def db_path() -> _t.Iterator[str]:
-    """Returns the path to the SQLite database file."""
-    with NamedTemporaryFile() as file:
-        yield file.name
+@pytest.fixture(params=[setup_SqliteStateBackend])
+async def state_backend(request: pytest.FixtureRequest) -> _t.AsyncIterator[StateBackend]:
+    """Returns a `StateBackend` instance."""
+    state_backend_setup = request.param
+    with state_backend_setup() as state_backend:
+        _upsert_connector = state_backend.upsert_connector
+
+        async def upsert_connector(connector: Connector) -> None:
+            """Upserts a connector into the state."""
+            if not isinstance(connector, ConnectorTestHelper):
+                raise RuntimeError("`Connector` must be an instance of `ConnectorTestHelper`.")
+            connector.times_upserted += 1
+            await _upsert_connector(connector)
+
+        setattr(state_backend, "upsert_connector", upsert_connector)
+        yield state_backend
 
 
 @pytest.mark.asyncio
 async def test_state_backend_multiprocess(
+    state_backend: StateBackend,  # noqa: F811
     components: list[Component],  # noqa: F811
     connectors: list[Connector],  # noqa: F811
-    db_path: str,
 ) -> None:
     """Tests `StateBackend.upsert_process` method."""
-    state_backend = SqliteStateBackendTestHelper(db_path=db_path)
-
     comp_a1, comp_a2, comp_b1, comp_b2 = components
     conn_1, conn_2, conn_3, conn_4 = connectors
 
