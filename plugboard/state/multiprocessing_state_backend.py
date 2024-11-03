@@ -23,6 +23,15 @@ class MultiprocessingStateBackend(DictStateBackend):
         self._manager = manager
         self._state: DictProxy[str, _t.Any] = self._manager.dict()
 
+    async def _initialise_data(
+        self, job_id: _t.Optional[str] = None, metadata: _t.Optional[dict] = None, **kwargs: _t.Any
+    ) -> None:
+        await super()._initialise_data(job_id, metadata, **kwargs)
+        comp_proc_map: dict = self._manager.dict()
+        await self._set("_comp_proc_map", comp_proc_map)
+        conn_proc_map: dict = self._manager.dict()
+        await self._set("_conn_proc_map", conn_proc_map)
+
     async def _set(self, key: str | tuple[str, ...], value: _t.Any) -> None:  # noqa: A003
         _state, _key = self._state, key
         if isinstance(_key, tuple):
