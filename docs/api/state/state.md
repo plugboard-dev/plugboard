@@ -3,4 +3,5 @@
       members:
       - StateBackend
       - DictStateBackend
+      - MultiprocessingStateBackend
       - SqliteStateBackend
