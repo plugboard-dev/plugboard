@@ -1,4 +1,4 @@
-"""Tests for the `SqliteStateBackend` class."""
+"""Tests for the `StateBackend` classes that permit multiprocessing."""
 
 import asyncio
 from multiprocessing.managers import SyncManager
@@ -12,9 +12,9 @@ from plugboard.component import Component, IOController
 from plugboard.connector import Connector, ZMQChannel
 from plugboard.process import Process
 from plugboard.schemas.connector import ConnectorSpec
-from plugboard.state import StateBackend
+from plugboard.state import DictStateBackend, StateBackend
 from tests.conftest import ComponentTestHelper
-from tests.integration.conftest import setup_SqliteStateBackend
+from tests.integration.conftest import setup_MultiprocessingStateBackend, setup_SqliteStateBackend
 
 
 class A(ComponentTestHelper):
@@ -77,7 +77,7 @@ def connectors() -> list[Connector]:
     ]
 
 
-@pytest.fixture(params=[setup_SqliteStateBackend])
+@pytest.fixture(params=[setup_SqliteStateBackend, setup_MultiprocessingStateBackend])
 async def state_backend(request: pytest.FixtureRequest) -> _t.AsyncIterator[StateBackend]:
     """Returns a `StateBackend` instance."""
     state_backend_setup = request.param
@@ -108,14 +108,27 @@ async def test_state_backend_multiprocess(
     for c in [conn_1, conn_2, conn_3, conn_4]:
         assert c.dict()["times_upserted"] == 0
 
-    process_1 = Process(name="P1", components=[comp_a1, comp_b1], connectors=[conn_1, conn_2])
-    process_2 = Process(name="P2", components=[comp_a2, comp_b2], connectors=[conn_3, conn_4])
+    if isinstance(state_backend, DictStateBackend):
+        # Non-persistent state backend only supports one process
+        processes = [
+            Process(
+                name="P1",
+                components=[comp_a1, comp_b1, comp_a2, comp_b2],
+                connectors=[conn_1, conn_2, conn_3, conn_4],
+            )
+        ]
 
-    await process_1.connect_state(state=state_backend)
-    await process_2.connect_state(state=state_backend)
+    else:
+        processes = [
+            Process(name="P1", components=[comp_a1, comp_b1], connectors=[conn_1, conn_2]),
+            Process(name="P2", components=[comp_a2, comp_b2], connectors=[conn_3, conn_4]),
+        ]
 
-    assert await state_backend.get_process(process_1.id) == process_1.dict()
-    assert await state_backend.get_process(process_2.id) == process_2.dict()
+    for p in processes:
+        await p.connect_state(state=state_backend)
+
+    for p in processes:
+        assert await state_backend.get_process(p.id) == p.dict()
 
     # Check state data is as expected for components after connecting processes to state
     for comp in [comp_a1, comp_a2, comp_b1, comp_b2]:
@@ -139,7 +152,7 @@ async def test_state_backend_multiprocess(
     # backend, so we expect the state backend to have up to date component data afterwards
     mp_processes = []
     with WorkerPool(n_jobs=2, use_dill=True) as pool:
-        for comp in [*process_1.components.values(), *process_2.components.values()]:
+        for comp in [c for p in processes for c in p.components.values()]:
             p = pool.apply_async(init_component, args=(comp,))
             mp_processes.append(p)
         for p in mp_processes:
@@ -159,7 +172,7 @@ async def test_state_backend_multiprocess(
 
     mp_processes = []
     with WorkerPool(n_jobs=2, use_dill=True) as pool:
-        for conn in [*process_1.connectors.values(), *process_2.connectors.values()]:
+        for conn in [c for p in processes for c in p.connectors.values()]:
             p = pool.apply_async(upsert_connector, args=(conn,))
             mp_processes.append(p)
         for p in mp_processes:
