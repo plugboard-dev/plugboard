@@ -7,7 +7,7 @@ import pytest
 import time_machine
 
 from plugboard.exceptions import StateBackendError
-from plugboard.state import DictStateBackend, StateBackend
+from plugboard.state import DictStateBackend, MultiprocessingStateBackend, StateBackend
 from plugboard.utils.entities import EntityIdGen
 
 
@@ -35,14 +35,20 @@ def invalid_job_id() -> str:
     return "invalid_job_id"
 
 
+@pytest.fixture(scope="module", params=[DictStateBackend, MultiprocessingStateBackend])
+def state_backend_cls(request: pytest.FixtureRequest) -> _t.Type[StateBackend]:
+    """Returns a `StateBackend` class."""
+    return request.param
+
+
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
-    "state_backend_cls, job_id_fixture, metadata, exc_ctx",
+    "job_id_fixture, metadata, exc_ctx",
     [
-        (DictStateBackend, "null_job_id", None, None),
-        (DictStateBackend, "null_job_id", {"key": "value"}, None),
-        (DictStateBackend, "valid_job_id", {"key": "value"}, pytest.raises(StateBackendError)),
-        (DictStateBackend, "invalid_job_id", None, pytest.raises(StateBackendError)),
+        ("null_job_id", None, None),
+        ("null_job_id", {"key": "value"}, None),
+        ("valid_job_id", {"key": "value"}, pytest.raises(StateBackendError)),
+        ("invalid_job_id", None, pytest.raises(StateBackendError)),
     ],
 )
 async def test_state_backend_init(
@@ -76,9 +82,9 @@ async def test_state_backend_init(
 
 
 @pytest.mark.asyncio
-async def test_state_backend_get() -> None:
+async def test_state_backend_get(state_backend_cls: _t.Type[StateBackend]) -> None:
     """Tests `StateBackend` get method."""
-    state_backend = DictStateBackend()
+    state_backend = state_backend_cls()
 
     # Test getting a value that exists in the state
     state_backend._state = {"key": "value"}
@@ -104,30 +110,27 @@ async def test_state_backend_get() -> None:
 
 
 @pytest.mark.asyncio
-async def test_state_backend_set() -> None:
+async def test_state_backend_set(state_backend_cls: _t.Type[StateBackend]) -> None:
     """Tests `StateBackend` set method."""
-    state_backend = DictStateBackend()
+    state_backend = state_backend_cls()
 
     # Test setting a value with a single key
     await state_backend._set("key", "value")
-    assert state_backend._state == {"key": "value"}
+    assert dict(state_backend._state) == {"key": "value"}
 
     # Test setting a value with a nested key
     await state_backend._set(("nested", "key"), "value")
-    assert state_backend._state == {"key": "value", "nested": {"key": "value"}}
+    assert state_backend._state["key"] == "value"
+    assert dict(state_backend._state["nested"]) == {"key": "value"}
 
     # Test setting a value with a nested key where the intermediate key does not exist
     await state_backend._set(("nonexistent", "key"), "value")
-    assert state_backend._state == {
-        "key": "value",
-        "nested": {"key": "value"},
-        "nonexistent": {"key": "value"},
-    }
+    assert state_backend._state["key"] == "value"
+    assert dict(state_backend._state["nested"]) == {"key": "value"}
+    assert dict(state_backend._state["nonexistent"]) == {"key": "value"}
 
     # Test setting a value with a nested key where the final key already exists
     await state_backend._set(("nested", "key"), "new_value")
-    assert state_backend._state == {
-        "key": "value",
-        "nested": {"key": "new_value"},
-        "nonexistent": {"key": "value"},
-    }
+    assert state_backend._state["key"] == "value"
+    assert dict(state_backend._state["nested"]) == {"key": "new_value"}
+    assert dict(state_backend._state["nonexistent"]) == {"key": "value"}
