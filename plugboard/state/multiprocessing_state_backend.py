@@ -23,6 +23,11 @@ class MultiprocessingStateBackend(DictStateBackend):
         super().__init__(*args, **kwargs)
         self._state: DictProxy[str, _t.Any] = manager.dict()
 
+    @property
+    def state(self) -> dict[str, _t.Any]:
+        """State dictionary."""
+        return {k: self._convert_value(v) for k, v in self._state.items()}
+
     @classmethod
     def _convert_value(cls, value: _t.Any) -> _t.Any:
         """Recursively convert DictProxy objects to dictionaries."""

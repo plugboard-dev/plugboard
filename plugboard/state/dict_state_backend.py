@@ -1,5 +1,6 @@
 """Provides `DictStateBackend` class for single process state management."""
 
+from multiprocessing.managers import DictProxy
 import typing as _t
 
 from plugboard.exceptions import StateBackendError
@@ -12,7 +13,12 @@ class DictStateBackend(StateBackend):
     def __init__(self, *args: _t.Any, **kwargs: _t.Any) -> None:
         """Instantiates `DictStateBackend`."""
         super().__init__(*args, **kwargs)
-        self._state: dict[str, _t.Any] = {}
+        self._state: dict[str, _t.Any] | DictProxy[str, _t.Any] = {}
+
+    @property
+    def state(self) -> dict[str, _t.Any]:
+        """State dictionary."""
+        return dict(self._state)
 
     async def _initialise_data(
         self, job_id: _t.Optional[str] = None, metadata: _t.Optional[dict] = None, **kwargs: _t.Any

@@ -124,11 +124,11 @@ async def test_state_backend_multiprocess(
             Process(name="P2", components=[comp_a2, comp_b2], connectors=[conn_3, conn_4]),
         ]
 
-    for p in processes:
-        await p.connect_state(state=state_backend)
+    for proc in processes:
+        await proc.connect_state(state=state_backend)
 
-    for p in processes:
-        assert await state_backend.get_process(p.id) == p.dict()
+    for proc in processes:
+        assert await state_backend.get_process(proc.id) == proc.dict()
 
     # Check state data is as expected for components after connecting processes to state
     for comp in [comp_a1, comp_a2, comp_b1, comp_b2]:
@@ -152,7 +152,7 @@ async def test_state_backend_multiprocess(
     # backend, so we expect the state backend to have up to date component data afterwards
     mp_processes = []
     with WorkerPool(n_jobs=2, use_dill=True) as pool:
-        for comp in [c for p in processes for c in p.components.values()]:
+        for comp in [c for proc in processes for c in proc.components.values()]:
             p = pool.apply_async(init_component, args=(comp,))
             mp_processes.append(p)
         for p in mp_processes:
@@ -172,7 +172,7 @@ async def test_state_backend_multiprocess(
 
     mp_processes = []
     with WorkerPool(n_jobs=2, use_dill=True) as pool:
-        for conn in [c for p in processes for c in p.connectors.values()]:
+        for conn in [c for proc in processes for c in proc.connectors.values()]:
             p = pool.apply_async(upsert_connector, args=(conn,))
             mp_processes.append(p)
         for p in mp_processes:

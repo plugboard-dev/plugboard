@@ -82,7 +82,7 @@ async def test_state_backend_init(
 
 
 @pytest.mark.asyncio
-async def test_state_backend_get(state_backend_cls: _t.Type[StateBackend]) -> None:
+async def test_state_backend_get(state_backend_cls: _t.Type[DictStateBackend]) -> None:
     """Tests `StateBackend` get method."""
     state_backend = state_backend_cls()
 
@@ -110,27 +110,30 @@ async def test_state_backend_get(state_backend_cls: _t.Type[StateBackend]) -> No
 
 
 @pytest.mark.asyncio
-async def test_state_backend_set(state_backend_cls: _t.Type[StateBackend]) -> None:
+async def test_state_backend_set(state_backend_cls: _t.Type[DictStateBackend]) -> None:
     """Tests `StateBackend` set method."""
     state_backend = state_backend_cls()
 
     # Test setting a value with a single key
     await state_backend._set("key", "value")
-    assert dict(state_backend._state) == {"key": "value"}
+    assert state_backend.state == {"key": "value"}
 
     # Test setting a value with a nested key
     await state_backend._set(("nested", "key"), "value")
-    assert state_backend._state["key"] == "value"
-    assert dict(state_backend._state["nested"]) == {"key": "value"}
+    assert state_backend.state == {"key": "value", "nested": {"key": "value"}}
 
     # Test setting a value with a nested key where the intermediate key does not exist
     await state_backend._set(("nonexistent", "key"), "value")
-    assert state_backend._state["key"] == "value"
-    assert dict(state_backend._state["nested"]) == {"key": "value"}
-    assert dict(state_backend._state["nonexistent"]) == {"key": "value"}
+    assert state_backend.state == {
+        "key": "value",
+        "nested": {"key": "value"},
+        "nonexistent": {"key": "value"},
+    }
 
     # Test setting a value with a nested key where the final key already exists
     await state_backend._set(("nested", "key"), "new_value")
-    assert state_backend._state["key"] == "value"
-    assert dict(state_backend._state["nested"]) == {"key": "new_value"}
-    assert dict(state_backend._state["nonexistent"]) == {"key": "value"}
+    assert state_backend.state == {
+        "key": "value",
+        "nested": {"key": "new_value"},
+        "nonexistent": {"key": "value"},
+    }
