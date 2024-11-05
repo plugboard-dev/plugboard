@@ -10,6 +10,7 @@ from .connector import (
     ConnectorSpec,
 )
 from .entities import Entity
+from .event import Event
 from .io import IODirection
 from .process import ProcessArgsSpec, ProcessSpec
 from .state import StateBackendArgsSpec, StateBackendSpec
@@ -25,6 +26,7 @@ __all__ = [
     "ConnectorMode",
     "ConnectorSpec",
     "Entity",
+    "Event",
     "IODirection",
     "StateBackendSpec",
     "StateBackendArgsSpec",
