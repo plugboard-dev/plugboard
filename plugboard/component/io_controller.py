@@ -1,10 +1,12 @@
 """Provides the `IOController` class for handling input/output operations."""
 
 import asyncio
+from collections import deque
 import typing as _t
 
 from plugboard.connector import Channel, Connector
 from plugboard.exceptions import ChannelClosedError, IOStreamClosedError
+from plugboard.schemas.event import Event
 from plugboard.schemas.io import IODirection
 
 
@@ -27,6 +29,7 @@ class IOController:
             str(IODirection.INPUT): {},
             str(IODirection.OUTPUT): {},
         }
+        self.events: deque[Event] = deque()
         self._input_channels: dict[str, Channel] = {}
         self._output_channels: dict[str, Channel] = {}
         self._is_closed = False

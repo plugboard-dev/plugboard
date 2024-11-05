@@ -9,6 +9,7 @@ from plugboard.component.io_controller import (
     IODirection,
     IOStreamClosedError,
 )
+from plugboard.events import EventHandlers
 from plugboard.state import StateBackend
 from plugboard.utils import ClassRegistry, ExportMixin
 
@@ -91,6 +92,7 @@ class Component(ABC, ExportMixin):
         async def _wrapper() -> None:
             await self.io.read()
             self._bind_inputs()
+            self._handle_event()
             await self._step()
             self._bind_outputs()
             await self.io.write()
@@ -106,6 +108,17 @@ class Component(ABC, ExportMixin):
         """Binds component fields to output fields."""
         for field in self.io.outputs:
             self.io.data[str(IODirection.OUTPUT)][field] = getattr(self, field)
+
+    def _handle_event(self) -> None:
+        """Handles incoming events."""
+        event = self.io.events.popleft()
+        if event is None:
+            return
+        try:
+            handler = EventHandlers.get(self.__class__.__name__, event.type)
+            handler(self, event)
+        except KeyError:
+            pass
 
     async def run(self) -> None:
         """Executes component logic for all steps to completion."""
