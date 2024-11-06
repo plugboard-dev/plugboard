@@ -87,7 +87,7 @@ async def test_state_backend_get(state_backend_cls: _t.Type[DictStateBackend]) -
     state_backend = state_backend_cls()
 
     # Test getting a value that exists in the state
-    state_backend._state = {"key": "value"}
+    state_backend.state = {"key": "value"}
     result = await state_backend._get("key")
     assert result == "value"
 
@@ -96,7 +96,7 @@ async def test_state_backend_get(state_backend_cls: _t.Type[DictStateBackend]) -
     assert result is None
 
     # Test getting a nested value that exists in the state
-    state_backend._state = {"nested": {"key": "value"}}
+    state_backend.state = {"nested": {"key": "value"}}
     result = await state_backend._get(("nested", "key"))
     assert result == "value"
 

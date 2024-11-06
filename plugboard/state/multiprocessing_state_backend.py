@@ -2,12 +2,41 @@
 
 from __future__ import annotations
 
+from collections.abc import MutableMapping
 from multiprocessing.managers import DictProxy, SyncManager
 import typing as _t
 
 import inject
 
 from plugboard.state.dict_state_backend import DictStateBackend
+
+
+def _flatten_dict(
+    d: dict[str, _t.Any], parent_key: _t.Optional[tuple[str, ...]] = None
+) -> dict[tuple[str, ...], _t.Any]:
+    """Flattens nested dictionaries."""
+    items: list[tuple[tuple[str, ...], _t.Any]] = []
+    for k, v in d.items():
+        new_key = parent_key + (k,) if parent_key else (k,)
+        if isinstance(v, dict):
+            items.extend(_flatten_dict(v, new_key).items())
+        else:
+            items.append((new_key, v))
+    # Handle case of empty dict
+    if not items and parent_key:
+        items.append((parent_key, {}))
+    return dict(items)
+
+
+def _unflatten_dict(d: MutableMapping[tuple[str, ...], _t.Any]) -> dict[str, _t.Any]:
+    """Converts flattened dictionaries back to a nested form."""
+    result: dict[str, _t.Any] = {}
+    for k, v in d.items():
+        current = result
+        for key in k[:-1]:
+            current = current.setdefault(key, {})
+        current[k[-1]] = v
+    return result
 
 
 class MultiprocessingStateBackend(DictStateBackend):
@@ -21,34 +50,40 @@ class MultiprocessingStateBackend(DictStateBackend):
             manager: A multiprocessing manager.
         """
         super().__init__(*args, **kwargs)
-        self._state: DictProxy[str, _t.Any] = manager.dict()
+        # Store flattened key-value pairs to avoid needing nested managed dictionaries
+        self._state: DictProxy[tuple[str, ...], _t.Any] = manager.dict()  # type: ignore
 
     @property
     def state(self) -> dict[str, _t.Any]:
         """State dictionary."""
-        return {k: self._convert_value(v) for k, v in self._state.items()}
+        return _unflatten_dict(self._state)
 
-    @classmethod
-    def _convert_value(cls, value: _t.Any) -> _t.Any:
-        """Recursively convert DictProxy objects to dictionaries."""
-        if isinstance(value, DictProxy) or isinstance(value, dict):
-            return {k: cls._convert_value(v) for k, v in value.items()}
-        return value
-
-    def _prepare_value(self, value: _t.Any, manager: SyncManager) -> _t.Any:
-        """Recursively convert dictionaries to DictProxy objects."""
-        if isinstance(value, dict):
-            return manager.dict({k: self._prepare_value(v, manager) for k, v in value.items()})
-        return value
+    @state.setter
+    def state(self, value: dict[str, _t.Any]) -> None:
+        """Set state dictionary."""
+        self._state.update(_flatten_dict(value))
 
     async def _get(self, key: str | tuple[str, ...], value: _t.Optional[_t.Any] = None) -> _t.Any:
-        return self._convert_value(await super()._get(key, value))
+        if isinstance(key, str):
+            key = (key,)
+        if key in self._state:
+            return self._state[key]
 
-    @inject.params(manager=SyncManager)
-    async def _set(self, key: str | tuple[str, ...], value: _t.Any, manager: SyncManager) -> None:  # noqa: A003
-        _state, _key = self._state, key
-        if isinstance(_key, tuple):
-            for k in key[:-1]:  # type: str
-                _state = _state.setdefault(k, manager.dict())
-            _key = key[-1]  # Set nested value with final key component below
-        _state[_key] = self._prepare_value(value, manager=manager)
+        # Fetch nested dictionary if any
+        items = {k[len(key) :]: v for k, v in self._state.items() if k[: len(key)] == key}
+        if not items:
+            return value
+        return _unflatten_dict(items)
+
+    async def _set(self, key: str | tuple[str, ...], value: _t.Any) -> None:  # noqa: A003
+        if isinstance(key, str):
+            key = (key,)
+        if isinstance(value, dict):
+            update = _flatten_dict(value, key)
+        else:
+            update = {key: value}
+        self._state.update(update)
+        # Prune overwritten keys from the state
+        for k in update.keys():
+            for n in range(1, len(k)):
+                self._state.pop(k[:n], None)
