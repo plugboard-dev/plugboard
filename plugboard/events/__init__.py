@@ -11,7 +11,7 @@ class EventHandlers:
     _handlers: _t.ClassVar[dict[str, dict[str, _t.Callable[..., _t.Any]]]] = {}
 
     @classmethod
-    def register(
+    def add(
         cls, event_type: str
     ) -> _t.Callable[[_t.Callable[..., _t.Any]], _t.Callable[..., _t.Any]]:
         """Decorator that registers methods as handlers for specific event types.
