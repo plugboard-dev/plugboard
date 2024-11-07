@@ -7,7 +7,6 @@ import typing as _t
 class EventHandlers:
     """`EventHandlers` provides a decorator for registering event handlers."""
 
-    # Class-level dictionary to store event handlers
     _handlers: _t.ClassVar[dict[str, dict[str, _t.Callable[..., _t.Any]]]] = defaultdict(dict)
 
     @staticmethod
