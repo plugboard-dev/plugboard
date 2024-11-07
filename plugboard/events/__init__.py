@@ -1,6 +1,6 @@
 """Provides models and utilities for handling events."""
 
-from functools import wraps
+from collections import defaultdict
 import typing as _t
 
 
@@ -8,7 +8,15 @@ class EventHandlers:
     """`EventHandlers` provides a decorator for registering event handlers."""
 
     # Class-level dictionary to store event handlers
-    _handlers: _t.ClassVar[dict[str, dict[str, _t.Callable[..., _t.Any]]]] = {}
+    _handlers: _t.ClassVar[dict[str, dict[str, _t.Callable[..., _t.Any]]]] = defaultdict(dict)
+
+    @staticmethod
+    def _get_class_path(func: _t.Callable[..., _t.Any]) -> str:
+        """Get the fully qualified path for the class containing the handler."""
+        module_name = func.__module__
+        qualname_parts = func.__qualname__.split(".")
+        class_name = qualname_parts[-2]  # Last part is the method name
+        return f"{module_name}.{class_name}"
 
     @classmethod
     def add(
@@ -24,30 +32,18 @@ class EventHandlers:
         """
 
         def decorator(func: _t.Callable[..., _t.Any]) -> _t.Callable[..., _t.Any]:
-            @wraps(func)
-            def wrapper(*args: _t.Any, **kwargs: _t.Any) -> _t.Any:
-                return func(*args, **kwargs)
-
-            # Store the handler when the decorated method is defined
-            def _store_handler(owner_class: _t.Type[_t.Any]) -> None:
-                class_name = owner_class.__name__
-                if class_name not in cls._handlers:
-                    cls._handlers[class_name] = {}
-
-                cls._handlers[class_name][event_type] = func
-
-            # Store handler when descriptor is accessed
-            wrapper.__set_name__ = _store_handler  # type: ignore
-            return wrapper
+            class_path = cls._get_class_path(func)
+            cls._handlers[class_path][event_type] = func
+            return func
 
         return decorator
 
     @classmethod
-    def get(cls, class_name: str, event_type: str) -> _t.Callable[..., _t.Any]:
+    def get(cls, class_path: str, event_type: str) -> _t.Callable[..., _t.Any]:
         """Retrieve a handler for a specific event type.
 
         Args:
-            class_name (str): Name of the class containing the handler
+            class_path (str): Fully qualified path of the class (module.class)
             event_type (str): Type of event to handle
 
         Returns:
@@ -56,12 +52,10 @@ class EventHandlers:
         Raises:
             KeyError: If no handler found for class or event type
         """
-        if class_name not in cls._handlers:
-            raise KeyError(f"No handlers registered for class '{class_name}'")
-
-        if event_type not in cls._handlers[class_name]:
+        if class_path not in cls._handlers:
+            raise KeyError(f"No handlers registered for class '{class_path}'")
+        if event_type not in cls._handlers[class_path]:
             raise KeyError(
-                f"No handler found for event type '{event_type}' in class '{class_name}'"
+                f"No handler found for event type '{event_type}' in class '{class_path}'"
             )
-
-        return cls._handlers[class_name][event_type]
+        return cls._handlers[class_path][event_type]
