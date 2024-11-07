@@ -3,6 +3,8 @@
 from collections import defaultdict
 import typing as _t
 
+from plugboard.schemas import Event
+
 
 class EventHandlers:
     """`EventHandlers` provides a decorator for registering event handlers."""
@@ -10,40 +12,45 @@ class EventHandlers:
     _handlers: _t.ClassVar[dict[str, dict[str, _t.Callable[..., _t.Any]]]] = defaultdict(dict)
 
     @staticmethod
-    def _get_class_path(func: _t.Callable[..., _t.Any]) -> str:
-        """Get the fully qualified path for the class containing the handler."""
-        module_name = func.__module__
-        qualname_parts = func.__qualname__.split(".")
+    def _get_class_path_for_method(method: _t.Callable[..., _t.Any]) -> str:
+        """Get the fully qualified path for the class containing a method."""
+        module_name = method.__module__
+        qualname_parts = method.__qualname__.split(".")
         class_name = qualname_parts[-2]  # Last part is the method name
         return f"{module_name}.{class_name}"
 
+    @staticmethod
+    def _get_class_path(class_: _t.Type) -> str:
+        """Get the fully qualified path for a class."""
+        return f"{class_.__module__}.{class_.__name__}"
+
     @classmethod
     def add(
-        cls, event_type: str
+        cls, event: _t.Type[Event] | Event
     ) -> _t.Callable[[_t.Callable[..., _t.Any]], _t.Callable[..., _t.Any]]:
-        """Decorator that registers methods as handlers for specific event types.
+        """Decorator that registers class methods as handlers for specific event types.
 
         Args:
-            event_type (str): The type of event this handler processes
+            event: Event class this handler processes
 
         Returns:
             Callable: Decorated method
         """
 
-        def decorator(func: _t.Callable[..., _t.Any]) -> _t.Callable[..., _t.Any]:
-            class_path = cls._get_class_path(func)
-            cls._handlers[class_path][event_type] = func
-            return func
+        def decorator(method: _t.Callable[..., _t.Any]) -> _t.Callable[..., _t.Any]:
+            class_path = cls._get_class_path_for_method(method)
+            cls._handlers[class_path][event.type] = method
+            return method
 
         return decorator
 
     @classmethod
-    def get(cls, class_path: str, event_type: str) -> _t.Callable[..., _t.Any]:
+    def get(cls, _class: _t.Type, event: _t.Type[Event] | Event) -> _t.Callable[..., _t.Any]:
         """Retrieve a handler for a specific event type.
 
         Args:
-            class_path (str): Fully qualified path of the class (module.class)
-            event_type (str): Type of event to handle
+            _class: Class to handle event for
+            event: Event class or instance to handle
 
         Returns:
             Callable: The event handler method
@@ -51,8 +58,9 @@ class EventHandlers:
         Raises:
             KeyError: If no handler found for class or event type
         """
+        class_path = cls._get_class_path(_class)
         if (class_handlers := cls._handlers.get(class_path)) is None:
             raise KeyError(f"No handlers found for class '{class_path}'")
-        elif (handler := class_handlers.get(event_type)) is None:
-            raise KeyError(f"No handler found for class '{class_path}' and event '{event_type}'")
+        elif (handler := class_handlers.get(event.type)) is None:
+            raise KeyError(f"No handler found for class '{class_path}' and event '{event.type}'")
         return handler
