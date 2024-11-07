@@ -1,6 +1,7 @@
 """Provides models for events."""
 
 from datetime import datetime, timezone
+import typing as _t
 from uuid import uuid4
 
 from pydantic import BaseModel, Field
@@ -27,6 +28,8 @@ class EventUtils:
 class Event(BaseModel):
     """`Event` is a base model for all events."""
 
+    type: _t.ClassVar[str]
+
     id: str = Field(
         default_factory=EventUtils.gen_id,
         pattern=_REGEX_UUID,
@@ -35,7 +38,6 @@ class Event(BaseModel):
         default_factory=EventUtils.gen_timestamp,
         pattern=_REGEX_TIMESTAMP,
     )
-    type: str
     source: str
     version: str = "0.1.0"
     data: dict[str, str]
