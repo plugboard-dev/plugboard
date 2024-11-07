@@ -52,10 +52,8 @@ class EventHandlers:
         Raises:
             KeyError: If no handler found for class or event type
         """
-        if class_path not in cls._handlers:
-            raise KeyError(f"No handlers registered for class '{class_path}'")
-        if event_type not in cls._handlers[class_path]:
-            raise KeyError(
-                f"No handler found for event type '{event_type}' in class '{class_path}'"
-            )
-        return cls._handlers[class_path][event_type]
+        if (class_handlers := cls._handlers.get(class_path)) is None:
+            raise KeyError(f"No handlers found for class '{class_path}'")
+        elif (handler := class_handlers.get(event_type)) is None:
+            raise KeyError(f"No handler found for class '{class_path}' and event '{event_type}'")
+        return handler
