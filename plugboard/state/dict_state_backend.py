@@ -18,7 +18,7 @@ class DictStateBackend(StateBackend):
     def _state(self) -> dict[str, _t.Any]:
         """State dictionary."""
         return self._state_dict
-    
+
     @_state.setter
     def _state(self, value: dict[str, _t.Any]) -> None:
         """Set state dictionary."""
