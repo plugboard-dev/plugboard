@@ -12,17 +12,17 @@ class DictStateBackend(StateBackend):
     def __init__(self, *args: _t.Any, **kwargs: _t.Any) -> None:
         """Instantiates `DictStateBackend`."""
         super().__init__(*args, **kwargs)
-        self._state: dict[str, _t.Any] = {}
+        self._state_dict: dict[str, _t.Any] = {}
 
     @property
-    def state(self) -> dict[str, _t.Any]:
+    def _state(self) -> dict[str, _t.Any]:
         """State dictionary."""
-        return dict(self._state)
-
-    @state.setter
-    def state(self, value: dict[str, _t.Any]) -> None:
+        return self._state_dict
+    
+    @_state.setter
+    def _state(self, value: dict[str, _t.Any]) -> None:
         """Set state dictionary."""
-        self._state = value
+        self._state_dict.update(value)
 
     async def _initialise_data(
         self, job_id: _t.Optional[str] = None, metadata: _t.Optional[dict] = None, **kwargs: _t.Any
@@ -37,7 +37,7 @@ class DictStateBackend(StateBackend):
         raise StateBackendError("Cannot reuse job ID for non-persistent backend.")
 
     async def _get(self, key: str | tuple[str, ...], value: _t.Optional[_t.Any] = None) -> _t.Any:
-        _state, _key = self._state, key
+        _state, _key = self._state_dict, key
         if isinstance(_key, tuple):
             for k in key[:-1]:  # type: str
                 try:
@@ -50,7 +50,7 @@ class DictStateBackend(StateBackend):
         return _state.get(_key, value)
 
     async def _set(self, key: str | tuple[str, ...], value: _t.Any) -> None:  # noqa: A003
-        _state, _key = self._state, key
+        _state, _key = self._state_dict, key
         if isinstance(_key, tuple):
             for k in key[:-1]:  # type: str
                 _state = _state.setdefault(k, {})

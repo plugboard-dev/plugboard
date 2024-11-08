@@ -87,7 +87,7 @@ async def test_state_backend_get(state_backend_cls: _t.Type[DictStateBackend]) -
     state_backend = state_backend_cls()
 
     # Test getting a value that exists in the state
-    state_backend.state = {"key": "value"}
+    state_backend._state = {"key": "value"}
     result = await state_backend._get("key")
     assert result == "value"
 
@@ -96,7 +96,7 @@ async def test_state_backend_get(state_backend_cls: _t.Type[DictStateBackend]) -
     assert result is None
 
     # Test getting a nested value that exists in the state
-    state_backend.state = {"nested": {"key": "value"}}
+    state_backend._state = {"nested": {"key": "value"}}
     result = await state_backend._get(("nested", "key"))
     assert result == "value"
 
@@ -116,15 +116,15 @@ async def test_state_backend_set(state_backend_cls: _t.Type[DictStateBackend]) -
 
     # Test setting a value with a single key
     await state_backend._set("key", "value")
-    assert state_backend.state == {"key": "value"}
+    assert state_backend._state == {"key": "value"}
 
     # Test setting a value with a nested key
     await state_backend._set(("nested", "key"), "value")
-    assert state_backend.state == {"key": "value", "nested": {"key": "value"}}
+    assert state_backend._state == {"key": "value", "nested": {"key": "value"}}
 
     # Test setting a value with a nested key where the intermediate key does not exist
     await state_backend._set(("nonexistent", "key"), "value")
-    assert state_backend.state == {
+    assert state_backend._state == {
         "key": "value",
         "nested": {"key": "value"},
         "nonexistent": {"key": "value"},
@@ -132,7 +132,7 @@ async def test_state_backend_set(state_backend_cls: _t.Type[DictStateBackend]) -
 
     # Test setting a value with a nested key where the final key already exists
     await state_backend._set(("nested", "key"), "new_value")
-    assert state_backend.state == {
+    assert state_backend._state == {
         "key": "value",
         "nested": {"key": "new_value"},
         "nonexistent": {"key": "value"},

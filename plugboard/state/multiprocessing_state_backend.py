@@ -51,26 +51,26 @@ class MultiprocessingStateBackend(DictStateBackend):
         """
         super().__init__(*args, **kwargs)
         # Store flattened key-value pairs to avoid needing nested managed dictionaries
-        self._state: DictProxy[tuple[str, ...], _t.Any] = manager.dict()  # type: ignore
+        self._state_mgr: DictProxy[tuple[str, ...], _t.Any] = manager.dict()  # type: ignore
 
     @property
-    def state(self) -> dict[str, _t.Any]:
+    def _state(self) -> dict[str, _t.Any]:
         """State dictionary."""
-        return _unflatten_dict(self._state)
+        return _unflatten_dict(self._state_mgr)
 
-    @state.setter
-    def state(self, value: dict[str, _t.Any]) -> None:
+    @_state.setter
+    def _state(self, value: dict[str, _t.Any]) -> None:
         """Set state dictionary."""
-        self._state.update(_flatten_dict(value))
+        self._state_mgr.update(_flatten_dict(value))
 
     async def _get(self, key: str | tuple[str, ...], value: _t.Optional[_t.Any] = None) -> _t.Any:
         if isinstance(key, str):
             key = (key,)
-        if key in self._state:
-            return self._state[key]
+        if key in self._state_mgr:
+            return self._state_mgr[key]
 
         # Fetch nested dictionary if any
-        items = {k[len(key) :]: v for k, v in self._state.items() if k[: len(key)] == key}
+        items = {k[len(key) :]: v for k, v in self._state_mgr.items() if k[: len(key)] == key}
         if not items:
             return value
         return _unflatten_dict(items)
@@ -82,8 +82,8 @@ class MultiprocessingStateBackend(DictStateBackend):
             update = _flatten_dict(value, key)
         else:
             update = {key: value}
-        self._state.update(update)
+        self._state_mgr.update(update)
         # Prune overwritten keys from the state
         for k in update.keys():
             for n in range(1, len(k)):
-                self._state.pop(k[:n], None)
+                self._state_mgr.pop(k[:n], None)
