@@ -40,7 +40,7 @@ def _unflatten_dict(d: MutableMapping[tuple[str, ...], _t.Any]) -> dict[str, _t.
 
 
 class MultiprocessingStateBackend(DictStateBackend):
-    """`MultiprocessingStateBackend` provides state persistence for single process runs."""
+    """`MultiprocessingStateBackend` provides state persistence for multiprocess runs."""
 
     @inject.params(manager=SyncManager)
     def __init__(self, manager: SyncManager, *args: _t.Any, **kwargs: _t.Any) -> None:  # noqa: D417
