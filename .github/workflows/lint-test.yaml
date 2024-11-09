@@ -60,7 +60,7 @@ jobs:
         if: always()
 
       - name: Notebook output cleared
-        run: poetry run nbstripout --verify **/*.ipynb
+        run: find . -name '*.ipynb' -exec poetry run nbstripout --verify {} +
         if: always()
 
       - name: Build docs
