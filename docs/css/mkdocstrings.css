@@ -25,3 +25,32 @@ a.external:hover::after,
 a.autorefs-external:hover::after {
     background-color: var(--md-accent-fg-color);
 }
+
+/* See: 
+    https://github.com/squidfunk/mkdocs-material/blob/master/src/templates/assets/stylesheets/main/_colors.scss
+    https://coolors.co/075d7a-1c0f13-cc9c4a-f9f9f9-d65780
+*/
+:root {
+    --pb-blue: #075D7A;
+    --pb-black: #1C0F13;
+    --pb-gray: #C2C2C2;
+    --pb-gold: #CC9C4A;
+    --pb-white: #F9F9F9;
+    --pb-pink: #D65780;
+}
+
+[data-md-color-scheme="default"] {
+    --md-primary-fg-color: var(--pb-blue);
+    --md-accent-fg-color: var(--pb-gold);
+
+    --md-footer-bg-color: var(--pb-blue);
+    --md-text-link-color: var(--pb-pink);
+}
+
+[data-md-color-scheme="slate"] {
+    --md-primary-fg-color: var(--pb-blue);
+    --md-accent-fg-color: var(--pb-pink);
+
+    --md-footer-bg-color: var(--pb-blue);
+    --md-text-link-color: var(--pb-gold);
+}
