@@ -11,12 +11,26 @@
 
 <hr>
 
-Plugboard is an event-driven modelling and orchestration framework in Python for simulating complex processes with many interconnected components.
+Plugboard is an **event-driven modelling and orchestration framework** in Python for simulating complex processes with many interconnected components.
 
-The code was originally developed to create digital twins of complex heavy industrial processes involving material recirculation, enabling scenario analysis, yield optimisation, and operational improvements. At its heart, plugboard is an abstract and general purpose modelling and orchestration tool for distributed simulations which can be applied to problems in many domains.
+You can use it to:
 
-## Key Features
+- **Define models** in Python and **connect them together easily** so that data automatically moves between them;
+- Run your model on a laptop, then scale out on multiple processors, or go to a compute cluster in the cloud.
+
+Some examples of what you can build with Plugboard include:
+
+- Digital twin models of complex processes:
+    - It can easily handle common problems in industrial process simulation like material recirculation;
+    - Models can be composed from different underlying components, e.g. physics-based simulations, machine-learning, AI models;
+- AI integrations:
+    - You can feed data to/from different LLMs using Plugboard components;
+    - Easily reconfigure and swap model providers for optimal performance.
+
+## 🖋️ Key Features
+
 These are the key features of the core library for building and executing process models:
+
 - Classes containing core framework logic which can be extended to define domain specific model component logic.
 - YAML model specification format for defining process models.
 - CLI commands for executing models locally or in cloud infrastructure.
@@ -29,16 +43,19 @@ These are the key features of the core library for building and executing proces
 - Support for different message exchange patterns such as: one-to-one, one-to-many, many-to-one etc via a broker; or peer-to-peer with http requests.
 - Load and store data to/from models using various infrastructures such as blob stores and databases via provided integrations.
 
-## Installation
+## 🔌 Installation
+
 Plugboard requires Python >= 3.12. Install the package with pip inside a virtual env as below.
 ```shell
 python -m pip install plugboard
 ```
 
-## Usage
+## 🚀 Usage
+
 Plugboard is built to help you with two things: defining process models, and executing those models. There are two main ways to interact with plugboard: via the Python API; or, via the CLI using model definitions saved in yaml or json format.
 
 ### Building models with the Python API
+
 A model is made up of one or more components, though Plugboard really shines when you have many! First we start by defining the `Component`s within our model. Components can have only inputs, only outputs, or both. To keep it simple we just have two components here, showing the most basic functionality. Each component has several methods which are called at different stages during model execution: `init` for optional initialisation actions; `step` to take a single step forward through time; `run` to execute all steps; and `destroy` for optional teardown actions.
 ```python
 from contextlib import AsyncExitStack
@@ -103,6 +120,7 @@ async with process:
 ```
 
 ### Executing pre-defined models on the CLI
+
 In many cases, we want to define components once, with suitable parameters, and then use them repeatedly in different simulations. Plugboard enables this workflow with model specification files in yaml or json format. Once the components have been defined, the simple model above can be represented with a yaml file like so.
 ```yaml
 # my-model.yaml
@@ -128,11 +146,14 @@ We can now run this model using the plugboard CLI with the command:
 plugboard process run my-model.yaml
 ```
 
-## Documentation
+## 📖 Documentation
+
 For more information including a detailed API reference and step-by-step usage examples, refer to the [documentation site](https://plugboard.dev).
 
-## Contributions
+## 👋 Contributions
+
 Contributions are welcomed and warmly received! For bug fixes and smaller feature requests feel free to open an issue on this repo. For any larger changes please get in touch with us to discuss first. More information for developers can be found in [the contributors section]() of the docs.
 
-## Licence
+## ⚖️ Licence
+
 Plugboard is offered under the [Apache 2.0 Licence](https://www.apache.org/licenses/LICENSE-2.0) so it's free for personal or commercial use within those terms.
