@@ -14,12 +14,14 @@ IO_NS_UNSET = "__UNSET__"
 
 
 class IOController:
-    """`IOController` manages input/output to/from component fields."""
+    """`IOController` manages input/output to/from components."""
 
     def __init__(
         self,
         inputs: _t.Optional[_t.Any] = None,
         outputs: _t.Optional[_t.Any] = None,
+        input_events: _t.Optional[list[Event]] = None,
+        output_events: _t.Optional[list[Event]] = None,
         namespace: str = IO_NS_UNSET,
     ) -> None:
         self.namespace = namespace
@@ -29,7 +31,10 @@ class IOController:
             str(IODirection.INPUT): {},
             str(IODirection.OUTPUT): {},
         }
-        self.events: deque[Event] = deque()
+        self.events: dict[str, deque[Event]] = {
+            str(IODirection.INPUT): deque(),
+            str(IODirection.OUTPUT): deque(),
+        }
         self._input_channels: dict[str, Channel] = {}
         self._output_channels: dict[str, Channel] = {}
         self._is_closed = False
