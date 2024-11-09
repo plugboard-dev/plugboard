@@ -112,7 +112,7 @@ Visually, we've created the model below, with Plugboard automatically handling t
 <div align="center">
 ```mermaid
 graph LR;
-    A(A)-->|data|B(B);
+    A(Component A)-->|data|B(Component B);
 ```
 </div>
 
