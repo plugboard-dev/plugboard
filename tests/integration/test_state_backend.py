@@ -10,7 +10,11 @@ from plugboard.process import Process
 from plugboard.schemas import ConnectorSpec
 from plugboard.state import StateBackend
 from tests.conftest import ComponentTestHelper
-from tests.integration.conftest import setup_DictStateBackend, setup_SqliteStateBackend
+from tests.integration.conftest import (
+    setup_DictStateBackend,
+    setup_MultiprocessingStateBackend,
+    setup_SqliteStateBackend,
+)
 
 
 class A(ComponentTestHelper):
@@ -75,7 +79,9 @@ def C_connectors() -> list[Connector]:
     ]
 
 
-@pytest.fixture(params=[setup_DictStateBackend, setup_SqliteStateBackend])
+@pytest.fixture(
+    params=[setup_DictStateBackend, setup_MultiprocessingStateBackend, setup_SqliteStateBackend]
+)
 async def state_backend(request: pytest.FixtureRequest) -> _t.AsyncIterator[StateBackend]:
     """Returns a `StateBackend` instance."""
     state_backend_setup = request.param

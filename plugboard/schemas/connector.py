@@ -4,7 +4,7 @@ from enum import StrEnum
 import re
 import typing as _t
 
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 
 DEFAULT_CHANNEL_CLS_PATH: str = "plugboard.connector.AsyncioChannelBuilder"
@@ -68,9 +68,11 @@ class ConnectorSpec(BaseModel):
         mode: The mode of the connector.
     """
 
+    model_config = ConfigDict(use_enum_values=True)
+
     source: ComponentSocket
     target: ComponentSocket
-    mode: ConnectorMode = ConnectorMode.ONE_TO_ONE
+    mode: ConnectorMode = Field(default=ConnectorMode.ONE_TO_ONE, validate_default=True)
 
     @field_validator("source", "target", mode="before")
     @classmethod
