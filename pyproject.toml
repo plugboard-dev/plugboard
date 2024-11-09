@@ -48,7 +48,7 @@ ipython = "^8.26.0"
 jupyterlab = "^4.2.4"
 mpire = {extras = ["dill"], version = "^2.10.2"}
 mypy = "^1.11.2"
-nbstripout = "^0.7.1"
+nbstripout = "^0.8.0"
 poetry-dynamic-versioning = "^1.4.0"
 poetry-plugin-export = "^1.8.0"
 poetry-plugin-sort = "^0.2.1"
