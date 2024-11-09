@@ -161,7 +161,7 @@ Plugboard is under active development, with new features in the works:
 
 ## 👋 Contributions
 
-Contributions are welcomed and warmly received! For bug fixes and smaller feature requests feel free to open an issue on this repo. For any larger changes please get in touch with us to discuss first. More information for developers can be found in [the contributors section]() of the docs.
+Contributions are welcomed and warmly received! For bug fixes and smaller feature requests feel free to open an issue on this repo. For any larger changes please get in touch with us to discuss first. More information for developers can be found in [the contributing section](https://docs.plugboard.dev/contributing/) of the docs.
 
 ## ⚖️ Licence
 

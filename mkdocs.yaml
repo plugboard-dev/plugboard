@@ -91,6 +91,7 @@ watch:
 - docs
 - plugboard
 - README.md
+- CONTRIBUTING.md
 
 nav:
 - Home: index.md
@@ -106,3 +107,4 @@ nav:
   - schemas: api/schemas/schemas.md
   - state: api/state/state.md
   - utils: api/utils/utils.md
+- Contributing: contributing.md
