@@ -3,14 +3,14 @@
 import typing as _t
 
 from annotated_types import Len
-from pydantic import BaseModel
 
+from plugboard.schemas._common import PlugboardBaseModel
 from .component import ComponentSpec
 from .connector import ChannelBuilderSpec, ConnectorSpec
 from .state import StateBackendSpec
 
 
-class ProcessArgsSpec(BaseModel, extra="allow"):
+class ProcessArgsSpec(PlugboardBaseModel, extra="allow"):
     """Specification of the [`Process`][plugboard.process.Process] constructor arguments.
 
     Attributes:
@@ -28,7 +28,7 @@ class ProcessArgsSpec(BaseModel, extra="allow"):
     state: StateBackendSpec = StateBackendSpec()
 
 
-class ProcessSpec(BaseModel):
+class ProcessSpec(PlugboardBaseModel):
     """Specification of a Plugboard [`Process`][plugboard.process.Process].
 
     Attributes:

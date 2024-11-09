@@ -1,9 +1,11 @@
 """Provides `ComponentSpec` class."""
 
-from pydantic import BaseModel, Field
+from pydantic import Field
+
+from plugboard.schemas._common import PlugboardBaseModel
 
 
-class ComponentArgsSpec(BaseModel, extra="allow"):
+class ComponentArgsSpec(PlugboardBaseModel, extra="allow"):
     """Specification of the [`Component`][plugboard.component.Component] constructor arguments.
 
     Attributes:
@@ -19,7 +21,7 @@ class ComponentArgsSpec(BaseModel, extra="allow"):
     constraints: dict = {}
 
 
-class ComponentSpec(BaseModel):
+class ComponentSpec(PlugboardBaseModel):
     """Specification of a [`Component`][plugboard.component.Component].
 
     Attributes:
