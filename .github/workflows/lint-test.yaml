@@ -1,4 +1,4 @@
-name: CI
+name: Lint and test
 
 on:
   push:
@@ -60,9 +60,7 @@ jobs:
         if: always()
 
       - name: Notebook output cleared
-        run: |
-          poetry run pre-commit install
-          poetry run pre-commit run --all-files
+        run: find . -name '*.ipynb' -exec poetry run nbstripout --verify {} +
         if: always()
 
       - name: Build docs
