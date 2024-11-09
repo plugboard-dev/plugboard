@@ -13,10 +13,7 @@
 
 Plugboard is an **event-driven modelling and orchestration framework** in Python for simulating complex processes with many interconnected components.
 
-You can use it to:
-
-- **Define models** in Python and **connect them together easily** so that data automatically moves between them;
-- Run your model on a laptop, then scale out on multiple processors, or go to a compute cluster in the cloud.
+You can use it to **define models** in Python and **connect them together easily** so that data automatically moves between them. After running your model on a laptop, you can then scale out on multiple processors, or go to a compute cluster in the cloud.
 
 Some examples of what you can build with Plugboard include:
 
@@ -29,19 +26,11 @@ Some examples of what you can build with Plugboard include:
 
 ## 🖋️ Key Features
 
-These are the key features of the core library for building and executing process models:
-
-- Classes containing core framework logic which can be extended to define domain specific model component logic.
-- YAML model specification format for defining process models.
-- CLI commands for executing models locally or in cloud infrastructure.
-- Support for different simulation paradigms: realtime, discrete time, and discrete event.
-- Detailed logging of component inputs, outputs and state for monitoring and process mining or surrogate modelling use-cases.
-- Modern implementation with Python >= 3.12 based around asyncio with complete type annotation coverage.
-- Support for strongly typed data messages and validation based on pydantic.
-- Support for different parallelisation patterns such as: single-threaded with coroutines, single-host multi process, or distributed with Ray in Kubernetes.
-- Data exchange between components with popular messaging technologies like RabbitMQ and Google Pub/Sub.
-- Support for different message exchange patterns such as: one-to-one, one-to-many, many-to-one etc via a broker; or peer-to-peer with http requests.
-- Load and store data to/from models using various infrastructures such as blob stores and databases via provided integrations.
+- **Reusable classes** containing the core framework, which you can extend to define your own model logic;
+- **YAML model specification** format for saving model definitions, allowing you to run the same model locally or in cloud infrastructure;
+- A **command line interface** for executing models;
+- Built to handle the **data intensive simulation** requirements of industrial process applications;
+- Modern implementation with **Python 3.12 and above** based around **asyncio** with complete type annotation coverage.
 
 ## 🔌 Installation
 
@@ -149,6 +138,18 @@ plugboard process run my-model.yaml
 ## 📖 Documentation
 
 For more information including a detailed API reference and step-by-step usage examples, refer to the [documentation site](https://plugboard.dev).
+
+## 🐾 Roadmap
+
+Plugboard is under active development, with new features in the works:
+
+- Support for different simulation paradigms: realtime, discrete time, and discrete event.
+- Detailed logging of component inputs, outputs and state for monitoring and process mining or surrogate modelling use-cases.
+- Support for strongly typed data messages and validation based on pydantic.
+- Support for different parallelisation patterns such as: single-threaded with coroutines, single-host multi process, or distributed with Ray in Kubernetes.
+- Data exchange between components with popular messaging technologies like RabbitMQ and Google Pub/Sub.
+- Support for different message exchange patterns such as: one-to-one, one-to-many, many-to-one etc via a broker; or peer-to-peer with http requests.
+- Load and store data to/from models using various infrastructures such as blob stores and databases via provided integrations.
 
 ## 👋 Contributions
 
