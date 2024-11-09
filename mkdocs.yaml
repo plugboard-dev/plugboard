@@ -57,8 +57,12 @@ markdown_extensions:
 extra_css:
 - css/mkdocstrings.css
 
+extra_javascript:
+- https://buttons.github.io/buttons.js
+
 theme:
   name: material
+  custom_dir: docs/overrides
   features:
   - navigation.tabs
   - content.code.annotate

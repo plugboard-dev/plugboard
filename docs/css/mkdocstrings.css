@@ -42,6 +42,7 @@ a.autorefs-external:hover::after {
 [data-md-color-scheme="default"] {
     --md-primary-fg-color: var(--pb-blue);
     --md-accent-fg-color: var(--pb-gold);
+    --md-typeset-a-color: var(--pb-pink);
 
     --md-footer-bg-color: var(--pb-blue);
     --md-text-link-color: var(--pb-pink);
@@ -50,7 +51,21 @@ a.autorefs-external:hover::after {
 [data-md-color-scheme="slate"] {
     --md-primary-fg-color: var(--pb-blue);
     --md-accent-fg-color: var(--pb-pink);
+    --md-typeset-a-color: var(--pb-gold);
 
     --md-footer-bg-color: var(--pb-blue);
     --md-text-link-color: var(--pb-gold);
+}
+
+.md-banner {
+    background-color: var(--pb-gold);
+    color: var(--pb-black);
+
+    a:link {
+        color: var(--pb-blue);
+    }
+
+    a:visited {
+        color: var(--pb-blue);
+    }
 }
