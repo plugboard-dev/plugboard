@@ -99,7 +99,7 @@ process = Process(
     components=[A(name="a", iters=10), B(name="b", path="./b.txt")],
     connectors=[
         Connector(
-            spec=ConnectorSpec(source="comp_a.out_1", target="comp_b.in_1"),
+            spec=ConnectorSpec(source="a.out_1", target="b.in_1"),
             channel=AsyncioChannel(),
         )
     ],
@@ -107,6 +107,14 @@ process = Process(
 async with process:
     await process.run()
 ```
+
+Visually, we've created the model below, with Plugboard automatically handling the flow of data between the two components.
+<div align="center">
+```mermaid
+graph LR;
+    A(A)-->|data|B(B);
+```
+</div>
 
 ### Executing pre-defined models on the CLI
 
