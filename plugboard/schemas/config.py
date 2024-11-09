@@ -1,11 +1,10 @@
 """Provides top-level `ConfigSpec` class for Plugboard configuration."""
 
-from pydantic import BaseModel
-
+from plugboard.schemas._common import PlugboardBaseModel
 from .process import ProcessSpec
 
 
-class ProcessConfigSpec(BaseModel):
+class ProcessConfigSpec(PlugboardBaseModel):
     """A `ProcessSpec` within a Plugboard configuration.
 
     Attributes:
@@ -15,7 +14,7 @@ class ProcessConfigSpec(BaseModel):
     process: ProcessSpec
 
 
-class ConfigSpec(BaseModel):
+class ConfigSpec(PlugboardBaseModel):
     """Configuration for a Plugboard simulation.
 
     Attributes:
