@@ -4,7 +4,9 @@ from enum import StrEnum
 import re
 import typing as _t
 
-from pydantic import BaseModel, field_validator
+from pydantic import Field, field_validator
+
+from plugboard.schemas._common import PlugboardBaseModel
 
 
 DEFAULT_CHANNEL_CLS_PATH: str = "plugboard.connector.AsyncioChannelBuilder"
@@ -26,7 +28,7 @@ class ConnectorMode(StrEnum):
     MANY_TO_MANY = "many-to-many"
 
 
-class ComponentSocket(BaseModel):
+class ComponentSocket(PlugboardBaseModel):
     """`ComponentSocket` defines a connection point for a component.
 
     Attributes:
@@ -59,7 +61,7 @@ class ComponentSocket(BaseModel):
         return self.id
 
 
-class ConnectorSpec(BaseModel):
+class ConnectorSpec(PlugboardBaseModel):
     """`ConnectorSpec` defines a connection between two components.
 
     Attributes:
@@ -70,7 +72,7 @@ class ConnectorSpec(BaseModel):
 
     source: ComponentSocket
     target: ComponentSocket
-    mode: ConnectorMode = ConnectorMode.ONE_TO_ONE
+    mode: ConnectorMode = Field(default=ConnectorMode.ONE_TO_ONE, validate_default=True)
 
     @field_validator("source", "target", mode="before")
     @classmethod
@@ -88,7 +90,7 @@ class ConnectorSpec(BaseModel):
         return self.id
 
 
-class ChannelBuilderArgsSpec(BaseModel, extra="allow"):
+class ChannelBuilderArgsSpec(PlugboardBaseModel, extra="allow"):
     """Specification of the [`Channel`][plugboard.connector.Channel] constructor arguments.
 
     Attributes:
@@ -98,7 +100,7 @@ class ChannelBuilderArgsSpec(BaseModel, extra="allow"):
     parameters: dict = {}
 
 
-class ChannelBuilderSpec(BaseModel):
+class ChannelBuilderSpec(PlugboardBaseModel):
     """Specification of a `ChannelBuilder`.
 
     Attributes:
