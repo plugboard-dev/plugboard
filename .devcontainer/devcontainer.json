@@ -27,8 +27,8 @@
 				"charliermarsh.ruff"
 			],
 			"settings": {
-				"python.editor.formatOnSave": true,
-				"python.editor.codeActionsOnSave": {
+				"editor.formatOnSave": true,
+				"editor.codeActionsOnSave": {
 					"source.fixAll": "explicit"
 				},
 				"python.terminal.activateEnvInCurrentTerminal": true,
