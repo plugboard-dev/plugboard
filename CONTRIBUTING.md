@@ -1,6 +1,6 @@
 # Contributing
 
-Thank you for your interest in Plugboard. Contributions are welcomed and warmly received! For bug fixes and smaller feature requests feel free to open an issue on out [Github repo](https://github.com/plugboard-dev/plugboard/issues). For any larger changes please get in touch with us to discuss first.
+Thank you for your interest in Plugboard. Contributions are welcomed and warmly received! For bug fixes and smaller feature requests feel free to open an issue on our [Github repo](https://github.com/plugboard-dev/plugboard/issues). For any larger changes please get in touch with us to discuss first.
 
 ## 😻 PR process
 

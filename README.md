@@ -30,7 +30,8 @@ Some examples of what you can build with Plugboard include:
 - **YAML model specification** format for saving model definitions, allowing you to run the same model locally or in cloud infrastructure;
 - A **command line interface** for executing models;
 - Built to handle the **data intensive simulation** requirements of industrial process applications;
-- Modern implementation with **Python 3.12 and above** based around **asyncio** with complete type annotation coverage.
+- Modern implementation with **Python 3.12 and above** based around **asyncio** with complete type annotation coverage;
+- Built-in integrations for **loading/saving data** from cloud storage and SQL databases.
 
 ## 🔌 Installation
 
@@ -38,6 +39,8 @@ Plugboard requires Python >= 3.12. Install the package with pip inside a virtual
 ```shell
 python -m pip install plugboard
 ```
+
+Optional integrations for different cloud providers can be installed using `plugboard[aws]`, `plugboard[azure]` or `plugboard[gcp]`.
 
 ## 🚀 Usage
 
@@ -145,7 +148,7 @@ plugboard process run my-model.yaml
 
 ## 📖 Documentation
 
-For more information including a detailed API reference and step-by-step usage examples, refer to the [documentation site](https://plugboard.dev).
+For more information including a detailed API reference and step-by-step usage examples, refer to the [documentation site](https://docs.plugboard.dev).
 
 ## 🐾 Roadmap
 
@@ -157,7 +160,6 @@ Plugboard is under active development, with new features in the works:
 - Support for different parallelisation patterns such as: single-threaded with coroutines, single-host multi process, or distributed with Ray in Kubernetes.
 - Data exchange between components with popular messaging technologies like RabbitMQ and Google Pub/Sub.
 - Support for different message exchange patterns such as: one-to-one, one-to-many, many-to-one etc via a broker; or peer-to-peer with http requests.
-- Load and store data to/from models using various infrastructures such as blob stores and databases via provided integrations.
 
 ## 👋 Contributions
 
