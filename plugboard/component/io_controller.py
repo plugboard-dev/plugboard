@@ -101,10 +101,14 @@ class IOController:
         io_channels[field] = channel
 
     def _add_channel(self, conn: Connector) -> None:
-        if conn.spec.source.component == self.namespace:
-            self._add_channel_for_field(conn.spec.source.field, IODirection.OUTPUT, conn.channel)
-        elif conn.spec.target.component == self.namespace:
-            self._add_channel_for_field(conn.spec.target.field, IODirection.INPUT, conn.channel)
+        if conn.spec.source.entity == self.namespace:
+            self._add_channel_for_field(
+                conn.spec.source.descriptor, IODirection.OUTPUT, conn.channel
+            )
+        elif conn.spec.target.entity == self.namespace:
+            self._add_channel_for_field(
+                conn.spec.target.descriptor, IODirection.INPUT, conn.channel
+            )
 
     def connect(self, connectors: list[Connector]) -> None:
         """Connects the input/output fields to input/output channels."""
