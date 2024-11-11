@@ -27,6 +27,8 @@ class IOController:
         self.namespace = namespace
         self.inputs = inputs or []
         self.outputs = outputs or []
+        self.input_events = [evt.type for evt in (input_events or [])]
+        self.output_events = [evt.type for evt in (output_events or [])]
         self.data: dict[str, dict[str, _t.Any]] = {
             str(IODirection.INPUT): {},
             str(IODirection.OUTPUT): {},
@@ -37,6 +39,8 @@ class IOController:
         }
         self._input_channels: dict[str, Channel] = {}
         self._output_channels: dict[str, Channel] = {}
+        self._input_event_channels: dict[str, Channel] = {}
+        self._output_event_channels: dict[str, Channel] = {}
         self._is_closed = False
 
     @property
@@ -100,6 +104,13 @@ class IOController:
         io_channels = getattr(self, f"_{direction}_channels")
         io_channels[field] = channel
 
+    def _add_channel_for_event(self, event: str, direction: IODirection, channel: Channel) -> None:
+        io_events = getattr(self, f"{direction}_events")
+        if event not in io_events:
+            raise ValueError(f"Unrecognised {direction} event {event}.")
+        io_channels = getattr(self, f"_{direction}_event_channels")
+        io_channels[event] = channel
+
     def _add_channel(self, conn: Connector) -> None:
         if conn.spec.source.entity == self.namespace:
             self._add_channel_for_field(
@@ -109,6 +120,10 @@ class IOController:
             self._add_channel_for_field(
                 conn.spec.target.descriptor, IODirection.INPUT, conn.channel
             )
+        elif conn.spec.source.entity in self.output_events:
+            self._add_channel_for_event(conn.spec.source.entity, IODirection.OUTPUT, conn.channel)
+        elif conn.spec.target.entity in self.input_events:
+            self._add_channel_for_event(conn.spec.target.entity, IODirection.INPUT, conn.channel)
 
     def connect(self, connectors: list[Connector]) -> None:
         """Connects the input/output fields to input/output channels."""
