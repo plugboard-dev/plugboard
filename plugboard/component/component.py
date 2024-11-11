@@ -112,8 +112,9 @@ class Component(ABC, ExportMixin):
 
     def _handle_event(self) -> None:
         """Handles incoming events."""
-        event = self.io.events[str(IODirection.INPUT)].popleft()
-        if event is None:
+        try:
+            event = self.io.events[str(IODirection.INPUT)].popleft()
+        except IndexError:
             return
         try:
             handler = EventHandlers.get(self.__class__, event)
