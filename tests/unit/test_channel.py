@@ -2,7 +2,8 @@
 
 import asyncio
 
-from mpire import WorkerPool
+import inject
+from multiprocess.context import BaseContext
 import pytest
 
 from plugboard.connector import AsyncioChannelBuilder, Channel, ChannelBuilder, ZMQChannelBuilder
@@ -65,7 +66,8 @@ def test_multiprocessing_channel(channel_builder_cls: type[ChannelBuilder]) -> N
     def _recv_proc(channel: Channel) -> None:
         asyncio.run(_recv_proc_async(channel))
 
-    with WorkerPool(n_jobs=2, use_dill=True) as pool:
+    mp_ctx = inject.instance(BaseContext)
+    with mp_ctx.Pool(2) as pool:
         r1 = pool.apply_async(_send_proc, (channel,))
         r2 = pool.apply_async(_recv_proc, (channel,))
         r1.get()

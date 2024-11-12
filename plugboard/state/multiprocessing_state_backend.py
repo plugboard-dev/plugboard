@@ -3,10 +3,10 @@
 from __future__ import annotations
 
 from collections.abc import MutableMapping
-from multiprocessing.managers import DictProxy, SyncManager
 import typing as _t
 
 import inject
+from multiprocess.managers import DictProxy, SyncManager
 
 from plugboard.state.dict_state_backend import DictStateBackend
 
