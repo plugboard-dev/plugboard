@@ -65,7 +65,7 @@ def test_multiprocessing_channel(channel_builder_cls: type[ChannelBuilder]) -> N
     def _recv_proc(channel: Channel) -> None:
         asyncio.run(_recv_proc_async(channel))
 
-    with WorkerPool(n_jobs=2, use_dill=True) as pool:
+    with WorkerPool(n_jobs=2, use_dill=True, start_method="spawn") as pool:
         r1 = pool.apply_async(_send_proc, (channel,))
         r2 = pool.apply_async(_recv_proc, (channel,))
         r1.get()
