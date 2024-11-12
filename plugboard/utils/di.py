@@ -1,9 +1,8 @@
 """Provides dependency injection utilities."""
 
-from multiprocessing import Manager
-from multiprocessing.managers import SyncManager
-
 import inject
+from multiprocess import Manager
+from multiprocess.managers import SyncManager
 
 
 def _configure(binder: inject.Binder) -> None:
@@ -12,7 +11,7 @@ def _configure(binder: inject.Binder) -> None:
     Provides:
     * A shared multiprocessing Manager object.
     """
-    binder.bind(SyncManager, Manager())
+    binder.bind_to_constructor(SyncManager, Manager)
 
 
 inject.configure(_configure)
