@@ -47,7 +47,6 @@ gcp = ["gcsfs"]
 [tool.poetry.group.dev.dependencies]
 ipython = "^8.26.0"
 jupyterlab = "^4.2.4"
-mpire = {extras = ["dill"], version = "^2.10.2"}
 mypy = "^1.11.2"
 nbstripout = "^0.8.0"
 poetry-dynamic-versioning = "^1.4.0"
