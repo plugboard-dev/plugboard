@@ -1,6 +1,7 @@
 """Provides models for events."""
 
 from datetime import datetime, timezone
+import re
 import typing as _t
 from uuid import uuid4
 
@@ -9,6 +10,7 @@ from pydantic import BaseModel, Field
 
 _REGEX_UUID: str = r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
 _REGEX_TIMESTAMP: str = r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$"
+_REGEX_EVENT_TYPE: str = r"^[a-zA-Z][a-zA-Z0-9_-.]*$"
 
 
 class EventUtils:
@@ -42,3 +44,10 @@ class Event(BaseModel):
     version: str = "0.1.0"
     data: dict[str, str]
     metadata: dict[str, str] = {}
+
+    def __init_subclass__(cls, *args: _t.Any, **kwargs: _t.Any) -> None:
+        super().__init_subclass__(*args, **kwargs)
+        if not hasattr(cls, "type"):
+            raise NotImplementedError(f"{cls.__name__} must define a `type` attribute.")
+        if not re.match(_REGEX_EVENT_TYPE, cls.type):
+            raise ValueError(f"Invalid event type: {cls.type}")
