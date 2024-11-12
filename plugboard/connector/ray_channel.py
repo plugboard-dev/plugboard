@@ -23,9 +23,10 @@ class RayChannel(Channel):
 
         Args:
             maxsize: Optional; Queue maximum item capacity.
-            actor_options: Optional; Options to pass to the Ray actor.
+            actor_options: Optional; Options to pass to the Ray actor. Defaults to {"num_cpus": 1}.
         """
         super().__init__(*args, **kwargs)  # type: ignore
+        actor_options = actor_options or {"num_cpus": 1}
         self._actor = ray.remote(**actor_options)(AsyncioChannel).remote(maxsize=maxsize)
 
     @property
@@ -48,7 +49,7 @@ class RayChannel(Channel):
 
     async def recv(self) -> _t.Any:
         """Returns an item received from the `RayChannel`."""
-        item = await self._actor.get.remote()
+        item = await self._actor.recv.remote()
         return item
 
     async def close(self, force: bool = False, grace_period_s: int = 5) -> None:
