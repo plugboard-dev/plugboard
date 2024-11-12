@@ -42,7 +42,7 @@ class Event(BaseModel):
     )
     source: str
     version: str = "0.1.0"
-    data: dict[str, str]
+    data: dict[str, _t.Any] | BaseModel
     metadata: dict[str, str] = {}
 
     def __init_subclass__(cls, *args: _t.Any, **kwargs: _t.Any) -> None:
