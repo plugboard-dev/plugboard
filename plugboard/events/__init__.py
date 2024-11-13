@@ -6,15 +6,16 @@ import typing as _t
 from plugboard.schemas import Event
 
 
+_AsyncFunc = _t.Callable[..., _t.Coroutine[_t.Any, _t.Any, _t.Any]]
+
+
 class EventHandlers:
     """`EventHandlers` provides a decorator for registering event handlers."""
 
-    _handlers: _t.ClassVar[dict[str, dict[str, _t.Callable[..., _t.Any]]]] = defaultdict(dict)
+    _handlers: _t.ClassVar[dict[str, dict[str, _AsyncFunc]]] = defaultdict(dict)
 
     @classmethod
-    def add(
-        cls, event: _t.Type[Event] | Event
-    ) -> _t.Callable[[_t.Callable[..., _t.Any]], _t.Callable[..., _t.Any]]:
+    def add(cls, event: _t.Type[Event] | Event) -> _t.Callable[[_AsyncFunc], _AsyncFunc]:
         """Decorator that registers class methods as handlers for specific event types.
 
         Args:
@@ -24,7 +25,7 @@ class EventHandlers:
             Callable: Decorated method
         """
 
-        def decorator(method: _t.Callable[..., _t.Any]) -> _t.Callable[..., _t.Any]:
+        def decorator(method: _AsyncFunc) -> _AsyncFunc:
             class_path = cls._get_class_path_for_method(method)
             cls._handlers[class_path][event.type] = method
             return method
@@ -32,7 +33,7 @@ class EventHandlers:
         return decorator
 
     @staticmethod
-    def _get_class_path_for_method(method: _t.Callable[..., _t.Any]) -> str:
+    def _get_class_path_for_method(method: _AsyncFunc) -> str:
         """Get the fully qualified path for the class containing a method."""
         module_name = method.__module__
         qualname_parts = method.__qualname__.split(".")
@@ -40,7 +41,7 @@ class EventHandlers:
         return f"{module_name}.{class_name}"
 
     @classmethod
-    def get(cls, _class: _t.Type, event: _t.Type[Event] | Event) -> _t.Callable[..., _t.Any]:
+    def get(cls, _class: _t.Type, event: _t.Type[Event] | Event) -> _AsyncFunc:
         """Retrieve a handler for a specific event type.
 
         Args:

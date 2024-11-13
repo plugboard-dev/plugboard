@@ -93,7 +93,7 @@ class Component(ABC, ExportMixin):
         async def _wrapper() -> None:
             await self.io.read()
             self._bind_inputs()
-            self._handle_event()
+            await self._handle_event()
             await self._step()
             self._bind_outputs()
             await self.io.write()
@@ -110,7 +110,7 @@ class Component(ABC, ExportMixin):
         for field in self.io.outputs:
             self.io.data[str(IODirection.OUTPUT)][field] = getattr(self, field)
 
-    def _handle_event(self) -> None:
+    async def _handle_event(self) -> None:
         """Handles incoming events."""
         try:
             event = self.io.events[str(IODirection.INPUT)].popleft()
@@ -122,7 +122,7 @@ class Component(ABC, ExportMixin):
             raise UnrecognisedEventError(
                 f"Unrecognised event type '{event.type}' for component '{self.__class__.__name__}'"
             ) from e
-        handler(self, event)
+        await handler(self, event)
 
     async def run(self) -> None:
         """Executes component logic for all steps to completion."""
