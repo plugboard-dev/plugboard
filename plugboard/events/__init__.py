@@ -11,19 +11,6 @@ class EventHandlers:
 
     _handlers: _t.ClassVar[dict[str, dict[str, _t.Callable[..., _t.Any]]]] = defaultdict(dict)
 
-    @staticmethod
-    def _get_class_path_for_method(method: _t.Callable[..., _t.Any]) -> str:
-        """Get the fully qualified path for the class containing a method."""
-        module_name = method.__module__
-        qualname_parts = method.__qualname__.split(".")
-        class_name = qualname_parts[-2]  # Last part is the method name
-        return f"{module_name}.{class_name}"
-
-    @staticmethod
-    def _get_class_path(class_: _t.Type) -> str:
-        """Get the fully qualified path for a class."""
-        return f"{class_.__module__}.{class_.__name__}"
-
     @classmethod
     def add(
         cls, event: _t.Type[Event] | Event
@@ -43,6 +30,14 @@ class EventHandlers:
             return method
 
         return decorator
+
+    @staticmethod
+    def _get_class_path_for_method(method: _t.Callable[..., _t.Any]) -> str:
+        """Get the fully qualified path for the class containing a method."""
+        module_name = method.__module__
+        qualname_parts = method.__qualname__.split(".")
+        class_name = qualname_parts[-2]  # Last part is the method name
+        return f"{module_name}.{class_name}"
 
     @classmethod
     def get(cls, _class: _t.Type, event: _t.Type[Event] | Event) -> _t.Callable[..., _t.Any]:
@@ -64,3 +59,8 @@ class EventHandlers:
         elif (handler := class_handlers.get(event.type)) is None:
             raise KeyError(f"No handler found for class '{class_path}' and event '{event.type}'")
         return handler
+
+    @staticmethod
+    def _get_class_path(class_: _t.Type) -> str:
+        """Get the fully qualified path for a class."""
+        return f"{class_.__module__}.{class_.__name__}"
