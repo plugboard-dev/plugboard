@@ -6,7 +6,13 @@ import inject
 from multiprocess.context import BaseContext
 import pytest
 
-from plugboard.connector import AsyncioChannelBuilder, Channel, ChannelBuilder, ZMQChannelBuilder
+from plugboard.connector import (
+    AsyncioChannelBuilder,
+    Channel,
+    ChannelBuilder,
+    RayChannelBuilder,
+    ZMQChannelBuilder,
+)
 from plugboard.exceptions import ChannelClosedError
 
 
@@ -22,19 +28,25 @@ TEST_ITEMS = [
 
 
 @pytest.mark.anyio
-@pytest.mark.parametrize("channel_builder_cls", [AsyncioChannelBuilder, ZMQChannelBuilder])
+@pytest.mark.parametrize(
+    "channel_builder_cls", [AsyncioChannelBuilder, RayChannelBuilder, ZMQChannelBuilder]
+)
 async def test_channel(channel_builder_cls: type[ChannelBuilder]) -> None:
     """Tests the various `Channel` classes."""
     channel = channel_builder_cls().build()
 
-    send_coros = [channel.send(item) for item in TEST_ITEMS]
-    recv_coros = [channel.recv() for _ in TEST_ITEMS]
+    # Send/receive first item to initialise the channel
+    initial_send_recv = await asyncio.gather(channel.send(TEST_ITEMS[0]), channel.recv())
+    # Send remaining items in loop to preserve order in distributed case
+    for item in TEST_ITEMS[1:]:
+        await channel.send(item)
+    recv_coros = [channel.recv() for _ in TEST_ITEMS[1:]]
 
-    results = await asyncio.gather(*send_coros, *recv_coros)
+    results = [initial_send_recv[1]] + await asyncio.gather(*recv_coros)
     await channel.close()
 
     # Ensure that the sent and received items are the same.
-    assert results[len(TEST_ITEMS) :] == TEST_ITEMS
+    assert results == TEST_ITEMS
 
     with pytest.raises(ChannelClosedError):
         await channel.recv()

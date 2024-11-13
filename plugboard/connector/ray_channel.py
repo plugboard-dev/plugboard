@@ -5,8 +5,31 @@ import typing as _t
 import ray
 
 from plugboard.connector.asyncio_channel import AsyncioChannel
-from plugboard.connector.channel import CHAN_MAXSIZE, Channel
+from plugboard.connector.channel import Channel
 from plugboard.connector.channel_builder import ChannelBuilder
+
+
+class _ChannelActor:
+    """Provides a `Channel` inside a Ray actor."""
+
+    def __init__(self, channel_cls: type[Channel], *args: _t.Any, **kwargs: _t.Any) -> None:
+        self._channel = channel_cls(*args, **kwargs)
+
+    async def send(self, item: _t.Any) -> None:
+        """Sends an item through the channel."""
+        await self._channel.send(item)
+
+    async def recv(self) -> _t.Any:
+        """Returns an item received from the channel."""
+        return await self._channel.recv()
+
+    async def close(self) -> None:
+        """Closes the channel."""
+        await self._channel.close()
+
+    def getattr(self, name: str) -> _t.Any:
+        """Returns attributes from the channel."""
+        return getattr(self._channel, name)
 
 
 class RayChannel(Channel):
@@ -14,25 +37,26 @@ class RayChannel(Channel):
 
     def __init__(  # noqa: D417
         self,
-        *args: _t.Any,
-        maxsize: int = CHAN_MAXSIZE,
+        channel_cls: type[Channel] = AsyncioChannel,
         actor_options: _t.Optional[dict] = None,
         **kwargs: _t.Any,
     ):
         """Instantiates `RayChannel`.
 
         Args:
-            maxsize: Optional; Queue maximum item capacity.
+            channel_cls: The type of `Channel` to use. Defaults to `AsyncioChannel`.
             actor_options: Optional; Options to pass to the Ray actor. Defaults to {"num_cpus": 1}.
+            **kwargs: Additional keyword arguments to pass to the the underlying `Channel`.
         """
-        super().__init__(*args, **kwargs)  # type: ignore
-        actor_options = actor_options or {"num_cpus": 1}
-        self._actor = ray.remote(**actor_options)(AsyncioChannel).remote(maxsize=maxsize)
+        default_options = {"num_cpus": 1}
+        actor_options = actor_options or {}
+        actor_options = {**default_options, **actor_options}
+        self._actor = ray.remote(**actor_options)(_ChannelActor).remote(channel_cls, **kwargs)
 
     @property
     def maxsize(self) -> int:
         """Returns the message capacity of the `RayChannel`."""
-        return self._actor.maxsize.remote()
+        return self._actor.getattr.remote("maxsize")
 
     @property
     def is_closed(self) -> bool:
@@ -41,7 +65,7 @@ class RayChannel(Channel):
         When a `RayChannel` is closed, it can no longer be used to send messages,
         though there may still be some messages waiting to be read.
         """
-        return self._actor.is_closed.remote()
+        return self._actor.getattr.remote("is_closed")
 
     async def send(self, item: _t.Any) -> None:
         """Sends an item through the `RayChannel`."""
@@ -49,28 +73,11 @@ class RayChannel(Channel):
 
     async def recv(self) -> _t.Any:
         """Returns an item received from the `RayChannel`."""
-        item = await self._actor.recv.remote()
-        return item
+        return await self._actor.recv.remote()
 
-    async def close(self, force: bool = False, grace_period_s: int = 5) -> None:
-        """Closes the `RayChannel` and terminates the underlying actor.
-
-        Args:
-            force: Forcefully kill the actor, causing an immediate failure. If `False`, graceful
-                actor termination will be attempted first, before falling back to a forceful kill.
-            grace_period_s: If force is `False`, how long in seconds to wait for graceful
-                termination before falling back to forceful kill.
-        """
-        if self.actor:
-            await self._actor.close.remote()
-            if force:
-                ray.kill(self._actor, no_restart=True)
-            else:
-                done_ref = self.actor.__ray_terminate__.remote()
-                _, not_done = ray.wait([done_ref], timeout=grace_period_s)
-                if not_done:
-                    ray.kill(self._actor, no_restart=True)
-        self.actor = None
+    async def close(self) -> None:
+        """Closes the `RayChannel` and terminates the underlying actor."""
+        await self._actor.close.remote()
 
 
 class RayChannelBuilder(ChannelBuilder):
