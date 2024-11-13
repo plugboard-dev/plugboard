@@ -31,6 +31,8 @@ class ConnectorMode(StrEnum):
 class ConnectorSocket(PlugboardBaseModel):
     """`ConnectorSocket` defines a connection point for an entity.
 
+    TODO : Improve docs on var naming for different use-cases: dt vs evt.
+
     Attributes:
         entity: The name of the entity.
         descriptor: The name of the descriptor on the entity.
