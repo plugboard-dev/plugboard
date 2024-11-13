@@ -62,6 +62,10 @@ class ConnectorSocket(PlugboardBaseModel):
     def __str__(self) -> str:
         return self.id
 
+    def connects_to(self, entities: list[str]) -> bool:
+        """Returns `True` if the `ConnectorSocket` connects to any of the named entities."""
+        return self.entity in entities
+
 
 class ConnectorSpec(PlugboardBaseModel):
     """`ConnectorSpec` defines a connection between two entities.

@@ -112,17 +112,17 @@ class IOController:
         io_channels[event] = channel
 
     def _add_channel(self, conn: Connector) -> None:
-        if conn.spec.source.entity == self.namespace:
+        if conn.spec.source.connects_to([self.namespace]):
             self._add_channel_for_field(
                 conn.spec.source.descriptor, IODirection.OUTPUT, conn.channel
             )
-        elif conn.spec.target.entity == self.namespace:
+        elif conn.spec.target.connects_to([self.namespace]):
             self._add_channel_for_field(
                 conn.spec.target.descriptor, IODirection.INPUT, conn.channel
             )
-        elif conn.spec.source.entity in self.output_events:
+        elif conn.spec.source.connects_to(self.output_events):
             self._add_channel_for_event(conn.spec.source.entity, IODirection.OUTPUT, conn.channel)
-        elif conn.spec.target.entity in self.input_events:
+        elif conn.spec.target.connects_to(self.input_events):
             self._add_channel_for_event(conn.spec.target.entity, IODirection.INPUT, conn.channel)
 
     def connect(self, connectors: list[Connector]) -> None:
