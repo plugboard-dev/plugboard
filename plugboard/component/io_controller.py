@@ -115,10 +115,14 @@ class IOController:
         try:
             async with asyncio.TaskGroup() as tg:
                 tg.create_task(self._write_events())
-                for field, chan in self._output_channels.items():
-                    tg.create_task(self._write_field(field, chan))
+                tg.create_task(self._write_fields())
         except* ChannelClosedError as eg:
             raise self._build_io_stream_error(IODirection.OUTPUT, eg) from eg
+
+    async def _write_fields(self) -> None:
+        async with asyncio.TaskGroup() as tg:
+            for field, chan in self._output_channels.items():
+                tg.create_task(self._write_field(field, chan))
 
     async def _write_field(self, field: str, chan: Channel) -> None:
         item = self.data[str(IODirection.OUTPUT)][field]
@@ -133,14 +137,20 @@ class IOController:
             async with asyncio.TaskGroup() as tg:
                 for _ in range(len(queue)):
                     evt = queue.popleft()
-                    try:
-                        chan = self._output_event_channels[evt.type]
-                    except KeyError as e:
-                        raise ValueError(f"Unrecognised output event {evt.type}.") from e
-                    tg.create_task(chan.send(evt))
+                    tg.create_task(self._write_event(evt))
         except* ChannelClosedError as e:
             # TODO : Add more context to the error message.
             raise ChannelClosedError(f"Channel closed for event.") from e
+
+    async def _write_event(self, event: Event) -> None:
+        try:
+            chan = self._output_event_channels[event.type]
+        except KeyError as e:
+            raise ValueError(f"Unrecognised output event {event.type}.") from e
+        try:
+            await chan.send(event)
+        except ChannelClosedError as e:
+            raise ChannelClosedError(f"Channel closed for event: {event.type}.") from e
 
     def _build_io_stream_error(
         self, direction: IODirection, eg: ExceptionGroup
