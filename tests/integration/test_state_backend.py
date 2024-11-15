@@ -13,6 +13,7 @@ from tests.conftest import ComponentTestHelper
 from tests.integration.conftest import (
     setup_DictStateBackend,
     setup_MultiprocessingStateBackend,
+    setup_RayStateBackend,
     setup_SqliteStateBackend,
 )
 
@@ -80,7 +81,12 @@ def C_connectors() -> list[Connector]:
 
 
 @pytest.fixture(
-    params=[setup_DictStateBackend, setup_MultiprocessingStateBackend, setup_SqliteStateBackend]
+    params=[
+        setup_DictStateBackend,
+        setup_MultiprocessingStateBackend,
+        setup_SqliteStateBackend,
+        setup_RayStateBackend,
+    ]
 )
 async def state_backend(request: pytest.FixtureRequest) -> _t.AsyncIterator[StateBackend]:
     """Returns a `StateBackend` instance."""
