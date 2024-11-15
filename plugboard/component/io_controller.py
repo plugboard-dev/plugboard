@@ -159,6 +159,14 @@ class IOController:
         msg = f"Error reading {direction} for namespace: {self.namespace}\n\t{inner_exc_msg}"
         return IOStreamClosedError(msg)
 
+    def queue_event(self, event: Event) -> None:
+        """Queues an event for output."""
+        if self._is_closed:
+            raise IOStreamClosedError("Attempted queue_event on a closed io controller.")
+        if event.type not in self._output_event_channels:
+            raise ValueError(f"Unrecognised output event {event.type}.")
+        self.events[str(IODirection.OUTPUT)].append(event)
+
     async def close(self) -> None:
         """Closes all input/output channels."""
         for chan in self._output_channels.values():
