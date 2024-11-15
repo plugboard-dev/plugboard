@@ -1,0 +1,43 @@
+"""Provides `EventConnectors` class which helps build event connectors for components."""
+
+from plugboard.component import Component
+from plugboard.connector import ChannelBuilder, Connector
+from plugboard.schemas import ConnectorSocket, ConnectorSpec
+
+
+class EventConnectors:
+    """`EventConnectors` constructs connectors for component event handlers."""
+
+    _source_descriptor: str = "publishers"
+    _target_descriptor: str = "subscribers"
+
+    def __init__(self, channel_builder: ChannelBuilder) -> None:
+        self._channel_builder = channel_builder
+
+    def build(self, components: list[Component]) -> dict[str, Connector]:
+        """Returns mapping of connectors for events handled by components."""
+        evt_conn_map: dict[str, Connector] = {}
+        for component in components:
+            comp_evt_conn_map = self._build_for_component(evt_conn_map, component)
+            evt_conn_map.update(comp_evt_conn_map)
+        return evt_conn_map
+
+    def _build_for_component(
+        self, evt_conn_map: dict[str, Connector], component: Component
+    ) -> dict[str, Connector]:
+        component_evts = set(component.io.input_events + component.io.output_events)
+        return {
+            evt_type: self._build_for_event(evt_type)
+            for evt_type in component_evts
+            if evt_type not in evt_conn_map
+        }
+
+    def _build_for_event(self, evt_type: str) -> Connector:
+        evt_type_safe = evt_type.replace(".", "_").replace("-", "_")
+        source = ConnectorSocket(entity=evt_type_safe, descriptor=self._source_descriptor)
+        target = ConnectorSocket(entity=evt_type_safe, descriptor=self._target_descriptor)
+        connector = Connector(
+            spec=ConnectorSpec(source=source, target=target),
+            channel=self._channel_builder.build(),
+        )
+        return connector

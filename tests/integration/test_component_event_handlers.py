@@ -6,9 +6,8 @@ from pydantic import BaseModel
 import pytest
 
 from plugboard.component import Component
-from plugboard.connector import AsyncioChannelBuilder, ChannelBuilder, Connector
-from plugboard.events import EventHandlers
-from plugboard.schemas import ConnectorSpec, Event
+from plugboard.connector import AsyncioChannelBuilder, ChannelBuilder
+from plugboard.events import Event, EventConnectors, EventHandlers
 
 
 class EventTypeAData(BaseModel):
@@ -70,37 +69,27 @@ class A(Component):
         self._event_B_count += evt.data.y
 
 
-def create_event_connectors_for_components(
-    components: list[Component], channel_builder: ChannelBuilder
-) -> dict[str, Connector]:
-    """Create event connectors for components."""
-    evt_connectors: dict[str, Connector] = {}
-    for component in components:
-        component_evts = set(component.io.input_events + component.io.output_events)
-        for evt_type in component_evts:
-            if evt_type in evt_connectors:
-                continue
-            evt_type_safe = evt_type.replace(".", "_").replace("-", "_")
-            source, target = f"{evt_type_safe}.publishers", f"{evt_type_safe}.subscribers"
-            connector = Connector(
-                spec=ConnectorSpec(source=source, target=target),
-                channel=channel_builder.build(),
-            )
-            evt_connectors[evt_type] = connector
-    return evt_connectors
+@pytest.fixture
+def channel_builder() -> ChannelBuilder:
+    """Fixture for an asyncio channel builder."""
+    return AsyncioChannelBuilder()
+
+
+@pytest.fixture
+def event_connectors(channel_builder: ChannelBuilder) -> EventConnectors:
+    """Fixture for an event connectors instance."""
+    return EventConnectors(channel_builder=channel_builder)
 
 
 @pytest.mark.anyio
-async def test_component_event_handlers() -> None:
+async def test_component_event_handlers(event_connectors: EventConnectors) -> None:
     """Test that event handlers are registered and called correctly for components."""
     a = A(name="a")
 
     assert a.event_A_count == 0
     assert a.event_B_count == 0
 
-    event_connectors_map = create_event_connectors_for_components(
-        [a], channel_builder=AsyncioChannelBuilder()
-    )
+    event_connectors_map = event_connectors.build([a])
     connectors = list(event_connectors_map.values())
 
     a.io.connect(connectors)
