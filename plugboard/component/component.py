@@ -9,7 +9,7 @@ from plugboard.component.io_controller import (
     IODirection,
     IOStreamClosedError,
 )
-from plugboard.events import EventHandlers
+from plugboard.events import Event, EventHandlers
 from plugboard.exceptions import UnrecognisedEventError
 from plugboard.state import StateBackend
 from plugboard.utils import ClassRegistry, ExportMixin
@@ -122,7 +122,9 @@ class Component(ABC, ExportMixin):
             raise UnrecognisedEventError(
                 f"Unrecognised event type '{event.type}' for component '{self.__class__.__name__}'"
             ) from e
-        await handler(self, event)
+        res = await handler(self, event)
+        if isinstance(res, Event):
+            self.io.queue_event(res)
 
     async def run(self) -> None:
         """Executes component logic for all steps to completion."""
