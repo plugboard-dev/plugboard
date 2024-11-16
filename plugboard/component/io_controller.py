@@ -135,14 +135,10 @@ class IOController:
 
     async def _write_events(self) -> None:
         queue = self.events[str(IODirection.OUTPUT)]
-        try:
-            async with asyncio.TaskGroup() as tg:
-                for _ in range(len(queue)):
-                    event = queue.popleft()
-                    tg.create_task(self._write_event(event))
-        except* ChannelClosedError as e:
-            # TODO : Add more context to the error message.
-            raise ChannelClosedError(f"Channel closed for event.") from e
+        async with asyncio.TaskGroup() as tg:
+            for _ in range(len(queue)):
+                event = queue.popleft()
+                tg.create_task(self._write_event(event))
 
     async def _write_event(self, event: Event) -> None:
         try:
