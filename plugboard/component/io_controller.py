@@ -91,22 +91,22 @@ class IOController:
 
     async def _read_events(self) -> None:
         read_tasks = []
-        for event, chan in self._input_event_channels.items():
-            if event not in self._read_tasks:
-                task = asyncio.create_task(self._read_event(event, chan))
-                task.set_name(event)
-                self._read_tasks[event] = task
-            read_tasks.append(self._read_tasks[event])
+        for event_type, chan in self._input_event_channels.items():
+            if event_type not in self._read_tasks:
+                task = asyncio.create_task(self._read_event(event_type, chan))
+                task.set_name(event_type)
+                self._read_tasks[event_type] = task
+            read_tasks.append(self._read_tasks[event_type])
         done, _ = await asyncio.wait(read_tasks, return_when=asyncio.FIRST_COMPLETED)
         for task in done:
-            event = task.get_name()
-            self._read_tasks.pop(event)
+            event_type = task.get_name()
+            self._read_tasks.pop(event_type)
 
-    async def _read_event(self, event: str, chan: Channel) -> None:
+    async def _read_event(self, event_type: str, chan: Channel) -> None:
         try:
             self.events[str(IODirection.INPUT)].append(await chan.recv())
         except ChannelClosedError as e:
-            raise ChannelClosedError(f"Channel closed for event: {event}") from e
+            raise ChannelClosedError(f"Channel closed for event: {event_type}") from e
 
     async def write(self) -> None:
         """Writes data to output channels."""
@@ -136,8 +136,8 @@ class IOController:
         try:
             async with asyncio.TaskGroup() as tg:
                 for _ in range(len(queue)):
-                    evt = queue.popleft()
-                    tg.create_task(self._write_event(evt))
+                    event = queue.popleft()
+                    tg.create_task(self._write_event(event))
         except* ChannelClosedError as e:
             # TODO : Add more context to the error message.
             raise ChannelClosedError(f"Channel closed for event.") from e
@@ -180,12 +180,14 @@ class IOController:
         io_channels = getattr(self, f"_{direction}_channels")
         io_channels[field] = channel
 
-    def _add_channel_for_event(self, event: str, direction: IODirection, channel: Channel) -> None:
+    def _add_channel_for_event(
+        self, event_type: str, direction: IODirection, channel: Channel
+    ) -> None:
         io_events = getattr(self, f"{direction}_events")
-        if event not in io_events:
-            raise ValueError(f"Unrecognised {direction} event {event}.")
+        if event_type not in io_events:
+            raise ValueError(f"Unrecognised {direction} event {event_type}.")
         io_channels = getattr(self, f"_{direction}_event_channels")
-        io_channels[event] = channel
+        io_channels[event_type] = channel
 
     def _add_channel(self, conn: Connector) -> None:
         if conn.spec.source.connects_to([self.namespace]):
