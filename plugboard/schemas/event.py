@@ -10,7 +10,7 @@ from pydantic import BaseModel, Field
 
 _REGEX_UUID: str = r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
 _REGEX_TIMESTAMP: str = r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$"
-_REGEX_EVENT_TYPE: str = r"^[a-zA-Z][a-zA-Z0-9_-.]*$"
+_REGEX_EVENT_TYPE: str = r"^[a-zA-Z][a-zA-Z0-9_\-.]*$"
 
 
 class EventUtils:
