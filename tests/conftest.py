@@ -18,7 +18,7 @@ def anyio_backend() -> str:
 @pytest.fixture(scope="session")
 def ray_context() -> _t.Iterator[None]:
     """Initialises and shuts down Ray."""
-    ray.init(include_dashboard=False)
+    ray.init(num_cpus=2, num_gpus=0, include_dashboard=False)
     yield
     ray.shutdown()
 
