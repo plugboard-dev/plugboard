@@ -51,3 +51,8 @@ class Event(BaseModel):
             raise NotImplementedError(f"{cls.__name__} must define a `type` attribute.")
         if not re.match(_REGEX_EVENT_TYPE, cls.type):
             raise ValueError(f"Invalid event type: {cls.type}")
+
+    @staticmethod
+    def safe_type(event_type: str) -> str:
+        """Returns a safe event type string for use in broker topic strings."""
+        return event_type.replace(".", "_").replace("-", "_")

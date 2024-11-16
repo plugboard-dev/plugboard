@@ -1,5 +1,6 @@
 """Provides spec classes related to `Connector`s."""
 
+from collections.abc import Container
 from enum import StrEnum
 import re
 import typing as _t
@@ -62,7 +63,7 @@ class ConnectorSocket(PlugboardBaseModel):
     def __str__(self) -> str:
         return self.id
 
-    def connects_to(self, entities: list[str]) -> bool:
+    def connects_to(self, entities: Container[str]) -> bool:
         """Returns `True` if the `ConnectorSocket` connects to any of the named entities."""
         return self.entity in entities
 

@@ -5,6 +5,7 @@ from __future__ import annotations
 import typing as _t
 
 from plugboard.connector import Connector
+from plugboard.events import Event
 from plugboard.schemas import ConnectorSocket, ConnectorSpec
 
 
@@ -41,7 +42,7 @@ class EventConnectors:
         }
 
     def _build_for_event(self, evt_type: str) -> Connector:
-        evt_type_safe = evt_type.replace(".", "_").replace("-", "_")
+        evt_type_safe = Event.safe_type(evt_type)
         source = ConnectorSocket(entity=evt_type_safe, descriptor=self._source_descriptor)
         target = ConnectorSocket(entity=evt_type_safe, descriptor=self._target_descriptor)
         connector = Connector(

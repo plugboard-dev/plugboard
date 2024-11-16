@@ -41,6 +41,8 @@ class IOController:
         self._output_channels: dict[str, Channel] = {}
         self._input_event_channels: dict[str, Channel] = {}
         self._output_event_channels: dict[str, Channel] = {}
+        self._input_event_types = {Event.safe_type(evt.type) for evt in self.input_events}
+        self._output_event_types = {Event.safe_type(evt.type) for evt in self.output_events}
         self._read_tasks: dict[str, asyncio.Task] = {}
         self._is_closed = False
 
@@ -183,8 +185,8 @@ class IOController:
     def _add_channel_for_event(
         self, event_type: str, direction: IODirection, channel: Channel
     ) -> None:
-        io_events = getattr(self, f"{direction}_events")
-        if event_type not in io_events:
+        io_event_types = getattr(self, f"_{direction}_event_types")
+        if event_type not in io_event_types:
             raise ValueError(f"Unrecognised {direction} event {event_type}.")
         io_channels = getattr(self, f"_{direction}_event_channels")
         io_channels[event_type] = channel
@@ -198,9 +200,9 @@ class IOController:
             self._add_channel_for_field(
                 conn.spec.target.descriptor, IODirection.INPUT, conn.channel
             )
-        elif conn.spec.source.connects_to([evt.type for evt in self.output_events]):
+        elif conn.spec.source.connects_to(self._output_event_types):
             self._add_channel_for_event(conn.spec.source.entity, IODirection.OUTPUT, conn.channel)
-        elif conn.spec.target.connects_to([evt.type for evt in self.input_events]):
+        elif conn.spec.target.connects_to(self._input_event_types):
             self._add_channel_for_event(conn.spec.target.entity, IODirection.INPUT, conn.channel)
 
     def connect(self, connectors: list[Connector]) -> None:
