@@ -1,8 +1,16 @@
 """Provides `EventConnectors` class which helps build event connectors for components."""
 
-from plugboard.component import Component
-from plugboard.connector import ChannelBuilder, Connector
+from __future__ import annotations
+
+import typing as _t
+
+from plugboard.connector import Connector
 from plugboard.schemas import ConnectorSocket, ConnectorSpec
+
+
+if _t.TYPE_CHECKING:
+    from plugboard.component import Component
+    from plugboard.connector import ChannelBuilder
 
 
 class EventConnectors:
