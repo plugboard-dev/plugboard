@@ -30,9 +30,14 @@ class ConnectorMode(StrEnum):
 
 
 class ConnectorSocket(PlugboardBaseModel):
-    """`ConnectorSocket` defines a connection point for an entity.
+    """`ConnectorSocket` defines a source or target connection point on a `Connector`.
 
-    TODO : Improve docs on var naming for different use-cases: dt vs evt.
+    There are two typical types of connections in use: those between attributes of components;
+    and those connecting components with events which they either emit or consume. When connecting
+    two component attributes together, the `entity` is the name of the component, and the
+    `descriptor` is the name of the attribute. When connecting components with events, the `entity`
+    is the name of the event, and the `descriptor` is either "publishers" or "subscribers" as
+    appropriate.
 
     Attributes:
         entity: The name of the entity.
