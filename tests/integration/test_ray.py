@@ -25,6 +25,7 @@ def temp_file_path() -> _t.Iterator[str]:
         yield f.name
 
 
+# TODO: Replace with a `build_actor_wrapper` class
 class ComponentActor:
     def __init__(self, component_cls: type[Component], *args: _t.Any, **kwargs: _t.Any) -> None:
         self._component = component_cls(*args, **kwargs)
