@@ -120,17 +120,16 @@ class Component(ABC, ExportMixin):
         async with asyncio.TaskGroup() as tg:
             while self.io.events[str(IODirection.INPUT)]:
                 event = self.io.events[str(IODirection.INPUT)].popleft()
-                try:
-                    handler = EventHandlers.get(self.__class__, event)
-                except KeyError as e:
-                    cls_name = self.__class__.__name__
-                    raise UnrecognisedEventError(
-                        f"Unrecognised event type '{event.type}' for component '{cls_name}'"
-                    ) from e
-                tg.create_task(self._handle_event(event, handler))
+                tg.create_task(self._handle_event(event))
 
-    async def _handle_event(self, event: Event, handler: _t.Callable) -> None:
+    async def _handle_event(self, event: Event) -> None:
         """Handles an event."""
+        try:
+            handler = EventHandlers.get(self.__class__, event)
+        except KeyError as e:
+            raise UnrecognisedEventError(
+                f"Unrecognised event type '{event.type}' for component '{self.__class__.__name__}'"
+            ) from e
         res = await handler(self, event)
         if isinstance(res, Event):
             self.io.queue_event(res)
