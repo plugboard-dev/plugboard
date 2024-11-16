@@ -62,14 +62,11 @@ class IOController:
         """
         if self._is_closed:
             raise IOStreamClosedError("Attempted read on a closed io controller.")
+        read_tasks = [asyncio.create_task(self._read_fields())]
+        if len(self._input_event_channels) > 0:
+            read_tasks.append(asyncio.create_task(self._read_events()))
         try:
-            await asyncio.wait(
-                [
-                    asyncio.create_task(self._read_events()),
-                    asyncio.create_task(self._read_fields()),
-                ],
-                return_when=asyncio.FIRST_COMPLETED,
-            )
+            await asyncio.wait(read_tasks, return_when=asyncio.FIRST_COMPLETED)
         except* ChannelClosedError as eg:
             await self.close()
             raise self._build_io_stream_error(IODirection.INPUT, eg) from eg
