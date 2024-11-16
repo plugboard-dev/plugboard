@@ -23,7 +23,7 @@ class _ActorWrapper[T]:
 
 def _call_with_name(func: _t.Callable) -> _t.Callable:
     @wraps(func)
-    def wrapper(self, *args, **kwargs):
+    def wrapper(self, *args: _t.Any, **kwargs: _t.Any) -> _t.Callable:
         return getattr(self._self, func.__name__)(*args, **kwargs)
 
     return wrapper
@@ -31,7 +31,7 @@ def _call_with_name(func: _t.Callable) -> _t.Callable:
 
 def _call_with_name_async(func: _t.Callable) -> _t.Callable:
     @wraps(func)
-    async def wrapper(self, *args, **kwargs):
+    async def wrapper(self, *args: _t.Any, **kwargs: _t.Any) -> _t.Callable:
         return await getattr(self._self, func.__name__)(*args, **kwargs)
 
     return wrapper
