@@ -27,7 +27,7 @@ class RayChannel(Channel):
             actor_options: Optional; Options to pass to the Ray actor. Defaults to {"num_cpus": 1}.
             **kwargs: Additional keyword arguments to pass to the the underlying `Channel`.
         """
-        default_options = {"num_cpus": 1}
+        default_options = {"num_cpus": 0.1}
         actor_options = actor_options or {}
         actor_options = {**default_options, **actor_options}
         self._actor = ray.remote(**actor_options)(_AsyncioChannelActor).remote(**kwargs)

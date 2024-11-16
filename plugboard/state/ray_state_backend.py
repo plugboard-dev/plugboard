@@ -24,7 +24,8 @@ class _DictionaryActor:
                     return value
                 except TypeError:
                     raise ValueError(f"Invalid key: {key}")
-            _key = key[-1]  # Return nested value from final key component below
+            # Return nested value from final key component below
+            _key = key[-1]
         return _d.get(_key, value)
 
     async def _set(self, key: str | tuple[str, ...], value: _t.Any) -> None:  # noqa: A003
@@ -52,7 +53,7 @@ class RayStateBackend(DictStateBackend):
     ) -> None:
         """Instantiates `RayStateBackend`."""
         super().__init__(*args, **kwargs)
-        default_options = {"num_cpus": 1}
+        default_options = {"num_cpus": 0.1}
         actor_options = actor_options or {}
         actor_options = {**default_options, **actor_options}
         self._actor = ray.remote(**actor_options)(_DictionaryActor).remote()

@@ -61,9 +61,9 @@ async def test_ray_run(temp_file_path: str) -> None:
     state = RayStateBackend()
 
     components = [
-        ray.remote(num_cpus=1)(ComponentActor).remote(A, name="A", iters=10),
-        ray.remote(num_cpus=1)(ComponentActor).remote(B, name="B", factor=45),
-        ray.remote(num_cpus=1)(ComponentActor).remote(C, name="C", path=temp_file_path),
+        ray.remote(num_cpus=0.1)(ComponentActor).remote(A, name="A", iters=10),
+        ray.remote(num_cpus=0.1)(ComponentActor).remote(B, name="B", factor=45),
+        ray.remote(num_cpus=0.1)(ComponentActor).remote(C, name="C", path=temp_file_path),
     ]
     connectors = [
         Connector(
