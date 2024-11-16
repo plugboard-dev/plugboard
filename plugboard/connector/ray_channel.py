@@ -7,29 +7,10 @@ import ray
 from plugboard.connector.asyncio_channel import AsyncioChannel
 from plugboard.connector.channel import Channel
 from plugboard.connector.channel_builder import ChannelBuilder
+from plugboard.utils.ray import build_actor_wrapper
 
 
-class _ChannelActor:
-    """Provides a `Channel` inside a Ray actor."""
-
-    def __init__(self, channel_cls: type[Channel], *args: _t.Any, **kwargs: _t.Any) -> None:
-        self._channel = channel_cls(*args, **kwargs)
-
-    async def send(self, item: _t.Any) -> None:
-        """Sends an item through the channel."""
-        await self._channel.send(item)
-
-    async def recv(self) -> _t.Any:
-        """Returns an item received from the channel."""
-        return await self._channel.recv()
-
-    async def close(self) -> None:
-        """Closes the channel."""
-        await self._channel.close()
-
-    def getattr(self, name: str) -> _t.Any:
-        """Returns attributes from the channel."""
-        return getattr(self._channel, name)
+_AsyncioChannelActor = build_actor_wrapper(AsyncioChannel)
 
 
 class RayChannel(Channel):
@@ -37,21 +18,19 @@ class RayChannel(Channel):
 
     def __init__(  # noqa: D417
         self,
-        channel_cls: type[Channel] = AsyncioChannel,
         actor_options: _t.Optional[dict] = None,
         **kwargs: _t.Any,
     ):
         """Instantiates `RayChannel`.
 
         Args:
-            channel_cls: The type of `Channel` to use. Defaults to `AsyncioChannel`.
             actor_options: Optional; Options to pass to the Ray actor. Defaults to {"num_cpus": 1}.
             **kwargs: Additional keyword arguments to pass to the the underlying `Channel`.
         """
         default_options = {"num_cpus": 1}
         actor_options = actor_options or {}
         actor_options = {**default_options, **actor_options}
-        self._actor = ray.remote(**actor_options)(_ChannelActor).remote(channel_cls, **kwargs)
+        self._actor = ray.remote(**actor_options)(_AsyncioChannelActor).remote(**kwargs)
 
     @property
     def maxsize(self) -> int:
