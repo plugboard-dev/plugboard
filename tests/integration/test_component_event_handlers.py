@@ -109,3 +109,5 @@ async def test_component_event_handlers(event_connectors: EventConnectors) -> No
 
     assert a.event_A_count == 2
     assert a.event_B_count == 4
+
+    await a.io.close()

@@ -173,6 +173,8 @@ class IOController:
         """Closes all input/output channels."""
         for chan in self._output_channels.values():
             await chan.close()
+        for task in self._read_tasks.values():
+            task.cancel()
         self._is_closed = True
 
     def _add_channel_for_field(self, field: str, direction: IODirection, channel: Channel) -> None:
