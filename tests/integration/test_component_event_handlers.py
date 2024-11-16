@@ -5,7 +5,7 @@ import typing as _t
 from pydantic import BaseModel
 import pytest
 
-from plugboard.component import Component
+from plugboard.component import Component, IOController
 from plugboard.connector import AsyncioChannelBuilder, ChannelBuilder
 from plugboard.events import Event, EventConnectors, EventHandlers
 
@@ -38,6 +38,8 @@ class EventTypeB(Event):
 
 class A(Component):
     """A test component."""
+
+    io = IOController(input_events=[EventTypeA, EventTypeB])
 
     def __init__(self: _t.Self, *args: _t.Any, **kwargs: _t.Any) -> None:
         super().__init__(*args, **kwargs)

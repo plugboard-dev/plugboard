@@ -20,15 +20,15 @@ class IOController:
         self,
         inputs: _t.Optional[_t.Any] = None,
         outputs: _t.Optional[_t.Any] = None,
-        input_events: _t.Optional[list[Event]] = None,
-        output_events: _t.Optional[list[Event]] = None,
+        input_events: _t.Optional[list[_t.Type[Event]]] = None,
+        output_events: _t.Optional[list[_t.Type[Event]]] = None,
         namespace: str = IO_NS_UNSET,
     ) -> None:
         self.namespace = namespace
         self.inputs = inputs or []
         self.outputs = outputs or []
-        self.input_events = [evt.type for evt in (input_events or [])]
-        self.output_events = [evt.type for evt in (output_events or [])]
+        self.input_events = input_events or []
+        self.output_events = output_events or []
         self.data: dict[str, dict[str, _t.Any]] = {
             str(IODirection.INPUT): {},
             str(IODirection.OUTPUT): {},
@@ -196,9 +196,9 @@ class IOController:
             self._add_channel_for_field(
                 conn.spec.target.descriptor, IODirection.INPUT, conn.channel
             )
-        elif conn.spec.source.connects_to(self.output_events):
+        elif conn.spec.source.connects_to([evt.type for evt in self.output_events]):
             self._add_channel_for_event(conn.spec.source.entity, IODirection.OUTPUT, conn.channel)
-        elif conn.spec.target.connects_to(self.input_events):
+        elif conn.spec.target.connects_to([evt.type for evt in self.input_events]):
             self._add_channel_for_event(conn.spec.target.entity, IODirection.INPUT, conn.channel)
 
     def connect(self, connectors: list[Connector]) -> None:

@@ -35,9 +35,9 @@ class EventConnectors:
     ) -> dict[str, Connector]:
         component_evts = set(component.io.input_events + component.io.output_events)
         return {
-            evt_type: self._build_for_event(evt_type)
-            for evt_type in component_evts
-            if evt_type not in evt_conn_map
+            evt.type: self._build_for_event(evt.type)
+            for evt in component_evts
+            if evt.type not in evt_conn_map
         }
 
     def _build_for_event(self, evt_type: str) -> Connector:

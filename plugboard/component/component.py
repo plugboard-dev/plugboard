@@ -35,7 +35,11 @@ class Component(ABC, ExportMixin):
         self._state: _t.Optional[StateBackend] = state
         self._state_is_connected = False
         self.io = IOController(
-            inputs=type(self).io.inputs, outputs=type(self).io.outputs, namespace=name
+            inputs=self.__class__.io.inputs,
+            outputs=self.__class__.io.outputs,
+            input_events=self.__class__.io.input_events,
+            output_events=self.__class__.io.output_events,
+            namespace=name,
         )
         self.init = self._handle_init_wrapper()  # type: ignore
         self.step = self._handle_step_wrapper()  # type: ignore
