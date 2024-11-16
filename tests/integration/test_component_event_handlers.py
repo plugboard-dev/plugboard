@@ -7,7 +7,7 @@ import pytest
 
 from plugboard.component import Component, IOController
 from plugboard.connector import AsyncioChannelBuilder, ChannelBuilder
-from plugboard.events import Event, EventConnectors, EventHandlers
+from plugboard.events import Event, EventConnectorBuilder, EventHandlers
 
 
 class EventTypeAData(BaseModel):
@@ -78,13 +78,13 @@ def channel_builder() -> ChannelBuilder:
 
 
 @pytest.fixture
-def event_connectors(channel_builder: ChannelBuilder) -> EventConnectors:
+def event_connectors(channel_builder: ChannelBuilder) -> EventConnectorBuilder:
     """Fixture for an event connectors instance."""
-    return EventConnectors(channel_builder=channel_builder)
+    return EventConnectorBuilder(channel_builder=channel_builder)
 
 
 @pytest.mark.anyio
-async def test_component_event_handlers(event_connectors: EventConnectors) -> None:
+async def test_component_event_handlers(event_connectors: EventConnectorBuilder) -> None:
     """Test that event handlers are registered and called correctly for components."""
     a = A(name="a")
 

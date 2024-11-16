@@ -1,4 +1,4 @@
-"""Provides `EventConnectors` class which helps build event connectors for components."""
+"""Provides `EventConnectorBuilder` class which helps build event connectors for components."""
 
 from __future__ import annotations
 
@@ -14,8 +14,8 @@ if _t.TYPE_CHECKING:
     from plugboard.connector import ChannelBuilder
 
 
-class EventConnectors:
-    """`EventConnectors` constructs connectors for component event handlers."""
+class EventConnectorBuilder:
+    """`EventConnectorBuilder` constructs connectors for component event handlers."""
 
     _source_descriptor: str = "publishers"
     _target_descriptor: str = "subscribers"
