@@ -3,6 +3,7 @@
 import typing as _t
 
 import pytest
+import ray
 
 from plugboard.component import Component, IOController as IO
 from plugboard.component.io_controller import IOStreamClosedError
@@ -12,6 +13,14 @@ from plugboard.component.io_controller import IOStreamClosedError
 def anyio_backend() -> str:
     """Returns the name of the AnyIO backend to use."""
     return "asyncio"
+
+
+@pytest.fixture(scope="session")
+def ray_context() -> _t.Iterator[None]:
+    """Initialises and shuts down Ray."""
+    ray.init(include_dashboard=False)
+    yield
+    ray.shutdown()
 
 
 class ComponentTestHelper(Component):
