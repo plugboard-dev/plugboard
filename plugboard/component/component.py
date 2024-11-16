@@ -1,6 +1,7 @@
 """Provides Component class."""
 
 from abc import ABC, abstractmethod
+import asyncio
 from functools import wraps
 import typing as _t
 
@@ -97,7 +98,7 @@ class Component(ABC, ExportMixin):
         async def _wrapper() -> None:
             await self.io.read()
             self._bind_inputs()
-            await self._handle_event()
+            await self._handle_events()
             await self._step()
             self._bind_outputs()
             await self.io.write()
@@ -114,18 +115,22 @@ class Component(ABC, ExportMixin):
         for field in self.io.outputs:
             self.io.data[str(IODirection.OUTPUT)][field] = getattr(self, field)
 
-    async def _handle_event(self) -> None:
+    async def _handle_events(self) -> None:
         """Handles incoming events."""
-        try:
-            event = self.io.events[str(IODirection.INPUT)].popleft()
-        except IndexError:
-            return
-        try:
-            handler = EventHandlers.get(self.__class__, event)
-        except KeyError as e:
-            raise UnrecognisedEventError(
-                f"Unrecognised event type '{event.type}' for component '{self.__class__.__name__}'"
-            ) from e
+        async with asyncio.TaskGroup() as tg:
+            while self.io.events[str(IODirection.INPUT)]:
+                event = self.io.events[str(IODirection.INPUT)].popleft()
+                try:
+                    handler = EventHandlers.get(self.__class__, event)
+                except KeyError as e:
+                    cls_name = self.__class__.__name__
+                    raise UnrecognisedEventError(
+                        f"Unrecognised event type '{event.type}' for component '{cls_name}'"
+                    ) from e
+                tg.create_task(self._handle_event(event, handler))
+
+    async def _handle_event(self, event: Event, handler: _t.Callable) -> None:
+        """Handles an event."""
         res = await handler(self, event)
         if isinstance(res, Event):
             self.io.queue_event(res)
