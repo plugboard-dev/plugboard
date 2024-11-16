@@ -5,8 +5,8 @@ from __future__ import annotations
 import typing as _t
 
 from plugboard.connector import Connector
-from plugboard.events import Event
 from plugboard.schemas import ConnectorSocket, ConnectorSpec
+from plugboard.schemas.event import Event
 
 
 if _t.TYPE_CHECKING:
