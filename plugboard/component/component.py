@@ -107,13 +107,15 @@ class Component(ABC, ExportMixin):
 
     def _bind_inputs(self) -> None:
         """Binds input fields to component fields."""
+        # TODO : Correct behaviour for missing fields (can happen when using events)?
         for field in self.io.inputs:
-            setattr(self, field, self.io.data[str(IODirection.INPUT)][field])
+            setattr(self, field, self.io.data[str(IODirection.INPUT)].get(field))
 
     def _bind_outputs(self) -> None:
         """Binds component fields to output fields."""
+        # TODO : Correct behaviour for missing fields (can happen when using events)?
         for field in self.io.outputs:
-            self.io.data[str(IODirection.OUTPUT)][field] = getattr(self, field)
+            self.io.data[str(IODirection.OUTPUT)][field] = getattr(self, field, None)
 
     async def _handle_events(self) -> None:
         """Handles incoming events."""
