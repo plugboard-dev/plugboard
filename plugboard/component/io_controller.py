@@ -66,7 +66,10 @@ class IOController:
         if len(self._input_event_channels) > 0:
             read_tasks.append(asyncio.create_task(self._read_events()))
         try:
-            await asyncio.wait(read_tasks, return_when=asyncio.FIRST_COMPLETED)
+            done, _ = await asyncio.wait(read_tasks, return_when=asyncio.FIRST_COMPLETED)
+            for task in done:
+                if (e := task.exception()) is not None:
+                    raise e
         except* ChannelClosedError as eg:
             await self.close()
             raise self._build_io_stream_error(IODirection.INPUT, eg) from eg
@@ -78,9 +81,14 @@ class IOController:
                 task = asyncio.create_task(self._read_field(field, chan))
                 self._read_tasks[field] = task
             read_tasks.append(self._read_tasks[field])
-        await asyncio.wait(read_tasks, return_when=asyncio.ALL_COMPLETED)
+        if len(read_tasks) == 0:
+            return
+        done, _ = await asyncio.wait(read_tasks, return_when=asyncio.ALL_COMPLETED)
         for field in self._input_channels.keys():
             self._read_tasks.pop(field)
+        for task in done:
+            if (e := task.exception()) is not None:
+                raise e
 
     async def _read_field(self, field: str, chan: Channel) -> None:
         try:
@@ -96,10 +104,15 @@ class IOController:
                 task.set_name(event_type)
                 self._read_tasks[event_type] = task
             read_tasks.append(self._read_tasks[event_type])
+        if len(read_tasks) == 0:
+            return
         done, _ = await asyncio.wait(read_tasks, return_when=asyncio.FIRST_COMPLETED)
         for task in done:
             event_type = task.get_name()
             self._read_tasks.pop(event_type)
+        for task in done:
+            if (e := task.exception()) is not None:
+                raise e
 
     async def _read_event(self, event_type: str, chan: Channel) -> None:
         try:
