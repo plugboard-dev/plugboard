@@ -6,9 +6,17 @@ import typing as _t
 from uuid import UUID, uuid4
 
 from pydantic import UUID4, BaseModel, Field
+from pydantic.functional_validators import AfterValidator
 
 
-_REGEX_TIMESTAMP: str = r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$"
+def _ensure_utc(dt: datetime) -> datetime:
+    if dt.tzinfo is None:
+        return dt.replace(tzinfo=timezone.utc)
+    return dt.astimezone(timezone.utc)
+
+
+UTCDateTime = _t.Annotated[datetime, AfterValidator(_ensure_utc)]
+
 _REGEX_EVENT_TYPE: str = r"^[a-zA-Z][a-zA-Z0-9_\-.]*$"
 
 
@@ -21,9 +29,9 @@ class EventUtils:
         return uuid4()
 
     @staticmethod
-    def gen_timestamp() -> str:
+    def gen_timestamp() -> datetime:
         """Generates a timestamp string for an event in ISO 8601 format."""
-        return datetime.now(timezone.utc).isoformat()
+        return datetime.now(timezone.utc)
 
 
 class Event(BaseModel):
@@ -32,10 +40,7 @@ class Event(BaseModel):
     type: _t.ClassVar[str]
 
     id: UUID4 = Field(default_factory=EventUtils.gen_id)
-    timestamp: str = Field(
-        default_factory=EventUtils.gen_timestamp,
-        pattern=_REGEX_TIMESTAMP,
-    )
+    timestamp: UTCDateTime = Field(default_factory=EventUtils.gen_timestamp)
     source: str
     version: str = "0.1.0"
     data: dict[str, _t.Any] | BaseModel
