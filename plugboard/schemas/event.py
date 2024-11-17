@@ -3,12 +3,11 @@
 from datetime import datetime, timezone
 import re
 import typing as _t
-from uuid import uuid4
+from uuid import UUID, uuid4
 
-from pydantic import BaseModel, Field
+from pydantic import UUID4, BaseModel, Field
 
 
-_REGEX_UUID: str = r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
 _REGEX_TIMESTAMP: str = r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$"
 _REGEX_EVENT_TYPE: str = r"^[a-zA-Z][a-zA-Z0-9_\-.]*$"
 
@@ -17,13 +16,13 @@ class EventUtils:
     """`EventUtils` provides helper functions for `Event`s."""
 
     @staticmethod
-    def gen_id() -> str:
+    def gen_id() -> UUID:
         """Generates a unique identifier for an event."""
-        return str(uuid4())
+        return uuid4()
 
     @staticmethod
     def gen_timestamp() -> str:
-        """Generates a timestamp for an event in ISO 8601 format."""
+        """Generates a timestamp string for an event in ISO 8601 format."""
         return datetime.now(timezone.utc).isoformat()
 
 
@@ -32,10 +31,7 @@ class Event(BaseModel):
 
     type: _t.ClassVar[str]
 
-    id: str = Field(
-        default_factory=EventUtils.gen_id,
-        pattern=_REGEX_UUID,
-    )
+    id: UUID4 = Field(default_factory=EventUtils.gen_id)
     timestamp: str = Field(
         default_factory=EventUtils.gen_timestamp,
         pattern=_REGEX_TIMESTAMP,
