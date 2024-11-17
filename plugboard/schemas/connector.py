@@ -53,7 +53,7 @@ class ConnectorSocket(PlugboardBaseModel):
 
     @classmethod
     def from_ref(cls, ref: str) -> _t.Self:
-        """Creates an `ConnectorSocket` from a reference string."""
+        """Creates a `ConnectorSocket` from a reference string."""
         match = cls._PATTERN.match(ref)
         if not match:
             raise ValueError(f"Reference must be of the form 'entity.descriptor', got {ref}")
