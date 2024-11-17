@@ -51,9 +51,15 @@ class RayStateBackend(DictStateBackend):
     def __init__(
         self, *args: _t.Any, actor_options: _t.Optional[dict] = None, **kwargs: _t.Any
     ) -> None:
-        """Instantiates `RayStateBackend`."""
+        """Instantiates `RayStateBackend`.
+
+        Args:
+            *args: Additional positional arguments to pass to the underlying `StateBackend`.
+            actor_options: Optional; Options to pass to the Ray actor. Defaults to {"num_cpus": 0}.
+            **kwargs: Additional keyword arguments to pass to the the underlying `StateBackend`.
+        """
         super().__init__(*args, **kwargs)
-        default_options = {"num_cpus": 0.1}
+        default_options = {"num_cpus": 0}
         actor_options = actor_options or {}
         actor_options = {**default_options, **actor_options}
         self._actor = ray.remote(**actor_options)(_DictionaryActor).remote()
