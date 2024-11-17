@@ -35,7 +35,7 @@ class RayChannel(Channel):
     @property
     def maxsize(self) -> int:
         """Returns the message capacity of the `RayChannel`."""
-        return self._actor.getattr.remote("maxsize")
+        return self._actor.getattr.remote("maxsize")  # type: ignore
 
     @property
     def is_closed(self) -> bool:
@@ -44,19 +44,19 @@ class RayChannel(Channel):
         When a `RayChannel` is closed, it can no longer be used to send messages,
         though there may still be some messages waiting to be read.
         """
-        return self._actor.getattr.remote("is_closed")
+        return self._actor.getattr.remote("is_closed")  # type: ignore
 
     async def send(self, item: _t.Any) -> None:
         """Sends an item through the `RayChannel`."""
-        await self._actor.send.remote(item)
+        await self._actor.send.remote(item)  # type: ignore
 
     async def recv(self) -> _t.Any:
         """Returns an item received from the `RayChannel`."""
-        return await self._actor.recv.remote()
+        return await self._actor.recv.remote()  # type: ignore
 
     async def close(self) -> None:
         """Closes the `RayChannel` and terminates the underlying actor."""
-        await self._actor.close.remote()
+        await self._actor.close.remote()  # type: ignore
 
 
 class RayChannelBuilder(ChannelBuilder):

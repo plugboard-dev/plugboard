@@ -33,7 +33,7 @@ class ComponentActor:
     async def connect_state(self, state: _t.Optional[StateBackend] = None) -> None:
         await self._component.connect_state(state)
 
-    def connect(self, connectors: _t.Dict[str, Connector]) -> None:
+    def connect(self, connectors: list[Connector]) -> None:
         self._component.io.connect(connectors)
 
     async def init(self) -> None:
@@ -51,7 +51,7 @@ class ComponentActor:
 
     def getattr(self, name: str) -> _t.Any:
         """Returns attributes from the channel."""
-        return getattr(self._channel, name)
+        return getattr(self._component, name)
 
 
 @pytest.mark.anyio
@@ -61,9 +61,9 @@ async def test_ray_run(temp_file_path: str) -> None:
     state = RayStateBackend()
 
     components = [
-        ray.remote(num_cpus=0.1)(ComponentActor).remote(A, name="A", iters=10),
-        ray.remote(num_cpus=0.1)(ComponentActor).remote(B, name="B", factor=45),
-        ray.remote(num_cpus=0.1)(ComponentActor).remote(C, name="C", path=temp_file_path),
+        ray.remote(num_cpus=0.1)(ComponentActor).remote(A, name="A", iters=10),  # type: ignore
+        ray.remote(num_cpus=0.1)(ComponentActor).remote(B, name="B", factor=45),  # type: ignore
+        ray.remote(num_cpus=0.1)(ComponentActor).remote(C, name="C", path=temp_file_path),  # type: ignore
     ]
     connectors = [
         Connector(
@@ -77,11 +77,11 @@ async def test_ray_run(temp_file_path: str) -> None:
     await state.init()
     # Task groups are not supported in Ray
     await asyncio.gather(*[state.upsert_connector(connector) for connector in connectors])
-    await asyncio.gather(*(component.connect_state.remote(state) for component in components))
-    await asyncio.gather(*(component.connect.remote(connectors) for component in components))
+    await asyncio.gather(*(component.connect_state.remote(state) for component in components))  # type: ignore
+    await asyncio.gather(*(component.connect.remote(connectors) for component in components))  # type: ignore
 
-    await asyncio.gather(*(component.init.remote() for component in components))
-    await asyncio.gather(*(component.run.remote() for component in components))
+    await asyncio.gather(*(component.init.remote() for component in components))  # type: ignore
+    await asyncio.gather(*(component.run.remote() for component in components))  # type: ignore
 
     with open(temp_file_path, "r") as f:
         data = f.read()

@@ -67,15 +67,15 @@ class RayStateBackend(DictStateBackend):
     @property
     def _state(self) -> dict[str, _t.Any]:
         """State dictionary."""
-        return ray.get(self._actor.get_dict.remote())
+        return ray.get(self._actor.get_dict.remote())  # type: ignore
 
     @_state.setter
     def _state(self, value: dict[str, _t.Any]) -> None:
         """Set state dictionary."""
-        ray.get(self._actor.set_dict.remote(value))
+        ray.get(self._actor.set_dict.remote(value))  # type: ignore
 
     async def _get(self, key: str | tuple[str, ...], value: _t.Optional[_t.Any] = None) -> _t.Any:
-        return await self._actor._get.remote(key, value)
+        return await self._actor._get.remote(key, value)  # type: ignore
 
     async def _set(self, key: str | tuple[str, ...], value: _t.Any) -> None:  # noqa: A003
-        await self._actor._set.remote(key, value)
+        await self._actor._set.remote(key, value)  # type: ignore
