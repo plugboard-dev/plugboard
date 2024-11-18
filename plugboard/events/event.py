@@ -42,7 +42,17 @@ class EventUtils:
 
 
 class Event(PlugboardBaseModel, ABC):
-    """`Event` is a base model for all events."""
+    """`Event` is a base model for all events.
+
+    Attributes:
+        type: Type of the `Event`.
+        id: UUID v4 unique identifier for the `Event`.
+        timestamp: UTC timestamp for the `Event`.
+        source: Source of the `Event`.
+        version: Version of the `Event`.
+        data: Data associated with the `Event`.
+        metadata: Metadata for the `Event`.
+    """
 
     type: _t.ClassVar[str]
 
