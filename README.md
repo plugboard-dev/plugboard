@@ -4,9 +4,9 @@
     <source media="(prefers-color-scheme: light)" srcset="docs/assets/plugboard-logo-light.svg" width="80%" height="auto">
     <img alt="Plugboard" src="docs/assets/plugboard-logo.jpeg" width="80%" height="auto">
   </picture>
-
+</div>
+<div align="center">
 ![](https://github.com/plugboard-dev/plugboard/actions/workflows/lint-test.yaml/badge.svg)
-
 </div>
 
 <hr>
