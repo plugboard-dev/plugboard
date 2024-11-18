@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from abc import ABC
 from datetime import datetime, timezone
 import re
 import typing as _t
@@ -39,7 +40,7 @@ class EventUtils:
         return datetime.now(timezone.utc)
 
 
-class Event(BaseModel):
+class Event(BaseModel, ABC):
     """`Event` is a base model for all events."""
 
     type: _t.ClassVar[str]
