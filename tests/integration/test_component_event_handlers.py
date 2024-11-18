@@ -7,7 +7,7 @@ import pytest
 
 from plugboard.component import Component, IOController
 from plugboard.connector import AsyncioChannelBuilder, ChannelBuilder
-from plugboard.events import Event, EventConnectorBuilder, EventHandlers
+from plugboard.events import Event, EventConnectorBuilder
 
 
 class EventTypeAData(BaseModel):
@@ -60,12 +60,12 @@ class A(Component):
         """A test step."""
         pass
 
-    @EventHandlers.add(EventTypeA)
+    @EventTypeA.handler
     async def event_A_handler(self, evt: EventTypeA) -> None:
         """A test event handler."""
         self._event_A_count += evt.data.x
 
-    @EventHandlers.add(EventTypeB)
+    @EventTypeB.handler
     async def event_B_handler(self, evt: EventTypeB) -> None:
         """A test event handler."""
         self._event_B_count += evt.data.y

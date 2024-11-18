@@ -1,21 +1,24 @@
 """Provides `EventHandlers` class for registering and retrieving event handlers."""
 
+from __future__ import annotations
+
 from collections import defaultdict
 import typing as _t
 
-from plugboard.events.event import Event
+from plugboard.utils.types import AsyncCallable
 
 
-_AsyncFunc = _t.Callable[..., _t.Coroutine[_t.Any, _t.Any, _t.Any]]
+if _t.TYPE_CHECKING:
+    from plugboard.events.event import Event
 
 
 class EventHandlers:
     """`EventHandlers` provides a decorator for registering event handlers."""
 
-    _handlers: _t.ClassVar[dict[str, dict[str, _AsyncFunc]]] = defaultdict(dict)
+    _handlers: _t.ClassVar[dict[str, dict[str, AsyncCallable]]] = defaultdict(dict)
 
     @classmethod
-    def add(cls, event: _t.Type[Event] | Event) -> _t.Callable[[_AsyncFunc], _AsyncFunc]:
+    def add(cls, event: _t.Type[Event] | Event) -> _t.Callable[[AsyncCallable], AsyncCallable]:
         """Decorator that registers class methods as handlers for specific event types.
 
         Args:
@@ -25,7 +28,7 @@ class EventHandlers:
             Callable: Decorated method
         """
 
-        def decorator(method: _AsyncFunc) -> _AsyncFunc:
+        def decorator(method: AsyncCallable) -> AsyncCallable:
             class_path = cls._get_class_path_for_method(method)
             cls._handlers[class_path][event.type] = method
             return method
@@ -33,7 +36,7 @@ class EventHandlers:
         return decorator
 
     @staticmethod
-    def _get_class_path_for_method(method: _AsyncFunc) -> str:
+    def _get_class_path_for_method(method: AsyncCallable) -> str:
         """Get the fully qualified path for the class containing a method."""
         module_name = method.__module__
         qualname_parts = method.__qualname__.split(".")
@@ -41,7 +44,7 @@ class EventHandlers:
         return f"{module_name}.{class_name}"
 
     @classmethod
-    def get(cls, _class: _t.Type, event: _t.Type[Event] | Event) -> _AsyncFunc:
+    def get(cls, _class: _t.Type, event: _t.Type[Event] | Event) -> AsyncCallable:
         """Retrieve a handler for a specific event type.
 
         Args:

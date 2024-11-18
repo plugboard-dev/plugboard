@@ -1,5 +1,7 @@
 """Provides base model for events and helper functionality."""
 
+from __future__ import annotations
+
 from datetime import datetime, timezone
 import re
 import typing as _t
@@ -7,6 +9,9 @@ from uuid import UUID, uuid4
 
 from pydantic import UUID4, BaseModel, Field
 from pydantic.functional_validators import AfterValidator
+
+from plugboard.events.event_handlers import EventHandlers
+from plugboard.utils.types import AsyncCallable
 
 
 def _ensure_utc(dt: datetime) -> datetime:
@@ -57,3 +62,8 @@ class Event(BaseModel):
     def safe_type(event_type: str) -> str:
         """Returns a safe event type string for use in broker topic strings."""
         return event_type.replace(".", "_").replace("-", "_")
+
+    @classmethod
+    def handler(cls, method: AsyncCallable) -> AsyncCallable:
+        """Registers a class method as an event handler."""
+        return EventHandlers.add(cls)(method)

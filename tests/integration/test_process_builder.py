@@ -6,7 +6,7 @@ import typing as _t
 import pytest
 
 from plugboard.component import IOController as IO
-from plugboard.events import Event, EventHandlers
+from plugboard.events import Event
 from plugboard.process import ProcessBuilder
 from plugboard.schemas import (
     ChannelBuilderArgsSpec,
@@ -39,12 +39,12 @@ class D(ComponentTestHelper):
     async def step(self) -> None:
         pass
 
-    @EventHandlers.add(DummyEvent1)
+    @DummyEvent1.handler
     async def dummy_event_1_handler(self, event: DummyEvent1) -> None:
         pass
 
-    @EventHandlers.add(DummyEvent1)
-    async def dummy_event_2_handler(self, event: DummyEvent1) -> None:
+    @DummyEvent2.handler
+    async def dummy_event_2_handler(self, event: DummyEvent2) -> None:
         pass
 
 
