@@ -63,6 +63,7 @@ extra_javascript:
 theme:
   name: material
   logo: assets/plugboard-logo-dark.svg
+  favicon: assets/favicon.png
   custom_dir: docs/overrides
   features:
   - navigation.tabs
