@@ -1,7 +1,7 @@
 <div align="center">
   <picture align="center">
-    <source media="(prefers-color-scheme: dark)" srcset="docs/assets/plugboard-logo.jpeg" width="80%" height="auto">
-    <source media="(prefers-color-scheme: light)" srcset="docs/assets/plugboard-logo.jpeg" width="80%" height="auto">
+    <source media="(prefers-color-scheme: dark)" srcset="docs/assets/plugboard-logo-dark.svg" width="80%" height="auto">
+    <source media="(prefers-color-scheme: light)" srcset="docs/assets/plugboard-logo-light.svg" width="80%" height="auto">
     <img alt="Plugboard" src="docs/assets/plugboard-logo.jpeg" width="80%" height="auto">
   </picture>
 
