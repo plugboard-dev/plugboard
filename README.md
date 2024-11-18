@@ -8,6 +8,11 @@
 
 <hr>
 
+<div align="center" class="badge-section">
+
+![Lint and test](https://github.com/plugboard-dev/plugboard/actions/workflows/lint-test.yaml/badge.svg)</a>
+
+</div>
 
 
 Plugboard is an **event-driven modelling and orchestration framework** in Python for simulating complex processes with many interconnected components.

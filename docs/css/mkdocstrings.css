@@ -26,6 +26,11 @@ a.autorefs-external::after {
     visibility: hidden;
 }
 
+/* Remove CI badges. */
+.badge-section {
+    visibility: hidden;
+}
+
 a.external:hover::after,
 a.autorefs-external:hover::after {
     background-color: var(--md-accent-fg-color);
