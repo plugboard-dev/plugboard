@@ -1,14 +1,14 @@
 <div align="center">
   <picture align="center">
-    <source media="(prefers-color-scheme: dark)" srcset="docs/assets/plugboard-logo-dark.svg" width="80%" height="auto">
-    <source media="(prefers-color-scheme: light)" srcset="docs/assets/plugboard-logo-light.svg" width="80%" height="auto">
+    <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/plugboard-dev/plugboard/refs/heads/main/docs/assets/plugboard-logo-dark.svg" width="65%" height="auto">
+    <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/plugboard-dev/plugboard/refs/heads/main/docs/assets/plugboard-logo-light.svg" width="65%" height="auto">
     <img alt="Plugboard" src="docs/assets/plugboard-logo.jpeg" width="80%" height="auto">
   </picture>
 </div>
+
 <hr>
-<div align="center">
-![](https://github.com/plugboard-dev/plugboard/actions/workflows/lint-test.yaml/badge.svg)
-</div>
+
+
 
 Plugboard is an **event-driven modelling and orchestration framework** in Python for simulating complex processes with many interconnected components.
 
@@ -26,6 +26,7 @@ Some examples of what you can build with Plugboard include:
 ## 🖋️ Key Features
 
 - **Reusable classes** containing the core framework, which you can extend to define your own model logic;
+- Support for different simulation paradigms: **discrete time** and **event based**.
 - **YAML model specification** format for saving model definitions, allowing you to run the same model locally or in cloud infrastructure;
 - A **command line interface** for executing models;
 - Built to handle the **data intensive simulation** requirements of industrial process applications;
@@ -153,7 +154,6 @@ For more information including a detailed API reference and step-by-step usage e
 
 Plugboard is under active development, with new features in the works:
 
-- Support for different simulation paradigms: realtime, discrete time, and discrete event.
 - Detailed logging of component inputs, outputs and state for monitoring and process mining or surrogate modelling use-cases.
 - Support for strongly typed data messages and validation based on pydantic.
 - Support for different parallelisation patterns such as: single-threaded with coroutines, single-host multi process, or distributed with Ray in Kubernetes.
