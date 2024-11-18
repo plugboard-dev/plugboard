@@ -5,8 +5,8 @@ from collections import deque
 import typing as _t
 
 from plugboard.connector import Channel, Connector
+from plugboard.events import Event
 from plugboard.exceptions import ChannelClosedError, IOStreamClosedError
-from plugboard.schemas.event import Event
 from plugboard.schemas.io import IODirection
 
 

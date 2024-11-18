@@ -3,7 +3,7 @@
 from collections import defaultdict
 import typing as _t
 
-from plugboard.schemas import Event
+from plugboard.events.event import Event
 
 
 _AsyncFunc = _t.Callable[..., _t.Coroutine[_t.Any, _t.Any, _t.Any]]

@@ -1,4 +1,4 @@
-"""Provides models for events."""
+"""Provides base model for events and helper functionality."""
 
 from datetime import datetime, timezone
 import re

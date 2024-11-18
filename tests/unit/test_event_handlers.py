@@ -7,8 +7,7 @@ import typing as _t
 import pytest
 
 from plugboard.component import Component, IOController
-from plugboard.events import EventHandlers
-from plugboard.schemas import Event
+from plugboard.events import Event, EventHandlers
 
 
 class A(Component):
