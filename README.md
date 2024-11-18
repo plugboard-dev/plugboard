@@ -5,11 +5,10 @@
     <img alt="Plugboard" src="docs/assets/plugboard-logo.jpeg" width="80%" height="auto">
   </picture>
 </div>
+<hr>
 <div align="center">
 ![](https://github.com/plugboard-dev/plugboard/actions/workflows/lint-test.yaml/badge.svg)
 </div>
-
-<hr>
 
 Plugboard is an **event-driven modelling and orchestration framework** in Python for simulating complex processes with many interconnected components.
 
