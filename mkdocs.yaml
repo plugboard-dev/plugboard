@@ -1,5 +1,5 @@
 site_name: Plugboard
-site_url: https://plugboard.dev
+site_url: https://docs.plugboard.dev
 site_description: An event-driven modelling and orchestration framework for simulating complex processes
 
 repo_name: plugboard-dev/plugboard
@@ -48,13 +48,23 @@ markdown_extensions:
 - pymdownx.inlinehilite
 - pymdownx.snippets:
     dedent_subsections: true
-- pymdownx.superfences
+- pymdownx.superfences:
+    custom_fences:
+      - name: mermaid
+        class: mermaid
+        format: !!python/name:pymdownx.superfences.fence_code_format
 
 extra_css:
 - css/mkdocstrings.css
 
+extra_javascript:
+- https://buttons.github.io/buttons.js
+
 theme:
   name: material
+  logo: assets/plugboard-logo-dark.svg
+  favicon: assets/favicon.png
+  custom_dir: docs/overrides
   features:
   - navigation.tabs
   - content.code.annotate
@@ -83,6 +93,7 @@ watch:
 - docs
 - plugboard
 - README.md
+- CONTRIBUTING.md
 
 nav:
 - Home: index.md
@@ -98,3 +109,4 @@ nav:
   - schemas: api/schemas/schemas.md
   - state: api/state/state.md
   - utils: api/utils/utils.md
+- Contributing: contributing.md
