@@ -69,10 +69,14 @@ class A(Component):
         self._iters = iters
 
     async def init(self) -> None:
-        self._seq = range(self._iters)
+        await super().init()
+        self._seq = iter(range(self._iters))
 
     async def step(self) -> None:
-        self.out_1 = next(self._seq)
+        try:
+            self.out_1 = next(self._seq)
+        except StopIteration:
+            await self.io.close()
 
 
 class B(Component):
@@ -90,7 +94,7 @@ class B(Component):
 
     async def step(self) -> None:
         out = 2 * self.in_1
-        self._f.write(f"{out}\n")
+        await self._f.write(f"{out}\n")
 
     async def destroy(self) -> None:
         await self._ctx.aclose()
@@ -98,16 +102,15 @@ class B(Component):
 
 Now we take these components, connect them up as a `Process`, and fire off the model. Using the `Process` context handler takes care of calling `init` at the beginning and `destroy` at the end for all `Component`s. Calling `Process.run` triggers all the components to start iterating through all their inputs until a termination condition is reached. Simulations proceed in an event-driven manner: when inputs arrive, the components are triggered to step forward in time. The framework handles the details of the inter-component communication, you just need to specify the logic of your components, and the connections between them.
 ```python
-import asyncio
 from plugboard.connector import AsyncioChannel, Connector
 from plugboard.process import Process
 from plugboard.schemas import ConnectorSpec
 
 process = Process(
-    components=[A(name="a", iters=10), B(name="b", path="./b.txt")],
+    components=[A(name="comp_a", iters=10), B(name="comp_b", path="comp_b.txt")],
     connectors=[
         Connector(
-            spec=ConnectorSpec(source="a.out_1", target="b.in_1"),
+            spec=ConnectorSpec(source="comp_a.out_1", target="comp_b.in_1"),
             channel=AsyncioChannel(),
         )
     ],
