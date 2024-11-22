@@ -58,10 +58,10 @@ class B(Component):
 async def main() -> None:
     # --8<-- [start:main]
     process = Process(
-        components=[A(name="comp_a", iters=10), B(name="comp_b", path="comp_b.txt")],
+        components=[A(name="a", iters=10), B(name="b", path="b.txt")],
         connectors=[
             Connector(
-                spec=ConnectorSpec(source="comp_a.out_1", target="comp_b.in_1"),
+                spec=ConnectorSpec(source="a.out_1", target="b.in_1"),
                 channel=AsyncioChannel(),
             )
         ],
