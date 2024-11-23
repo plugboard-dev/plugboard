@@ -8,6 +8,7 @@ from plugboard.exceptions import NotInitialisedError
 
 
 try:
+    # OpenAI is an optional dependency
     from openai import AsyncAzureOpenAI, AsyncOpenAI
     from openai.types.chat import (
         ChatCompletionAssistantMessageParam,
@@ -26,7 +27,7 @@ class OpenAIChat(Component):
     def __init__(
         self,
         *args: _t.Any,
-        model: str = "gpt-4o-turbo",
+        model: str = "gpt-4o-mini",
         system_prompt: _t.Optional[list[ChatCompletionMessageParam]] = None,
         context_window: int = 0,
         client_type: _t.Literal["openai", "azure"] = "openai",
@@ -66,16 +67,15 @@ class OpenAIChat(Component):
     async def step(self) -> None:  # noqa: D102
         if not self._client:
             raise NotInitialisedError()
-        messages = [
-            *self._system_prompt,
-            *self._messages,
-            ChatCompletionUserMessageParam(
-                role="user",
-                content=self.prompt,  # type: ignore
-            ),
-        ]
         completion = await self._client.chat.completions.create(
-            messages=messages,
+            messages=[
+                *self._system_prompt,
+                *self._messages,
+                ChatCompletionUserMessageParam(
+                    role="user",
+                    content=self.prompt,  # type: ignore
+                ),
+            ],
             model=self._model,
         )
         response = completion.choices[0].message.content
