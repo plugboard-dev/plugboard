@@ -47,3 +47,9 @@ class NotFoundError(StateBackendError):
     """Raised when a resource is not found."""
 
     pass
+
+
+class NotInitialisedError(StateBackendError):
+    """Raised attempting to step or run a `Process` or `Component` that has not been initialised."""
+
+    pass
