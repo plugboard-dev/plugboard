@@ -1152,7 +1152,7 @@ files = [
 name = "distro"
 version = "1.9.0"
 description = "Distro - an OS platform information API"
-optional = true
+optional = false
 python-versions = ">=3.6"
 files = [
     {file = "distro-1.9.0-py3-none-any.whl", hash = "sha256:7bffd925d65168f85027d8da9af6bddab658135b840670a223589bc0c8ef02b2"},
@@ -2183,7 +2183,7 @@ i18n = ["Babel (>=2.7)"]
 name = "jiter"
 version = "0.7.1"
 description = "Fast iterable JSON parser."
-optional = true
+optional = false
 python-versions = ">=3.8"
 files = [
     {file = "jiter-0.7.1-cp310-cp310-macosx_10_12_x86_64.whl", hash = "sha256:262e96d06696b673fad6f257e6a0abb6e873dc22818ca0e0600f4a1189eb334f"},
@@ -3700,13 +3700,13 @@ signedtoken = ["cryptography (>=3.0.0)", "pyjwt (>=2.0.0,<3)"]
 
 [[package]]
 name = "openai"
-version = "1.55.0"
+version = "1.54.5"
 description = "The official Python library for the openai API"
-optional = true
+optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "openai-1.55.0-py3-none-any.whl", hash = "sha256:446e08918f8dd70d8723274be860404c8c7cc46b91b93bbc0ef051f57eb503c1"},
-    {file = "openai-1.55.0.tar.gz", hash = "sha256:6c0975ac8540fe639d12b4ff5a8e0bf1424c844c4a4251148f59f06c4b2bd5db"},
+    {file = "openai-1.54.5-py3-none-any.whl", hash = "sha256:f55a4450f38501814b53e76311ed7845a6f7f35bab46d0fb2a3728035d7a72d8"},
+    {file = "openai-1.54.5.tar.gz", hash = "sha256:2aab4f9755a3e1e04d8a45ac1f4ce7b6948bab76646020c6386256d7e5cbb7e0"},
 ]
 
 [package.dependencies]
@@ -3721,6 +3721,22 @@ typing-extensions = ">=4.11,<5"
 
 [package.extras]
 datalib = ["numpy (>=1)", "pandas (>=1.2.3)", "pandas-stubs (>=1.1.0.11)"]
+
+[[package]]
+name = "openai-responses"
+version = "0.11.2"
+description = "🧪🤖 Pytest plugin for automatically mocking OpenAI requests"
+optional = false
+python-versions = "<4.0,>=3.9"
+files = [
+    {file = "openai_responses-0.11.2-py3-none-any.whl", hash = "sha256:302993370c6c76a502bb58b1a8ee750c6b10d74f9093b995bb54801c79b06e17"},
+    {file = "openai_responses-0.11.2.tar.gz", hash = "sha256:2de311d18aa5518630802f0487abbf5c3254ac8eaa0d334c5ad9146bd7082e2f"},
+]
+
+[package.dependencies]
+openai = ">=1.50,<1.55"
+requests-toolbelt = ">=1,<2"
+respx = ">=0.20,<0.21"
 
 [[package]]
 name = "openapi-schema-validator"
@@ -5331,6 +5347,20 @@ urllib3 = ">=1.25.10,<3.0"
 tests = ["coverage (>=6.0.0)", "flake8", "mypy", "pytest (>=7.0.0)", "pytest-asyncio", "pytest-cov", "pytest-httpserver", "tomli", "tomli-w", "types-PyYAML", "types-requests"]
 
 [[package]]
+name = "respx"
+version = "0.20.2"
+description = "A utility for mocking out the Python HTTPX and HTTP Core libraries."
+optional = false
+python-versions = ">=3.7"
+files = [
+    {file = "respx-0.20.2-py2.py3-none-any.whl", hash = "sha256:ab8e1cf6da28a5b2dd883ea617f8130f77f676736e6e9e4a25817ad116a172c9"},
+    {file = "respx-0.20.2.tar.gz", hash = "sha256:07cf4108b1c88b82010f67d3c831dae33a375c7b436e54d87737c7f9f99be643"},
+]
+
+[package.dependencies]
+httpx = ">=0.21.0"
+
+[[package]]
 name = "rfc3339-validator"
 version = "0.1.4"
 description = "A pure python RFC3339 validator"
@@ -5931,7 +5961,7 @@ files = [
 name = "tqdm"
 version = "4.67.0"
 description = "Fast, Extensible Progress Meter"
-optional = true
+optional = false
 python-versions = ">=3.7"
 files = [
     {file = "tqdm-4.67.0-py3-none-any.whl", hash = "sha256:0cd8af9d56911acab92182e88d763100d4788bdf421d251616040cc4d44863be"},
@@ -6499,4 +6529,4 @@ openai = ["openai"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.12,<4.0"
-content-hash = "b7442461c3110efd80bb735561cdf6350f9cd3f6508adc198158765814e33a73"
+content-hash = "9568cf6334083f2bbd941dc3ecbcaca80a64e4950cf82768893b7edfab33ebaf"
