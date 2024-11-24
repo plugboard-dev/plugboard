@@ -35,7 +35,7 @@ def openai_mock(client_type: str) -> _t.Iterator[openai_responses.OpenAIMock]:
         args = {}
     elif client_type == "azure":
         args = {"base_url": "https://example-endpoint.openai.azure.com"}
-    mock = openai_responses.OpenAIMock(*args)
+    mock = openai_responses.OpenAIMock(**args)
     with mock.router:
         yield mock
 
