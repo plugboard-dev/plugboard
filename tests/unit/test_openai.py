@@ -5,6 +5,7 @@ import os
 import typing as _t
 from unittest.mock import patch
 
+from openai.types.chat import ChatCompletionMessageParam
 import openai_responses
 import pytest
 
@@ -35,7 +36,7 @@ def openai_mock(client_type: str) -> _t.Iterator[openai_responses.OpenAIMock]:
         args = {}
     elif client_type == "azure":
         args = {"base_url": "https://example-endpoint.openai.azure.com"}
-    mock = openai_responses.OpenAIMock(**args)
+    mock = openai_responses.OpenAIMock(**args)  # type: ignore
     with mock.router:
         yield mock
 
@@ -55,7 +56,10 @@ def openai_mock(client_type: str) -> _t.Iterator[openai_responses.OpenAIMock]:
     ],
 )
 async def test_openai_chat(
-    openai_mock: openai_responses.OpenAIMock, system_prompt, context_window: int, client_type: str
+    openai_mock: openai_responses.OpenAIMock,
+    system_prompt: list[ChatCompletionMessageParam],
+    context_window: int,
+    client_type: _t.Literal["openai", "azure"],
 ) -> None:
     """Test the `OpenAIChat` component."""
     llm = OpenAIChat(
