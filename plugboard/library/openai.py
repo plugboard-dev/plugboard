@@ -20,7 +20,17 @@ except ImportError:
 
 
 class OpenAIChat(Component):
-    """`OpenAIChat` provides a component for interacting with OpenAI-compatible models."""
+    """`OpenAIChat` provides a component for interacting with OpenAI-compatible models.
+
+    Requires the optional `plugboard[openai]` installation. The API key can be set via the
+    `OPENAI_API_KEY` environment variable. For Azure OpenAI, use `AZURE_OPENAI_API_KEY` and
+    see [here](https://learn.microsoft.com/en-us/azure/ai-services/openai/how-to/switching-endpoints)
+    for additional configuration options.
+
+
+    See the [OpenAI docs](https://platform.openai.com/docs/quickstart?language-preference=python)
+    for more information on configuration and message types.
+    """
 
     io = IO(inputs=["prompt"], outputs=["response"])
 
