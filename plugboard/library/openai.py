@@ -27,7 +27,6 @@ class OpenAIChat(Component):
     see [here](https://learn.microsoft.com/en-us/azure/ai-services/openai/how-to/switching-endpoints)
     for additional configuration options.
 
-
     See the [OpenAI docs](https://platform.openai.com/docs/quickstart?language-preference=python)
     for more information on configuration and message types.
     """
@@ -49,8 +48,9 @@ class OpenAIChat(Component):
         Args:
             *args: Additional positional arguments to pass to the underlying `Component`.
             model: The name of the model to use.
-            system_prompt: Optional; The system prompt to use. See the OpenAI API documentation for
-                examples.
+            system_prompt: Optional; A list of prompts to provide to the model. This can include a
+                system prompt, along with user and assistant messages. Each message should contain
+                a `role` and `content` field. See the OpenAI docs for more information.
             context_window: The number of messages to keep in the chat history. Higher values incur
                 more token costs on each call.
             client_type: Whether to use "openai" or "azure" client.
