@@ -40,11 +40,9 @@ class _OpenAIBase(Component, ABC):
     ) -> None:
         super().__init__(*args, **kwargs)
         self._model = model
-        self._system_prompt: list[ChatCompletionMessageParam] = system_prompt or [
-        ]
+        self._system_prompt: list[ChatCompletionMessageParam] = system_prompt or []
         # Store 2x the context window to allow for both input and output messages
-        self._messages: deque[ChatCompletionMessageParam] = deque(
-            maxlen=context_window * 2)
+        self._messages: deque[ChatCompletionMessageParam] = deque(maxlen=context_window * 2)
         self._open_ai_kwargs = open_ai_kwargs or {}
         self._client_type = client_type
         self._client: _t.Optional[AsyncOpenAI | AsyncAzureOpenAI] = None
@@ -73,8 +71,6 @@ class _OpenAIBase(Component, ABC):
         pass
 
     async def step(self) -> None:  # noqa: D102
-        if not self._client:
-            raise NotInitialisedError()
         completion = await self._handle_llm()
         response = completion.choices[0].message.content
         if response is not None:
@@ -142,6 +138,8 @@ class OpenAIChat(_OpenAIBase):
 
     async def _handle_llm(self) -> ChatCompletion:
         """Calls the chat completion API."""
+        if not self._client:
+            raise NotInitialisedError()
         completion = await self._client.chat.completions.create(
             messages=self._prompt_messages,
             model=self._model,
@@ -206,10 +204,13 @@ class OpenAIStructuredChat(_OpenAIBase):
 
     async def _handle_llm(self) -> ChatCompletion:
         """Calls the parsed chat completion API."""
-        completion = self._client.beta.chat.completions.parse(
+        if not self._client:
+            raise NotInitialisedError()
+        completion = await self._client.beta.chat.completions.parse(
             messages=self._prompt_messages,
             model=self._model,
-            response_format=self._response_model,
+            response_format=self._response_model,  # type: ignore
         )
         response = completion.choices[0].message
         self.response = response.parsed if not response.refusal else None  # type: ignore
+        return completion
