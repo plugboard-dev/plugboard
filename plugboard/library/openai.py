@@ -1,5 +1,6 @@
 """Provides Components for interacting with OpenAI-compatible models."""
 
+from abc import ABC, abstractmethod
 from collections import deque
 import typing as _t
 
@@ -19,7 +20,43 @@ except ImportError:
     pass
 
 
-class OpenAIChat(Component):
+class _OpenAIBase(Component, ABC):
+    """Base class for OpenAI Components."""
+
+    io = IO(inputs=["prompt"], outputs=["response"])
+
+    def __init__(
+        self,
+        *args: _t.Any,
+        model: str = "gpt-4o-mini",
+        system_prompt: _t.Optional[list[ChatCompletionMessageParam]] = None,
+        context_window: int = 0,
+        client_type: _t.Literal["openai", "azure"] = "openai",
+        open_ai_kwargs: _t.Optional[dict[str, _t.Any]] = None,
+        **kwargs: _t.Any,
+    ) -> None:
+        super().__init__(*args, **kwargs)
+        self._model = model
+        self._system_prompt: list[ChatCompletionMessageParam] = system_prompt or []
+        # Store 2x the context window to allow for both input and output messages
+        self._messages: deque[ChatCompletionMessageParam] = deque(maxlen=context_window * 2)
+        self._open_ai_kwargs = open_ai_kwargs or {}
+        self._client_type = client_type
+        self._client: _t.Optional[AsyncOpenAI | AsyncAzureOpenAI] = None
+
+    async def init(self) -> None:  # noqa: D102
+        if self._client_type == "azure":
+            self._client = AsyncAzureOpenAI(**self._open_ai_kwargs)
+        else:
+            self._client = AsyncOpenAI(**self._open_ai_kwargs)
+
+    @abstractmethod
+    async def step(self) -> None:  # noqa: D102
+        if not self._client:
+            raise NotInitialisedError()
+
+
+class OpenAIChat(_OpenAIBase):
     """`OpenAIChat` provides a component for interacting with OpenAI-compatible models.
 
     Requires the optional `plugboard[openai]` installation. The API key can be set via the
@@ -59,22 +96,18 @@ class OpenAIChat(Component):
                 endpoint, e.g. Gemini.
             **kwargs: Additional keyword arguments to pass to the the underlying `Component`.
         """
-        super().__init__(*args, **kwargs)
-        self._model = model
-        self._system_prompt: list[ChatCompletionMessageParam] = system_prompt or []
-        # Store 2x the context window to allow for both input and output messages
-        self._messages: deque[ChatCompletionMessageParam] = deque(maxlen=context_window * 2)
-        self._open_ai_kwargs = open_ai_kwargs or {}
-        self._client_type = client_type
-        self._client: _t.Optional[AsyncOpenAI | AsyncAzureOpenAI] = None
-
-    async def init(self) -> None:  # noqa: D102
-        if self._client_type == "azure":
-            self._client = AsyncAzureOpenAI(**self._open_ai_kwargs)
-        else:
-            self._client = AsyncOpenAI(**self._open_ai_kwargs)
+        super().__init__(
+            *args,
+            model=model,
+            system_prompt=system_prompt,
+            context_window=context_window,
+            client_type=client_type,
+            open_ai_kwargs=open_ai_kwargs,
+            **kwargs,
+        )
 
     async def step(self) -> None:  # noqa: D102
+        await super().step()
         if not self._client:
             raise NotInitialisedError()
         completion = await self._client.chat.completions.create(
