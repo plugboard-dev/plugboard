@@ -7,10 +7,11 @@ from unittest.mock import patch
 
 from openai.types.chat import ChatCompletionMessageParam
 import openai_responses
+from pydantic import BaseModel
 import pytest
 
 from plugboard.connector import AsyncioChannel, Connector
-from plugboard.library.openai import OpenAIChat
+from plugboard.library.openai import OpenAIChat, OpenAIStructuredChat
 from plugboard.schemas import ConnectorSpec
 
 
@@ -102,3 +103,46 @@ async def test_openai_chat(
         if context_window & message_id > 0:
             assert request["messages"][-3]["role"] == "user"
             assert request["messages"][-2]["role"] == "assistant"
+
+
+async def test_openai_structured_chat(
+    openai_mock: openai_responses.OpenAIMock,
+    client_type: _t.Literal["openai", "azure"],
+) -> None:
+    """Test the `OpenAIStructuredChat` component."""
+
+    class ExpectedResponse(BaseModel):
+        x: int
+        y: str
+
+    llm = OpenAIStructuredChat(
+        name="llm",
+        response_model=ExpectedResponse,
+        system_prompt=[{"role": "system", "content": "Help the user solve for x and y"}],
+        client_type=client_type,
+    )
+    conn = Connector(
+        spec=ConnectorSpec(source="none.none", target="llm.prompt"),
+        channel=AsyncioChannel(),
+    )
+
+    llm.io.connect([conn])
+    await llm.init()
+
+    openai_mock.beta.chat.completions.create.response = {
+        "choices": [
+            {
+                "index": 0,
+                "finish_reason": "stop",
+                "message": {
+                    "content": ExpectedResponse(x=45, y="test").model_dump_json(),
+                    "role": "assistant",
+                },
+            }
+        ]
+    }
+    await conn.channel.send(f"Test prompt")
+    await llm.step()
+    # Response must be parsed
+    assert llm.response.x == 45  # type: ignore
+    assert llm.response.y == "test"  # type: ignore
