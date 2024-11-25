@@ -6,8 +6,9 @@ from pydantic import BaseModel
 import pytest
 
 from plugboard.component import Component, IOController
-from plugboard.connector import AsyncioChannelBuilder, ChannelBuilder
+from plugboard.connector import AsyncioChannel, AsyncioChannelBuilder, ChannelBuilder, Connector
 from plugboard.events import Event, EventConnectorBuilder
+from plugboard.schemas import ConnectorSpec
 
 
 class EventTypeAData(BaseModel):
@@ -84,17 +85,46 @@ def event_connectors(channel_builder: ChannelBuilder) -> EventConnectorBuilder:
 
 
 @pytest.mark.anyio
-async def test_component_event_handlers(event_connectors: EventConnectorBuilder) -> None:
+@pytest.mark.parametrize(
+    "io_controller_kwargs",
+    [
+        {
+            "inputs": [],
+            "outputs": [],
+            "input_events": [EventTypeA, EventTypeB],
+            "output_events": [],
+        },
+        {
+            "inputs": ["in_1"],
+            "outputs": ["out_1"],
+            "input_events": [EventTypeA, EventTypeB],
+            "output_events": [],
+        },
+        {
+            "inputs": ["in_1", "in_2"],
+            "outputs": ["out_1"],
+            "input_events": [EventTypeA, EventTypeB],
+            "output_events": [],
+        },
+    ],
+)
+async def test_component_event_handlers(
+    io_controller_kwargs: dict, event_connectors: EventConnectorBuilder
+) -> None:
     """Test that event handlers are registered and called correctly for components."""
-    a = A(name="a")
 
-    assert a.event_A_count == 0
-    assert a.event_B_count == 0
+    class _A(A):
+        io = IOController(**io_controller_kwargs)
+
+    a = _A(name="a")
 
     event_connectors_map = event_connectors.build([a])
     connectors = list(event_connectors_map.values())
 
     a.io.connect(connectors)
+
+    assert a.event_A_count == 0
+    assert a.event_B_count == 0
 
     evt_A = EventTypeA(data=EventTypeAData(x=2), source="test-driver")
     await event_connectors_map[evt_A.type].channel.send(evt_A)
@@ -105,6 +135,78 @@ async def test_component_event_handlers(event_connectors: EventConnectorBuilder)
 
     evt_B = EventTypeB(data=EventTypeBData(y=4), source="test-driver")
     await event_connectors_map[evt_B.type].channel.send(evt_B)
+    await a.step()
+
+    assert a.event_A_count == 2
+    assert a.event_B_count == 4
+
+    await a.io.close()
+
+
+@pytest.fixture
+def field_connectors() -> list[Connector]:
+    """Fixture for a list of field connectors."""
+    return [
+        Connector(
+            spec=ConnectorSpec(source="null.in_1", target="a.in_1"),
+            channel=AsyncioChannel(),
+        ),
+        Connector(
+            spec=ConnectorSpec(source="null.in_2", target="a.in_2"),
+            channel=AsyncioChannel(),
+        ),
+        Connector(
+            spec=ConnectorSpec(source="a.out_1", target="null.out_1"),
+            channel=AsyncioChannel(),
+        ),
+    ]
+
+
+@pytest.mark.anyio
+async def test_component_event_handlers_with_field_inputs(
+    event_connectors: EventConnectorBuilder,
+    field_connectors: list[Connector],
+) -> None:
+    """Test that event handlers are registered and called correctly for components."""
+
+    class _A(A):
+        io = IOController(
+            inputs=["in_1", "in_2"],
+            outputs=["out_1"],
+            input_events=[EventTypeA, EventTypeB],
+            output_events=[],
+        )
+
+    a = _A(name="a")
+
+    event_connectors_map = event_connectors.build([a])
+    connectors = list(event_connectors_map.values()) + field_connectors
+
+    a.io.connect(connectors)
+
+    # Initially event counters should be zero
+    assert a.event_A_count == 0
+    assert a.event_B_count == 0
+
+    # After sending one event of type A, the event_A_count should be 2
+    evt_A = EventTypeA(data=EventTypeAData(x=2), source="test-driver")
+    await event_connectors_map[evt_A.type].channel.send(evt_A)
+    await a.step()
+
+    assert a.event_A_count == 2
+    assert a.event_B_count == 0
+
+    # After sending one event of type B, the event_B_count should be 4
+    evt_B = EventTypeB(data=EventTypeBData(y=4), source="test-driver")
+    await event_connectors_map[evt_B.type].channel.send(evt_B)
+    await a.step()
+
+    assert a.event_A_count == 2
+    assert a.event_B_count == 4
+
+    # After sending data for input fields, the event counters should remain the same
+    await field_connectors[0].channel.send(1)
+    await field_connectors[1].channel.send(2)
     await a.step()
 
     assert a.event_A_count == 2
