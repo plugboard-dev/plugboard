@@ -40,9 +40,11 @@ class _OpenAIBase(Component, ABC):
     ) -> None:
         super().__init__(*args, **kwargs)
         self._model = model
-        self._system_prompt: list[ChatCompletionMessageParam] = system_prompt or []
+        self._system_prompt: list[ChatCompletionMessageParam] = system_prompt or [
+        ]
         # Store 2x the context window to allow for both input and output messages
-        self._messages: deque[ChatCompletionMessageParam] = deque(maxlen=context_window * 2)
+        self._messages: deque[ChatCompletionMessageParam] = deque(
+            maxlen=context_window * 2)
         self._open_ai_kwargs = open_ai_kwargs or {}
         self._client_type = client_type
         self._client: _t.Optional[AsyncOpenAI | AsyncAzureOpenAI] = None
@@ -164,7 +166,7 @@ class OpenAIStructuredChat(_OpenAIBase):
     def __init__(
         self,
         *args: _t.Any,
-        response_model: BaseModel,
+        response_model: type[BaseModel],
         model: str = "gpt-4o-mini",
         system_prompt: _t.Optional[list[ChatCompletionMessageParam]] = None,
         context_window: int = 0,
