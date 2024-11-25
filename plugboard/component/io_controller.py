@@ -79,6 +79,7 @@ class IOController:
         except asyncio.CancelledError:
             for task in read_tasks:
                 task.cancel()
+            raise
 
     async def _read_fields(self) -> None:
         read_tasks = []
