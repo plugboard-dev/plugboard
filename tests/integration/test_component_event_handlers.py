@@ -1,5 +1,6 @@
 """Integration test for event handlers in a component."""
 
+import asyncio
 import typing as _t
 
 from pydantic import BaseModel
@@ -211,5 +212,36 @@ async def test_component_event_handlers_with_field_inputs(
 
     assert a.event_A_count == 2
     assert a.event_B_count == 4
+
+    # After sending data for one input field and one event of type A, the event_A_count should be 4
+    await field_connectors[0].channel.send(3)
+    await event_connectors_map[evt_A.type].channel.send(evt_A)
+    await a.step()
+
+    assert a.event_A_count == 4
+    assert a.event_B_count == 4
+
+    # After sending data for the other input field, the event counters should remain the same
+    await field_connectors[1].channel.send(4)
+    await a.step()
+
+    assert a.event_A_count == 4
+    assert a.event_B_count == 4
+
+    # After sending data for both input fields and both events, the event counters should
+    # eventually be updated after at most two steps
+    await field_connectors[0].channel.send(5)
+    await field_connectors[1].channel.send(6)
+    await event_connectors_map[evt_A.type].channel.send(evt_A)
+    await event_connectors_map[evt_B.type].channel.send(evt_B)
+    await a.step()
+    try:
+        # All read tasks may have completed in a single step, so timeout rather than wait forever
+        await asyncio.wait_for(a.step(), timeout=0.1)
+    except asyncio.TimeoutError:
+        pass
+
+    assert a.event_A_count == 6
+    assert a.event_B_count == 8
 
     await a.io.close()
