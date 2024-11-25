@@ -66,10 +66,12 @@ class IOController:
         if len(self._input_event_channels) > 0:
             read_tasks.append(asyncio.create_task(self._read_events()))
         try:
-            done, _ = await asyncio.wait(read_tasks, return_when=asyncio.FIRST_COMPLETED)
+            done, pending = await asyncio.wait(read_tasks, return_when=asyncio.FIRST_COMPLETED)
             for task in done:
                 if (e := task.exception()) is not None:
                     raise e
+            for task in pending:
+                task.cancel()
         except* ChannelClosedError as eg:
             await self.close()
             raise self._build_io_stream_error(IODirection.INPUT, eg) from eg
