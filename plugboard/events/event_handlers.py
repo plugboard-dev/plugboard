@@ -45,7 +45,7 @@ class EventHandlers:
 
     @classmethod
     def get(cls, _class: _t.Type, event: _t.Type[Event] | Event) -> AsyncCallable:
-        """Retrieve a handler for a specific event type.
+        """Retrieve a handler for a specific class and event type.
 
         Args:
             _class: Class to handle event for
@@ -57,12 +57,13 @@ class EventHandlers:
         Raises:
             KeyError: If no handler found for class or event type
         """
-        class_path = cls._get_class_path(_class)
-        if (class_handlers := cls._handlers.get(class_path)) is None:
-            raise KeyError(f"No handlers found for class '{class_path}'")
-        elif (handler := class_handlers.get(event.type)) is None:
-            raise KeyError(f"No handler found for class '{class_path}' and event '{event.type}'")
-        return handler
+        for base_class in _class.__mro__:
+            base_path = f"{base_class.__module__}.{base_class.__name__}"
+            if base_path in cls._handlers and event.type in cls._handlers[base_path]:
+                return cls._handlers[base_path][event.type]
+        raise KeyError(
+            f"No handler found for class '{_class.__name__}' and event type '{event.type}'"
+        )
 
     @staticmethod
     def _get_class_path(class_: _t.Type) -> str:
