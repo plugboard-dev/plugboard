@@ -188,6 +188,8 @@ async def test_component_event_handlers_with_field_inputs(
     # Initially event counters should be zero
     assert a.event_A_count == 0
     assert a.event_B_count == 0
+    assert getattr(a, "in_1", None) is None
+    assert getattr(a, "in_2", None) is None
 
     # After sending one event of type A, the event_A_count should be 2
     evt_A = EventTypeA(data=EventTypeAData(x=2), source="test-driver")
@@ -196,6 +198,8 @@ async def test_component_event_handlers_with_field_inputs(
 
     assert a.event_A_count == 2
     assert a.event_B_count == 0
+    assert getattr(a, "in_1", None) is None
+    assert getattr(a, "in_2", None) is None
 
     # After sending one event of type B, the event_B_count should be 4
     evt_B = EventTypeB(data=EventTypeBData(y=4), source="test-driver")
@@ -204,6 +208,8 @@ async def test_component_event_handlers_with_field_inputs(
 
     assert a.event_A_count == 2
     assert a.event_B_count == 4
+    assert getattr(a, "in_1", None) is None
+    assert getattr(a, "in_2", None) is None
 
     # After sending data for input fields, the event counters should remain the same
     await field_connectors[0].channel.send(1)
@@ -212,13 +218,13 @@ async def test_component_event_handlers_with_field_inputs(
 
     assert a.event_A_count == 2
     assert a.event_B_count == 4
+    assert getattr(a, "in_1", None) == 1
+    assert getattr(a, "in_2", None) == 2
 
     # After sending data for only one input field, step should timeout as read tasks are incomplete
     await field_connectors[0].channel.send(3)
-    try:
+    with pytest.raises(TimeoutError):
         await asyncio.wait_for(a.step(), timeout=0.1)
-    except asyncio.TimeoutError:
-        pass
 
     # After sending an event of type A before all field data is sent, the event_A_count should be 4
     await event_connectors_map[evt_A.type].channel.send(evt_A)
@@ -226,6 +232,8 @@ async def test_component_event_handlers_with_field_inputs(
 
     assert a.event_A_count == 4
     assert a.event_B_count == 4
+    assert getattr(a, "in_1", None) == 1
+    assert getattr(a, "in_2", None) == 2
 
     # After sending data for the other input field, the event counters should remain the same
     await field_connectors[1].channel.send(4)
@@ -233,6 +241,8 @@ async def test_component_event_handlers_with_field_inputs(
 
     assert a.event_A_count == 4
     assert a.event_B_count == 4
+    assert getattr(a, "in_1", None) == 3
+    assert getattr(a, "in_2", None) == 4
 
     # After sending data for both input fields and both events, the event counters should
     # eventually be updated after at most two steps
@@ -249,5 +259,7 @@ async def test_component_event_handlers_with_field_inputs(
 
     assert a.event_A_count == 6
     assert a.event_B_count == 8
+    assert getattr(a, "in_1", None) == 5
+    assert getattr(a, "in_2", None) == 6
 
     await a.io.close()
