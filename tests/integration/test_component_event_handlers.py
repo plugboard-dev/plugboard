@@ -213,8 +213,14 @@ async def test_component_event_handlers_with_field_inputs(
     assert a.event_A_count == 2
     assert a.event_B_count == 4
 
-    # After sending data for one input field and one event of type A, the event_A_count should be 4
+    # After sending data for only one input field, step should timeout as read tasks are incomplete
     await field_connectors[0].channel.send(3)
+    try:
+        await asyncio.wait_for(a.step(), timeout=0.1)
+    except asyncio.TimeoutError:
+        pass
+
+    # After sending an event of type A before all field data is sent, the event_A_count should be 4
     await event_connectors_map[evt_A.type].channel.send(evt_A)
     await a.step()
 
