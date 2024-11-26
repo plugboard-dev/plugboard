@@ -143,10 +143,10 @@ class IOController:
             for field, chan in self._output_channels.items():
                 tg.create_task(self._write_field(field, chan))
 
-    async def _write_field(self, field: str, chan: Channel) -> None:
+    async def _write_field(self, field: str, channel: Channel) -> None:
         item = self.data[str(IODirection.OUTPUT)][field]
         try:
-            await chan.send(item)
+            await channel.send(item)
         except ChannelClosedError as e:
             raise ChannelClosedError(f"Channel closed for field: {field}.") from e
 
@@ -206,19 +206,23 @@ class IOController:
         io_channels = getattr(self, f"_{direction}_event_channels")
         io_channels[event_type] = channel
 
-    def _add_channel(self, conn: Connector) -> None:
-        if conn.spec.source.connects_to([self.namespace]):
+    def _add_channel(self, connector: Connector) -> None:
+        if connector.spec.source.connects_to([self.namespace]):
             self._add_channel_for_field(
-                conn.spec.source.descriptor, IODirection.OUTPUT, conn.channel
+                connector.spec.source.descriptor, IODirection.OUTPUT, connector.channel
             )
-        elif conn.spec.target.connects_to([self.namespace]):
+        elif connector.spec.target.connects_to([self.namespace]):
             self._add_channel_for_field(
-                conn.spec.target.descriptor, IODirection.INPUT, conn.channel
+                connector.spec.target.descriptor, IODirection.INPUT, connector.channel
             )
-        elif conn.spec.source.connects_to(self._output_event_types):
-            self._add_channel_for_event(conn.spec.source.entity, IODirection.OUTPUT, conn.channel)
-        elif conn.spec.target.connects_to(self._input_event_types):
-            self._add_channel_for_event(conn.spec.target.entity, IODirection.INPUT, conn.channel)
+        elif connector.spec.source.connects_to(self._output_event_types):
+            self._add_channel_for_event(
+                connector.spec.source.entity, IODirection.OUTPUT, connector.channel
+            )
+        elif connector.spec.target.connects_to(self._input_event_types):
+            self._add_channel_for_event(
+                connector.spec.target.entity, IODirection.INPUT, connector.channel
+            )
 
     def connect(self, connectors: list[Connector]) -> None:
         """Connects the input/output fields to input/output channels."""
