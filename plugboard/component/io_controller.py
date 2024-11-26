@@ -82,50 +82,50 @@ class IOController:
             raise
 
     async def _read_fields(self) -> None:
-        read_tasks = []
-        for field, chan in self._input_channels.items():
-            if field not in self._read_tasks:
-                task = asyncio.create_task(self._read_field(field, chan))
-                self._read_tasks[field] = task
-            read_tasks.append(self._read_tasks[field])
-        if len(read_tasks) == 0:
-            return
-        await asyncio.wait(read_tasks, return_when=asyncio.ALL_COMPLETED)
-        for field in self._input_channels.keys():
-            task = self._read_tasks.pop(field)
-            if (e := task.exception()) is not None:
-                raise e
-            self.data[str(IODirection.INPUT)][field] = task.result()
-
-    async def _read_field(self, field: str, chan: Channel) -> _t.Any:
-        try:
-            return await chan.recv()
-        except ChannelClosedError as e:
-            raise ChannelClosedError(f"Channel closed for field: {field}.") from e
+        await self._read_channel_set(
+            channel_type="field",
+            channels=self._input_channels,
+            return_when=asyncio.ALL_COMPLETED,
+            store_fn=lambda k, v: self.data[str(IODirection.INPUT)].update({k: v}),
+        )
 
     async def _read_events(self) -> None:
+        await self._read_channel_set(
+            channel_type="event",
+            channels=self._input_event_channels,
+            return_when=asyncio.FIRST_COMPLETED,
+            store_fn=lambda _, v: self.events[str(IODirection.INPUT)].append(v),
+        )
+
+    async def _read_channel_set(
+        self,
+        channel_type: str,
+        channels: dict[str, Channel],
+        return_when: str,
+        store_fn: _t.Callable[[str, _t.Any], None],
+    ) -> None:
         read_tasks = []
-        for event_type, chan in self._input_event_channels.items():
-            if event_type not in self._read_tasks:
-                task = asyncio.create_task(self._read_event(event_type, chan))
-                task.set_name(event_type)
-                self._read_tasks[event_type] = task
-            read_tasks.append(self._read_tasks[event_type])
+        for key, chan in channels.items():
+            if key not in self._read_tasks:
+                task = asyncio.create_task(self._read_channel(channel_type, key, chan))
+                task.set_name(key)
+                self._read_tasks[key] = task
+            read_tasks.append(self._read_tasks[key])
         if len(read_tasks) == 0:
             return
-        done, _ = await asyncio.wait(read_tasks, return_when=asyncio.FIRST_COMPLETED)
+        done, _ = await asyncio.wait(read_tasks, return_when=return_when)
         for task in done:
-            event_type = task.get_name()
-            self._read_tasks.pop(event_type)
+            key = task.get_name()
+            self._read_tasks.pop(key)
             if (e := task.exception()) is not None:
                 raise e
-            self.events[str(IODirection.INPUT)].append(task.result())
+            store_fn(key, task.result())
 
-    async def _read_event(self, event_type: str, chan: Channel) -> _t.Any:
+    async def _read_channel(self, channel_type: str, key: str, channel: Channel) -> _t.Any:
         try:
-            return await chan.recv()
+            return await channel.recv()
         except ChannelClosedError as e:
-            raise ChannelClosedError(f"Channel closed for event: {event_type}") from e
+            raise ChannelClosedError(f"Channel closed for {channel_type}: {key}.") from e
 
     async def write(self) -> None:
         """Writes data to output channels."""
