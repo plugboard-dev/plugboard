@@ -74,24 +74,3 @@ def test_component_event_handlers_get(
     with exception_context:
         assert EventHandlers.get(queried_class, event_type) == expected_handler
 
-
-# def test_func_event_handlers_add() -> None:
-#     """Test that the `add` decorator registers event handlers."""
-
-#     # TODO : Investigate possibility of plain functions as event handlers
-#     @EventHandlers.add(EventType1)
-#     def test_handler() -> None:
-#         pass
-
-#     assert EventHandlers._handlers == {"?": {EventType1.type: test_handler}}
-
-
-# def test_func_event_handlers_get() -> None:
-#     """Test that the `get` method retrieves event handlers."""
-
-#     # TODO : Investigate possibility of plain functions as event handlers
-#     @EventHandlers.add(EventType1)
-#     def test_handler() -> None:
-#         pass
-
-#     assert EventHandlers.get(int, EventType1) == test_handler
