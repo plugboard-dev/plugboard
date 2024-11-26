@@ -61,7 +61,7 @@ class _OpenAIBase(Component, ABC):
             *self._messages,
             ChatCompletionUserMessageParam(
                 role="user",
-                content=self.prompt,  # type: ignore
+                content=str(self.prompt),  # type: ignore
             ),
         ]
 
@@ -78,7 +78,7 @@ class _OpenAIBase(Component, ABC):
                 [
                     ChatCompletionUserMessageParam(
                         role="user",
-                        content=self.prompt,  # type: ignore
+                        content=str(self.prompt),  # type: ignore
                     ),
                     ChatCompletionAssistantMessageParam(
                         role="assistant",
