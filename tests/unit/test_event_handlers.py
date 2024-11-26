@@ -73,4 +73,3 @@ def test_component_event_handlers_get(
     setattr(A, "event_1_handler", EventHandlers.add(EventType1)(A.event_1_handler))
     with exception_context:
         assert EventHandlers.get(queried_class, event_type) == expected_handler
-
