@@ -90,16 +90,16 @@ class IOController:
             read_tasks.append(self._read_tasks[field])
         if len(read_tasks) == 0:
             return
-        done, _ = await asyncio.wait(read_tasks, return_when=asyncio.ALL_COMPLETED)
+        await asyncio.wait(read_tasks, return_when=asyncio.ALL_COMPLETED)
         for field in self._input_channels.keys():
-            self._read_tasks.pop(field)
-        for task in done:
+            task = self._read_tasks.pop(field)
             if (e := task.exception()) is not None:
                 raise e
+            self.data[str(IODirection.INPUT)][field] = task.result()
 
-    async def _read_field(self, field: str, chan: Channel) -> None:
+    async def _read_field(self, field: str, chan: Channel) -> _t.Any:
         try:
-            self.data[str(IODirection.INPUT)][field] = await chan.recv()
+            return await chan.recv()
         except ChannelClosedError as e:
             raise ChannelClosedError(f"Channel closed for field: {field}.") from e
 
@@ -117,13 +117,13 @@ class IOController:
         for task in done:
             event_type = task.get_name()
             self._read_tasks.pop(event_type)
-        for task in done:
             if (e := task.exception()) is not None:
                 raise e
+            self.events[str(IODirection.INPUT)].append(task.result())
 
-    async def _read_event(self, event_type: str, chan: Channel) -> None:
+    async def _read_event(self, event_type: str, chan: Channel) -> _t.Any:
         try:
-            self.events[str(IODirection.INPUT)].append(await chan.recv())
+            return await chan.recv()
         except ChannelClosedError as e:
             raise ChannelClosedError(f"Channel closed for event: {event_type}") from e
 
