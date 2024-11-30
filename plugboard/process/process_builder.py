@@ -6,7 +6,6 @@ import typing as _t
 from plugboard.component.component import Component, ComponentRegistry
 from plugboard.connector.channel_builder import ChannelBuilder
 from plugboard.connector.connector import Connector
-from plugboard.process.local_process import LocalProcess
 from plugboard.process.process import Process
 from plugboard.schemas import ProcessSpec
 from plugboard.state import StateBackend
@@ -28,8 +27,11 @@ class ProcessBuilder:
         state = cls._build_statebackend(spec)
         components = cls._build_components(spec)
         connectors = cls._build_connectors(spec)
+        process_class: _t.Optional[_t.Any] = locate(spec.type)
+        if not process_class or not issubclass(process_class, Process):
+            raise ValueError(f"Process class {spec.type} not found.")
 
-        return LocalProcess(
+        return process_class(
             components=components,
             connectors=connectors,
             name=spec.args.name,
@@ -40,7 +42,7 @@ class ProcessBuilder:
     @classmethod
     def _build_statebackend(cls, spec: ProcessSpec) -> StateBackend:
         state_spec = spec.args.state
-        statebackend_class: _t.Any = locate(state_spec.type)
+        statebackend_class: _t.Optional[_t.Any] = locate(state_spec.type)
         if not statebackend_class or not issubclass(statebackend_class, StateBackend):
             raise ValueError(f"StateBackend class {spec.args.state.type} not found.")
         return statebackend_class(**dict(spec.args.state.args))
