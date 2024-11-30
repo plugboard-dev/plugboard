@@ -10,7 +10,7 @@ import pytest
 
 from plugboard.component import Component, IOController
 from plugboard.connector import Connector, ZMQChannel
-from plugboard.process import Process
+from plugboard.process import LocalProcess
 from plugboard.schemas.connector import ConnectorSpec
 from plugboard.state import DictStateBackend, StateBackend
 from tests.conftest import ComponentTestHelper
@@ -111,7 +111,7 @@ async def test_state_backend_multiprocess(
     if isinstance(state_backend, DictStateBackend):
         # Non-persistent state backend only supports one process
         processes = [
-            Process(
+            LocalProcess(
                 name="P1",
                 components=[comp_a1, comp_b1, comp_a2, comp_b2],
                 connectors=[conn_1, conn_2, conn_3, conn_4],
@@ -120,8 +120,8 @@ async def test_state_backend_multiprocess(
 
     else:
         processes = [
-            Process(name="P1", components=[comp_a1, comp_b1], connectors=[conn_1, conn_2]),
-            Process(name="P2", components=[comp_a2, comp_b2], connectors=[conn_3, conn_4]),
+            LocalProcess(name="P1", components=[comp_a1, comp_b1], connectors=[conn_1, conn_2]),
+            LocalProcess(name="P2", components=[comp_a2, comp_b2], connectors=[conn_3, conn_4]),
         ]
 
     for proc in processes:

@@ -10,7 +10,7 @@ import pytest
 
 from plugboard.component import IOController as IO
 from plugboard.connector import AsyncioChannel, Connector
-from plugboard.process import Process
+from plugboard.process import LocalProcess
 from plugboard.schemas import ConnectorSpec
 from tests.conftest import ComponentTestHelper
 
@@ -89,7 +89,7 @@ async def test_process_with_components_run(iters: int, factor: float, tempfile_p
     )
     connectors = [conn_ab, conn_bc]
 
-    process = Process(components, connectors)
+    process = LocalProcess(components, connectors)
 
     await process.init()
     for c in components:

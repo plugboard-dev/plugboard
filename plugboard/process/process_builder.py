@@ -6,6 +6,7 @@ import typing as _t
 from plugboard.component.component import Component, ComponentRegistry
 from plugboard.connector.channel_builder import ChannelBuilder
 from plugboard.connector.connector import Connector
+from plugboard.process.local_process import LocalProcess
 from plugboard.process.process import Process
 from plugboard.schemas import ProcessSpec
 from plugboard.state import StateBackend
@@ -28,7 +29,7 @@ class ProcessBuilder:
         components = cls._build_components(spec)
         connectors = cls._build_connectors(spec)
 
-        return Process(
+        return LocalProcess(
             components=components,
             connectors=connectors,
             name=spec.args.name,

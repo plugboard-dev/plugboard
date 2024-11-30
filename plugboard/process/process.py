@@ -1,7 +1,8 @@
-"""Provides the `Process` class for managing components in a process model."""
+"""Provides Process base class."""
 
 from __future__ import annotations
 
+from abc import ABC, abstractmethod
 import asyncio
 from types import TracebackType
 import typing as _t
@@ -12,8 +13,8 @@ from plugboard.state import DictStateBackend, StateBackend
 from plugboard.utils import ExportMixin, gen_rand_str
 
 
-class Process(ExportMixin):
-    """`Process` manages components in a process model."""
+class Process(ExportMixin, ABC):
+    """`Process` is a base class for managing components in a model."""
 
     def __init__(
         self,
@@ -42,7 +43,7 @@ class Process(ExportMixin):
         return self._state
 
     async def connect_state(self, state: _t.Optional[StateBackend] = None) -> None:
-        """Connects the `Process` to the StateBackend."""
+        """Connects the `Process` to the `StateBackend`."""
         if self._state_is_connected:
             return
         self._state = state or self._state
@@ -57,36 +58,30 @@ class Process(ExportMixin):
                 tg.create_task(self._state.upsert_connector(connector))
         self._state_is_connected = True
 
+    @abstractmethod
     def _connect_components(self) -> None:
-        connectors = list(self.connectors.values())
-        for component in self.components.values():
-            component.io.connect(connectors)
+        """Connect components."""
+        pass
 
+    @abstractmethod
     async def init(self) -> None:
         """Performs component initialisation actions."""
-        async with asyncio.TaskGroup() as tg:
-            await self.connect_state()
-            for component in self.components.values():
-                tg.create_task(component.init())
+        pass
 
+    @abstractmethod
     async def step(self) -> None:
         """Executes a single step for the process."""
-        async with asyncio.TaskGroup() as tg:
-            for component in self.components.values():
-                tg.create_task(component.step())
+        pass
 
+    @abstractmethod
     async def run(self) -> None:
         """Runs the process to completion."""
-        async with asyncio.TaskGroup() as tg:
-            for component in self.components.values():
-                tg.create_task(component.run())
+        pass
 
+    @abstractmethod
     async def destroy(self) -> None:
         """Performs tear-down actions for the `Process` and its `Component`s."""
-        async with asyncio.TaskGroup() as tg:
-            for component in self.components.values():
-                tg.create_task(component.destroy())
-            await self._state.destroy()
+        pass
 
     async def __aenter__(self) -> Process:
         """Enters the context manager."""

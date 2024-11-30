@@ -35,14 +35,15 @@ class ProcessSpec(PlugboardBaseModel):
 
     Attributes:
         args: The arguments for the `Process`.
+        type: The type of `Process` to build.
         channel_builder: The `ChannelBuilder` to use for the `Process`.
     """
 
     args: ProcessArgsSpec
     type: _t.Literal[
-        "plugboard.process.SingleProcess",
+        "plugboard.process.LocalProcess",
         "plugboard.process.ParallelProcess",
-    ] = "plugboard.process.SingleProcess"
+    ] = "plugboard.process.LocalProcess"
     channel_builder: ChannelBuilderSpec = ChannelBuilderSpec()
 
     @model_validator(mode="after")

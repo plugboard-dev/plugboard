@@ -6,7 +6,7 @@ import pytest
 
 from plugboard.component import Component, IOController
 from plugboard.connector import AsyncioChannel, Connector
-from plugboard.process import Process
+from plugboard.process import LocalProcess
 from plugboard.schemas import ConnectorSpec
 from plugboard.state import StateBackend
 from tests.conftest import ComponentTestHelper
@@ -165,10 +165,14 @@ async def test_state_backend_upsert_process(
     conn_3, conn_4 = C_connectors
 
     async with state_backend:
-        process_1 = Process(name="P1", components=[comp_b1, comp_b2], connectors=[conn_1, conn_2])
+        process_1 = LocalProcess(
+            name="P1", components=[comp_b1, comp_b2], connectors=[conn_1, conn_2]
+        )
         await state_backend.upsert_process(process_1, with_components=with_components)
 
-        process_2 = Process(name="P2", components=[comp_c1, comp_c2], connectors=[conn_3, conn_4])
+        process_2 = LocalProcess(
+            name="P2", components=[comp_c1, comp_c2], connectors=[conn_3, conn_4]
+        )
         await state_backend.upsert_process(process_2, with_components=with_components)
 
         process_1_dict = process_1.dict()
@@ -191,7 +195,7 @@ async def test_state_backend_process_init(
     comp_b1, comp_b2 = B_components
     conn_1, conn_2 = B_connectors
 
-    process = Process(
+    process = LocalProcess(
         name="P1", components=[comp_b1, comp_b2], connectors=[conn_1, conn_2], state=state_backend
     )
 
