@@ -4,7 +4,7 @@
 import pytest
 
 from plugboard.exceptions import RegistryError
-from plugboard.utils import ClassRegistry
+from plugboard.utils import ClassRegistry, build_actor_wrapper
 
 
 class BaseA:
@@ -26,6 +26,29 @@ class A2(BaseA):
 
 class B(BaseB):
     pass
+
+
+class C:
+    def __init__(self) -> None:
+        self.x = 0
+
+    def add(self, y: int) -> None:
+        self.x += y
+
+    async def add_async(self, y: int) -> None:
+        self.x += y
+
+
+class D:
+    c: C = C()
+
+    @property
+    def x(self) -> int:
+        return self.c.x
+
+    @x.setter
+    def x(self, value: int) -> None:
+        self.c.x = value
 
 
 def test_registry() -> None:
@@ -86,3 +109,33 @@ def test_registry_default_key() -> None:
     RegistryA.add(A1)
     with pytest.raises(RegistryError):
         RegistryA.get("A1")
+
+
+@pytest.mark.anyio
+async def test_actor_wrapper() -> None:
+    """Tests the `build_actor_wrapper` utility."""
+    WrappedC = build_actor_wrapper(C)
+    WrappedD = build_actor_wrapper(D)
+
+    c = WrappedC()
+    d = WrappedD()
+
+    # Must be able to call synchronous methods on target
+    c.add(5)  # type: ignore
+    assert c._self.x == 5
+    # Must be able to call asynchronous methods on target
+    await c.add_async(10)  # type: ignore
+    assert c._self.x == 15
+
+    # Must be able to access properties on target
+    assert d.getattr("x") == 0
+    d.setattr("x", 25)
+    assert d.getattr("x") == 25
+    assert d._self.c.x == 25
+
+    # Must be able to call synchronous methods on nested target
+    d.c_add(5)  # type: ignore
+    assert d._self.c.x == 30
+    # Must be able to call asynchronous methods on nested target
+    await d.c_add_async(10)  # type: ignore
+    assert d._self.c.x == 40
