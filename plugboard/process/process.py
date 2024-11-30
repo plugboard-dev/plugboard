@@ -16,6 +16,8 @@ from plugboard.utils import ExportMixin, gen_rand_str
 class Process(ExportMixin, ABC):
     """`Process` is a base class for managing components in a model."""
 
+    _default_state_cls: _t.Type[StateBackend] = DictStateBackend
+
     def __init__(
         self,
         components: _t.Iterable[Component],
@@ -24,11 +26,20 @@ class Process(ExportMixin, ABC):
         parameters: _t.Optional[dict] = None,
         state: _t.Optional[StateBackend] = None,
     ) -> None:
+        """Instantiates a `Process`.
+
+        Args:
+            components: The components in the `Process`.
+            connectors: The connectors between the components.
+            name: Optional; Name for this `Process`.
+            parameters: Optional; Parameters for the `Process`.
+            state: Optional; `StateBackend` for the `Process`.
+        """
         self.name = name or f"{self.__class__.__name__}_{gen_rand_str(8)}"
         self.components: dict[str, Component] = {c.id: c for c in components}
         self.connectors: dict[str, Connector] = {c.id: c for c in connectors}
         self.parameters: dict = parameters or {}
-        self._state: StateBackend = state or DictStateBackend()
+        self._state: StateBackend = state or self._default_state_cls()
         self._state_is_connected: bool = False
         self._connect_components()
 
