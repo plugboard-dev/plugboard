@@ -63,6 +63,10 @@ def build_actor_wrapper(cls: type[T]) -> type[_ActorWrapper[T]]:
     This is useful for handling classes that are modified at runtime, e.g. via wrapped methods, and
     therefore not supported by the `ray.remote` decorator.
 
+    The wrapper methods will have the same name as the original methods, but where nested in class
+    attributes the method names will be prefixed accordingly. The wrapper also provides a `getattr`
+    and `setattr` method to access the wrapped object's properties.
+
     Args:
         cls: The class to wrap.
 
