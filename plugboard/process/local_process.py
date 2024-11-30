@@ -1,7 +1,5 @@
 """Provides the `LocalProcess` class for managing components on a single processor."""
 
-from __future__ import annotations
-
 import asyncio
 
 from plugboard.process.process import Process
