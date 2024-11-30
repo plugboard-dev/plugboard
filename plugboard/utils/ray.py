@@ -21,20 +21,40 @@ class _ActorWrapper[T]:
         setattr(self._self, key, value)
 
 
-def _call_with_name(func: _t.Callable) -> _t.Callable:
+def _call_with_name(func: _t.Callable, path: tuple[str, ...]) -> _t.Callable:
     @wraps(func)
     def wrapper(self: _ActorWrapper, *args: _t.Any, **kwargs: _t.Any) -> _t.Callable:
-        return getattr(self._self, func.__name__)(*args, **kwargs)
+        obj = self._self
+        for name in path:
+            obj = getattr(obj, name)
+        return getattr(obj, func.__name__)(*args, **kwargs)
 
     return wrapper
 
 
-def _call_with_name_async(func: _t.Callable) -> _t.Callable:
+def _call_with_name_async(func: _t.Callable, path: tuple[str, ...]) -> _t.Callable:
     @wraps(func)
     async def wrapper(self: _ActorWrapper, *args: _t.Any, **kwargs: _t.Any) -> _t.Callable:
-        return await getattr(self._self, func.__name__)(*args, **kwargs)
+        obj = self._self
+        for name in path:
+            obj = getattr(obj, name)
+        return await getattr(obj, func.__name__)(*args, **kwargs)
 
     return wrapper
+
+
+def _wrap_methods(obj: object, path: tuple[str, ...]) -> _t.Iterator[tuple[str, _t.Callable]]:
+    """Recursively wraps all public methods on a class."""
+    public_attrs = {name: getattr(obj, name) for name in dir(obj) if not name.startswith("_")}
+    prefix = "_".join(path) + "_" if path else ""
+    for name, attr in public_attrs.items():
+        if callable(attr):
+            if inspect.iscoroutinefunction(attr):
+                yield f"{prefix}{name}", _call_with_name_async(attr, path)
+            else:
+                yield f"{prefix}{name}", _call_with_name(attr, path)
+        elif not attr.__class__.__module__ == "builtins":
+            yield from _wrap_methods(attr, (*path, name))
 
 
 def build_actor_wrapper(cls: type[T]) -> type[_ActorWrapper[T]]:
@@ -49,12 +69,5 @@ def build_actor_wrapper(cls: type[T]) -> type[_ActorWrapper[T]]:
     Returns:
         A new class that wraps the original class and can be used as a Ray actor.
     """
-    public_attrs = {name: getattr(cls, name) for name in dir(cls) if not name.startswith("_")}
-    methods = {
-        name: _call_with_name_async(method)
-        if inspect.iscoroutinefunction(method)
-        else _call_with_name(method)
-        for name, method in public_attrs.items()
-        if callable(method)
-    }
+    methods = dict(_wrap_methods(cls, tuple()))
     return type(f"{cls.__name__}Actor", (_ActorWrapper,), {**methods, "_cls": cls})

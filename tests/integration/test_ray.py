@@ -11,10 +11,10 @@ import typing as _t
 import pytest
 import ray
 
-from plugboard.component import Component
 from plugboard.connector import Connector, RayChannelBuilder
 from plugboard.schemas import ConnectorSpec
-from plugboard.state import RayStateBackend, StateBackend
+from plugboard.state import RayStateBackend
+from plugboard.utils import build_actor_wrapper
 from tests.integration.test_process_with_components_run import A, B, C
 
 
@@ -25,33 +25,9 @@ def temp_file_path() -> _t.Iterator[str]:
         yield f.name
 
 
-# TODO: Replace with a `build_actor_wrapper` class
-class ComponentActor:
-    def __init__(self, component_cls: type[Component], *args: _t.Any, **kwargs: _t.Any) -> None:
-        self._component = component_cls(*args, **kwargs)
-
-    async def connect_state(self, state: _t.Optional[StateBackend] = None) -> None:
-        await self._component.connect_state(state)
-
-    def connect(self, connectors: list[Connector]) -> None:
-        self._component.io.connect(connectors)
-
-    async def init(self) -> None:
-        await self._component.init()
-
-    async def step(self) -> None:
-        await self._component.step()
-
-    async def run(self) -> None:
-        await self._component.run()
-
-    async def destroy(self) -> None:
-        """Performs tear-down actions for `Component`."""
-        await self._component.destroy()
-
-    def getattr(self, name: str) -> _t.Any:
-        """Returns attributes from the channel."""
-        return getattr(self._component, name)
+ActorA = build_actor_wrapper(A)
+ActorB = build_actor_wrapper(B)
+ActorC = build_actor_wrapper(C)
 
 
 @pytest.mark.anyio
@@ -61,9 +37,9 @@ async def test_ray_run(temp_file_path: str) -> None:
     state = RayStateBackend()
 
     components = [
-        ray.remote(num_cpus=0.1)(ComponentActor).remote(A, name="A", iters=10),  # type: ignore
-        ray.remote(num_cpus=0.1)(ComponentActor).remote(B, name="B", factor=45),  # type: ignore
-        ray.remote(num_cpus=0.1)(ComponentActor).remote(C, name="C", path=temp_file_path),  # type: ignore
+        ray.remote(num_cpus=0.1)(ActorA).remote(name="A", iters=10),  # type: ignore
+        ray.remote(num_cpus=0.1)(ActorB).remote(name="B", factor=45),  # type: ignore
+        ray.remote(num_cpus=0.1)(ActorC).remote(name="C", path=temp_file_path),  # type: ignore
     ]
     connectors = [
         Connector(
@@ -78,7 +54,7 @@ async def test_ray_run(temp_file_path: str) -> None:
     # Task groups are not supported in Ray
     await asyncio.gather(*[state.upsert_connector(connector) for connector in connectors])
     await asyncio.gather(*(component.connect_state.remote(state) for component in components))  # type: ignore
-    await asyncio.gather(*(component.connect.remote(connectors) for component in components))  # type: ignore
+    await asyncio.gather(*(component.io_connect.remote(connectors) for component in components))  # type: ignore
 
     await asyncio.gather(*(component.init.remote() for component in components))  # type: ignore
     await asyncio.gather(*(component.run.remote() for component in components))  # type: ignore
