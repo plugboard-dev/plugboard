@@ -3,10 +3,12 @@
 import typing as _t
 
 from annotated_types import Len
+from pydantic import model_validator
+from typing_extensions import Self
 
 from plugboard.schemas._common import PlugboardBaseModel
 from .component import ComponentSpec
-from .connector import ChannelBuilderSpec, ConnectorSpec
+from .connector import DEFAULT_CHANNEL_CLS_PATH, ChannelBuilderSpec, ConnectorSpec
 from .state import StateBackendSpec
 
 
@@ -37,4 +39,18 @@ class ProcessSpec(PlugboardBaseModel):
     """
 
     args: ProcessArgsSpec
+    type: _t.Literal[
+        "plugboard.process.SingleProcess",
+        "plugboard.process.ParallelProcess",
+    ] = "plugboard.process.SingleProcess"
     channel_builder: ChannelBuilderSpec = ChannelBuilderSpec()
+
+    @model_validator(mode="after")
+    def _validate_channel_builder_type(self: Self) -> Self:
+        channel_builder_type = self.channel_builder.type
+        if (
+            self.type.endswith("ParallelProcess")
+            and channel_builder_type == DEFAULT_CHANNEL_CLS_PATH
+        ):
+            raise ValueError("ParallelProcess requires a parallel-capable channel builder type.")
+        return self
