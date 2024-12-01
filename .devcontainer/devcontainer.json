@@ -17,7 +17,7 @@
 	"customizations": {
 		"codespaces": {
 			"openFiles": [
-				"README.md"
+				"CONTRIBUTING.md"
 			]
 		},
 		"vscode": {

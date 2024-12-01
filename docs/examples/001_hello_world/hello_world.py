@@ -23,10 +23,14 @@ class A(Component):
         self._iters = iters
 
     async def init(self) -> None:
-        self._seq = range(self._iters)
+        await super().init()
+        self._seq = iter(range(self._iters))
 
     async def step(self) -> None:
-        self.out_1 = next(self._seq)
+        try:
+            self.out_1 = next(self._seq)
+        except StopIteration:
+            await self.io.close()
 
 
 class B(Component):
@@ -44,7 +48,7 @@ class B(Component):
 
     async def step(self) -> None:
         out = 2 * self.in_1
-        self._f.write(f"{out}\n")
+        await self._f.write(f"{out}\n")
 
     async def destroy(self) -> None:
         await self._ctx.aclose()
@@ -54,10 +58,10 @@ class B(Component):
 async def main() -> None:
     # --8<-- [start:main]
     process = LocalProcess(
-        components=[A(name="a", iters=10), B(name="b", path="./b.txt")],
+        components=[A(name="a", iters=10), B(name="b", path="b.txt")],
         connectors=[
             Connector(
-                spec=ConnectorSpec(source="comp_a.out_1", target="comp_b.in_1"),
+                spec=ConnectorSpec(source="a.out_1", target="b.in_1"),
                 channel=AsyncioChannel(),
             )
         ],
