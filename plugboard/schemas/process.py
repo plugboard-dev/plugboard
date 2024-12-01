@@ -42,16 +42,13 @@ class ProcessSpec(PlugboardBaseModel):
     args: ProcessArgsSpec
     type: _t.Literal[
         "plugboard.process.LocalProcess",
-        "plugboard.process.ParallelProcess",
+        "plugboard.process.RayProcess",
     ] = "plugboard.process.LocalProcess"
     channel_builder: ChannelBuilderSpec = ChannelBuilderSpec()
 
     @model_validator(mode="after")
     def _validate_channel_builder_type(self: Self) -> Self:
         channel_builder_type = self.channel_builder.type
-        if (
-            self.type.endswith("ParallelProcess")
-            and channel_builder_type == DEFAULT_CHANNEL_CLS_PATH
-        ):
-            raise ValueError("ParallelProcess requires a parallel-capable channel builder type.")
+        if self.type.endswith("RayProcess") and channel_builder_type == DEFAULT_CHANNEL_CLS_PATH:
+            raise ValueError("RayProcess requires a parallel-capable channel builder type.")
         return self
