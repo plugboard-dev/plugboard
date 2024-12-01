@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-import asyncio
 from types import TracebackType
 import typing as _t
 
@@ -60,18 +59,19 @@ class Process(ExportMixin, ABC):
         self._state = state or self._state
         if self._state is None:
             return
-        async with asyncio.TaskGroup() as tg:
-            await self._state.init()
-            await self._state.upsert_process(self)
-            for component in self.components.values():
-                tg.create_task(component.connect_state(self._state))
-            for connector in self.connectors.values():
-                tg.create_task(self._state.upsert_connector(connector))
+        await self._state.init()
+        await self._state.upsert_process(self)
+        await self._connect_state()
         self._state_is_connected = True
 
     @abstractmethod
     def _connect_components(self) -> None:
         """Connect components."""
+        pass
+
+    @abstractmethod
+    async def _connect_state(self) -> None:
+        """Connects the `Components` and `Connectors` to the `StateBackend`."""
         pass
 
     @abstractmethod

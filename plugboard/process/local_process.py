@@ -13,6 +13,13 @@ class LocalProcess(Process):
         for component in self.components.values():
             component.io.connect(connectors)
 
+    async def _connect_state(self) -> None:
+        async with asyncio.TaskGroup() as tg:
+            for component in self.components.values():
+                tg.create_task(component.connect_state(self._state))
+            for connector in self.connectors.values():
+                tg.create_task(self._state.upsert_connector(connector))
+
     async def init(self) -> None:
         """Performs component initialisation actions."""
         async with asyncio.TaskGroup() as tg:
