@@ -15,7 +15,7 @@ class _ActorWrapper[T]:
         self._self = self._cls(*args, **kwargs)
 
     def getattr(self, key: str) -> _t.Any:
-        return getattr(self._self, key)
+        return getattr(self._self, key, None)
 
     def setattr(self, key: str, value: _t.Any) -> None:
         setattr(self._self, key, value)
