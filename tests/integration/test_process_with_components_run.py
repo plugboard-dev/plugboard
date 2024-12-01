@@ -117,6 +117,9 @@ async def test_process_with_components_run(
     #    assert c.is_finished
     #    assert c.step_count == iters
 
+    assert comp_a.out_1 == iters - 1
+    assert comp_c.in_1 == (iters - 1) * factor  # type: ignore
+
     with tempfile_path.open() as f:
         data = f.read()
 
