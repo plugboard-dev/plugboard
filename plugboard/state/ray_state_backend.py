@@ -2,9 +2,13 @@
 
 import typing as _t
 
-import ray
-
 from plugboard.state.dict_state_backend import DictStateBackend
+
+
+try:
+    import ray
+except ImportError:
+    pass
 
 
 class _DictionaryActor:

@@ -2,13 +2,16 @@
 
 import typing as _t
 
-import ray
-
 from plugboard.connector.asyncio_channel import AsyncioChannel
 from plugboard.connector.channel import Channel
 from plugboard.connector.channel_builder import ChannelBuilder
 from plugboard.utils.ray import build_actor_wrapper
 
+
+try:
+    import ray
+except ImportError:
+    pass
 
 _AsyncioChannelActor = build_actor_wrapper(AsyncioChannel)
 

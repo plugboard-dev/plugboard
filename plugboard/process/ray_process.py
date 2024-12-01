@@ -3,13 +3,17 @@
 import asyncio
 import typing as _t
 
-import ray
-
 from plugboard.component import Component
 from plugboard.connector import Connector
 from plugboard.process.process import Process
 from plugboard.state import RayStateBackend, StateBackend
 from plugboard.utils import build_actor_wrapper
+
+
+try:
+    import ray
+except ImportError:
+    pass
 
 
 class RayProcess(Process):
