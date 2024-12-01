@@ -1,0 +1,96 @@
+"""Provides the `RayProcess` class for managing components in a Ray cluster."""
+
+import asyncio
+import typing as _t
+
+import ray
+
+from plugboard.component import Component
+from plugboard.connector import Connector
+from plugboard.process.process import Process
+from plugboard.state import RayStateBackend, StateBackend
+from plugboard.utils import build_actor_wrapper
+
+
+class RayProcess(Process):
+    """`RayProcess` manages components in a process model on a multiple Ray actors."""
+
+    _default_state_cls = RayStateBackend
+
+    def __init__(
+        self,
+        components: _t.Iterable[Component],
+        connectors: _t.Iterable[Connector],
+        name: _t.Optional[str] = None,
+        parameters: _t.Optional[dict] = None,
+        state: _t.Optional[StateBackend] = None,
+    ) -> None:
+        """Instantiates a `RayProcess`.
+
+        Args:
+            components: The components in the `Process`.
+            connectors: The connectors between the components.
+            name: Optional; Name for this `Process`.
+            parameters: Optional; Parameters for the `Process`.
+            state: Optional; `StateBackend` for the `Process`.
+        """
+        self._component_actors = {
+            # Recreate components on remote actors
+            c.id: ray.remote(num_cpus=0, name=c.id)(build_actor_wrapper(c.__class__)).remote(  # type: ignore
+                **c.export()["args"]
+            )
+            for c in components
+        }
+        super().__init__(components, connectors, name, parameters, state)
+
+    async def _update_component_attributes(self) -> None:
+        """Updates attributes on local components from remote actors."""
+        component_io_names = [
+            (c.id, name) for c in self.components.values() for name in c.io.inputs + c.io.outputs
+        ]
+        component_io_values = await asyncio.gather(
+            *[self._component_actors[id].getattr.remote(name) for id, name in component_io_names]
+        )
+        # Set attributes on the components
+        for (id, name), value in zip(component_io_names, component_io_values):
+            setattr(self.components[id], name, value)
+
+    def _connect_components(self) -> None:
+        connectors = list(self.connectors.values())
+        for component in self._component_actors.values():
+            component.io_connect.remote(connectors)
+
+    async def _connect_state(self) -> None:
+        component_coros = [
+            component.connect_state.remote(self._state)
+            for component in self._component_actors.values()
+        ]
+        connector_coros = [
+            self._state.upsert_connector(connector) for connector in self.connectors.values()
+        ]
+        await asyncio.gather(*component_coros, *connector_coros)
+
+    async def init(self) -> None:
+        """Performs component initialisation actions."""
+        await self.connect_state()
+        coros = [component.init.remote() for component in self._component_actors.values()]
+        await asyncio.gather(*coros)
+        await self._update_component_attributes()
+
+    async def step(self) -> None:
+        """Executes a single step for the process."""
+        coros = [component.step.remote() for component in self._component_actors.values()]
+        await asyncio.gather(*coros)
+        await self._update_component_attributes()
+
+    async def run(self) -> None:
+        """Runs the process to completion."""
+        coros = [component.run.remote() for component in self._component_actors.values()]
+        await asyncio.gather(*coros)
+        await self._update_component_attributes()
+
+    async def destroy(self) -> None:
+        """Performs tear-down actions for the `RayProcess` and its `Component`s."""
+        coros = [component.destroy.remote() for component in self._component_actors.values()]
+        await asyncio.gather(*coros)
+        await self._state.destroy()
