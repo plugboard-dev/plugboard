@@ -105,6 +105,7 @@ async def test_process_with_components_run(
     process = process_cls(components, connectors)
 
     await process.init()
+    # TODO: Work out how to re-enable this
     # for c in components:
     #    assert c.is_initialised
 
