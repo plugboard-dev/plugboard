@@ -1,6 +1,7 @@
 """Provides Component class."""
 
 from abc import ABC, abstractmethod
+import asyncio
 from functools import wraps
 import typing as _t
 
@@ -9,6 +10,8 @@ from plugboard.component.io_controller import (
     IODirection,
     IOStreamClosedError,
 )
+from plugboard.events import Event, EventHandlers
+from plugboard.exceptions import UnrecognisedEventError
 from plugboard.state import StateBackend
 from plugboard.utils import ClassRegistry, ExportMixin
 
@@ -33,7 +36,11 @@ class Component(ABC, ExportMixin):
         self._state: _t.Optional[StateBackend] = state
         self._state_is_connected = False
         self.io = IOController(
-            inputs=type(self).io.inputs, outputs=type(self).io.outputs, namespace=name
+            inputs=self.__class__.io.inputs,
+            outputs=self.__class__.io.outputs,
+            input_events=self.__class__.io.input_events,
+            output_events=self.__class__.io.output_events,
+            namespace=name,
         )
         self.init = self._handle_init_wrapper()  # type: ignore
         self.step = self._handle_step_wrapper()  # type: ignore
@@ -91,6 +98,7 @@ class Component(ABC, ExportMixin):
         async def _wrapper() -> None:
             await self.io.read()
             self._bind_inputs()
+            await self._handle_events()
             await self._step()
             self._bind_outputs()
             await self.io.write()
@@ -99,13 +107,37 @@ class Component(ABC, ExportMixin):
 
     def _bind_inputs(self) -> None:
         """Binds input fields to component fields."""
+        # TODO : Correct behaviour for missing fields (can happen when using events)?
         for field in self.io.inputs:
-            setattr(self, field, self.io.data[str(IODirection.INPUT)][field])
+            field_default = getattr(self, field, None)
+            value = self.io.data[str(IODirection.INPUT)].get(field, field_default)
+            setattr(self, field, value)
 
     def _bind_outputs(self) -> None:
         """Binds component fields to output fields."""
+        # TODO : Correct behaviour for missing fields (can happen when using events)?
         for field in self.io.outputs:
-            self.io.data[str(IODirection.OUTPUT)][field] = getattr(self, field)
+            field_default = getattr(self, field, None)
+            self.io.data[str(IODirection.OUTPUT)][field] = field_default
+
+    async def _handle_events(self) -> None:
+        """Handles incoming events."""
+        async with asyncio.TaskGroup() as tg:
+            while self.io.events[str(IODirection.INPUT)]:
+                event = self.io.events[str(IODirection.INPUT)].popleft()
+                tg.create_task(self._handle_event(event))
+
+    async def _handle_event(self, event: Event) -> None:
+        """Handles an event."""
+        try:
+            handler = EventHandlers.get(self.__class__, event)
+        except KeyError as e:
+            raise UnrecognisedEventError(
+                f"Unrecognised event type '{event.type}' for component '{self.__class__.__name__}'"
+            ) from e
+        res = await handler(self, event)
+        if isinstance(res, Event):
+            self.io.queue_event(res)
 
     async def run(self) -> None:
         """Executes component logic for all steps to completion."""

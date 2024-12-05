@@ -1,8 +1,12 @@
 """Integration tests for `ProcessBuilder`."""
 # ruff: noqa: D101,D102,D103
 
+import typing as _t
+
 import pytest
 
+from plugboard.component import IOController as IO
+from plugboard.events import Event
 from plugboard.process import ProcessBuilder
 from plugboard.schemas import (
     ChannelBuilderArgsSpec,
@@ -14,6 +18,34 @@ from plugboard.schemas import (
     StateBackendSpec,
 )
 from plugboard.utils import EntityIdGen
+from tests.conftest import ComponentTestHelper
+
+
+class DummyEvent1(Event):
+    """An event type for testing."""
+
+    type: _t.ClassVar[str] = "DummyEvent1"
+
+
+class DummyEvent2(Event):
+    """An event type for testing."""
+
+    type: _t.ClassVar[str] = "DummyEvent2"
+
+
+class D(ComponentTestHelper):
+    io = IO(input_events=[DummyEvent1, DummyEvent2])
+
+    async def step(self) -> None:
+        pass
+
+    @DummyEvent1.handler
+    async def dummy_event_1_handler(self, event: DummyEvent1) -> None:
+        pass
+
+    @DummyEvent2.handler
+    async def dummy_event_2_handler(self, event: DummyEvent2) -> None:
+        pass
 
 
 @pytest.fixture
@@ -33,6 +65,10 @@ def process_spec() -> ProcessSpec:
                 ComponentSpec(
                     type="tests.integration.test_process_with_components_run.C",
                     args={"name": "C", "path": "/tmp/test.txt"},
+                ),
+                ComponentSpec(
+                    type="tests.integration.test_process_builder.D",
+                    args={"name": "D"},
                 ),
             ],
             connectors=[
@@ -63,10 +99,11 @@ async def test_process_builder_build(process_spec: ProcessSpec) -> None:
     """Tests building a process."""
     process = ProcessBuilder.build(process_spec)
     # Must build a process with the correct components and connectors
-    assert len(process.components) == 3
-    assert len(process.connectors) == 2
+    assert len(process.components) == 4
+    # Number of connectors must be sum of those specified in config and those built for events
+    assert len(process.connectors) == 4
     # Must build a process with the correct component names
-    assert process.components.keys() == {"A", "B", "C"}
+    assert process.components.keys() == {"A", "B", "C", "D"}
     # Must build connectors with the correct channel types
     assert all(
         con.channel.__class__.__name__ == "AsyncioChannel" for con in process.connectors.values()
