@@ -58,6 +58,9 @@ docs = [
     "mkdocstrings[python] ~= 0.25"
 ]
 
+[tool.uv]
+package = true
+
 [project.scripts]
 plugboard = "plugboard.cli:app"
 
