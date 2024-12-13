@@ -14,28 +14,28 @@ For local development we recommend [VSCode](https://code.visualstudio.com/).
 
 ### Python dependencies
 
-Dependencies are managed using [poetry](https://python-poetry.org/). Install the project using
+Dependencies are managed using [uv](https://docs.astral.sh/uv/). Install the project using
 ```sh
-poetry install
+uv sync
 ```
 
 ### Testing
 
 Tests are run in [pytest](https://docs.pytest.org/en/stable/), which you can run with
 ```sh
-pytest .
+uv run pytest .
 ```
 
 ### Linting
 
 We use [ruff](https://github.com/astral-sh/ruff) for code formatting and style. Install the pre-commit hook by running
 ```sh
-poetry run pre-commit install
+uv run pre-commit install
 ```
 
 ### Documentation
 
 The package documentation uses [Material for MkDocs](https://squidfunk.github.io/mkdocs-material/) and can be viewed locally by running
 ```sh
-mkdocs serve
+uv run mkdocs serve
 ```
