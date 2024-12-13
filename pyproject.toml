@@ -2,10 +2,10 @@
 name = "plugboard"
 version = "0.0.0"
 description = "Plugboard is an event driven modelling and orchestration framework for simulating complex processes with many interconnected components."
-# authors = [
-#     "Chris Knight <plugboard@csknight.uk>",
-#     "Toby Coleman <plugboard@tobycoleman.com>",
-# ]
+authors = [
+    {name = "Chris Knight", email = "plugboard@csknight.uk"},
+    {name = "Toby Coleman", email = "plugboard@tobycoleman.com"}
+]
 requires-python = ">=3.12,<4.0"
 dependencies = [
     "aiosqlite ~= 0.20",
@@ -58,7 +58,7 @@ docs = [
     "mkdocstrings[python] ~= 0.25"
 ]
 
-[tool.poetry.scripts]
+[project.scripts]
 plugboard = "plugboard.cli:app"
 
 [tool.pytest.ini_options]  # Orchestrates code testing
