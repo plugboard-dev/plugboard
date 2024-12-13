@@ -45,7 +45,7 @@ jobs:
           cache-dependency-glob: "uv.lock"
 
       - name: Install project
-        run: uv sync
+        run: uv sync --group test --group docs
       
       # Run all checks, even if some fail
       - name: Ruff linting

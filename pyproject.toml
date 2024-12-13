@@ -60,7 +60,6 @@ docs = [
 
 [tool.uv]
 package = true
-default-groups = ["dev", "test", "docs"]
 
 [project.scripts]
 plugboard = "plugboard.cli:app"

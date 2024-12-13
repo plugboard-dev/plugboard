@@ -16,7 +16,7 @@ For local development we recommend [VSCode](https://code.visualstudio.com/).
 
 Dependencies are managed using [uv](https://docs.astral.sh/uv/). Install the project using
 ```sh
-uv sync
+uv sync --all-extras --group test --group docs
 ```
 
 ### Testing
