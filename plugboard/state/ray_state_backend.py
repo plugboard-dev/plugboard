@@ -3,6 +3,7 @@
 import typing as _t
 
 from plugboard.state.dict_state_backend import DictStateBackend
+from plugboard.utils import depends_on_optional
 
 
 try:
@@ -52,6 +53,7 @@ class _DictionaryActor:
 class RayStateBackend(DictStateBackend):
     """`RayStateBackend` provides state persistence for Ray cluster runs."""
 
+    @depends_on_optional("ray")
     def __init__(
         self, *args: _t.Any, actor_options: _t.Optional[dict] = None, **kwargs: _t.Any
     ) -> None:

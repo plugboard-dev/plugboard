@@ -5,7 +5,7 @@ import typing as _t
 from plugboard.connector.asyncio_channel import AsyncioChannel
 from plugboard.connector.channel import Channel
 from plugboard.connector.channel_builder import ChannelBuilder
-from plugboard.utils.ray import build_actor_wrapper
+from plugboard.utils import build_actor_wrapper, depends_on_optional
 
 
 try:
@@ -19,6 +19,7 @@ _AsyncioChannelActor = build_actor_wrapper(AsyncioChannel)
 class RayChannel(Channel):
     """`RayChannel` enables async data exchange between coroutines on a Ray cluster."""
 
+    @depends_on_optional("ray")
     def __init__(  # noqa: D417
         self,
         actor_options: _t.Optional[dict] = None,

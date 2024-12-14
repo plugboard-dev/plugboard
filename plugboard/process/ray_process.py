@@ -7,7 +7,7 @@ from plugboard.component import Component
 from plugboard.connector import Connector
 from plugboard.process.process import Process
 from plugboard.state import RayStateBackend, StateBackend
-from plugboard.utils import build_actor_wrapper
+from plugboard.utils import build_actor_wrapper, depends_on_optional
 
 
 try:
@@ -21,6 +21,7 @@ class RayProcess(Process):
 
     _default_state_cls = RayStateBackend
 
+    @depends_on_optional("ray")
     def __init__(
         self,
         components: _t.Iterable[Component],
