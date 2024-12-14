@@ -4,7 +4,7 @@
 import pytest
 
 from plugboard.exceptions import RegistryError
-from plugboard.utils import ClassRegistry, build_actor_wrapper
+from plugboard.utils import ClassRegistry, build_actor_wrapper, depends_on_optional
 
 
 class BaseA:
@@ -139,3 +139,23 @@ async def test_actor_wrapper() -> None:
     # Must be able to call asynchronous methods on nested target
     await d.c_add_async(10)  # type: ignore
     assert d._self.c.x == 40
+
+
+def test_depends_on_optional() -> None:
+    """Tests the `depends_on_optional` utility."""
+
+    @depends_on_optional("unknown_package")
+    def func_not_ok(x: int) -> int:
+        return x
+
+    @depends_on_optional("pydantic")
+    def func_ok(x: int) -> int:
+        return x
+
+    # Must raise ImportError if the optional dependency is not found
+    with pytest.raises(ImportError) as e:
+        func_not_ok(1)
+        assert "plugboard[unknown_package]" in str(e.value)
+
+    # Must not raise ImportError if the optional dependency is found
+    assert func_ok(1) == 1
