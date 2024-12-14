@@ -7,9 +7,9 @@ on:
 
 env:
   PYTHON_VERSION: '3.12'
-  POETRY_VERSION: '1.8'
 
 # See https://packaging.python.org/en/latest/guides/publishing-package-distribution-releases-using-github-actions-ci-cd-workflows/
+# Uses https://github.com/astral-sh/uv/issues/6298#issuecomment-2335034247 to set version equivalent to poetry-dynamic-versioning
 jobs:
   build:
     name: Build distribution 📦
@@ -21,17 +21,23 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - uses: actions/setup-python@v5
+      - name: Install python
+        uses: actions/setup-python@v5
         with:
           python-version: ${{env.PYTHON_VERSION}}
 
-      - name: Install
-        run: |
-          pip install poetry==$POETRY_VERSION
-          poetry install --without dev
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+        with:
+          enable-cache: true
+          cache-dependency-glob: "uv.lock"
 
       - name: Build wheel
-        run: poetry build
+        run: |
+          GIT_REF=${{ github.ref }}
+          VERSION=${GIT_REF#"refs/tags/v"}
+          uvx --from=toml-cli toml set --toml-path=pyproject.toml project.version $VERSION
+          uv build
 
       - name: Store the distribution packages
         uses: actions/upload-artifact@v4
