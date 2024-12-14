@@ -4,7 +4,7 @@
 import pytest
 
 from plugboard.exceptions import RegistryError
-from plugboard.utils import ClassRegistry, build_actor_wrapper, depends_on_optional
+from plugboard.utils import ClassRegistry, build_actor_wrapper, depends_on_optional, gather_except
 
 
 class BaseA:
@@ -159,3 +159,24 @@ def test_depends_on_optional() -> None:
 
     # Must not raise ImportError if the optional dependency is found
     assert func_ok(1) == 1
+
+
+@pytest.mark.anyio
+async def test_gather_except() -> None:
+    """Tests the `gather_except` utility."""
+
+    async def coro_ok() -> int:
+        return 1
+
+    async def coro_err() -> int:
+        raise ValueError("Error")
+
+    # Must return the results if all coroutines are successful
+    results = await gather_except(coro_ok(), coro_ok())
+    assert results == [1, 1]
+
+    # Must raise an exception if any coroutines raise an exception
+    with pytest.raises(ExceptionGroup) as e:
+        await gather_except(coro_ok(), coro_err())
+    assert len(e.value.exceptions) == 1
+    assert isinstance(e.value.exceptions[0], ValueError)
