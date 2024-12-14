@@ -31,13 +31,14 @@ gcp = ["gcsfs>=2024.9.0.post1"]
 
 [dependency-groups]
 dev = [
+    "dunamai~=1.23.0",
     "ipython~=8.26",
     "jupyterlab~=4.2",
     "mypy~=1.11",
     "nbstripout~=0.8",
     "pre-commit~=3.8",
     "ruff~=0.5",
-    "types-aiofiles~=24.1"
+    "types-aiofiles~=24.1",
 ]
 test = [
     "aiofile~=3.9",
