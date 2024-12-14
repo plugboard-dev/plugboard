@@ -27,11 +27,13 @@
 				"charliermarsh.ruff"
 			],
 			"settings": {
-				"editor.formatOnSave": true,
-				"editor.defaultFormatter": "charliermarsh.ruff",
-				"editor.codeActionsOnSave": {
-					"source.fixAll": "explicit",
-					"source.organizeImports": "explicit"
+				"[python]": {
+					"editor.formatOnSave": true,
+					"editor.defaultFormatter": "charliermarsh.ruff",
+					"editor.codeActionsOnSave": {
+						"source.fixAll": "explicit",
+						"source.organizeImports": "explicit"
+					}
 				},
 				"python.terminal.activateEnvInCurrentTerminal": true,
 				"python.terminal.activateEnvironment": true,
