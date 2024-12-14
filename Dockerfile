@@ -2,7 +2,6 @@
 
 # Base stage with common setup --------------------------------------------------------------------
 FROM python:3.12-slim-bookworm AS base
-COPY --from=ghcr.io/astral-sh/uv:0.5.9 /uv /uvx /bin/
 RUN addgroup --system --gid 10000 appuser \
   && adduser --system --uid 10000 --gid 10000 --home /home/appuser appuser
 WORKDIR /app
@@ -16,7 +15,8 @@ ENV PATH="${UV_PROJECT_ENVIRONMENT}/bin:${PATH}"
 ENV UV_LINK_MODE=copy
 
 # Install dependencies with --no-install-project to avoid potential cache invalidation
-RUN --mount=type=cache,target=/root/.cache/uv \
+RUN --mount=from=ghcr.io/astral-sh/uv,source=/uv,target=/bin/uv \
+  --mount=type=cache,target=/root/.cache/uv \
   --mount=type=bind,source=uv.lock,target=uv.lock \
   --mount=type=bind,source=pyproject.toml,target=pyproject.toml \
   uv sync --frozen --no-install-project --no-editable
@@ -32,9 +32,10 @@ COPY --from=builder ${UV_PROJECT_ENVIRONMENT} ${UV_PROJECT_ENVIRONMENT}
 # Install package with version string passed as build arg
 ARG semver
 ENV UV_VERSION_BYPASS=${semver}
-RUN --mount=type=bind,target=/app,rw --mount=type=tmpfs,target=/tmp/build \
+RUN --mount=from=ghcr.io/astral-sh/uv,source=/uv,target=/bin/uv \
+  --mount=type=bind,target=/app,rw --mount=type=tmpfs,target=/tmp/build \
   --mount=type=cache,target=/root/.cache/uv \
-  uvx --from=toml-cli toml set --toml-path=pyproject.toml project.version $UV_VERSION_BYPASS \
+  uv tool run --from=toml-cli toml set --toml-path=pyproject.toml project.version $UV_VERSION_BYPASS \
   uv sync --frozen --no-editable --compile-bytecode
 
 # Get security updates. Relies on cache bust from previous steps.
