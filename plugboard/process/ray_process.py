@@ -41,12 +41,17 @@ class RayProcess(Process):
         """
         self._component_actors = {
             # Recreate components on remote actors
-            c.id: ray.remote(num_cpus=0, name=c.id)(build_actor_wrapper(c.__class__)).remote(  # type: ignore
-                **c.export()["args"]
-            )
+            c.id: self._create_component_actor(c)
             for c in components
         }
+
         super().__init__(components, connectors, name, parameters, state)
+
+    def _create_component_actor(self, component: Component) -> _t.Any:
+        name = component.id
+        args = component.export()["args"]
+        actor_cls = build_actor_wrapper(component.__class__)
+        return ray.remote(num_cpus=0, name=name)(actor_cls).remote(args)  # type: ignore
 
     async def _update_component_attributes(self) -> None:
         """Updates attributes on local components from remote actors."""
