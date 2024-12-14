@@ -9,7 +9,6 @@ on:
 
 env:
   PYTHON_VERSION: '3.12'
-  POETRY_VERSION: '1.8'
 
 jobs:
   publish:
@@ -23,16 +22,23 @@ jobs:
       - name: checkout current branch
         uses: actions/checkout@v4
 
-      - uses: actions/setup-python@v5
+      - name: Install python
+        uses: actions/setup-python@v5
         with:
           python-version: ${{env.PYTHON_VERSION}}
 
-      - name: install
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+        with:
+          enable-cache: true
+          cache-dependency-glob: "uv.lock"
+
+      - name: Install project
         id: install
         run: |
-          pip install poetry==$POETRY_VERSION
-          poetry install --with docs
-          VERSION=$(poetry version --short)
+          VERSION=$(dunamai from git --style semver)
+          uvx --from=toml-cli toml set --toml-path=pyproject.toml project.version $VERSION
+          uv sync --group docs
           echo "version=$VERSION" >> $GITHUB_OUTPUT
 
       - name: Set git credentials
@@ -43,11 +49,11 @@ jobs:
       # Main branch publishes dev version of docs
       - run: |
           echo "Deploying dev version ${{ steps.install.outputs.version }}"
-          poetry run mike deploy -b gh-pages dev --push
+          uv run mike deploy -b gh-pages dev --push
         if: github.ref == 'refs/heads/main'
 
       # Tagged commits publish latest and numbered version of docs
       - run: |
           echo "Deploying latest version ${{ steps.install.outputs.version }}"
-          poetry run mike deploy -b gh-pages ${{ steps.install.outputs.version }} latest --update-aliases --push
+          uv run mike deploy -b gh-pages ${{ steps.install.outputs.version }} latest --update-aliases --push
         if: startsWith(github.ref, 'refs/tags/')
