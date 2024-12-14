@@ -4178,7 +4178,7 @@ testing = ["google-api-core (>=1.31.5)"]
 name = "protobuf"
 version = "5.28.3"
 description = ""
-optional = true
+optional = false
 python-versions = ">=3.8"
 files = [
     {file = "protobuf-5.28.3-cp310-abi3-win32.whl", hash = "sha256:0c4eec6f987338617072592b97943fdbe30d019c56126493111cf24344c1cc24"},
@@ -5027,7 +5027,7 @@ all = ["numpy"]
 name = "ray"
 version = "2.40.0"
 description = "Ray provides a simple, universal API for building distributed applications."
-optional = true
+optional = false
 python-versions = ">=3.9"
 files = [
     {file = "ray-2.40.0-cp310-cp310-macosx_10_15_x86_64.whl", hash = "sha256:064af8bc52cc988c82470b8e76e5df417737fa7c1d87f597a892c69eb4ec3caa"},
@@ -6418,4 +6418,4 @@ ray = ["ray"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.12,<4.0"
-content-hash = "f24e0fe06241e05f733da94cd7cc859793f26aa3cb8584d38c913f86b7ceb9c0"
+content-hash = "34802462a2710b0089a6363041668d6d6babd402b06bac25c9f10c6182454cb5"
