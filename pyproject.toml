@@ -8,54 +8,54 @@ authors = [
 ]
 requires-python = ">=3.12,<4.0"
 dependencies = [
-    "aiosqlite ~= 0.20",
-    "annotated-types ~= 0.7",
-    "async-lru ~= 2.0",
-    "fsspec >= 2024.9.0",
-    "inject ~= 5.2",
-    "moto[server] ~= 5.0",
-    "msgspec[yaml] ~= 0.18",
-    "multiprocess ~= 0.70",
+    "aiosqlite~=0.20",
+    "annotated-types~=0.7",
+    "async-lru~=2.0",
+    "fsspec>=2024.9.0",
+    "inject~=5.2",
+    "msgspec[yaml]~=0.18",
+    "multiprocess~=0.70",
     "pandas >=1.0,<3",
-    "pyarrow ~= 17.0",
-    "pydantic ~= 2.8",
-    "pyzmq ~= 26.2",
-    "rich ~= 13.9",
-    "sqlalchemy[asyncio] ~= 2.0",
-    "typer ~= 0.12"
+    "pyarrow~=17.0",
+    "pydantic~=2.8",
+    "pyzmq~=26.2",
+    "rich~=13.9",
+    "sqlalchemy[asyncio]~=2.0",
+    "typer~=0.12"
 ]
 
 [project.optional-dependencies]
-aws = ["s3fs >= 2024.9.0"]
-azure = ["adlfs >= 2024.7.0"]
-gcp = ["gcsfs >= 2024.9.0.post1"]
+aws = ["s3fs>=2024.9.0"]
+azure = ["adlfs>=2024.7.0"]
+gcp = ["gcsfs>=2024.9.0.post1"]
 
 [dependency-groups]
 dev = [
-    "ipython ~= 8.26",
-    "jupyterlab ~= 4.2",
-    "mypy ~= 1.11",
-    "nbstripout ~= 0.8",
-    "pre-commit ~= 3.8",
-    "ruff ~= 0.5",
-    "types-aiofiles ~= 24.1"
+    "ipython~=8.26",
+    "jupyterlab~=4.2",
+    "mypy~=1.11",
+    "nbstripout~=0.8",
+    "pre-commit~=3.8",
+    "ruff~=0.5",
+    "types-aiofiles~=24.1"
 ]
 test = [
-    "aiofile ~= 3.9",
-    "aiosqlite~= 0.20",
-    "anyio >= 4.3.0,<4.4.0",  # FIXME: Pinned due to hanging tests when running with anyio==4.4.0 on 2024-07-01
-    "pytest ~= 8.3",
-    "pytest-asyncio ~= 0.23",
-    "pytest-cases ~= 3.8",
-    "pytest-env ~= 1.1",
-    "pytest-rerunfailures ~= 14.0",
-    "s3fs >= 2024.9.0",
-    "time-machine ~= 2.15"
+    "aiofile~=3.9",
+    "aiosqlite~=0.20",
+    "anyio>=4.3.0,<4.4.0",  # FIXME: Pinned due to hanging tests when running with anyio==4.4.0 on 2024-07-01
+    "moto[server]~=5.0",
+    "pytest~=8.3",
+    "pytest-asyncio~=0.23",
+    "pytest-cases~=3.8",
+    "pytest-env~=1.1",
+    "pytest-rerunfailures~=14.0",
+    "s3fs>=2024.9.0",
+    "time-machine~=2.15"
 ]
 docs = [
-    "mike ~= 2.1",
-    "mkdocs-material ~= 9.5",
-    "mkdocstrings[python] ~= 0.25"
+    "mike~=2.1",
+    "mkdocs-material~=9.5",
+    "mkdocstrings[python]~=0.25"
 ]
 
 [tool.uv]
