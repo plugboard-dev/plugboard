@@ -68,7 +68,7 @@ jobs:
         if: always()
 
       - name: Build docs
-        run: uv run mkdocs build
+        run: uv run mkdocs build --site-dir /tmp/site
         if: always()
 
       - name: Build package
