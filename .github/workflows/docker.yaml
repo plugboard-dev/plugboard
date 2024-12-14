@@ -39,7 +39,7 @@ jobs:
 
       - name: Set package version
         run: |
-          VERSION=$(uv tool run dunamai from git --style semver)
+          VERSION=$(uvx dunamai from git --style semver)
           echo "PACKAGE_VERSION=$VERSION" >> $GITHUB_ENV
 
       - name: Set up QEMU

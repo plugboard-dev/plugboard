@@ -34,7 +34,7 @@ jobs:
 
       - name: Build wheel
         run: |
-          VERSION=$(dunamai from git --style semver)
+          VERSION=$(uvx dunamai from git --style semver)
           uvx --from=toml-cli toml set --toml-path=pyproject.toml project.version $VERSION
           uv build
 
