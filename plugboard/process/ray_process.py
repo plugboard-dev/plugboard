@@ -7,7 +7,7 @@ from plugboard.component import Component
 from plugboard.connector import Connector
 from plugboard.process.process import Process
 from plugboard.state import RayStateBackend, StateBackend
-from plugboard.utils import build_actor_wrapper, depends_on_optional
+from plugboard.utils import build_actor_wrapper, depends_on_optional, gather_except
 
 
 try:
@@ -78,29 +78,29 @@ class RayProcess(Process):
         connector_coros = [
             self._state.upsert_connector(connector) for connector in self.connectors.values()
         ]
-        await asyncio.gather(*component_coros, *connector_coros)
+        await gather_except(*component_coros, *connector_coros)
 
     async def init(self) -> None:
         """Performs component initialisation actions."""
         await self.connect_state()
         coros = [component.init.remote() for component in self._component_actors.values()]
-        await asyncio.gather(*coros)
+        await gather_except(*coros)
         await self._update_component_attributes()
 
     async def step(self) -> None:
         """Executes a single step for the process."""
         coros = [component.step.remote() for component in self._component_actors.values()]
-        await asyncio.gather(*coros)
+        await gather_except(*coros)
         await self._update_component_attributes()
 
     async def run(self) -> None:
         """Runs the process to completion."""
         coros = [component.run.remote() for component in self._component_actors.values()]
-        await asyncio.gather(*coros)
+        await gather_except(*coros)
         await self._update_component_attributes()
 
     async def destroy(self) -> None:
         """Performs tear-down actions for the `RayProcess` and its `Component`s."""
         coros = [component.destroy.remote() for component in self._component_actors.values()]
-        await asyncio.gather(*coros)
+        await gather_except(*coros)
         await self._state.destroy()
