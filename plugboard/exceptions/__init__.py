@@ -47,3 +47,15 @@ class NotFoundError(StateBackendError):
     """Raised when a resource is not found."""
 
     pass
+
+
+class EventError(Exception):
+    """Raised for event related errors."""
+
+    pass
+
+
+class UnrecognisedEventError(EventError):
+    """Raised when an unrecognised event is encountered."""
+
+    pass

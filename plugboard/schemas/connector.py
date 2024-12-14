@@ -1,5 +1,6 @@
 """Provides spec classes related to `Connector`s."""
 
+from collections.abc import Container
 from enum import StrEnum
 import re
 import typing as _t
@@ -28,57 +29,68 @@ class ConnectorMode(StrEnum):
     MANY_TO_MANY = "many-to-many"
 
 
-class ComponentSocket(PlugboardBaseModel):
-    """`ComponentSocket` defines a connection point for a component.
+class ConnectorSocket(PlugboardBaseModel):
+    """`ConnectorSocket` defines a source or target connection point on a `Connector`.
+
+    There are two typical types of connections in use: those between attributes of components;
+    and those connecting components with events which they either emit or consume. When connecting
+    two component attributes together, the `entity` is the name of the component, and the
+    `descriptor` is the name of the attribute. When connecting components with events, the `entity`
+    is the name of the event, and the `descriptor` is either "publishers" or "subscribers" as
+    appropriate.
 
     Attributes:
-        component: The name of the component.
-        field: The name of the I/O field on the component.
+        entity: The name of the entity.
+        descriptor: The name of the descriptor on the entity.
     """
 
     _PATTERN: _t.ClassVar[re.Pattern] = re.compile(
-        r"^([a-zA-Z_][a-zA-Z0-9_-]*)\.([a-zA-Z_][a-zA-Z0-9_]*)$"
+        r"^([a-zA-Z_][a-zA-Z0-9_\-]*)\.([a-zA-Z_][a-zA-Z0-9_]*)$"
     )
 
-    component: str
-    field: str
+    entity: str
+    descriptor: str
 
     @classmethod
     def from_ref(cls, ref: str) -> _t.Self:
-        """Creates a `ComponentSocket` from a reference string."""
+        """Creates a `ConnectorSocket` from a reference string."""
         match = cls._PATTERN.match(ref)
         if not match:
-            raise ValueError(f"Reference must be of the form 'component.field', got {ref}")
-        component, field = match.groups()
-        return cls(component=component, field=field)
+            raise ValueError(f"Reference must be of the form 'entity.descriptor', got {ref}")
+        entity, descriptor = match.groups()
+        return cls(entity=entity, descriptor=descriptor)
 
     @property
     def id(self) -> str:
-        """Unique ID for `ComponentSocket`."""
-        return f"{self.component}.{self.field}"
+        """Unique ID for `ConnectorSocket`."""
+        return f"{self.entity}.{self.descriptor}"
 
     def __str__(self) -> str:
         return self.id
 
+    def connects_to(self, entities: Container[str]) -> bool:
+        """Returns `True` if the `ConnectorSocket` connects to any of the named entities."""
+        return self.entity in entities
+
 
 class ConnectorSpec(PlugboardBaseModel):
-    """`ConnectorSpec` defines a connection between two components.
+    """`ConnectorSpec` defines a connection between two entities.
 
     Attributes:
-        source: The source component socket.
-        target: The target component socket.
+        source: The source endpoint.
+        target: The target endpoint.
         mode: The mode of the connector.
     """
 
-    source: ComponentSocket
-    target: ComponentSocket
+    source: ConnectorSocket
+    target: ConnectorSocket
     mode: ConnectorMode = Field(default=ConnectorMode.ONE_TO_ONE, validate_default=True)
 
     @field_validator("source", "target", mode="before")
     @classmethod
-    def _validate_source_target(cls, v: ComponentSocket | str) -> ComponentSocket:
-        if not isinstance(v, ComponentSocket):
-            return ComponentSocket.from_ref(v)
+    def _validate_source_target(cls, v: ConnectorSocket | str) -> ConnectorSocket:
+        if not isinstance(v, ConnectorSocket):
+            return ConnectorSocket.from_ref(v)
         return v
 
     @property
