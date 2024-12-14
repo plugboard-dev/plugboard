@@ -1,4 +1,4 @@
-"""Provides Process base class."""
+"""Provides `Process` base class."""
 
 from __future__ import annotations
 
