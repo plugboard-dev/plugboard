@@ -31,7 +31,6 @@ gcp = ["gcsfs>=2024.9.0.post1"]
 
 [dependency-groups]
 dev = [
-    "dunamai~=1.23.0",
     "ipython~=8.26",
     "jupyterlab~=4.2",
     "mypy~=1.11",

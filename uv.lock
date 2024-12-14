@@ -680,18 +680,6 @@ wheels = [
 ]
 
 [[package]]
-name = "dunamai"
-version = "1.23.0"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "packaging" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/06/4e/a5c8c337a1d9ac0384298ade02d322741fb5998041a5ea74d1cd2a4a1d47/dunamai-1.23.0.tar.gz", hash = "sha256:a163746de7ea5acb6dacdab3a6ad621ebc612ed1e528aaa8beedb8887fccd2c4", size = 44681 }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/21/4c/963169386309fec4f96fd61210ac0a0666887d0fb0a50205395674d20b71/dunamai-1.23.0-py3-none-any.whl", hash = "sha256:a0906d876e92441793c6a423e16a4802752e723e9c9a5aabdc5535df02dbe041", size = 26342 },
-]
-
-[[package]]
 name = "executing"
 version = "2.1.0"
 source = { registry = "https://pypi.org/simple" }
@@ -2253,7 +2241,6 @@ gcp = [
 
 [package.dev-dependencies]
 dev = [
-    { name = "dunamai" },
     { name = "ipython" },
     { name = "jupyterlab" },
     { name = "mypy" },
@@ -2304,7 +2291,6 @@ requires-dist = [
 
 [package.metadata.requires-dev]
 dev = [
-    { name = "dunamai", specifier = ">=1.23.0" },
     { name = "ipython", specifier = "~=8.26" },
     { name = "jupyterlab", specifier = "~=4.2" },
     { name = "mypy", specifier = "~=1.11" },
