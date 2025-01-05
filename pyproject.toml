@@ -50,6 +50,7 @@ test = [
     "pytest-cases~=3.8",
     "pytest-env~=1.1",
     "pytest-rerunfailures~=14.0",
+    "ray>=2.40.0",
     "s3fs>=2024.9.0",
     "time-machine~=2.15"
 ]

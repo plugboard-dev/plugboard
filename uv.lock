@@ -2297,6 +2297,7 @@ test = [
     { name = "pytest-cases" },
     { name = "pytest-env" },
     { name = "pytest-rerunfailures" },
+    { name = "ray" },
     { name = "s3fs" },
     { name = "time-machine" },
 ]
@@ -2348,6 +2349,7 @@ test = [
     { name = "pytest-cases", specifier = "~=3.8" },
     { name = "pytest-env", specifier = "~=1.1" },
     { name = "pytest-rerunfailures", specifier = "~=14.0" },
+    { name = "ray", specifier = ">=2.40.0" },
     { name = "s3fs", specifier = ">=2024.9.0" },
     { name = "time-machine", specifier = "~=2.15" },
 ]
