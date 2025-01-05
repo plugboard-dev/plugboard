@@ -19,7 +19,7 @@ RUN --mount=from=ghcr.io/astral-sh/uv,source=/uv,target=/bin/uv \
   --mount=type=cache,target=/root/.cache/uv \
   --mount=type=bind,source=uv.lock,target=uv.lock \
   --mount=type=bind,source=pyproject.toml,target=pyproject.toml \
-  uv sync --frozen --no-install-project --no-editable
+  uv sync --no-install-project --no-editable
 
 # Final stage with production setup ---------------------------------------------------------------
 FROM base AS prod
@@ -35,8 +35,8 @@ ENV UV_VERSION_BYPASS=${semver}
 RUN --mount=from=ghcr.io/astral-sh/uv,source=/uv,target=/bin/uv \
   --mount=type=bind,target=/app,rw --mount=type=tmpfs,target=/tmp/build \
   --mount=type=cache,target=/root/.cache/uv \
-  uv tool run --from=toml-cli toml set --toml-path=pyproject.toml project.version $UV_VERSION_BYPASS \
-  uv sync --frozen --no-editable --compile-bytecode
+  uv tool run --from=toml-cli toml set --toml-path=pyproject.toml project.version $UV_VERSION_BYPASS && \
+  uv sync --no-editable --compile-bytecode --all-extras
 
 # Get security updates. Relies on cache bust from previous steps.
 RUN --mount=type=cache,id=apt,target=/var/cache/apt \
