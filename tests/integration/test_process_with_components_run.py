@@ -9,8 +9,8 @@ from aiofile import async_open
 import pytest
 
 from plugboard.component import IOController as IO
-from plugboard.connector import AsyncioChannel, Connector
-from plugboard.process import Process
+from plugboard.connector import AsyncioChannel, Channel, Connector, RayChannel
+from plugboard.process import LocalProcess, Process, RayProcess
 from plugboard.schemas import ConnectorSpec
 from tests.conftest import ComponentTestHelper
 
@@ -69,29 +69,43 @@ def tempfile_path() -> _t.Generator[Path, None, None]:
 
 @pytest.mark.anyio
 @pytest.mark.parametrize(
+    "process_cls, channel_cls",
+    [
+        (LocalProcess, AsyncioChannel),
+        (RayProcess, RayChannel),
+    ],
+)
+@pytest.mark.parametrize(
     "iters, factor",
     [
         (1, 1.0),
         (10, 2.0),
     ],
 )
-async def test_process_with_components_run(iters: int, factor: float, tempfile_path: Path) -> None:
+async def test_process_with_components_run(
+    process_cls: type[Process],
+    channel_cls: type[Channel],
+    iters: int,
+    factor: float,
+    tempfile_path: Path,
+) -> None:
     comp_a = A(iters=iters, name="comp_a")
     comp_b = B(factor=factor, name="comp_b")
     comp_c = C(path=str(tempfile_path), name="comp_c")
     components = [comp_a, comp_b, comp_c]
 
     conn_ab = Connector(
-        spec=ConnectorSpec(source="comp_a.out_1", target="comp_b.in_1"), channel=AsyncioChannel()
+        spec=ConnectorSpec(source="comp_a.out_1", target="comp_b.in_1"), channel=channel_cls()
     )
     conn_bc = Connector(
-        spec=ConnectorSpec(source="comp_b.out_1", target="comp_c.in_1"), channel=AsyncioChannel()
+        spec=ConnectorSpec(source="comp_b.out_1", target="comp_c.in_1"), channel=channel_cls()
     )
     connectors = [conn_ab, conn_bc]
 
-    process = Process(components, connectors)
+    process = process_cls(components, connectors)
 
     await process.init()
+    # TODO: Work out how to re-enable this
     for c in components:
         assert c.is_initialised
 
@@ -103,6 +117,9 @@ async def test_process_with_components_run(iters: int, factor: float, tempfile_p
     for c in components:
         assert c.is_finished
         assert c.step_count == iters
+
+    assert comp_a.out_1 == iters - 1
+    assert comp_c.in_1 == (iters - 1) * factor  # type: ignore
 
     with tempfile_path.open() as f:
         data = f.read()

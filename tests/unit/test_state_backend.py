@@ -7,7 +7,12 @@ import pytest
 import time_machine
 
 from plugboard.exceptions import StateBackendError
-from plugboard.state import DictStateBackend, MultiprocessingStateBackend, StateBackend
+from plugboard.state import (
+    DictStateBackend,
+    MultiprocessingStateBackend,
+    RayStateBackend,
+    StateBackend,
+)
 from plugboard.utils.entities import EntityIdGen
 
 
@@ -35,7 +40,9 @@ def invalid_job_id() -> str:
     return "invalid_job_id"
 
 
-@pytest.fixture(scope="module", params=[DictStateBackend, MultiprocessingStateBackend])
+@pytest.fixture(
+    scope="module", params=[DictStateBackend, MultiprocessingStateBackend, RayStateBackend]
+)
 def state_backend_cls(request: pytest.FixtureRequest) -> _t.Type[StateBackend]:
     """Returns a `StateBackend` class."""
     return request.param
