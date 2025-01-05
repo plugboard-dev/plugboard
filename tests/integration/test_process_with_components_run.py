@@ -106,17 +106,17 @@ async def test_process_with_components_run(
 
     await process.init()
     # TODO: Work out how to re-enable this
-    # for c in components:
-    #    assert c.is_initialised
+    for c in components:
+        assert c.is_initialised
 
     await process.step()
-    # for c in components:
-    #    assert c.step_count == 1
+    for c in components:
+        assert c.step_count == 1
 
     await process.run()
-    # for c in components:
-    #    assert c.is_finished
-    #    assert c.step_count == iters
+    for c in components:
+        assert c.is_finished
+        assert c.step_count == iters
 
     assert comp_a.out_1 == iters - 1
     assert comp_c.in_1 == (iters - 1) * factor  # type: ignore

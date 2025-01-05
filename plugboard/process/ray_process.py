@@ -1,6 +1,5 @@
 """Provides the `RayProcess` class for managing components in a Ray cluster."""
 
-import asyncio
 import typing as _t
 
 from plugboard.component import Component
@@ -55,15 +54,12 @@ class RayProcess(Process):
 
     async def _update_component_attributes(self) -> None:
         """Updates attributes on local components from remote actors."""
-        component_io_names = [
-            (c.id, name) for c in self.components.values() for name in c.io.inputs + c.io.outputs
-        ]
-        component_io_values = await asyncio.gather(
-            *[self._component_actors[id].getattr.remote(name) for id, name in component_io_names]
+        component_ids = [c.id for c in self.components.values()]
+        remote_states = await gather_except(
+            *[self._component_actors[id].getattr.remote("__dict__") for id in component_ids]
         )
-        # Set attributes on the components
-        for (id, name), value in zip(component_io_names, component_io_values):
-            setattr(self.components[id], name, value)
+        for id, state in zip(component_ids, remote_states):
+            self.components[id].__dict__.update(state)
 
     def _connect_components(self) -> None:
         connectors = list(self.connectors.values())
