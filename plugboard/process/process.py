@@ -1,8 +1,8 @@
-"""Provides the `Process` class for managing components in a process model."""
+"""Provides `Process` base class."""
 
 from __future__ import annotations
 
-import asyncio
+from abc import ABC, abstractmethod
 from types import TracebackType
 import typing as _t
 
@@ -12,8 +12,10 @@ from plugboard.state import DictStateBackend, StateBackend
 from plugboard.utils import ExportMixin, gen_rand_str
 
 
-class Process(ExportMixin):
-    """`Process` manages components in a process model."""
+class Process(ExportMixin, ABC):
+    """`Process` is a base class for managing components in a model."""
+
+    _default_state_cls: _t.Type[StateBackend] = DictStateBackend
 
     def __init__(
         self,
@@ -23,11 +25,20 @@ class Process(ExportMixin):
         parameters: _t.Optional[dict] = None,
         state: _t.Optional[StateBackend] = None,
     ) -> None:
+        """Instantiates a `Process`.
+
+        Args:
+            components: The components in the `Process`.
+            connectors: The connectors between the components.
+            name: Optional; Name for this `Process`.
+            parameters: Optional; Parameters for the `Process`.
+            state: Optional; `StateBackend` for the `Process`.
+        """
         self.name = name or f"{self.__class__.__name__}_{gen_rand_str(8)}"
         self.components: dict[str, Component] = {c.id: c for c in components}
         self.connectors: dict[str, Connector] = {c.id: c for c in connectors}
         self.parameters: dict = parameters or {}
-        self._state: StateBackend = state or DictStateBackend()
+        self._state: StateBackend = state or self._default_state_cls()
         self._state_is_connected: bool = False
         self._connect_components()
 
@@ -42,51 +53,46 @@ class Process(ExportMixin):
         return self._state
 
     async def connect_state(self, state: _t.Optional[StateBackend] = None) -> None:
-        """Connects the `Process` to the StateBackend."""
+        """Connects the `Process` to the `StateBackend`."""
         if self._state_is_connected:
             return
         self._state = state or self._state
         if self._state is None:
             return
-        async with asyncio.TaskGroup() as tg:
-            await self._state.init()
-            await self._state.upsert_process(self)
-            for component in self.components.values():
-                tg.create_task(component.connect_state(self._state))
-            for connector in self.connectors.values():
-                tg.create_task(self._state.upsert_connector(connector))
+        await self._state.init()
+        await self._state.upsert_process(self)
+        await self._connect_state()
         self._state_is_connected = True
 
+    @abstractmethod
     def _connect_components(self) -> None:
-        connectors = list(self.connectors.values())
-        for component in self.components.values():
-            component.io.connect(connectors)
+        """Connect components."""
+        pass
 
+    @abstractmethod
+    async def _connect_state(self) -> None:
+        """Connects the `Components` and `Connectors` to the `StateBackend`."""
+        pass
+
+    @abstractmethod
     async def init(self) -> None:
         """Performs component initialisation actions."""
-        async with asyncio.TaskGroup() as tg:
-            await self.connect_state()
-            for component in self.components.values():
-                tg.create_task(component.init())
+        pass
 
+    @abstractmethod
     async def step(self) -> None:
         """Executes a single step for the process."""
-        async with asyncio.TaskGroup() as tg:
-            for component in self.components.values():
-                tg.create_task(component.step())
+        pass
 
+    @abstractmethod
     async def run(self) -> None:
         """Runs the process to completion."""
-        async with asyncio.TaskGroup() as tg:
-            for component in self.components.values():
-                tg.create_task(component.run())
+        pass
 
+    @abstractmethod
     async def destroy(self) -> None:
         """Performs tear-down actions for the `Process` and its `Component`s."""
-        async with asyncio.TaskGroup() as tg:
-            for component in self.components.values():
-                tg.create_task(component.destroy())
-            await self._state.destroy()
+        pass
 
     async def __aenter__(self) -> Process:
         """Enters the context manager."""

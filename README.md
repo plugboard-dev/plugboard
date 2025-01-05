@@ -47,6 +47,8 @@ python -m pip install plugboard
 
 Optional integrations for different cloud providers can be installed using `plugboard[aws]`, `plugboard[azure]` or `plugboard[gcp]`.
 
+Support for parallelisation can be installed using `plugboard[ray]`.
+
 ## 🚀 Usage
 
 Plugboard is built to help you with two things: defining process models, and executing those models. There are two main ways to interact with plugboard: via the Python API; or, via the CLI using model definitions saved in yaml or json format.
