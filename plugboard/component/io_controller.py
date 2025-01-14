@@ -31,6 +31,8 @@ class IOController:
         self.initial_values = initial_values or {}
         self.input_events = input_events or []
         self.output_events = output_events or []
+        if set(self.initial_values.keys()) - set(self.inputs):
+            raise ValueError("Initial values must be for input fields only.")
         self.data: dict[str, dict[str, _t.Any]] = {
             str(IODirection.INPUT): {},
             str(IODirection.OUTPUT): {},
