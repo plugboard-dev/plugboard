@@ -38,6 +38,7 @@ class Component(ABC, ExportMixin):
         self.io = IOController(
             inputs=self.__class__.io.inputs,
             outputs=self.__class__.io.outputs,
+            initial_values=initial_values,
             input_events=self.__class__.io.input_events,
             output_events=self.__class__.io.output_events,
             namespace=name,

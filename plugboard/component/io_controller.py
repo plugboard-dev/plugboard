@@ -20,6 +20,7 @@ class IOController:
         self,
         inputs: _t.Optional[_t.Any] = None,
         outputs: _t.Optional[_t.Any] = None,
+        initial_values: _t.Optional[dict] = None,
         input_events: _t.Optional[list[_t.Type[Event]]] = None,
         output_events: _t.Optional[list[_t.Type[Event]]] = None,
         namespace: str = IO_NS_UNSET,
@@ -27,6 +28,7 @@ class IOController:
         self.namespace = namespace
         self.inputs = inputs or []
         self.outputs = outputs or []
+        self.initial_values = initial_values or {}
         self.input_events = input_events or []
         self.output_events = output_events or []
         self.data: dict[str, dict[str, _t.Any]] = {
@@ -44,6 +46,7 @@ class IOController:
         self._input_event_types = {Event.safe_type(evt.type) for evt in self.input_events}
         self._output_event_types = {Event.safe_type(evt.type) for evt in self.output_events}
         self._read_tasks: dict[str, asyncio.Task] = {}
+        self._initial_values = self.initial_values.copy() or {}
         self._is_closed = False
 
     @property
@@ -129,7 +132,7 @@ class IOController:
 
     async def _read_channel(self, channel_type: str, key: str, channel: Channel) -> _t.Any:
         try:
-            return await channel.recv()
+            return self._initial_values.pop(key, await channel.recv())
         except ChannelClosedError as e:
             raise ChannelClosedError(f"Channel closed for {channel_type}: {key}.") from e
 
