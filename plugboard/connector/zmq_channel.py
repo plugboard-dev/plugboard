@@ -13,7 +13,7 @@ from plugboard.connector.channel import Channel
 from plugboard.connector.channel_builder import ChannelBuilder
 from plugboard.connector.serde_channel import SerdeChannel
 from plugboard.exceptions import ChannelSetupError
-from plugboard.utils import gen_rand_str
+from plugboard.utils import depends_on_optional, gen_rand_str
 
 
 ZMQ_ADDR = r"tcp://127.0.0.1"
@@ -23,6 +23,7 @@ ZMQ_CONFIRM_MSG = "__PLUGBOARD_CHAN_CONFIRM_MSG__"
 class ZMQChannel(SerdeChannel):
     """`ZMQChannel` enables data exchange between processes using ZeroMQ."""
 
+    @depends_on_optional("ray")
     def __init__(  # noqa: D417
         self, *args: _t.Any, manager: SyncManager, maxsize: int = 2000, **kwargs: _t.Any
     ) -> None:
