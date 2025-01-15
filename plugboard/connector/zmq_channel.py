@@ -2,15 +2,18 @@
 
 import typing as _t
 
-from ray.util.queue import Queue
-import zmq
-import zmq.asyncio
-
 from plugboard.connector.channel_builder import ChannelBuilder
 from plugboard.connector.serde_channel import SerdeChannel
 from plugboard.exceptions import ChannelSetupError
 from plugboard.utils import depends_on_optional, gen_rand_str
 
+
+try:
+    from ray.util.queue import Queue
+    import zmq
+    import zmq.asyncio
+except ImportError:
+    pass
 
 ZMQ_ADDR = r"tcp://127.0.0.1"
 ZMQ_CONFIRM_MSG = "__PLUGBOARD_CHAN_CONFIRM_MSG__"
