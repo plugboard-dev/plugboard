@@ -46,9 +46,9 @@ async def test_circular_process_topology() -> None:
     await process.run()
 
     # Check the final inputs/outputs
-    assert comp_c.in_1 == 9
-    assert comp_c.in_2 == 8 * 2
-    assert comp_c.out_1 == 9
-    assert comp_c.out_2 == 8 * 2
+    assert comp_c.in_1 == 9  # type: ignore
+    assert comp_c.in_2 == 8 * 2  # type: ignore
+    assert comp_c.out_1 == 9  # type: ignore
+    assert comp_c.out_2 == 8 * 2  # type: ignore
 
     assert all(comp.is_finished for comp in components)

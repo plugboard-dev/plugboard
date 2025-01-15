@@ -12,7 +12,7 @@ class A(Component):
     io = IO(inputs=["a", "b"], outputs=["c"])
 
     async def step(self) -> None:
-        self.c = {"a": self.a, "b": self.b}
+        self.c = {"a": self.a, "b": self.b}  # type: ignore
 
 
 @pytest.mark.anyio
