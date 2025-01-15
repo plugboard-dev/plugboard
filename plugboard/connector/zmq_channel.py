@@ -27,7 +27,9 @@ class ZMQChannel(SerdeChannel):
 
         Uses ZeroMQ to provide communication between components on different
         processes. Note that maxsize is not a hard limit because the operating
-        system will buffer TCP messages before they reach the channel.
+        system will buffer TCP messages before they reach the channel. `ZMQChannel`
+        provides better performance than `RayChannel`, but is only suitable for use
+        on a single host. For multi-host communication, use `RayChannel`.
 
         Args:
             maxsize: Queue maximum item capacity, defaults to 2000.
