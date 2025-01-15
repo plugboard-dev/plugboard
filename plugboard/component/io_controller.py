@@ -134,9 +134,12 @@ class IOController:
 
     async def _read_channel(self, channel_type: str, key: str, channel: Channel) -> _t.Any:
         try:
-            return self._initial_values.pop(key, await channel.recv())
-        except ChannelClosedError as e:
-            raise ChannelClosedError(f"Channel closed for {channel_type}: {key}.") from e
+            return self._initial_values.pop(key)
+        except KeyError:
+            try:
+                return await channel.recv()
+            except ChannelClosedError as e:
+                raise ChannelClosedError(f"Channel closed for {channel_type}: {key}.") from e
 
     async def write(self) -> None:
         """Writes data to output channels."""
