@@ -4,12 +4,9 @@ import asyncio
 import random
 import typing as _t
 
-import inject
-from multiprocess.managers import SyncManager
 import zmq
 import zmq.asyncio
 
-from plugboard.connector.channel import Channel
 from plugboard.connector.channel_builder import ChannelBuilder
 from plugboard.connector.serde_channel import SerdeChannel
 from plugboard.exceptions import ChannelSetupError
@@ -25,17 +22,16 @@ class ZMQChannel(SerdeChannel):
 
     @depends_on_optional("ray")
     def __init__(  # noqa: D417
-        self, *args: _t.Any, manager: SyncManager, maxsize: int = 2000, **kwargs: _t.Any
+        self, *args: _t.Any, maxsize: int = 2000, **kwargs: _t.Any
     ) -> None:
         """Instantiates `ZMQChannel`.
 
-        Uses ZeroMQ to provide communication between components on different
-        processes. Note that maxsize is not a hard limit because the operating
-        system will buffer TCP messages before they reach the channel.
+                Uses ZeroMQ to provide communication between components on different
+                processes. Note that maxsize is not a hard limit because the operating
+                system will buffer TCP messages before they reach the channel.
 
         Args:
-            manager: A multiprocessing manager.
-            maxsize: Queue maximum item capacity, defaults to 2000.
+        -            maxsize: Queue maximum item capacity, defaults to 2000.
         """
         super().__init__(*args, **kwargs)
         self._port = manager.Value("i", 0)
@@ -89,12 +85,3 @@ class ZMQChannelBuilder(ChannelBuilder):
     """`ZMQChannelBuilder` builds `ZMQChannel` objects."""
 
     channel_cls = ZMQChannel
-
-    @inject.params(manager=SyncManager)
-    def build(self, *args: _t.Any, manager: SyncManager, **kwargs: _t.Any) -> Channel:  # noqa: D417
-        """Builds a `Channel` object.
-
-        Args:
-            manager: A multiprocessing manager.
-        """
-        return self.channel_cls(*args, manager=manager, **kwargs)
