@@ -2252,7 +2252,6 @@ dependencies = [
     { name = "pandas" },
     { name = "pyarrow" },
     { name = "pydantic" },
-    { name = "pyzmq" },
     { name = "rich" },
     { name = "sqlalchemy", extra = ["asyncio"] },
     { name = "typer" },
@@ -2269,6 +2268,7 @@ gcp = [
     { name = "gcsfs" },
 ]
 ray = [
+    { name = "pyzmq" },
     { name = "ray" },
 ]
 
@@ -2316,7 +2316,7 @@ requires-dist = [
     { name = "pandas", specifier = ">=1.0,<3" },
     { name = "pyarrow", specifier = "~=17.0" },
     { name = "pydantic", specifier = "~=2.8" },
-    { name = "pyzmq", specifier = "~=26.2" },
+    { name = "pyzmq", marker = "extra == 'ray'", specifier = "~=26.2" },
     { name = "ray", marker = "extra == 'ray'", specifier = ">=2.40.0" },
     { name = "rich", specifier = "~=13.9" },
     { name = "s3fs", marker = "extra == 'aws'", specifier = ">=2024.9.0" },
