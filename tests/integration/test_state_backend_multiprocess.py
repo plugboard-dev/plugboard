@@ -3,9 +3,8 @@
 import asyncio
 import typing as _t
 
-import inject
-from multiprocess.context import BaseContext
 import pytest
+from ray.util.multiprocessing import Pool
 
 from plugboard.component import Component, IOController
 from plugboard.connector import Connector, ZMQChannel
@@ -148,9 +147,8 @@ async def test_state_backend_multiprocess(
 
     # At the end of `Component.init` the component upserts itself into the state
     # backend, so we expect the state backend to have up to date component data afterwards
-    mp_ctx = inject.instance(BaseContext)
     mp_processes = []
-    with mp_ctx.Pool(2) as pool:
+    with Pool(2) as pool:
         for comp in [c for proc in processes for c in proc.components.values()]:
             p = pool.apply_async(init_component, args=(comp,))
             mp_processes.append(p)
@@ -170,7 +168,7 @@ async def test_state_backend_multiprocess(
         asyncio.run(_inner())
 
     mp_processes = []
-    with mp_ctx.Pool(2) as pool:
+    with Pool(2) as pool:
         for conn in [c for proc in processes for c in proc.connectors.values()]:
             p = pool.apply_async(upsert_connector, args=(conn,))
             mp_processes.append(p)
