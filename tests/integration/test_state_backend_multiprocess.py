@@ -5,7 +5,6 @@ import typing as _t
 
 import inject
 from multiprocess.context import BaseContext
-from multiprocess.managers import SyncManager
 import pytest
 
 from plugboard.component import Component, IOController
@@ -14,7 +13,7 @@ from plugboard.process import LocalProcess
 from plugboard.schemas.connector import ConnectorSpec
 from plugboard.state import DictStateBackend, StateBackend
 from tests.conftest import ComponentTestHelper
-from tests.integration.conftest import setup_MultiprocessingStateBackend, setup_SqliteStateBackend
+from tests.integration.conftest import setup_SqliteStateBackend
 
 
 class A(ComponentTestHelper):
@@ -56,28 +55,27 @@ class ConnectorTestHelper(Connector):
 @pytest.fixture
 def connectors() -> list[Connector]:
     """Returns a list of connectors."""
-    manager = inject.instance(SyncManager)
     return [
         ConnectorTestHelper(
             spec=ConnectorSpec(source="A1.out_1", target="B1.in_1"),
-            channel=ZMQChannel(manager=manager),
+            channel=ZMQChannel(),
         ),
         ConnectorTestHelper(
             spec=ConnectorSpec(source="A1.out_2", target="B1.in_2"),
-            channel=ZMQChannel(manager=manager),
+            channel=ZMQChannel(),
         ),
         ConnectorTestHelper(
             spec=ConnectorSpec(source="A2.out_1", target="B2.in_1"),
-            channel=ZMQChannel(manager=manager),
+            channel=ZMQChannel(),
         ),
         ConnectorTestHelper(
             spec=ConnectorSpec(source="A2.out_2", target="B2.in_2"),
-            channel=ZMQChannel(manager=manager),
+            channel=ZMQChannel(),
         ),
     ]
 
 
-@pytest.fixture(params=[setup_SqliteStateBackend, setup_MultiprocessingStateBackend])
+@pytest.fixture(params=[setup_SqliteStateBackend])
 async def state_backend(request: pytest.FixtureRequest) -> _t.AsyncIterator[StateBackend]:
     """Returns a `StateBackend` instance."""
     state_backend_setup = request.param

@@ -9,7 +9,6 @@ import time_machine
 from plugboard.exceptions import StateBackendError
 from plugboard.state import (
     DictStateBackend,
-    MultiprocessingStateBackend,
     RayStateBackend,
     StateBackend,
 )
@@ -40,9 +39,7 @@ def invalid_job_id() -> str:
     return "invalid_job_id"
 
 
-@pytest.fixture(
-    scope="module", params=[DictStateBackend, MultiprocessingStateBackend, RayStateBackend]
-)
+@pytest.fixture(scope="module", params=[DictStateBackend, RayStateBackend])
 def state_backend_cls(request: pytest.FixtureRequest) -> _t.Type[StateBackend]:
     """Returns a `StateBackend` class."""
     return request.param
