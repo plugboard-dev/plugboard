@@ -4,3 +4,4 @@ plugboard/**/__pycache__
 plugboard/*.egg-info
 !pyproject.toml
 !uv.lock
+!requirements.txt
