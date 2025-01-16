@@ -17,8 +17,7 @@ ENV UV_LINK_MODE=copy
 # Install dependencies with pip and requirements.txt to avoid potential cache invalidation
 RUN --mount=from=ghcr.io/astral-sh/uv,source=/uv,target=/bin/uv \
   --mount=type=cache,target=/root/.cache/uv \
-  --mount=type=bind,source=uv.lock,target=uv.lock \
-  --mount=type=bind,source=pyproject.toml,target=pyproject.toml \
+  --mount=type=bind,source=requirements.txt,target=requirements.txt \
   uv pip install -r ./requirements.txt
 
 # Final stage with production setup ---------------------------------------------------------------
