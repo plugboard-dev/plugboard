@@ -42,6 +42,10 @@ jobs:
           VERSION=$(uvx dunamai from git --style semver)
           echo "PACKAGE_VERSION=$VERSION" >> $GITHUB_ENV
 
+       name: Export requirements.txt file
+        run: |
+          uv export --all-extras --format requirements-txt --no-hashes --no-editable --no-dev >> requirements.txt
+
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
 
