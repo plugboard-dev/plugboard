@@ -5,8 +5,8 @@ from .config import ConfigSpec, ProcessConfigSpec
 from .connector import (
     ChannelBuilderArgsSpec,
     ChannelBuilderSpec,
-    ComponentSocket,
     ConnectorMode,
+    ConnectorSocket,
     ConnectorSpec,
 )
 from .entities import Entity
@@ -20,9 +20,9 @@ __all__ = [
     "ChannelBuilderArgsSpec",
     "ComponentSpec",
     "ComponentArgsSpec",
-    "ComponentSocket",
     "ConfigSpec",
     "ConnectorMode",
+    "ConnectorSocket",
     "ConnectorSpec",
     "Entity",
     "IODirection",

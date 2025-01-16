@@ -10,7 +10,7 @@ from plugboard.utils import ExportMixin
 
 
 class Connector(ExportMixin):
-    """`Connector` contains a `Channel` connecting two components."""
+    """`Connector` provides a `Channel` for communication between a specified source and target."""
 
     def __init__(self, spec: ConnectorSpec, channel: Channel) -> None:
         self.spec: ConnectorSpec = spec

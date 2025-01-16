@@ -4,7 +4,7 @@
 import pytest
 
 from plugboard.exceptions import RegistryError
-from plugboard.utils import ClassRegistry
+from plugboard.utils import ClassRegistry, build_actor_wrapper, depends_on_optional, gather_except
 
 
 class BaseA:
@@ -26,6 +26,29 @@ class A2(BaseA):
 
 class B(BaseB):
     pass
+
+
+class C:
+    def __init__(self) -> None:
+        self.x = 0
+
+    def add(self, y: int) -> None:
+        self.x += y
+
+    async def add_async(self, y: int) -> None:
+        self.x += y
+
+
+class D:
+    c: C = C()
+
+    @property
+    def x(self) -> int:
+        return self.c.x
+
+    @x.setter
+    def x(self, value: int) -> None:
+        self.c.x = value
 
 
 def test_registry() -> None:
@@ -86,3 +109,74 @@ def test_registry_default_key() -> None:
     RegistryA.add(A1)
     with pytest.raises(RegistryError):
         RegistryA.get("A1")
+
+
+@pytest.mark.anyio
+async def test_actor_wrapper() -> None:
+    """Tests the `build_actor_wrapper` utility."""
+    WrappedC = build_actor_wrapper(C)
+    WrappedD = build_actor_wrapper(D)
+
+    c = WrappedC()
+    d = WrappedD()
+
+    # Must be able to call synchronous methods on target
+    c.add(5)  # type: ignore
+    assert c._self.x == 5
+    # Must be able to call asynchronous methods on target
+    await c.add_async(10)  # type: ignore
+    assert c._self.x == 15
+
+    # Must be able to access properties on target
+    assert d.getattr("x") == 0
+    d.setattr("x", 25)
+    assert d.getattr("x") == 25
+    assert d._self.c.x == 25
+
+    # Must be able to call synchronous methods on nested target
+    d.c_add(5)  # type: ignore
+    assert d._self.c.x == 30
+    # Must be able to call asynchronous methods on nested target
+    await d.c_add_async(10)  # type: ignore
+    assert d._self.c.x == 40
+
+
+def test_depends_on_optional() -> None:
+    """Tests the `depends_on_optional` utility."""
+
+    @depends_on_optional("unknown_package")
+    def func_not_ok(x: int) -> int:
+        return x
+
+    @depends_on_optional("pydantic")
+    def func_ok(x: int) -> int:
+        return x
+
+    # Must raise ImportError if the optional dependency is not found
+    with pytest.raises(ImportError) as e:
+        func_not_ok(1)
+        assert "plugboard[unknown_package]" in str(e.value)
+
+    # Must not raise ImportError if the optional dependency is found
+    assert func_ok(1) == 1
+
+
+@pytest.mark.anyio
+async def test_gather_except() -> None:
+    """Tests the `gather_except` utility."""
+
+    async def coro_ok() -> int:
+        return 1
+
+    async def coro_err() -> int:
+        raise ValueError("Error")
+
+    # Must return the results if all coroutines are successful
+    results = await gather_except(coro_ok(), coro_ok())
+    assert results == [1, 1]
+
+    # Must raise an exception if any coroutines raise an exception
+    with pytest.raises(ExceptionGroup) as e:
+        await gather_except(coro_ok(), coro_err())
+    assert len(e.value.exceptions) == 1
+    assert isinstance(e.value.exceptions[0], ValueError)

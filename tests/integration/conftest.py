@@ -4,7 +4,12 @@ from contextlib import contextmanager
 from tempfile import NamedTemporaryFile
 import typing as _t
 
-from plugboard.state import DictStateBackend, MultiprocessingStateBackend, SqliteStateBackend
+from plugboard.state import (
+    DictStateBackend,
+    MultiprocessingStateBackend,
+    RayStateBackend,
+    SqliteStateBackend,
+)
 
 
 @contextmanager
@@ -24,3 +29,9 @@ def setup_SqliteStateBackend() -> _t.Iterator[SqliteStateBackend]:
     """Returns a `SqliteStateBackend` instance."""
     with NamedTemporaryFile() as file:
         yield SqliteStateBackend(file.name)
+
+
+@contextmanager
+def setup_RayStateBackend() -> _t.Iterator[RayStateBackend]:
+    """Returns a `SqliteStateBackend` instance."""
+    yield RayStateBackend()

@@ -10,34 +10,33 @@ RUN chown appuser:appuser /app
 
 # Builder stage with dependency installation to venv ----------------------------------------------
 FROM base AS builder
-ENV VIRTUAL_ENV=/opt/venv
-ENV PATH="${VIRTUAL_ENV}/bin:${PATH}"
-ENV PIP_CACHE_DIR=/root/.cache/pip
-RUN python -m venv ${VIRTUAL_ENV}
+ENV UV_PROJECT_ENVIRONMENT=/opt/venv
+ENV PATH="${UV_PROJECT_ENVIRONMENT}/bin:${PATH}"
+ENV UV_LINK_MODE=copy
 
-# Install poetry into venv
-RUN --mount=type=cache,id=pip,target=/root/.cache/pip \
-  pip install poetry==1.8.2 poetry-dynamic-versioning[plugin]==1.2.0
-
-# Install dependencies with pip to avoid potential cache invalidation due to extra poetry package metadata
-COPY requirements.txt ./
-RUN --mount=type=cache,id=pip,target=/root/.cache/pip \
-  pip install -r requirements.txt
-
+# Install dependencies with --no-install-project to avoid potential cache invalidation
+RUN --mount=from=ghcr.io/astral-sh/uv,source=/uv,target=/bin/uv \
+  --mount=type=cache,target=/root/.cache/uv \
+  --mount=type=bind,source=uv.lock,target=uv.lock \
+  --mount=type=bind,source=pyproject.toml,target=pyproject.toml \
+  uv sync --no-install-project --no-editable
 
 # Final stage with production setup ---------------------------------------------------------------
 FROM base AS prod
-ENV VIRTUAL_ENV=/opt/venv
-ENV PATH="${VIRTUAL_ENV}/bin:${PATH}"
+ENV UV_PROJECT_ENVIRONMENT=/opt/venv
+ENV PATH="${UV_PROJECT_ENVIRONMENT}/bin:${PATH}"
+ENV UV_LINK_MODE=copy
 
-COPY --from=builder ${VIRTUAL_ENV} ${VIRTUAL_ENV}
+COPY --from=builder ${UV_PROJECT_ENVIRONMENT} ${UV_PROJECT_ENVIRONMENT}
 
 # Install package with version string passed as build arg
 ARG semver
-ENV POETRY_DYNAMIC_VERSIONING_BYPASS=${semver}
-RUN --mount=type=bind,target=/app,rw --mount=type=tmpfs,target=/tmp/build \
-  poetry build -f wheel -o /tmp/build/dist && \
-  pip install --no-deps /tmp/build/dist/*.whl
+ENV UV_VERSION_BYPASS=${semver}
+RUN --mount=from=ghcr.io/astral-sh/uv,source=/uv,target=/bin/uv \
+  --mount=type=bind,target=/app,rw --mount=type=tmpfs,target=/tmp/build \
+  --mount=type=cache,target=/root/.cache/uv \
+  uv tool run --from=toml-cli toml set --toml-path=pyproject.toml project.version $UV_VERSION_BYPASS && \
+  uv sync --no-editable --compile-bytecode --all-extras
 
 # Get security updates. Relies on cache bust from previous steps.
 RUN --mount=type=cache,id=apt,target=/var/cache/apt \

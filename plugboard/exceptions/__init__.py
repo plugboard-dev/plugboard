@@ -53,3 +53,15 @@ class NotInitialisedError(StateBackendError):
     """Raised attempting to step or run a `Process` or `Component` that has not been initialised."""
 
     pass
+
+
+class EventError(Exception):
+    """Raised for event related errors."""
+
+    pass
+
+
+class UnrecognisedEventError(EventError):
+    """Raised when an unrecognised event is encountered."""
+
+    pass
