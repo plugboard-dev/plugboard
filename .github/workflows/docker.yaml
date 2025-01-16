@@ -44,7 +44,7 @@ jobs:
 
       - name: Export requirements.txt file
         run: |
-          uv export --all-extras --format requirements-txt --no-hashes --no-editable --no-dev >> requirements.txt
+          uv export --all-extras --format requirements-txt --no-hashes --no-editable --no-dev --no-emit-project >> requirements.txt
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
