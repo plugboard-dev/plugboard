@@ -18,6 +18,7 @@ ENV UV_LINK_MODE=copy
 RUN --mount=from=ghcr.io/astral-sh/uv,source=/uv,target=/bin/uv \
   --mount=type=cache,target=/root/.cache/uv \
   --mount=type=bind,source=requirements.txt,target=requirements.txt \
+  uv venv $UV_PROJECT_ENVIRONMENT && \
   uv pip install -r ./requirements.txt
 
 # Final stage with production setup ---------------------------------------------------------------
