@@ -28,7 +28,7 @@ class LLMChat(Component):
 
     io = IO(inputs=["prompt"], outputs=["response"])
 
-    @depends_on_optional("llm")
+    @depends_on_optional("llama-index", "llm")
     def __init__(
         self,
         name: str,
