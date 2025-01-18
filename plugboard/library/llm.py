@@ -57,7 +57,7 @@ class LLMChat(Component):
         self._structured = response_model is not None
         if response_model is not None:
             self.io = IO(
-                inputs=["prompt"], outputs=["response", *response_model.City.model_fields.keys()]
+                inputs=["prompt"], outputs=["response", *response_model.model_fields.keys()]
             )
             self._llm = self._llm.as_structured_llm(output_cls=response_model)
         # Memory 2x context window size for both prompt and response
@@ -75,6 +75,7 @@ class LLMChat(Component):
             ChatMessage.from_str(role="user", content=self.prompt),
         ]
         response = await self._llm.achat(full_prompt)
+        self._memory.append(full_prompt[-1])
         self._memory.append(response.message)
         self.response = response.message.content
         if self._structured:

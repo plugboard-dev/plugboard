@@ -2454,6 +2454,20 @@ wheels = [
 ]
 
 [[package]]
+name = "openai-responses"
+version = "0.11.4"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "openai" },
+    { name = "requests-toolbelt" },
+    { name = "respx" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/1f/4f/2efb7613351820a36b4be7315eb589a998bcab84ba4ebf3de02755c2b3b8/openai_responses-0.11.4.tar.gz", hash = "sha256:7ba06b58ab7947fe38b02a341ea5e17196e9f1e4db5f4baaec3d2bc57ea7fe32", size = 26589 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/9f/d5/a65d9ea68352b994758261c673c872b16d017bf24de57b692ceb84214c08/openai_responses-0.11.4-py3-none-any.whl", hash = "sha256:f3278f81c4bf6da1c90b508ff1f7ce7b6c19e59a5e17a44928f78540276cb5f3", size = 51669 },
+]
+
+[[package]]
 name = "openapi-schema-validator"
 version = "0.6.2"
 source = { registry = "https://pypi.org/simple" }
@@ -2682,6 +2696,7 @@ dev = [
     { name = "jupyterlab" },
     { name = "mypy" },
     { name = "nbstripout" },
+    { name = "openai-responses" },
     { name = "pre-commit" },
     { name = "ruff" },
     { name = "types-aiofiles" },
@@ -2735,6 +2750,7 @@ dev = [
     { name = "jupyterlab", specifier = "~=4.2" },
     { name = "mypy", specifier = "~=1.11" },
     { name = "nbstripout", specifier = "~=0.8" },
+    { name = "openai-responses", specifier = ">=0.11.4" },
     { name = "pre-commit", specifier = "~=3.8" },
     { name = "ruff", specifier = "~=0.5" },
     { name = "types-aiofiles", specifier = "~=24.1" },
@@ -3395,6 +3411,18 @@ wheels = [
 ]
 
 [[package]]
+name = "requests-toolbelt"
+version = "1.0.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "requests" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/f3/61/d7545dafb7ac2230c70d38d31cbfe4cc64f7144dc41f6e4e4b78ecd9f5bb/requests-toolbelt-1.0.0.tar.gz", hash = "sha256:7681a0a3d047012b5bdc0ee37d7f8f07ebe76ab08caeccfc3921ce23c88d5bc6", size = 206888 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/3f/51/d4db610ef29373b879047326cbf6fa98b6c1969d6f6dc423279de2b1be2c/requests_toolbelt-1.0.0-py2.py3-none-any.whl", hash = "sha256:cccfdd665f0a24fcf4726e690f65639d272bb0637b9b92dfd91a5568ccf6bd06", size = 54481 },
+]
+
+[[package]]
 name = "responses"
 version = "0.25.3"
 source = { registry = "https://pypi.org/simple" }
@@ -3406,6 +3434,18 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/67/24/1d67c8974daa502e860b4a5b57ad6de0d7dbc0b1160ef7148189a24a40e1/responses-0.25.3.tar.gz", hash = "sha256:617b9247abd9ae28313d57a75880422d55ec63c29d33d629697590a034358dba", size = 77798 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/12/24/93293d0be0db9da1ed8dfc5e6af700fdd40e8f10a928704dd179db9f03c1/responses-0.25.3-py3-none-any.whl", hash = "sha256:521efcbc82081ab8daa588e08f7e8a64ce79b91c39f6e62199b19159bea7dbcb", size = 55238 },
+]
+
+[[package]]
+name = "respx"
+version = "0.22.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "httpx" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/f4/7c/96bd0bc759cf009675ad1ee1f96535edcb11e9666b985717eb8c87192a95/respx-0.22.0.tar.gz", hash = "sha256:3c8924caa2a50bd71aefc07aa812f2466ff489f1848c96e954a5362d17095d91", size = 28439 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/8e/67/afbb0978d5399bc9ea200f1d4489a23c9a1dad4eee6376242b8182389c79/respx-0.22.0-py2.py3-none-any.whl", hash = "sha256:631128d4c9aba15e56903fb5f66fb1eff412ce28dd387ca3a81339e52dbd3ad0", size = 25127 },
 ]
 
 [[package]]

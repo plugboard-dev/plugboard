@@ -39,6 +39,7 @@ dev = [
     "jupyterlab~=4.2",
     "mypy~=1.11",
     "nbstripout~=0.8",
+    "openai-responses>=0.11.4",
     "pre-commit~=3.8",
     "ruff~=0.5",
     "types-aiofiles~=24.1",
