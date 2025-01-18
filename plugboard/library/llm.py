@@ -31,26 +31,24 @@ class LLMChat(Component):
     @depends_on_optional("llm")
     def __init__(
         self,
-        *args: _t.Any,
+        name: str,
         llm: str = "llama_index.llms.openai.OpenAI",
         system_prompt: _t.Optional[str] = None,
         context_window: int = 0,
         response_model: _t.Optional[_t.Type[BaseModel]] = None,
         llm_kwargs: _t.Optional[dict[str, _t.Any]] = None,
-        **kwargs: _t.Any,
     ) -> None:
         """Instantiates `LLMChat`.
 
         Args:
-            llm: The LLM class to use.
-            system_prompt: The system prompt to use.
-            context_window: The context window size.
-            response_model: The response model to use.
+            name: The name of the component.
+            llm: The LLM class to use from llama-index.
+            system_prompt: Optional; System prompt to prepend to the context window.
+            context_window: The number of previous messages to include in the context window.
+            response_model: Optional; A Pydantic model to structure the response.
             llm_kwargs: Additional keyword arguments for the LLM.
-            *args: Additional positional arguments.
-            **kwargs: Additional keyword arguments.
         """
-        super().__init__(*args, **kwargs)
+        super().__init__(name=name)
         _llm_cls = locate(llm)
         if _llm_cls is None or not issubclass(_llm_cls, LLM):
             raise ValueError(f"LLM class {llm} not found in llama-index.")
