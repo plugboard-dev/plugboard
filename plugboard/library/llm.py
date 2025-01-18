@@ -28,7 +28,7 @@ class LLMChat(Component):
 
     io = IO(inputs=["prompt"], outputs=["response"])
 
-    @depends_on_optional("llama-index", "llm")
+    @depends_on_optional("llama_index", "llm")
     def __init__(
         self,
         name: str,
@@ -52,6 +52,7 @@ class LLMChat(Component):
         _llm_cls = locate(llm)
         if _llm_cls is None or not issubclass(_llm_cls, LLM):
             raise ValueError(f"LLM class {llm} not found in llama-index.")
+        llm_kwargs = llm_kwargs or {}
         self._llm = _llm_cls(**llm_kwargs)
         self._structured = response_model is not None
         if response_model is not None:
@@ -61,17 +62,19 @@ class LLMChat(Component):
             self._llm = self._llm.as_structured_llm(output_cls=response_model)
         # Memory 2x context window size for both prompt and response
         self._memory: deque[ChatMessage] = deque(maxlen=context_window * 2)
-        self._system_prompt = ChatMessage.from_str(role="system", content=system_prompt)
+        self._system_prompt = (
+            [ChatMessage.from_str(role="system", content=system_prompt)] if system_prompt else []
+        )
 
     async def step(self) -> None:  # noqa: D102
         if not self.prompt:
             return
         full_prompt = [
-            self._system_prompt,
+            *self._system_prompt,
             *list(self._memory),
             ChatMessage.from_str(role="user", content=self.prompt),
         ]
-        response = await self._engine.achat(full_prompt)
+        response = await self._llm.achat(full_prompt)
         self._memory.append(response.message)
         self.response = response.message.content
         if self._structured:
