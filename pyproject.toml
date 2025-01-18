@@ -29,6 +29,9 @@ aws = ["s3fs>=2024.9.0"]
 azure = ["adlfs>=2024.7.0"]
 gcp = ["gcsfs>=2024.9.0.post1"]
 ray = ["ray>=2.40.0"]
+llm = [
+    "llama-index>=0.12.11",
+]
 
 [dependency-groups]
 dev = [
