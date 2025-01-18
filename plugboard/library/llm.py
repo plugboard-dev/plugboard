@@ -50,10 +50,10 @@ class LLMChat(Component):
         """
         super().__init__(name=name)
         _llm_cls = locate(llm)
-        if _llm_cls is None or not issubclass(_llm_cls, LLM):
+        if _llm_cls is None or not isinstance(_llm_cls, type) or not issubclass(_llm_cls, LLM):
             raise ValueError(f"LLM class {llm} not found in llama-index.")
         llm_kwargs = llm_kwargs or {}
-        self._llm = _llm_cls(**llm_kwargs)
+        self._llm: LLM = _llm_cls(**llm_kwargs)
         self._structured = response_model is not None
         if response_model is not None:
             self.io = IO(
@@ -67,17 +67,17 @@ class LLMChat(Component):
         )
 
     async def step(self) -> None:  # noqa: D102
-        if not self.prompt:
+        if not self.prompt:  # type: ignore
             return
         full_prompt = [
             *self._system_prompt,
             *list(self._memory),
-            ChatMessage.from_str(role="user", content=self.prompt),
+            ChatMessage.from_str(role="user", content=self.prompt),  # type: ignore
         ]
         response = await self._llm.achat(full_prompt)
         self._memory.append(full_prompt[-1])
         self._memory.append(response.message)
         self.response = response.message.content
-        if self._structured:
+        if self._structured and isinstance(response.raw, BaseModel):
             for field, value in response.raw.model_dump().items():
                 setattr(self, field, value)
