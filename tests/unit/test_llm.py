@@ -122,6 +122,6 @@ async def test_openai_structured_chat(
     llm.prompt = "Test prompt"
     await llm.step()
     # Response must be parsed
-    assert llm.x == 45  # type: ignore
-    assert llm.y == "test"  # type: ignore
+    assert llm.x == 45
+    assert llm.y == "test"
     assert json.loads(llm.response) == test_response.model_dump()
