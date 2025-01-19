@@ -69,14 +69,10 @@ class LLMChat(Component):
     async def step(self) -> None:  # noqa: D102
         if not self.prompt:  # type: ignore
             return
-        full_prompt = [
-            *self._system_prompt,
-            *list(self._memory),
-            ChatMessage.from_str(role="user", content=self.prompt),  # type: ignore
-        ]
+        prompt_message = ChatMessage.from_str(role="user", content=self.prompt)
+        full_prompt = [*self._system_prompt, *self._memory, prompt_message]
         response = await self._llm.achat(full_prompt)
-        self._memory.append(full_prompt[-1])
-        self._memory.append(response.message)
+        self._memory.extend([prompt_message, response.message])
         self.response = response.message.content
         if self._structured and isinstance(response.raw, BaseModel):
             for field, value in response.raw.model_dump().items():
