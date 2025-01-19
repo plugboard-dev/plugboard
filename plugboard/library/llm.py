@@ -67,7 +67,7 @@ class LLMChat(Component):
         )
 
     async def step(self) -> None:  # noqa: D102
-        if not self.prompt:  # type: ignore
+        if not self.prompt:
             return
         prompt_message = ChatMessage.from_str(role="user", content=self.prompt)
         full_prompt = [*self._system_prompt, *self._memory, prompt_message]
