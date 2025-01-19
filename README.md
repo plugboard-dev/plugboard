@@ -122,12 +122,10 @@ async with process:
 ```
 
 Visually, we've created the model below, with Plugboard automatically handling the flow of data between the two components.
-<div align="center">
 ```mermaid
 graph LR;
     A(Component A)-->|data|B(Component B);
 ```
-</div>
 
 ### Executing pre-defined models on the CLI
 
