@@ -1,4 +1,4 @@
-"""Unit tests for OpenAI components."""
+"""Unit tests for LLM components."""
 
 import json
 import os
@@ -41,7 +41,7 @@ async def test_llm_chat(
     system_prompt: _t.Optional[str],
     context_window: int,
 ) -> None:
-    """Test the `OpenAIChat` component."""
+    """Test the `LLMChat` component."""
     llm = LLMChat(
         name="llm",
         system_prompt=system_prompt,
@@ -82,7 +82,7 @@ async def test_llm_chat(
 async def test_openai_structured_chat(
     openai_mock: openai_responses.OpenAIMock,
 ) -> None:
-    """Test the `OpenAIStructuredChat` component."""
+    """Test the `LLMChat` component with structured output."""
 
     class ExpectedResponse(BaseModel):
         x: int
