@@ -51,6 +51,12 @@ class Component(ABC, ExportMixin):
             raise NotImplementedError(f"{cls.__name__} must define an `io` attribute.")
         ComponentRegistry.add(cls)
 
+    # Prevents type-checker errors on public component IO attributes
+    def __getattr__(self, key: str) -> _t.Any:
+        if not key.startswith("_"):
+            return None
+        raise AttributeError(f"'{self.__class__.__name__}' object has no attribute '{key}'")
+
     @property
     def id(self) -> str:
         """Unique ID for `Component`."""
