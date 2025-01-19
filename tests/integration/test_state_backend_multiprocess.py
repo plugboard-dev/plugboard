@@ -3,10 +3,8 @@
 import asyncio
 import typing as _t
 
-import inject
-from multiprocess.context import BaseContext
-from multiprocess.managers import SyncManager
 import pytest
+from ray.util.multiprocessing import Pool
 
 from plugboard.component import Component, IOController
 from plugboard.connector import Connector, ZMQChannel
@@ -14,7 +12,7 @@ from plugboard.process import LocalProcess
 from plugboard.schemas.connector import ConnectorSpec
 from plugboard.state import DictStateBackend, StateBackend
 from tests.conftest import ComponentTestHelper
-from tests.integration.conftest import setup_MultiprocessingStateBackend, setup_SqliteStateBackend
+from tests.integration.conftest import setup_RayStateBackend, setup_SqliteStateBackend
 
 
 class A(ComponentTestHelper):
@@ -56,28 +54,27 @@ class ConnectorTestHelper(Connector):
 @pytest.fixture
 def connectors() -> list[Connector]:
     """Returns a list of connectors."""
-    manager = inject.instance(SyncManager)
     return [
         ConnectorTestHelper(
             spec=ConnectorSpec(source="A1.out_1", target="B1.in_1"),
-            channel=ZMQChannel(manager=manager),
+            channel=ZMQChannel(),
         ),
         ConnectorTestHelper(
             spec=ConnectorSpec(source="A1.out_2", target="B1.in_2"),
-            channel=ZMQChannel(manager=manager),
+            channel=ZMQChannel(),
         ),
         ConnectorTestHelper(
             spec=ConnectorSpec(source="A2.out_1", target="B2.in_1"),
-            channel=ZMQChannel(manager=manager),
+            channel=ZMQChannel(),
         ),
         ConnectorTestHelper(
             spec=ConnectorSpec(source="A2.out_2", target="B2.in_2"),
-            channel=ZMQChannel(manager=manager),
+            channel=ZMQChannel(),
         ),
     ]
 
 
-@pytest.fixture(params=[setup_SqliteStateBackend, setup_MultiprocessingStateBackend])
+@pytest.fixture(params=[setup_SqliteStateBackend, setup_RayStateBackend])
 async def state_backend(request: pytest.FixtureRequest) -> _t.AsyncIterator[StateBackend]:
     """Returns a `StateBackend` instance."""
     state_backend_setup = request.param
@@ -150,9 +147,8 @@ async def test_state_backend_multiprocess(
 
     # At the end of `Component.init` the component upserts itself into the state
     # backend, so we expect the state backend to have up to date component data afterwards
-    mp_ctx = inject.instance(BaseContext)
     mp_processes = []
-    with mp_ctx.Pool(2) as pool:
+    with Pool(2) as pool:
         for comp in [c for proc in processes for c in proc.components.values()]:
             p = pool.apply_async(init_component, args=(comp,))
             mp_processes.append(p)
@@ -172,7 +168,7 @@ async def test_state_backend_multiprocess(
         asyncio.run(_inner())
 
     mp_processes = []
-    with mp_ctx.Pool(2) as pool:
+    with Pool(2) as pool:
         for conn in [c for proc in processes for c in proc.connectors.values()]:
             p = pool.apply_async(upsert_connector, args=(conn,))
             mp_processes.append(p)
