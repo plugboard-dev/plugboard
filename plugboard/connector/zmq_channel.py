@@ -76,6 +76,7 @@ class ZMQChannel(SerdeChannel):
             self._recv_socket = self._create_socket(zmq.PULL, [(zmq.RCVHWM, self._recv_hwm)])
             # Wait for port from the send socket, use random poll interval to avoid spikes
             port = await self._ray_queue.get_async()
+            await self._ray_queue.shutdown()  # type: ignore
             self._recv_socket.connect(f"{ZMQ_ADDR}:{port}")
             msg = await self._recv_socket.recv()
             if msg != self._confirm_msg:
