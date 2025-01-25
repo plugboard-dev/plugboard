@@ -15,7 +15,7 @@
 </div>
 
 
-Plugboard is an **event-driven modelling and orchestration framework** in Python for simulating complex processes with many interconnected components.
+Plugboard is an **event-driven modelling and orchestration framework** in Python for simulating and driving complex processes with many interconnected stateful components.
 
 You can use it to **define models** in Python and **connect them together easily** so that data automatically moves between them. After running your model on a laptop, you can then scale out on multiple processors, or go to a compute cluster in the cloud.
 
