@@ -4,7 +4,6 @@ import typing as _t
 
 from plugboard.connector.asyncio_channel import AsyncioChannel
 from plugboard.connector.channel import Channel
-from plugboard.connector.channel_builder import ChannelBuilder
 from plugboard.utils import build_actor_wrapper, depends_on_optional
 
 
@@ -61,9 +60,3 @@ class RayChannel(Channel):
     async def close(self) -> None:
         """Closes the `RayChannel` and terminates the underlying actor."""
         await self._actor.close.remote()  # type: ignore
-
-
-class RayChannelBuilder(ChannelBuilder):
-    """`RayChannelBuilder` builds `RayChannel` objects."""
-
-    channel_cls = RayChannel

@@ -2,7 +2,6 @@
 
 import typing as _t
 
-from plugboard.connector.channel_builder import ChannelBuilder
 from plugboard.connector.serde_channel import SerdeChannel
 from plugboard.exceptions import ChannelSetupError
 from plugboard.utils import depends_on_optional, gen_rand_str
@@ -83,9 +82,3 @@ class ZMQChannel(SerdeChannel):
                 raise ChannelSetupError("Channel confirmation message mismatch")
 
         return await self._recv_socket.recv()
-
-
-class ZMQChannelBuilder(ChannelBuilder):
-    """`ZMQChannelBuilder` builds `ZMQChannel` objects."""
-
-    channel_cls = ZMQChannel
