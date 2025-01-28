@@ -62,7 +62,7 @@ class ProcessBuilder:
         if not connector_class or not issubclass(connector_class, Connector):
             raise ValueError(f"Connector class {spec.connector_builder.type} not found")
         connector_builder = ConnectorBuilder(
-            connector_cls=connector_class, **dict(spec.channel_builder.args)
+            connector_cls=connector_class, **dict(spec.connector_builder.args)
         )
         event_connector_builder = EventConnectorBuilder(connector_builder=connector_builder)
         event_connectors = list(event_connector_builder.build(components).values())

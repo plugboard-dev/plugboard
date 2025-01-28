@@ -11,7 +11,7 @@ from plugboard.schemas import ConnectorSocket, ConnectorSpec
 
 if _t.TYPE_CHECKING:
     from plugboard.component import Component
-    from plugboard.connector import ChannelBuilder
+    from plugboard.connector import ConnectorBuilder
 
 
 class EventConnectorBuilder:
@@ -20,8 +20,8 @@ class EventConnectorBuilder:
     _source_descriptor: str = "publishers"
     _target_descriptor: str = "subscribers"
 
-    def __init__(self, channel_builder: ChannelBuilder) -> None:
-        self._channel_builder = channel_builder
+    def __init__(self, connector_builder: ConnectorBuilder) -> None:
+        self._connector_builder = connector_builder
 
     def build(self, components: list[Component]) -> dict[str, Connector]:
         """Returns mapping of connectors for events handled by components."""
@@ -45,8 +45,5 @@ class EventConnectorBuilder:
         evt_type_safe = Event.safe_type(evt_type)
         source = ConnectorSocket(entity=evt_type_safe, descriptor=self._source_descriptor)
         target = ConnectorSocket(entity=evt_type_safe, descriptor=self._target_descriptor)
-        connector = Connector(
-            spec=ConnectorSpec(source=source, target=target),
-            channel=self._channel_builder.build(),
-        )
-        return connector
+        spec = ConnectorSpec(source=source, target=target)
+        return self._connector_builder.build(spec)

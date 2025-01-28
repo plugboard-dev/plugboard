@@ -10,7 +10,7 @@ from pydantic import Field, field_validator
 from plugboard.schemas._common import PlugboardBaseModel
 
 
-DEFAULT_CHANNEL_CLS_PATH: str = "plugboard.connector.AsyncioChannelBuilder"
+DEFAULT_CONNECTOR_CLS_PATH: str = "plugboard.connector.AsyncioConnector"
 
 
 class ConnectorMode(StrEnum):
@@ -102,23 +102,23 @@ class ConnectorSpec(PlugboardBaseModel):
         return self.id
 
 
-class ChannelBuilderArgsSpec(PlugboardBaseModel, extra="allow"):
-    """Specification of the [`Channel`][plugboard.connector.Channel] constructor arguments.
+class ConnectorBuilderArgsSpec(PlugboardBaseModel, extra="allow"):
+    """Specification of the [`Connector`][plugboard.connector.Connector] constructor arguments.
 
     Attributes:
-        parameters: Parameters for the `Channel`.
+        parameters: Parameters for the `Connector`.
     """
 
     parameters: dict = {}
 
 
-class ChannelBuilderSpec(PlugboardBaseModel):
-    """Specification of a `ChannelBuilder`.
+class ConnectorBuilderSpec(PlugboardBaseModel):
+    """Specification of a `ConnectorBuilder`.
 
     Attributes:
-        type: The type of the `ChannelBuilder`.
-        args: Optional; The arguments for the `ChannelBuilder`.
+        type: The type of the `ConnectorBuilder`.
+        args: Optional; The arguments for the `ConnectorBuilder`.
     """
 
-    type: str = DEFAULT_CHANNEL_CLS_PATH
-    args: ChannelBuilderArgsSpec = ChannelBuilderArgsSpec()
+    type: str = DEFAULT_CONNECTOR_CLS_PATH
+    args: ConnectorBuilderArgsSpec = ConnectorBuilderArgsSpec()
