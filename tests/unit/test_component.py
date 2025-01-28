@@ -1,6 +1,8 @@
 """Unit tests for `Component`."""
 # ruff: noqa: D101,D102,D103
 
+import typing as _t
+
 import pytest
 
 from plugboard.component import Component, IOController as IO
@@ -19,7 +21,7 @@ class A(Component):
 @pytest.mark.parametrize(
     "initial_values", [{"a": [-1], "b": [-2]}, {"a": [-2]}, {"a": [-2, -1]}, {}]
 )
-async def test_component_initial_values(initial_values: dict[str, int]) -> None:
+async def test_component_initial_values(initial_values: dict[str, _t.Iterable]) -> None:
     """Tests the initial values of a `Component`."""
     component = A(name="init_values", initial_values=initial_values)
     connectors = {
@@ -35,7 +37,7 @@ async def test_component_initial_values(initial_values: dict[str, int]) -> None:
     component.io.connect(list(connectors.values()))
     await component.init()
 
-    n_init = {field: len(initial_values.get(field, [])) for field in {"a", "b"}}
+    n_init = {field: len(list(initial_values.get(field, []))) for field in {"a", "b"}}
 
     for input_idx in range(5):
         # Send input_idx to all inputs
@@ -46,6 +48,6 @@ async def test_component_initial_values(initial_values: dict[str, int]) -> None:
         # Initial values must be set where specified
         for field in {"a", "b"}:
             if n_init[field] >= input_idx + 1:
-                assert component.c.get(field) == initial_values[field][input_idx]
+                assert component.c.get(field) == list(initial_values[field])[input_idx]
             else:
                 assert component.c.get(field) == input_idx - n_init[field]
