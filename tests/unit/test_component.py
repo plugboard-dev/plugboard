@@ -12,11 +12,13 @@ class A(Component):
     io = IO(inputs=["a", "b"], outputs=["c"])
 
     async def step(self) -> None:
-        self.c = {"a": self.a, "b": self.b}  # type: ignore
+        self.c = {"a": self.a, "b": self.b}
 
 
 @pytest.mark.anyio
-@pytest.mark.parametrize("initial_values", [{"a": [-1], "b": [-2]}, {"a": [-2]}, {}])
+@pytest.mark.parametrize(
+    "initial_values", [{"a": [-1], "b": [-2]}, {"a": [-2]}, {"a": [-2, -1]}, {}]
+)
 async def test_component_initial_values(initial_values: dict[str, int]) -> None:
     """Tests the initial values of a `Component`."""
     component = A(name="init_values", initial_values=initial_values)
@@ -33,20 +35,17 @@ async def test_component_initial_values(initial_values: dict[str, int]) -> None:
     component.io.connect(list(connectors.values()))
     await component.init()
 
-    # Send 0 to all inputs
-    for field in {"a", "b"}:
-        await connectors[field].channel.send(0)
-    await component.step()
+    n_init = {field: len(initial_values.get(field, [])) for field in {"a", "b"}}
 
-    # Initial values must be set where specified
-    for field in {"a", "b"}:
-        assert component.c.get(field) == initial_values.get(field, [0])[0]
+    for input_idx in range(5):
+        # Send input_idx to all inputs
+        for field in {"a", "b"}:
+            await connectors[field].channel.send(input_idx)
+        await component.step()
 
-    # Send 1 to all inputs
-    for field in {"a", "b"}:
-        await connectors[field].channel.send(1)
-    await component.step()
-
-    # Initial values must be set, should get 0, otherwise 1
-    for field in {"a", "b"}:
-        assert component.c.get(field) == 0 if field in initial_values else 1
+        # Initial values must be set where specified
+        for field in {"a", "b"}:
+            if n_init[field] >= input_idx + 1:
+                assert component.c.get(field) == initial_values[field][input_idx]
+            else:
+                assert component.c.get(field) == input_idx - n_init[field]
