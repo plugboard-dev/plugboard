@@ -8,10 +8,11 @@ from plugboard.process.process import Process
 class LocalProcess(Process):
     """`LocalProcess` manages components in a process model on a single processor."""
 
-    def _connect_components(self) -> None:
+    async def _connect_components(self) -> None:
         connectors = list(self.connectors.values())
-        for component in self.components.values():
-            component.io.connect(connectors)
+        async with asyncio.TaskGroup() as tg:
+            for component in self.components.values():
+                tg.create_task(component.io.connect(connectors))
 
     async def _connect_state(self) -> None:
         async with asyncio.TaskGroup() as tg:
@@ -24,6 +25,7 @@ class LocalProcess(Process):
         """Performs component initialisation actions."""
         async with asyncio.TaskGroup() as tg:
             await self.connect_state()
+            await self._connect_components()
             for component in self.components.values():
                 tg.create_task(component.init())
 

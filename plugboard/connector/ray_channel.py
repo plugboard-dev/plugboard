@@ -4,6 +4,8 @@ import typing as _t
 
 from plugboard.connector.asyncio_channel import AsyncioChannel
 from plugboard.connector.channel import Channel
+from plugboard.connector.connector import Connector
+from plugboard.schemas.connector import ConnectorMode
 from plugboard.utils import build_actor_wrapper, depends_on_optional
 
 
@@ -60,3 +62,21 @@ class RayChannel(Channel):
     async def close(self) -> None:
         """Closes the `RayChannel` and terminates the underlying actor."""
         await self._actor.close.remote()  # type: ignore
+
+
+class RayConnector(Connector):
+    """`RayConnector` connects components using `RayChannel`."""
+
+    def __init__(self, *args: _t.Any, **kwargs: _t.Any) -> None:
+        super().__init__(*args, **kwargs)
+        if self.spec.mode != ConnectorMode.PIPELINE:
+            raise ValueError("RayConnector only supports `PIPELINE` type connections.")
+        self._channel = RayChannel()
+
+    async def connect_send(self) -> RayChannel:
+        """Returns a `RayChannel` for sending messages."""
+        return self._channel
+
+    async def connect_recv(self) -> RayChannel:
+        """Returns a `RayChannel` for receiving messages."""
+        return self._channel

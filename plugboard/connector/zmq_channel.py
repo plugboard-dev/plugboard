@@ -2,8 +2,10 @@
 
 import typing as _t
 
+from plugboard.connector.connector import Connector
 from plugboard.connector.serde_channel import SerdeChannel
 from plugboard.exceptions import ChannelSetupError
+from plugboard.schemas.connector import ConnectorMode
 from plugboard.utils import depends_on_optional, gen_rand_str
 
 
@@ -23,7 +25,12 @@ class ZMQChannel(SerdeChannel):
 
     @depends_on_optional("ray")
     def __init__(  # noqa: D417
-        self, *args: _t.Any, maxsize: int = 2000, **kwargs: _t.Any
+        self,
+        *args: _t.Any,
+        send_socket: _t.Optional[zmq.asyncio.Socket] = None,
+        recv_socket: _t.Optional[zmq.asyncio.Socket] = None,
+        maxsize: int = 2000,
+        **kwargs: _t.Any,
     ) -> None:
         """Instantiates `ZMQChannel`.
 
@@ -37,23 +44,10 @@ class ZMQChannel(SerdeChannel):
             maxsize: Queue maximum item capacity, defaults to 2000.
         """
         super().__init__(*args, **kwargs)
-        # Use a Ray queue to ensure sync ZMQ port number
-        self._ray_queue = Queue(maxsize=1)
-        self._send_socket: _t.Optional[zmq.asyncio.Socket] = None
-        self._recv_socket: _t.Optional[zmq.asyncio.Socket] = None
-        self._send_hwm = max(self._maxsize // 2, 1)
-        self._recv_hwm = max(self._maxsize - self._send_hwm, 1)
-        self._confirm_msg = f"{ZMQ_CONFIRM_MSG}:{gen_rand_str()}".encode()
-
-    @staticmethod
-    def _create_socket(
-        socket_type: int, socket_opts: list[tuple[int, int | bytes | str]]
-    ) -> zmq.asyncio.Socket:
-        ctx = zmq.asyncio.Context.instance()
-        socket = ctx.socket(socket_type)
-        for opt, value in socket_opts:
-            socket.setsockopt(opt, value)
-        return socket
+        self._send_socket: _t.Optional[zmq.asyncio.Socket] = send_socket
+        self._recv_socket: _t.Optional[zmq.asyncio.Socket] = recv_socket
+        self._send_hwm = max(maxsize // 2, 1)
+        self._recv_hwm = max(maxsize - self._send_hwm, 1)
 
     async def send(self, msg: bytes) -> None:
         """Sends a message through the `ZMQChannel`.
@@ -62,23 +56,67 @@ class ZMQChannel(SerdeChannel):
             msg: The message to be sent through the `ZMQChannel`.
         """
         if self._send_socket is None:
-            self._send_socket = self._create_socket(zmq.PUSH, [(zmq.SNDHWM, self._send_hwm)])
-            port = self._send_socket.bind_to_random_port(ZMQ_ADDR)
-            await self._ray_queue.put_async(port)
-            await self._send_socket.send(self._confirm_msg)
-
+            raise ChannelSetupError("Send socket is not initialized")
         await self._send_socket.send(msg)
 
     async def recv(self) -> bytes:
         """Receives a message from the `ZMQChannel` and returns it."""
         if self._recv_socket is None:
-            self._recv_socket = self._create_socket(zmq.PULL, [(zmq.RCVHWM, self._recv_hwm)])
-            # Wait for port from the send socket, use random poll interval to avoid spikes
-            port = await self._ray_queue.get_async()
-            await self._ray_queue.shutdown()  # type: ignore
-            self._recv_socket.connect(f"{ZMQ_ADDR}:{port}")
-            msg = await self._recv_socket.recv()
-            if msg != self._confirm_msg:
-                raise ChannelSetupError("Channel confirmation message mismatch")
-
+            raise ChannelSetupError("Recv socket is not initialized")
         return await self._recv_socket.recv()
+
+
+class ZMQConnector(Connector):
+    """`ZMQConnector` connects components using `ZMQChannel`."""
+
+    # FIXME : If multiple workers call `connect_send` they will each see `_send_channel` null
+    #       : on first call and create a new channel. This will lead to multiple channels.
+    #       : This code only works for the special case of exactly one sender and one receiver
+    #       : per ZMQConnector.
+
+    def __init__(self, *args: _t.Any, maxsize: int = 2000, **kwargs: _t.Any) -> None:
+        super().__init__(*args, **kwargs)
+        if self.spec.mode != ConnectorMode.PIPELINE:
+            raise ValueError("ZMQConnector only supports `PIPELINE` type connections.")
+        # Use a Ray queue to ensure sync ZMQ port number
+        self._ray_queue = Queue(maxsize=1)
+        self._maxsize = maxsize
+        self._send_channel: _t.Optional[ZMQChannel] = None
+        self._recv_channel: _t.Optional[ZMQChannel] = None
+        self._confirm_msg = f"{ZMQ_CONFIRM_MSG}:{gen_rand_str()}".encode()
+
+    async def connect_send(self) -> ZMQChannel:
+        """Returns a `ZMQChannel` for sending messages."""
+        if self._send_channel is not None:
+            return self._send_channel
+        send_socket = _create_socket(zmq.PUSH, [(zmq.SNDHWM, self._maxsize)])
+        port = send_socket.bind_to_random_port(ZMQ_ADDR)
+        await self._ray_queue.put_async(port)
+        await send_socket.send(self._confirm_msg)
+        self._send_channel = ZMQChannel(send_socket=send_socket, maxsize=self._maxsize)
+        return self._send_channel
+
+    async def connect_recv(self) -> ZMQChannel:
+        """Returns a `ZMQChannel` for receiving messages."""
+        if self._recv_channel is not None:
+            return self._recv_channel
+        recv_socket = _create_socket(zmq.PULL, [(zmq.RCVHWM, self._maxsize)])
+        # Wait for port from the send socket, use random poll interval to avoid spikes
+        port = await self._ray_queue.get_async()
+        await self._ray_queue.shutdown()  # type: ignore
+        recv_socket.connect(f"{ZMQ_ADDR}:{port}")
+        msg = await recv_socket.recv()
+        if msg != self._confirm_msg:
+            raise ChannelSetupError("Channel confirmation message mismatch")
+        self._recv_channel = ZMQChannel(recv_socket=recv_socket, maxsize=self._maxsize)
+        return self._recv_channel
+
+
+def _create_socket(
+    socket_type: int, socket_opts: list[tuple[int, int | bytes | str]]
+) -> zmq.asyncio.Socket:
+    ctx = zmq.asyncio.Context.instance()
+    socket = ctx.socket(socket_type)
+    for opt, value in socket_opts:
+        socket.setsockopt(opt, value)
+    return socket

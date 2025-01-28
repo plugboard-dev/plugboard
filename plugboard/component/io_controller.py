@@ -212,25 +212,26 @@ class IOController:
         io_channels = getattr(self, f"_{direction}_event_channels")
         io_channels[event_type] = channel
 
-    def _add_channel(self, connector: Connector) -> None:
+    async def _add_channel(self, connector: Connector) -> None:
         if connector.spec.source.connects_to([self.namespace]):
-            channel = connector.connect_send()
+            channel = await connector.connect_send()
             self._add_channel_for_field(
                 connector.spec.source.descriptor, IODirection.OUTPUT, channel
             )
         if connector.spec.target.connects_to([self.namespace]):
-            channel = connector.connect_recv()
+            channel = await connector.connect_recv()
             self._add_channel_for_field(
                 connector.spec.target.descriptor, IODirection.INPUT, channel
             )
         if connector.spec.source.connects_to(self._output_event_types):
-            channel = connector.connect_send()
+            channel = await connector.connect_send()
             self._add_channel_for_event(connector.spec.source.entity, IODirection.OUTPUT, channel)
         if connector.spec.target.connects_to(self._input_event_types):
-            channel = connector.connect_recv()
+            channel = await connector.connect_recv()
             self._add_channel_for_event(connector.spec.target.entity, IODirection.INPUT, channel)
 
-    def connect(self, connectors: list[Connector]) -> None:
+    async def connect(self, connectors: list[Connector]) -> None:
         """Connects the input/output fields to input/output channels."""
-        for conn in connectors:
-            self._add_channel(conn)
+        async with asyncio.TaskGroup() as tg:
+            for conn in connectors:
+                tg.create_task(self._add_channel(conn))

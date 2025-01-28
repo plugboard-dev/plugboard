@@ -40,7 +40,6 @@ class Process(ExportMixin, ABC):
         self.parameters: dict = parameters or {}
         self._state: StateBackend = state or self._default_state_cls()
         self._state_is_connected: bool = False
-        self._connect_components()
 
     @property
     def id(self) -> str:
@@ -65,7 +64,7 @@ class Process(ExportMixin, ABC):
         self._state_is_connected = True
 
     @abstractmethod
-    def _connect_components(self) -> None:
+    async def _connect_components(self) -> None:
         """Connect components."""
         pass
 

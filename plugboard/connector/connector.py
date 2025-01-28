@@ -17,12 +17,12 @@ class Connector(ABC, ExportMixin):
         self.spec: ConnectorSpec = spec
 
     @abstractmethod
-    def connect_send(self) -> Channel:
+    async def connect_send(self) -> Channel:
         """Returns a `Channel` for sending messages."""
         pass
 
     @abstractmethod
-    def connect_recv(self) -> Channel:
+    async def connect_recv(self) -> Channel:
         """Returns a `Channel` for receiving messages."""
         pass
 
