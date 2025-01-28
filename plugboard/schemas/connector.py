@@ -17,16 +17,14 @@ class ConnectorMode(StrEnum):
     """Defines the mode of a connector.
 
     Attributes:
-        ONE_TO_ONE: Specifies a one-to-one connection.
-        ONE_TO_MANY: Specifies a one-to-many connection.
-        MANY_TO_ONE: Specifies a many-to-one connection.
-        MANY_TO_MANY: Specifies a many-to-many connection.
+        PIPELINE: one-in-one-out task queue.
+        PUBSUB: one-to-many event distribution.
+        REQREP: one-to-one request-response.
     """
 
-    ONE_TO_ONE = "one-to-one"
-    ONE_TO_MANY = "one-to-many"
-    MANY_TO_ONE = "many-to-one"
-    MANY_TO_MANY = "many-to-many"
+    PIPELINE = "pipeline"
+    PUBSUB = "pub-sub"
+    REQREP = "req-rep"
 
 
 class ConnectorSocket(PlugboardBaseModel):
@@ -84,7 +82,7 @@ class ConnectorSpec(PlugboardBaseModel):
 
     source: ConnectorSocket
     target: ConnectorSocket
-    mode: ConnectorMode = Field(default=ConnectorMode.ONE_TO_ONE, validate_default=True)
+    mode: ConnectorMode = Field(default=ConnectorMode.PIPELINE, validate_default=True)
 
     @field_validator("source", "target", mode="before")
     @classmethod
