@@ -24,7 +24,7 @@ async def test_circular_process_topology() -> None:
     """Tests a circular `Process` topology."""
     comp_a = A(name="comp_a", iters=10)
     comp_b = B(name="comp_b", factor=2)
-    comp_c = C(name="comp_c", initial_values={"in_2": -1})
+    comp_c = C(name="comp_c", initial_values={"in_2": [-1]})
     components = [comp_a, comp_b, comp_c]
 
     conn_ac = Connector(
