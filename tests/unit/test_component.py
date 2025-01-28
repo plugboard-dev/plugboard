@@ -16,7 +16,7 @@ class A(Component):
 
 
 @pytest.mark.anyio
-@pytest.mark.parametrize("initial_values", [{"a": -1, "b": -2}, {"a": -2}, {}])
+@pytest.mark.parametrize("initial_values", [{"a": [-1], "b": [-2]}, {"a": [-2]}, {}])
 async def test_component_initial_values(initial_values: dict[str, int]) -> None:
     """Tests the initial values of a `Component`."""
     component = A(name="init_values", initial_values=initial_values)
@@ -40,7 +40,7 @@ async def test_component_initial_values(initial_values: dict[str, int]) -> None:
 
     # Initial values must be set where specified
     for field in {"a", "b"}:
-        assert component.c.get(field) == initial_values.get(field, 0)
+        assert component.c.get(field) == initial_values.get(field, [0])[0]
 
     # Send 1 to all inputs
     for field in {"a", "b"}:
