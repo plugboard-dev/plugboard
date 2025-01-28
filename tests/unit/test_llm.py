@@ -79,8 +79,11 @@ async def test_llm_chat(
             assert request["messages"][-2]["role"] == "assistant"
 
 
+@pytest.mark.asyncio
+@pytest.mark.parametrize("expand_response", [False, True])
 async def test_openai_structured_chat(
     openai_mock: openai_responses.OpenAIMock,
+    expand_response: bool,
 ) -> None:
     """Test the `LLMChat` component with structured output."""
 
@@ -92,6 +95,7 @@ async def test_openai_structured_chat(
         name="llm",
         response_model=ExpectedResponse,
         system_prompt="Help the user solve for x and y",
+        expand_response=expand_response,
         llm_kwargs={"model": "gpt-4o-mini"},
     )
     await llm.init()
@@ -121,7 +125,9 @@ async def test_openai_structured_chat(
     }
     llm.prompt = "Test prompt"
     await llm.step()
-    # Response must be parsed
-    assert llm.x == 45
-    assert llm.y == "test"
-    assert json.loads(llm.response) == test_response.model_dump()
+    if expand_response:
+        # Response must be parsed
+        assert llm.x == 45
+        assert llm.y == "test"
+    else:
+        assert json.loads(llm.response) == test_response.model_dump()
