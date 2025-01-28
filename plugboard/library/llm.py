@@ -59,9 +59,9 @@ class LLMChat(Component):
         self._llm: LLM = _llm_cls(**llm_kwargs)
         self._structured = response_model is not None
         self._expand_response = expand_response and self._structured
-        if self._expand_response:
+        if self._expand_response and response_model is not None:
             self.io = IO(inputs=["prompt"], outputs=list(response_model.model_fields.keys()))
-        if self._structured:
+        if self._structured and response_model is not None:
             self._llm = self._llm.as_structured_llm(output_cls=response_model)
         # Memory 2x context window size for both prompt and response
         self._memory: deque[ChatMessage] = deque(maxlen=context_window * 2)
@@ -79,5 +79,5 @@ class LLMChat(Component):
         if not self._expand_response:
             self.response = response.message.content
         else:
-            for field, value in response.raw.model_dump().items():
+            for field, value in response.raw.model_dump().items():  # type: ignore[union-attr]
                 setattr(self, field, value)
