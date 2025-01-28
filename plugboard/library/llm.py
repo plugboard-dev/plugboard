@@ -24,6 +24,10 @@ class LLMChat(Component):
     `OPENAI_API_KEY` environment variable to be set. Other LLMs supported by llama-index can be
     used: see [here](https://docs.llamaindex.ai/en/stable/module_guides/models/llms/modules/) for
     available models. Additional llama-index dependencies may be required for specific models.
+
+    Structured output is supported by providing a Pydantic model as the `response_model` argument.
+    This can optionally be unpacked into individual output fields by setting `expand_response=True`,
+    otherwise the LLM response will be stored in the `response` output field.
     """
 
     io = IO(inputs=["prompt"], outputs=["response"])
