@@ -36,6 +36,7 @@ class LLMChat(Component):
         system_prompt: _t.Optional[str] = None,
         context_window: int = 0,
         response_model: _t.Optional[_t.Type[BaseModel]] = None,
+        expand_response: bool = False,
         llm_kwargs: _t.Optional[dict[str, _t.Any]] = None,
     ) -> None:
         """Instantiates `LLMChat`.
@@ -46,6 +47,8 @@ class LLMChat(Component):
             system_prompt: Optional; System prompt to prepend to the context window.
             context_window: The number of previous messages to include in the context window.
             response_model: Optional; A Pydantic model to structure the response.
+            expand_response: Setting this to `True` when using a structured response model will
+                cause the individual attributes of the response model to be added as output fields.
             llm_kwargs: Additional keyword arguments for the LLM.
         """
         super().__init__(name=name)
@@ -55,10 +58,10 @@ class LLMChat(Component):
         llm_kwargs = llm_kwargs or {}
         self._llm: LLM = _llm_cls(**llm_kwargs)
         self._structured = response_model is not None
-        if response_model is not None:
-            self.io = IO(
-                inputs=["prompt"], outputs=["response", *response_model.model_fields.keys()]
-            )
+        self._expand_response = expand_response and self._structured
+        if self._expand_response:
+            self.io = IO(inputs=["prompt"], outputs=list(response_model.model_fields.keys()))
+        if self._structured:
             self._llm = self._llm.as_structured_llm(output_cls=response_model)
         # Memory 2x context window size for both prompt and response
         self._memory: deque[ChatMessage] = deque(maxlen=context_window * 2)
@@ -73,7 +76,8 @@ class LLMChat(Component):
         full_prompt = [*self._system_prompt, *self._memory, prompt_message]
         response = await self._llm.achat(full_prompt)
         self._memory.extend([prompt_message, response.message])
-        self.response = response.message.content
-        if self._structured and isinstance(response.raw, BaseModel):
+        if not self._expand_response:
+            self.response = response.message.content
+        else:
             for field, value in response.raw.model_dump().items():
                 setattr(self, field, value)
