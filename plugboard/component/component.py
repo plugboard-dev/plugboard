@@ -24,7 +24,7 @@ class Component(ABC, ExportMixin):
     def __init__(
         self,
         name: str,
-        initial_values: _t.Optional[dict] = None,
+        initial_values: _t.Optional[dict[str, _t.Iterable]] = None,
         parameters: _t.Optional[dict] = None,
         state: _t.Optional[StateBackend] = None,
         constraints: _t.Optional[dict] = None,
@@ -38,6 +38,7 @@ class Component(ABC, ExportMixin):
         self.io = IOController(
             inputs=self.__class__.io.inputs,
             outputs=self.__class__.io.outputs,
+            initial_values=initial_values,
             input_events=self.__class__.io.input_events,
             output_events=self.__class__.io.output_events,
             namespace=name,
