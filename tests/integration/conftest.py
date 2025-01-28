@@ -6,7 +6,6 @@ import typing as _t
 
 from plugboard.state import (
     DictStateBackend,
-    MultiprocessingStateBackend,
     RayStateBackend,
     SqliteStateBackend,
 )
@@ -16,12 +15,6 @@ from plugboard.state import (
 def setup_DictStateBackend() -> _t.Iterator[DictStateBackend]:
     """Returns a `DictStateBackend` instance."""
     yield DictStateBackend()
-
-
-@contextmanager
-def setup_MultiprocessingStateBackend() -> _t.Iterator[MultiprocessingStateBackend]:
-    """Returns a `MultiprocessingStateBackend` instance."""
-    yield MultiprocessingStateBackend()
 
 
 @contextmanager

@@ -43,7 +43,7 @@ class B(ComponentTestHelper):
         self._factor = factor
 
     async def step(self) -> None:
-        self.out_1 = self._factor * self.in_1  # type: ignore
+        self.out_1 = self._factor * self.in_1
         await super().step()
 
 
@@ -55,7 +55,7 @@ class C(ComponentTestHelper):
         self._path = path
 
     async def step(self) -> None:
-        out = self.in_1  # type: ignore
+        out = self.in_1
         async with async_open(self._path, "a") as f:
             await f.write(f"{out}\n")
         await super().step()
@@ -119,7 +119,7 @@ async def test_process_with_components_run(
         assert c.step_count == iters
 
     assert comp_a.out_1 == iters - 1
-    assert comp_c.in_1 == (iters - 1) * factor  # type: ignore
+    assert comp_c.in_1 == (iters - 1) * factor
 
     with tempfile_path.open() as f:
         data = f.read()

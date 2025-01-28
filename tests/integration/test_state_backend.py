@@ -12,7 +12,6 @@ from plugboard.state import StateBackend
 from tests.conftest import ComponentTestHelper
 from tests.integration.conftest import (
     setup_DictStateBackend,
-    setup_MultiprocessingStateBackend,
     setup_RayStateBackend,
     setup_SqliteStateBackend,
 )
@@ -83,7 +82,6 @@ def C_connectors() -> list[Connector]:
 @pytest.fixture(
     params=[
         setup_DictStateBackend,
-        setup_MultiprocessingStateBackend,
         setup_SqliteStateBackend,
         setup_RayStateBackend,
     ]

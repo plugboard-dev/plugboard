@@ -2,9 +2,8 @@
 
 import asyncio
 
-import inject
-from multiprocess.context import BaseContext
 import pytest
+from ray.util.multiprocessing import Pool
 
 from plugboard.connector import (
     AsyncioChannelBuilder,
@@ -78,8 +77,7 @@ def test_multiprocessing_channel(channel_builder_cls: type[ChannelBuilder]) -> N
     def _recv_proc(channel: Channel) -> None:
         asyncio.run(_recv_proc_async(channel))
 
-    mp_ctx = inject.instance(BaseContext)
-    with mp_ctx.Pool(2) as pool:
+    with Pool(2) as pool:
         r1 = pool.apply_async(_send_proc, (channel,))
         r2 = pool.apply_async(_recv_proc, (channel,))
         r1.get()

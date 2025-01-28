@@ -12,13 +12,10 @@ dependencies = [
     "annotated-types~=0.7",
     "async-lru~=2.0",
     "fsspec>=2024.9.0",
-    "inject~=5.2",
     "msgspec[yaml]~=0.18",
-    "multiprocess~=0.70",
     "pandas>=1.0,<3",
     "pyarrow~=17.0",
     "pydantic~=2.8",
-    "pyzmq~=26.2",
     "rich~=13.9",
     "sqlalchemy[asyncio]~=2.0",
     "typer~=0.12",
@@ -28,7 +25,7 @@ dependencies = [
 aws = ["s3fs>=2024.9.0"]
 azure = ["adlfs>=2024.7.0"]
 gcp = ["gcsfs>=2024.9.0.post1"]
-ray = ["ray>=2.40.0"]
+ray = ["pyzmq~=26.2", "ray>=2.40.0"]
 
 [dependency-groups]
 dev = [

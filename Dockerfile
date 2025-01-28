@@ -14,12 +14,11 @@ ENV UV_PROJECT_ENVIRONMENT=/opt/venv
 ENV PATH="${UV_PROJECT_ENVIRONMENT}/bin:${PATH}"
 ENV UV_LINK_MODE=copy
 
-# Install dependencies with --no-install-project to avoid potential cache invalidation
-RUN --mount=from=ghcr.io/astral-sh/uv,source=/uv,target=/bin/uv \
-  --mount=type=cache,target=/root/.cache/uv \
-  --mount=type=bind,source=uv.lock,target=uv.lock \
-  --mount=type=bind,source=pyproject.toml,target=pyproject.toml \
-  uv sync --no-install-project --no-editable
+# Install dependencies with pip and requirements.txt to avoid potential cache invalidation
+RUN --mount=type=cache,target=/root/.cache/pip \
+  --mount=type=bind,source=requirements.txt,target=requirements.txt \
+  python -m venv ${UV_PROJECT_ENVIRONMENT} && \
+  pip install -r ./requirements.txt
 
 # Final stage with production setup ---------------------------------------------------------------
 FROM base AS prod
