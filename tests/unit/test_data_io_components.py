@@ -7,7 +7,7 @@ import typing as _t
 import pandas as pd
 import pytest
 
-from plugboard.connector import AsyncioChannel, Connector
+from plugboard.connector import AsyncioConnector
 from plugboard.exceptions import IOStreamClosedError, NoMoreDataException
 from plugboard.library import DataReader, DataWriter
 from plugboard.schemas import ConnectorSpec
@@ -97,19 +97,19 @@ async def test_data_writer(
     """Test the DataWriter class."""
     writer = MockDataWriter(name="data-writer", field_names=list(df.columns), chunk_size=chunk_size)
     connectors = {
-        field: Connector(
+        field: AsyncioConnector(
             spec=ConnectorSpec(source="none.none", target=f"data-writer.{field}"),
-            channel=AsyncioChannel(),
         )
         for field in df.columns
     }
-    writer.io.connect(list(connectors.values()))
+    await writer.io.connect(list(connectors.values()))
 
     await writer.init()
 
+    output_channels = {field: await connectors[field].connect_send() for field in df.columns}
     for _, row in df.iterrows():
         for field in df.columns:
-            await connectors[field].channel.send(row[field])
+            await output_channels[field].send(row[field])
         await writer.step()
 
     await writer.io.close()

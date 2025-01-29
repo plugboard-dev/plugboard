@@ -10,7 +10,7 @@ from moto.moto_server.threaded_moto_server import ThreadedMotoServer
 import pandas as pd
 import pytest
 
-from plugboard.connector import AsyncioChannel, Connector
+from plugboard.connector import AsyncioConnector
 from plugboard.exceptions import IOStreamClosedError
 from plugboard.library.file_io import FileReader, FileWriter
 from plugboard.schemas import ConnectorSpec
@@ -120,19 +120,19 @@ async def test_file_writer(df: pd.DataFrame, write_path: str, chunk_size: _t.Opt
         chunk_size=chunk_size,
     )
     connectors = {
-        field: Connector(
+        field: AsyncioConnector(
             spec=ConnectorSpec(source="none.none", target=f"file-writer.{field}"),
-            channel=AsyncioChannel(),
         )
         for field in df.columns
     }
-    writer.io.connect(list(connectors.values()))
+    await writer.io.connect(list(connectors.values()))
 
     await writer.init()
 
+    output_channels = {field: await connectors[field].connect_send() for field in df.columns}
     for _, row in df.iterrows():
         for field in df.columns:
-            await connectors[field].channel.send(row[field])
+            await output_channels[field].send(row[field])
         await writer.step()
 
     await writer.io.close()

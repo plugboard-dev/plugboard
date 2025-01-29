@@ -12,10 +12,10 @@ import pytest
 from plugboard.connector import (
     Channel,
     Connector,
-    ConnectorSpec,
     ZMQConnector,
 )
 from plugboard.exceptions import ChannelClosedError
+from plugboard.schemas.connector import ConnectorSpec
 
 
 TEST_ITEMS = string.ascii_lowercase
@@ -72,8 +72,8 @@ async def test_pubsub_channel(connector_cls: type[Connector]) -> None:
     )
     connector = connector_cls(connector_spec)
 
-    publisher = connector.connect_send()
-    subscribers = [connector.connect_recv() for _ in range(3)]
+    publisher = await connector.connect_send()
+    subscribers = await asyncio.gather(*[connector.connect_recv() for _ in range(3)])
 
     async with asyncio.TaskGroup() as tg:
         publisher_task = tg.create_task(send_messages(publisher))
