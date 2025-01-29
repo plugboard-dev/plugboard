@@ -2,9 +2,14 @@
 
 import logging
 import sys
+import typing as _t
 
 from msgspec import json
 import structlog
+
+
+def _serialiser(obj: _t.Any, default: _t.Callable | None) -> bytes:
+    return json.encode(obj)
 
 
 def configure_logging() -> None:
@@ -18,10 +23,8 @@ def configure_logging() -> None:
                 structlog.processors.CallsiteParameter.LINENO,
                 structlog.processors.CallsiteParameter.MODULE,
                 structlog.processors.CallsiteParameter.PROCESS,
-                structlog.processors.CallsiteParameter.THREAD_NAME,
             ]
         ),
-        structlog.processors.StackInfoRenderer(),
     ]
 
     if sys.stderr.isatty():
@@ -33,7 +36,7 @@ def configure_logging() -> None:
         # Otherwise print JSON
         processors = common_processors + [
             structlog.processors.dict_tracebacks,
-            structlog.processors.JSONRenderer(serializer=json.encode),
+            structlog.processors.JSONRenderer(serializer=_serialiser),
         ]
 
     structlog.configure(
