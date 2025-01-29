@@ -33,12 +33,10 @@ def configure_logging() -> None:
     ]
 
     if not log_structured:
-        # Pretty printing when we run in a terminal session.
         processors = common_processors + [
             structlog.dev.ConsoleRenderer(),
         ]
     else:
-        # Otherwise print JSON
         processors = common_processors + [
             structlog.processors.dict_tracebacks,
             structlog.processors.JSONRenderer(serializer=_serialiser),
