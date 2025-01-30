@@ -23,7 +23,6 @@ ZMQ_CONFIRM_MSG = "__PLUGBOARD_CHAN_CONFIRM_MSG__"
 class ZMQChannel(SerdeChannel):
     """`ZMQChannel` enables data exchange between processes using ZeroMQ."""
 
-    @depends_on_optional("ray")
     def __init__(  # noqa: D417
         self,
         *args: _t.Any,
@@ -65,6 +64,16 @@ class ZMQChannel(SerdeChannel):
             raise ChannelSetupError("Recv socket is not initialized")
         return await self._recv_socket.recv()
 
+    async def close(self) -> None:
+        """Closes the `ZMQChannel`."""
+        if self._send_socket is not None:
+            await super().close()
+            self._send_socket.close()
+        if self._recv_socket is not None:
+            self._recv_socket.close()
+        self._is_closed = True
+        self._close_msg_received = True
+
 
 class ZMQConnector(Connector):
     """`ZMQConnector` connects components using `ZMQChannel`."""
@@ -74,6 +83,7 @@ class ZMQConnector(Connector):
     #       : This code only works for the special case of exactly one sender and one receiver
     #       : per ZMQConnector.
 
+    @depends_on_optional("ray")
     def __init__(self, *args: _t.Any, maxsize: int = 2000, **kwargs: _t.Any) -> None:
         super().__init__(*args, **kwargs)
         if self.spec.mode != ConnectorMode.PIPELINE:
@@ -103,7 +113,7 @@ class ZMQConnector(Connector):
         recv_socket = _create_socket(zmq.PULL, [(zmq.RCVHWM, self._maxsize)])
         # Wait for port from the send socket, use random poll interval to avoid spikes
         port = await self._ray_queue.get_async()
-        await self._ray_queue.shutdown()  # type: ignore
+        self._ray_queue.shutdown()
         recv_socket.connect(f"{ZMQ_ADDR}:{port}")
         msg = await recv_socket.recv()
         if msg != self._confirm_msg:

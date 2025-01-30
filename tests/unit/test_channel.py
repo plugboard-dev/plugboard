@@ -34,8 +34,9 @@ async def test_channel(connector_cls: type[Connector]) -> None:
     spec = ConnectorSpec(mode=ConnectorMode.PIPELINE, source="test.send", target="test.recv")
     connector = ConnectorBuilder(connector_cls=connector_cls).build(spec)
 
-    send_channel = await connector.connect_send()
-    recv_channel = await connector.connect_recv()
+    send_channel, recv_channel = await asyncio.gather(
+        connector.connect_send(), connector.connect_recv()
+    )
 
     # Send/receive first item to initialise the channel
     initial_send_recv = await asyncio.gather(send_channel.send(TEST_ITEMS[0]), recv_channel.recv())

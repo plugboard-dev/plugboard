@@ -58,6 +58,8 @@ class Channel(ABC):
 
     async def close(self) -> None:
         """Closes the `Channel`."""
+        if self._is_closed:
+            return
         await self.send(CHAN_CLOSE_MSG)
         self._is_closed = True
 
@@ -82,6 +84,7 @@ class Channel(ABC):
             msg = await self._recv()
             if msg == CHAN_CLOSE_MSG:
                 self._close_msg_received = True
+                self._is_closed = True
                 raise ChannelClosedError("Attempted recv on closed channel.")
             return msg
 
