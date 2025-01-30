@@ -5,7 +5,7 @@ import typing as _t
 import pytest
 
 from plugboard.component import Component, IOController
-from plugboard.connector import AsyncioChannel, Connector
+from plugboard.connector import AsyncioConnector, Connector
 from plugboard.process import LocalProcess
 from plugboard.schemas import ConnectorSpec
 from plugboard.state import StateBackend
@@ -51,12 +51,8 @@ def B_components() -> list[Component]:
 def B_connectors() -> list[Connector]:
     """Returns a tuple of connectors for `B` components."""
     return [
-        Connector(
-            spec=ConnectorSpec(source="B1.out_1", target="B2.in_1"), channel=AsyncioChannel()
-        ),
-        Connector(
-            spec=ConnectorSpec(source="B1.out_2", target="B2.in_2"), channel=AsyncioChannel()
-        ),
+        AsyncioConnector(spec=ConnectorSpec(source="B1.out_1", target="B2.in_1")),
+        AsyncioConnector(spec=ConnectorSpec(source="B1.out_2", target="B2.in_2")),
     ]
 
 
@@ -70,12 +66,8 @@ def C_components() -> list[Component]:
 def C_connectors() -> list[Connector]:
     """Returns a tuple of connectors for `C` components."""
     return [
-        Connector(
-            spec=ConnectorSpec(source="C1.out_1", target="C2.in_1"), channel=AsyncioChannel()
-        ),
-        Connector(
-            spec=ConnectorSpec(source="C1.out_2", target="C2.in_2"), channel=AsyncioChannel()
-        ),
+        AsyncioConnector(spec=ConnectorSpec(source="C1.out_1", target="C2.in_1")),
+        AsyncioConnector(spec=ConnectorSpec(source="C1.out_2", target="C2.in_2")),
     ]
 
 

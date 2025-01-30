@@ -5,6 +5,9 @@ import msgspec
 import pytest
 
 from plugboard.schemas import ConfigSpec
+from plugboard.schemas.connector import (
+    DEFAULT_CONNECTOR_CLS_PATH,
+)
 
 
 @pytest.fixture
@@ -23,4 +26,4 @@ def test_load(config: dict) -> None:
     # Must be one connector defined
     assert len(process_spec.args.connectors) == 1
     # Must default to AsyncioChannelBuilder
-    assert process_spec.channel_builder.type == "plugboard.connector.AsyncioChannelBuilder"
+    assert process_spec.connector_builder.type == DEFAULT_CONNECTOR_CLS_PATH
