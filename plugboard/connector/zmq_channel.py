@@ -45,6 +45,8 @@ class ZMQChannel(SerdeChannel):
         super().__init__(*args, **kwargs)
         self._send_socket: _t.Optional[zmq.asyncio.Socket] = send_socket
         self._recv_socket: _t.Optional[zmq.asyncio.Socket] = recv_socket
+        self._is_send_closed = send_socket is None
+        self._is_recv_closed = recv_socket is None
         self._send_hwm = max(maxsize // 2, 1)
         self._recv_hwm = max(maxsize - self._send_hwm, 1)
 
