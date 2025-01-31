@@ -86,23 +86,31 @@ class ZMQConnector(Connector):
     #       : per ZMQConnector.
 
     @depends_on_optional("ray")
-    def __init__(self, *args: _t.Any, maxsize: int = 2000, **kwargs: _t.Any) -> None:
+    def __init__(
+        self, *args: _t.Any, zmq_address: str = ZMQ_ADDR, maxsize: int = 2000, **kwargs: _t.Any
+    ) -> None:
         super().__init__(*args, **kwargs)
         if self.spec.mode != ConnectorMode.PIPELINE:
             raise ValueError("ZMQConnector only supports `PIPELINE` type connections.")
         # Use a Ray queue to ensure sync ZMQ port number
+        self._zmq_address = zmq_address
         self._ray_queue = Queue(maxsize=1)
         self._maxsize = maxsize
         self._send_channel: _t.Optional[ZMQChannel] = None
         self._recv_channel: _t.Optional[ZMQChannel] = None
         self._confirm_msg = f"{ZMQ_CONFIRM_MSG}:{gen_rand_str()}".encode()
 
+    @property
+    def zmq_address(self) -> str:
+        """The ZMQ address used for communication."""
+        return self._zmq_address
+
     async def connect_send(self) -> ZMQChannel:
         """Returns a `ZMQChannel` for sending messages."""
         if self._send_channel is not None:
             return self._send_channel
         send_socket = _create_socket(zmq.PUSH, [(zmq.SNDHWM, self._maxsize)])
-        port = send_socket.bind_to_random_port(ZMQ_ADDR)
+        port = send_socket.bind_to_random_port(self._zmq_address)
         await self._ray_queue.put_async(port)
         await send_socket.send(self._confirm_msg)
         self._send_channel = ZMQChannel(send_socket=send_socket, maxsize=self._maxsize)
@@ -116,7 +124,7 @@ class ZMQConnector(Connector):
         # Wait for port from the send socket, use random poll interval to avoid spikes
         port = await self._ray_queue.get_async()
         self._ray_queue.shutdown()
-        recv_socket.connect(f"{ZMQ_ADDR}:{port}")
+        recv_socket.connect(f"{self._zmq_address}:{port}")
         msg = await recv_socket.recv()
         if msg != self._confirm_msg:
             raise ChannelSetupError("Channel confirmation message mismatch")
