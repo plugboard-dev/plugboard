@@ -15,7 +15,7 @@ from plugboard.connector import (
     ZMQConnector,
 )
 from plugboard.exceptions import ChannelClosedError
-from plugboard.schemas.connector import ConnectorSpec
+from plugboard.schemas.connector import ConnectorMode, ConnectorSpec
 
 
 TEST_ITEMS = string.ascii_lowercase
@@ -68,18 +68,22 @@ async def test_pubsub_channel(connector_cls: type[Connector]) -> None:
     connector_spec = ConnectorSpec(
         source="pubsub-test.publishers",
         target="pubsub-test.subscribers",
-        mode="pubsub",
+        mode=ConnectorMode.PUBSUB,
     )
     connector = connector_cls(connector_spec)
 
-    publisher = await connector.connect_send()
-    subscribers = await asyncio.gather(*[connector.connect_recv() for _ in range(3)])
+    async with asyncio.TaskGroup() as tg:
+        publisher_conn_task = tg.create_task(connector.connect_send())
+        subscriber_conn_tasks = [tg.create_task(connector.connect_recv()) for _ in range(3)]
+
+    publisher = publisher_conn_task.result()
+    subscribers = [t.result() for t in subscriber_conn_tasks]
 
     async with asyncio.TaskGroup() as tg:
-        publisher_task = tg.create_task(send_messages(publisher))
-        subscribers_task = tg.create_task(recv_messages(subscribers))
+        publisher_send_task = tg.create_task(send_messages(publisher))
+        subscriber_recv_tasks = tg.create_task(recv_messages(subscribers))
 
-    sent_msgs_hash = publisher_task.result()
-    received_msgs_hashes = subscribers_task.result()
+    sent_msgs_hash = publisher_send_task.result()
+    received_msgs_hashes = subscriber_recv_tasks.result()
 
     assert all((x == sent_msgs_hash for x in received_msgs_hashes))
