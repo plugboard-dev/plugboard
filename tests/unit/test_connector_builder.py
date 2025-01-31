@@ -13,8 +13,8 @@ from plugboard.schemas.connector import ConnectorMode, ConnectorSpec
 
 class MyChannel(Channel):
     def __init__(self, a: int, **kwargs: dict[str, _t.Any]) -> None:
-        self.a = a
-        self.kwargs = kwargs
+        self._a = a
+        self._kwargs = kwargs
 
     async def send(self, msg: int) -> None:
         return
@@ -56,12 +56,13 @@ async def test_connector_builder() -> None:
     assert isinstance(connector1, MyConnector)
     assert connector1.spec == cs
     assert connector1._a == 1
+    assert connector1._b is None
 
     # Check that the channel was built correctly
     channel1 = await connector1.connect_recv()
     assert isinstance(channel1, MyChannel)
-    assert channel1.a == 1
-    assert channel1.kwargs == {}
+    assert channel1._a == 1
+    assert channel1._kwargs == {}
 
     connector_builder = ConnectorBuilder(connector_cls=MyConnector, a=1, b=2)
     connector2 = connector_builder.build(cs)
@@ -69,9 +70,10 @@ async def test_connector_builder() -> None:
     assert isinstance(connector2, MyConnector)
     assert connector2.spec == cs
     assert connector2._a == 1
+    assert connector2._b == 2
 
     channel2 = await connector2.connect_send()
     # Check that the channel was built correctly
     assert isinstance(channel2, MyChannel)
-    assert channel2.a == 2
-    assert channel2.kwargs == {"b": 3}
+    assert channel2._a == 1
+    assert channel2._kwargs == {"b": 2}
