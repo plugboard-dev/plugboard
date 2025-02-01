@@ -16,7 +16,6 @@ def _serialiser(obj: _t.Any, default: _t.Callable | None) -> bytes:
 def configure_logging() -> None:
     """Configures logging."""
     log_level = getattr(logging, settings.log_level)
-    # If log_structured is None, default to JSON logs if we're not running in a terminal session
     common_processors = [
         structlog.stdlib.add_log_level,
         structlog.processors.TimeStamper(fmt="iso"),
