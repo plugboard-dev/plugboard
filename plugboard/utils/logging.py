@@ -40,7 +40,7 @@ def configure_logging() -> None:
     structlog.configure(
         cache_logger_on_first_use=True,
         wrapper_class=structlog.make_filtering_bound_logger(log_level),
-        processors=processors,
+        processors=processors,  # type: ignore[arg-type]
         # Use BytesLoggerFactory when using msgspec serialization to bytes
         logger_factory=structlog.BytesLoggerFactory() if settings.log_structured else None,
     )

@@ -24,7 +24,7 @@ class Settings(BaseSettings):
             terminal session.
     """
 
-    log_level: LogLevel = "WARNING"
+    log_level: LogLevel = LogLevel.warning
     log_structured: bool = Field(default_factory=lambda: not sys.stderr.isatty())
 
     model_config = SettingsConfigDict(env_prefix="plugboard_")
