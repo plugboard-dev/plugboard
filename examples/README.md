@@ -1,0 +1,9 @@
+# Plugboard examples
+
+<div align="center">
+    [![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/plugboard-dev/plugboard)
+</div>
+
+This folder contains all of the [step-by-step tutorials](tutorials) and [demos](demos) featured in the [docs](https://docs.plugboard.dev).
+
+The Jupyter notebooks can be run locally, in [Github codespaces](https://codespaces.new/plugboard-dev/plugboard), or in [Google Colab](https://colab.research.google.com/). Note that if you are not using codespaces you will need to install Plugboard and any other required dependencies with `pip`.
