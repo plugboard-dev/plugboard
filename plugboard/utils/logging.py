@@ -1,7 +1,6 @@
 """Provides logging utilities."""
 
 import logging
-import sys
 import typing as _t
 
 from msgspec import json
@@ -18,9 +17,6 @@ def configure_logging() -> None:
     """Configures logging."""
     log_level = getattr(logging, settings.log_level)
     # If log_structured is None, default to JSON logs if we're not running in a terminal session
-    log_structured = (
-        settings.log_structured if settings.log_structured is not None else not sys.stderr.isatty()
-    )
     common_processors = [
         structlog.stdlib.add_log_level,
         structlog.processors.TimeStamper(fmt="iso"),
@@ -32,7 +28,7 @@ def configure_logging() -> None:
         ),
     ]
 
-    if not log_structured:
+    if not settings.log_structured:
         processors = common_processors + [
             structlog.dev.ConsoleRenderer(),
         ]
@@ -47,5 +43,5 @@ def configure_logging() -> None:
         wrapper_class=structlog.make_filtering_bound_logger(log_level),
         processors=processors,
         # Use BytesLoggerFactory when using msgspec serialization to bytes
-        logger_factory=structlog.BytesLoggerFactory() if log_structured else None,
+        logger_factory=structlog.BytesLoggerFactory() if settings.log_structured else None,
     )

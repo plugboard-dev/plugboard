@@ -1,7 +1,9 @@
 """Provides Plugboard's settings."""
 
 from enum import Enum
+import sys
 
+from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -18,12 +20,12 @@ class Settings(BaseSettings):
 
     Attributes:
         log_level: The log level to use.
-        log_structured: Whether to render logs to JSON. If None, defaults to JSON if not running in
-            a terminal session.
+        log_structured: Whether to render logs to JSON. Defaults to JSON if not running in a
+            terminal session.
     """
 
     log_level: LogLevel = "WARNING"
-    log_structured: bool | None = None
+    log_structured: bool = Field(default_factory=lambda: not sys.stderr.isatty())
 
     model_config = SettingsConfigDict(env_prefix="plugboard_")
 
