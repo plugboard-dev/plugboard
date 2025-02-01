@@ -51,7 +51,7 @@ class Component(ABC, ExportMixin):
         self.init = self._handle_init_wrapper()  # type: ignore
         self.step = self._handle_step_wrapper()  # type: ignore
         self.logger = logger.bind(cls=self.__class__.__name__, name=self.name)
-        self.logger("Component created")
+        self.logger.info("Component created")
 
     def __init_subclass__(cls, *args: _t.Any, **kwargs: _t.Any) -> None:
         super().__init_subclass__(*args, **kwargs)
