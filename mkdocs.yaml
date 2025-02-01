@@ -30,6 +30,7 @@ plugins:
           show_signature_annotations: true
           merge_init_into_class: true
           separate_signature: true
+- mkdocs-jupyter
 
 - mike:
     alias_type: symlink
@@ -97,9 +98,10 @@ watch:
 
 nav:
 - Home: index.md
-- Examples:
-  - Hello world: examples/001_hello_world/hello-world.md
-  - Simple model: examples/002_simple_model/simple-model.md
+- Tutorials:
+  - Hello world: examples/tutorials/hello-world.md
+- Demos:
+  - Simple model: examples/demos/001_simple_model/simple-model.ipynb
 - API Reference:
   - component: api/component/component.md
   - connector: api/connector/connector.md

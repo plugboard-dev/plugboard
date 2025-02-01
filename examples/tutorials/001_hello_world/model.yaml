@@ -2,11 +2,11 @@ plugboard:
   process:
     args:
       components:
-      - type: A
+      - type: hello_world.A
         args:
           name: "a"
           iters: 10
-      - type: B
+      - type: hello_world.B
         args:
           name: "b"
           path: "./b.txt"

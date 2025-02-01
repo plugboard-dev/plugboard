@@ -4,15 +4,19 @@
 # --8<-- [start:components]
 import asyncio
 from contextlib import AsyncExitStack
+import time
 import typing as _t
 
 from aiofile import async_open
+import structlog
 
-from plugboard.component import Component
-from plugboard.component import IOController as IO
+from plugboard.component import Component, IOController as IO
 from plugboard.connector import AsyncioChannel, Connector
 from plugboard.process import LocalProcess
 from plugboard.schemas import ConnectorSpec
+
+
+logger = structlog.get_logger()
 
 
 class A(Component):
@@ -27,6 +31,7 @@ class A(Component):
         self._seq = iter(range(self._iters))
 
     async def step(self) -> None:
+        self.logger.info("Step")
         try:
             self.out_1 = next(self._seq)
         except StopIteration:
@@ -47,6 +52,7 @@ class B(Component):
         )
 
     async def step(self) -> None:
+        self.logger.info("Step")
         out = 2 * self.in_1
         await self._f.write(f"{out}\n")
 
@@ -58,7 +64,7 @@ class B(Component):
 async def main() -> None:
     # --8<-- [start:main]
     process = LocalProcess(
-        components=[A(name="a", iters=10), B(name="b", path="b.txt")],
+        components=[A(name="a", iters=5), B(name="b", path="b.txt")],
         connectors=[
             Connector(
                 spec=ConnectorSpec(source="a.out_1", target="b.in_1"),
@@ -72,4 +78,6 @@ async def main() -> None:
 
 
 if __name__ == "__main__":
+    tstart = time.time()
     asyncio.run(main())
+    print(f"Elapsed: {time.time() - tstart:.2f} s")
