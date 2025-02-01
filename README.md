@@ -10,7 +10,8 @@
 
 <div align="center" class="badge-section">
 
-![Lint and test](https://github.com/plugboard-dev/plugboard/actions/workflows/lint-test.yaml/badge.svg)</a>
+![Lint and test](https://github.com/plugboard-dev/plugboard/actions/workflows/lint-test.yaml/badge.svg)
+![Documentation](https://github.com/plugboard-dev/plugboard/actions/workflows/docs.yaml/badge.svg)
 
 </div>
 
