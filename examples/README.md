@@ -6,4 +6,4 @@
 
 This folder contains all of the [step-by-step tutorials](tutorials) and [demos](demos) featured in the [docs](https://docs.plugboard.dev).
 
-The Jupyter notebooks can be run locally, in [Github codespaces](https://codespaces.new/plugboard-dev/plugboard), or in [Google Colab](https://colab.research.google.com/). Note that if you are not using codespaces you will need to install Plugboard and any other required dependencies with `pip`.
+The Jupyter notebooks can be run locally, in [Github codespaces](https://codespaces.new/plugboard-dev/plugboard), or in any other hosted Python 3.12+ environment.
