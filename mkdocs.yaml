@@ -31,7 +31,6 @@ plugins:
           merge_init_into_class: true
           separate_signature: true
 - mkdocs-jupyter
-
 - mike:
     alias_type: symlink
     canonical_version: latest
@@ -60,6 +59,8 @@ extra_css:
 
 extra_javascript:
 - https://buttons.github.io/buttons.js
+- javascripts/extra.js
+
 
 theme:
   name: material
@@ -92,6 +93,7 @@ theme:
 watch:
 - mkdocs.yaml
 - docs
+- examples
 - plugboard
 - README.md
 - CONTRIBUTING.md
