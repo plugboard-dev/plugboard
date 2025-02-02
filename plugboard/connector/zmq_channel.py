@@ -214,7 +214,10 @@ class ZMQPubsubConnector(ZMQConnector):
 
     async def connect_recv(self) -> ZMQChannel:
         """Returns a `ZMQChannel` for receiving pubsub messages."""
-        socket_opts: _zmq_sockopts_t = [(zmq.RCVHWM, self._maxsize), (zmq.SUBSCRIBE, b"")]
+        socket_opts: _zmq_sockopts_t = [
+            (zmq.RCVHWM, self._maxsize),
+            (zmq.SUBSCRIBE, bytes(self._topic, "utf-8")),
+        ]
         recv_socket = _create_socket(zmq.SUB, socket_opts)
         recv_socket.connect(f"{self._zmq_address}:{self._xpub_port}")
         return ZMQChannel(recv_socket=recv_socket, topic=self._topic, maxsize=self._maxsize)
