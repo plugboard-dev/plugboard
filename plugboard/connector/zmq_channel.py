@@ -110,7 +110,7 @@ class ZMQConnector(Connector):
         if self._send_channel is not None:
             return self._send_channel
         send_socket = _create_socket(zmq.PUSH, [(zmq.SNDHWM, self._maxsize)])
-        port = send_socket.bind_to_random_port(self._zmq_address)
+        port = send_socket.bind_to_random_port("tcp://*")
         await self._ray_queue.put_async(port)
         await send_socket.send(self._confirm_msg)
         self._send_channel = ZMQChannel(send_socket=send_socket, maxsize=self._maxsize)
