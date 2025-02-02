@@ -8,7 +8,7 @@ import typing as _t
 
 from plugboard.component import Component
 from plugboard.component.io_controller import IOController
-from plugboard.exceptions import IOStreamClosedError, NoMoreDataException
+from plugboard.exceptions import NoMoreDataException
 
 
 class DataReader(Component, ABC):
@@ -80,5 +80,5 @@ class DataReader(Component, ABC):
             try:
                 await self._fetch_chunk()
                 self._consume_record()
-            except NoMoreDataException as e:
-                raise IOStreamClosedError("No more data to read.") from e
+            except NoMoreDataException:
+                await self.io.close()
