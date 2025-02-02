@@ -59,7 +59,7 @@ class ZMQChannel(SerdeChannel):
         self._is_recv_closed = recv_socket is None
         self._send_hwm = max(maxsize // 2, 1)
         self._recv_hwm = max(maxsize - self._send_hwm, 1)
-        self._topic = bytes(topic, "utf-8")
+        self._topic = topic.encode("utf8")
 
     async def send(self, msg: bytes) -> None:
         """Sends a message through the `ZMQChannel`.
@@ -187,6 +187,7 @@ class ZMQPubsubConnector(ZMQConnector):
         return obj
 
     def __del__(self) -> None:
+        # TODO : Fixup the cleanup logic: Task was destroyed but it is pending!
         self._poll_task.cancel()
 
     async def _poll(self) -> None:
@@ -195,11 +196,9 @@ class ZMQPubsubConnector(ZMQConnector):
                 events = dict(await self._poller.poll())
                 if self._xpub_socket in events:
                     msg = await self._xpub_socket.recv_multipart()
-                    print("[BROKER] xpub_socket recv message: %r" % msg)
                     await self._xsub_socket.send_multipart(msg)
                 if self._xsub_socket in events:
                     msg = await self._xsub_socket.recv_multipart()
-                    print("[BROKER] xsub_socket recv message: %r" % msg)
                     await self._xpub_socket.send_multipart(msg)
         except asyncio.CancelledError:
             self._xsub_socket.close()
@@ -210,16 +209,18 @@ class ZMQPubsubConnector(ZMQConnector):
         """Returns a `ZMQChannel` for sending pubsub messages."""
         send_socket = _create_socket(zmq.PUB, [(zmq.SNDHWM, self._maxsize)])
         send_socket.connect(f"{self._zmq_address}:{self._xsub_port}")
+        await asyncio.sleep(0.1)
         return ZMQChannel(send_socket=send_socket, topic=self._topic, maxsize=self._maxsize)
 
     async def connect_recv(self) -> ZMQChannel:
         """Returns a `ZMQChannel` for receiving pubsub messages."""
         socket_opts: _zmq_sockopts_t = [
             (zmq.RCVHWM, self._maxsize),
-            (zmq.SUBSCRIBE, bytes(self._topic, "utf-8")),
+            (zmq.SUBSCRIBE, self._topic.encode("utf8")),
         ]
         recv_socket = _create_socket(zmq.SUB, socket_opts)
         recv_socket.connect(f"{self._zmq_address}:{self._xpub_port}")
+        await asyncio.sleep(0.1)
         return ZMQChannel(recv_socket=recv_socket, topic=self._topic, maxsize=self._maxsize)
 
 
