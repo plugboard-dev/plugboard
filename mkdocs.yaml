@@ -100,8 +100,11 @@ watch:
 
 nav:
 - Home: index.md
-- Tutorials:
-  - Hello world: examples/tutorials/hello-world.md
+- Usage:
+  - Key Concepts: usage/key-concepts.md
+  - Tutorials:
+    - Hello world: examples/tutorials/hello-world.md
+  - Configuration: usage/configuration.md
 - Demos:
   - Simple model: examples/demos/001_simple_model/simple-model.ipynb
 - API Reference:
