@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from abc import ABC
+import asyncio
 import typing as _t
 
 from plugboard.connector.connector import Connector
@@ -21,6 +22,7 @@ except ImportError:
 
 ZMQ_ADDR = r"tcp://127.0.0.1"
 ZMQ_CONFIRM_MSG = "__PLUGBOARD_CHAN_CONFIRM_MSG__"
+_zmq_sockopts_t = list[tuple[int, int | bytes | str]]
 
 
 class ZMQChannel(SerdeChannel):
@@ -31,6 +33,7 @@ class ZMQChannel(SerdeChannel):
         *args: _t.Any,
         send_socket: _t.Optional[zmq.asyncio.Socket] = None,
         recv_socket: _t.Optional[zmq.asyncio.Socket] = None,
+        topic: str = "",
         maxsize: int = 2000,
         **kwargs: _t.Any,
     ) -> None:
@@ -43,7 +46,11 @@ class ZMQChannel(SerdeChannel):
         on a single host. For multi-host communication, use `RayChannel`.
 
         Args:
-            maxsize: Queue maximum item capacity, defaults to 2000.
+            send_socket: Optional; The ZeroMQ socket for sending messages.
+            recv_socket: Optional; The ZeroMQ socket for receiving messages.
+            topic: Optional; The topic for the `ZMQChannel`, defaults to an empty string.
+                Only relevant in the case of pub-sub mode channels.
+            maxsize: Optional; Queue maximum item capacity, defaults to 2000.
         """
         super().__init__(*args, **kwargs)
         self._send_socket: _t.Optional[zmq.asyncio.Socket] = send_socket
@@ -52,6 +59,7 @@ class ZMQChannel(SerdeChannel):
         self._is_recv_closed = recv_socket is None
         self._send_hwm = max(maxsize // 2, 1)
         self._recv_hwm = max(maxsize - self._send_hwm, 1)
+        self._topic = bytes(topic, "utf-8")
 
     async def send(self, msg: bytes) -> None:
         """Sends a message through the `ZMQChannel`.
@@ -61,13 +69,14 @@ class ZMQChannel(SerdeChannel):
         """
         if self._send_socket is None:
             raise ChannelSetupError("Send socket is not initialized")
-        await self._send_socket.send(msg)
+        await self._send_socket.send_multipart([self._topic, msg])
 
     async def recv(self) -> bytes:
         """Receives a message from the `ZMQChannel` and returns it."""
         if self._recv_socket is None:
             raise ChannelSetupError("Recv socket is not initialized")
-        return await self._recv_socket.recv()
+        _, msg = await self._recv_socket.recv_multipart()
+        return msg
 
     async def close(self) -> None:
         """Closes the `ZMQChannel`."""
@@ -93,8 +102,6 @@ class ZMQConnector(Connector, ABC):
         self, *args: _t.Any, zmq_address: str = ZMQ_ADDR, maxsize: int = 2000, **kwargs: _t.Any
     ) -> None:
         super().__init__(*args, **kwargs)
-        if self.spec.mode != ConnectorMode.PIPELINE:
-            raise ValueError("ZMQConnector only supports `PIPELINE` type connections.")
         # Use a Ray queue to ensure sync ZMQ port number
         self._zmq_address = zmq_address
         self._ray_queue = Queue(maxsize=1)
@@ -160,6 +167,18 @@ class ZMQPipelineConnector(ZMQConnector):
 class ZMQPubsubConnector(ZMQConnector):
     """`ZMQPubsubConnector` connects components in pubsub mode using `ZMQChannel`."""
 
+    def __init__(self, *args: _t.Any, **kwargs: _t.Any) -> None:
+        super().__init__(*args, **kwargs)
+        self._topic = str(self.spec.source)
+        self._xsub_socket = _create_socket(zmq.XSUB, [(zmq.RCVHWM, self._maxsize)])
+        self._xsub_port = self._xsub_socket.bind_to_random_port("tcp://*")
+        self._xpub_socket = _create_socket(zmq.XPUB, [(zmq.SNDHWM, self._maxsize)])
+        self._xpub_port = self._xpub_socket.bind_to_random_port("tcp://*")
+        self._poller = zmq.asyncio.Poller()
+        self._poller.register(self._xsub_socket, zmq.POLLIN)
+        self._poller.register(self._xpub_socket, zmq.POLLIN)
+        self._poll_task = asyncio.create_task(self._poll())
+
     def __new__(cls, spec: ConnectorSpec, *args: _t.Any, **kwargs: _t.Any) -> ZMQPubsubConnector:  # noqa: D102
         if spec.mode != ConnectorMode.PUBSUB:
             raise ValueError("ZMQPubsubConnector only supports `pub-sub` type connections.")
@@ -167,18 +186,41 @@ class ZMQPubsubConnector(ZMQConnector):
         obj = _t.cast(ZMQPubsubConnector, obj)
         return obj
 
+    def __del__(self) -> None:
+        self._poll_task.cancel()
+
+    async def _poll(self) -> None:
+        try:
+            while True:
+                events = dict(await self._poller.poll())
+                if self._xpub_socket in events:
+                    msg = await self._xpub_socket.recv_multipart()
+                    print("[BROKER] xpub_socket recv message: %r" % msg)
+                    await self._xsub_socket.send_multipart(msg)
+                if self._xsub_socket in events:
+                    msg = await self._xsub_socket.recv_multipart()
+                    print("[BROKER] xsub_socket recv message: %r" % msg)
+                    await self._xpub_socket.send_multipart(msg)
+        except asyncio.CancelledError:
+            self._xsub_socket.close()
+            self._xpub_socket.close()
+            raise
+
     async def connect_send(self) -> ZMQChannel:
         """Returns a `ZMQChannel` for sending pubsub messages."""
-        raise NotImplementedError("Pubsub mode is not yet implemented")
+        send_socket = _create_socket(zmq.PUB, [(zmq.SNDHWM, self._maxsize)])
+        send_socket.connect(f"{self._zmq_address}:{self._xsub_port}")
+        return ZMQChannel(send_socket=send_socket, topic=self._topic, maxsize=self._maxsize)
 
     async def connect_recv(self) -> ZMQChannel:
         """Returns a `ZMQChannel` for receiving pubsub messages."""
-        raise NotImplementedError("Pubsub mode is not yet implemented")
+        socket_opts: _zmq_sockopts_t = [(zmq.RCVHWM, self._maxsize), (zmq.SUBSCRIBE, b"")]
+        recv_socket = _create_socket(zmq.SUB, socket_opts)
+        recv_socket.connect(f"{self._zmq_address}:{self._xpub_port}")
+        return ZMQChannel(recv_socket=recv_socket, topic=self._topic, maxsize=self._maxsize)
 
 
-def _create_socket(
-    socket_type: int, socket_opts: list[tuple[int, int | bytes | str]]
-) -> zmq.asyncio.Socket:
+def _create_socket(socket_type: int, socket_opts: _zmq_sockopts_t) -> zmq.asyncio.Socket:
     ctx = zmq.asyncio.Context.instance()
     socket = ctx.socket(socket_type)
     for opt, value in socket_opts:
