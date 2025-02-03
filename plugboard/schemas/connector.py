@@ -19,12 +19,10 @@ class ConnectorMode(StrEnum):
     Attributes:
         PIPELINE: one-in-one-out task queue.
         PUBSUB: one-to-many event distribution.
-        REQREP: one-to-one request-response.
     """
 
     PIPELINE = "pipeline"
-    PUBSUB = "pub-sub"
-    REQREP = "req-rep"
+    PUBSUB = "pubsub"
 
 
 class ConnectorSocket(PlugboardBaseModel):
