@@ -191,25 +191,24 @@ class ZMQPubsubConnector(ZMQConnector):
         self._poll_task.cancel()
 
     async def _poll(self) -> None:
+        poll_fn, xps, xss = self._poller.poll, self._xpub_socket, self._xsub_socket
         try:
             while True:
-                events = dict(await self._poller.poll())
-                if self._xpub_socket in events:
-                    msg = await self._xpub_socket.recv_multipart()
-                    await self._xsub_socket.send_multipart(msg)
-                if self._xsub_socket in events:
-                    msg = await self._xsub_socket.recv_multipart()
-                    await self._xpub_socket.send_multipart(msg)
+                events = dict(await poll_fn())
+                if xps in events:
+                    await xss.send_multipart(await xps.recv_multipart())
+                if xss in events:
+                    await xps.send_multipart(await xss.recv_multipart())
         except asyncio.CancelledError:
-            self._xsub_socket.close()
-            self._xpub_socket.close()
+            xps.close()
+            xss.close()
             raise
 
     async def connect_send(self) -> ZMQChannel:
         """Returns a `ZMQChannel` for sending pubsub messages."""
         send_socket = _create_socket(zmq.PUB, [(zmq.SNDHWM, self._maxsize)])
         send_socket.connect(f"{self._zmq_address}:{self._xsub_port}")
-        await asyncio.sleep(0.1)
+        await asyncio.sleep(0.1)  # Ensure connections established before first send. Better way?
         return ZMQChannel(send_socket=send_socket, topic=self._topic, maxsize=self._maxsize)
 
     async def connect_recv(self) -> ZMQChannel:
@@ -220,7 +219,7 @@ class ZMQPubsubConnector(ZMQConnector):
         ]
         recv_socket = _create_socket(zmq.SUB, socket_opts)
         recv_socket.connect(f"{self._zmq_address}:{self._xpub_port}")
-        await asyncio.sleep(0.1)
+        await asyncio.sleep(0.1)  # Ensure connections established before first send. Better way?
         return ZMQChannel(recv_socket=recv_socket, topic=self._topic, maxsize=self._maxsize)
 
 
