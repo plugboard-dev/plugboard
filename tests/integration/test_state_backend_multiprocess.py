@@ -7,7 +7,8 @@ import pytest
 from ray.util.multiprocessing import Pool
 
 from plugboard.component import Component, IOController
-from plugboard.connector import Connector, ZMQConnector
+from plugboard.connector import Connector
+from plugboard.connector.zmq_channel import ZMQPipelineConnector
 from plugboard.process import LocalProcess
 from plugboard.schemas.connector import ConnectorSpec
 from plugboard.state import DictStateBackend, StateBackend
@@ -38,7 +39,7 @@ def components() -> list[Component]:
     ]
 
 
-class ConnectorTestHelper(ZMQConnector):
+class ConnectorTestHelper(ZMQPipelineConnector):
     """`ConnectorTestHelper` tracks and outputs more data for storing in the state."""
 
     def __init__(self, spec: ConnectorSpec) -> None:
