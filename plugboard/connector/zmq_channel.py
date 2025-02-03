@@ -22,7 +22,7 @@ except ImportError:
 
 ZMQ_ADDR: str = r"tcp://127.0.0.1"
 ZMQ_CONFIRM_MSG: str = "__PLUGBOARD_CHAN_CONFIRM_MSG__"
-_zmq_sockopts_t = list[tuple[int, int | bytes | str]]
+_zmq_sockopts_t: _t.TypeAlias = list[tuple[int, int | bytes | str]]
 
 # Collection of poll tasks for ZMQ channels required to create strong refs to polling tasks
 # to avoid destroying tasks before they are done on garbage collection. Is there a better way?
