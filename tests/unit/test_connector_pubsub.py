@@ -27,18 +27,21 @@ def _get_hash(x: _t.Any) -> int:
     return hash(x)
 
 
-async def send_messages(channel: Channel) -> int:
-    """Tests helper function to send messages over publisher channel.
+async def send_messages(channels: list[Channel], num_messages: int) -> int:
+    """Test helper function to send messages over publisher channels.
 
-    Returns aggregated hash of all sent messages for the publisher.
+    Returns aggregated hash of all sent messages for the publishers.
     """
+    channel_cycle = cycle(channels)
     input_cycle = cycle(TEST_ITEMS)
     _hash = _get_hash(_HASH_SEED)
-    for _ in range(10):
+    for _ in range(num_messages):
+        channel = next(channel_cycle)
         item = next(input_cycle)
         await channel.send(item)
         _hash = _get_hash(str(_hash) + str(item))
-    await channel.close()
+    for channel in channels:
+        await channel.close()
     return _hash
 
 
@@ -48,12 +51,10 @@ async def recv_messages(channels: list[Channel]) -> list[int]:
     Returns list of aggregated hashes of all received messages for each subscriber.
     """
     hashes = [_get_hash(_HASH_SEED)] * len(channels)
-    tasks: list[asyncio.Task[str]] = [None] * len(channels)  # type: ignore
     try:
         while True:
             async with asyncio.TaskGroup() as tg:
-                for i, channel in enumerate(channels):
-                    tasks[i] = tg.create_task(channel.recv())
+                tasks = [tg.create_task(channel.recv()) for channel in channels]
             for i, task in enumerate(tasks):
                 msg = task.result()
                 hashes[i] = _get_hash(str(hashes[i]) + str(msg))
@@ -63,8 +64,18 @@ async def recv_messages(channels: list[Channel]) -> list[int]:
 
 
 @pytest.mark.anyio
-@pytest.mark.parametrize("connector_cls", [ZMQConnector])
-async def test_pubsub_channel(connector_cls: type[Connector]) -> None:
+@pytest.mark.parametrize(
+    "connector_cls, num_publishers, num_subscribers, num_messages",
+    [
+        (ZMQConnector, 1, 1, 1000),
+        (ZMQConnector, 10, 1, 1000),
+        (ZMQConnector, 1, 100, 1000),
+        (ZMQConnector, 10, 100, 1000),
+    ],
+)
+async def test_pubsub_channel(
+    connector_cls: type[Connector], num_publishers: int, num_subscribers: int, num_messages: int
+) -> None:
     """Tests the various `Channel` classes."""
     connector_spec = ConnectorSpec(
         source="pubsub-test.publishers",
@@ -74,14 +85,18 @@ async def test_pubsub_channel(connector_cls: type[Connector]) -> None:
     connector = connector_cls(connector_spec)
 
     async with asyncio.TaskGroup() as tg:
-        publisher_conn_task = tg.create_task(connector.connect_send())
-        subscriber_conn_tasks = [tg.create_task(connector.connect_recv()) for _ in range(3)]
+        publisher_conn_tasks = [
+            tg.create_task(connector.connect_send()) for _ in range(num_publishers)
+        ]
+        subscriber_conn_tasks = [
+            tg.create_task(connector.connect_recv()) for _ in range(num_subscribers)
+        ]
 
-    publisher = publisher_conn_task.result()
+    publishers = [t.result() for t in publisher_conn_tasks]
     subscribers = [t.result() for t in subscriber_conn_tasks]
 
     async with asyncio.TaskGroup() as tg:
-        publisher_send_task = tg.create_task(send_messages(publisher))
+        publisher_send_task = tg.create_task(send_messages(publishers, num_messages))
         subscriber_recv_tasks = tg.create_task(recv_messages(subscribers))
 
     sent_msgs_hash = publisher_send_task.result()
