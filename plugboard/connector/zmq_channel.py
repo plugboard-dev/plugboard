@@ -20,9 +20,13 @@ try:
 except ImportError:
     pass
 
-ZMQ_ADDR = r"tcp://127.0.0.1"
-ZMQ_CONFIRM_MSG = "__PLUGBOARD_CHAN_CONFIRM_MSG__"
+ZMQ_ADDR: str = r"tcp://127.0.0.1"
+ZMQ_CONFIRM_MSG: str = "__PLUGBOARD_CHAN_CONFIRM_MSG__"
 _zmq_sockopts_t = list[tuple[int, int | bytes | str]]
+
+# Collection of poll tasks for ZMQ channels required to create strong refs to polling tasks
+# to avoid destroying tasks before they are done on garbage collection. Is there a better way?
+_zmq_poller_tasks: set[asyncio.Task] = set()
 
 
 class ZMQChannel(SerdeChannel):
@@ -178,6 +182,7 @@ class ZMQPubsubConnector(ZMQConnector):
         self._poller.register(self._xsub_socket, zmq.POLLIN)
         self._poller.register(self._xpub_socket, zmq.POLLIN)
         self._poll_task = asyncio.create_task(self._poll())
+        _zmq_poller_tasks.add(self._poll_task)
 
     def __new__(cls, spec: ConnectorSpec, *args: _t.Any, **kwargs: _t.Any) -> ZMQPubsubConnector:  # noqa: D102
         if spec.mode != ConnectorMode.PUBSUB:
@@ -185,10 +190,6 @@ class ZMQPubsubConnector(ZMQConnector):
         obj = super().__new__(cls, spec, *args, **kwargs)
         obj = _t.cast(ZMQPubsubConnector, obj)
         return obj
-
-    def __del__(self) -> None:
-        # TODO : Fixup the cleanup logic: Task was destroyed but it is pending!
-        self._poll_task.cancel()
 
     async def _poll(self) -> None:
         poll_fn, xps, xss = self._poller.poll, self._xpub_socket, self._xsub_socket
@@ -199,10 +200,9 @@ class ZMQPubsubConnector(ZMQConnector):
                     await xss.send_multipart(await xps.recv_multipart())
                 if xss in events:
                     await xps.send_multipart(await xss.recv_multipart())
-        except asyncio.CancelledError:
-            xps.close()
-            xss.close()
-            raise
+        finally:
+            xps.close(linger=0)
+            xss.close(linger=0)
 
     async def connect_send(self) -> ZMQChannel:
         """Returns a `ZMQChannel` for sending pubsub messages."""
