@@ -57,8 +57,9 @@ async def recv_messages(channels: list[Channel]) -> list[int]:
             for i, task in enumerate(tasks):
                 msg = task.result()
                 _hashes[i] = _get_hash(str(_hashes[i]) + str(msg))
-    except ChannelClosedError:
-        return _hashes
+    except* ChannelClosedError:
+        pass
+    return _hashes
 
 
 @pytest.mark.anyio
