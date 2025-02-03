@@ -47,7 +47,7 @@ async def recv_messages(channels: list[Channel]) -> list[int]:
 
     Returns list of aggregated hashes of all received messages for each subscriber.
     """
-    _hashes = [_get_hash(_HASH_SEED)] * len(channels)
+    hashes = [_get_hash(_HASH_SEED)] * len(channels)
     tasks: list[asyncio.Task[str]] = [None] * len(channels)  # type: ignore
     try:
         while True:
@@ -56,10 +56,10 @@ async def recv_messages(channels: list[Channel]) -> list[int]:
                     tasks[i] = tg.create_task(channel.recv())
             for i, task in enumerate(tasks):
                 msg = task.result()
-                _hashes[i] = _get_hash(str(_hashes[i]) + str(msg))
+                hashes[i] = _get_hash(str(hashes[i]) + str(msg))
     except* ChannelClosedError:
         pass
-    return _hashes
+    return hashes
 
 
 @pytest.mark.anyio
