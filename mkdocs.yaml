@@ -104,6 +104,10 @@ nav:
   - Key Concepts: usage/key-concepts.md
   - Tutorials:
     - Hello world: examples/tutorials/hello-world.md
+    - A more complex process: examples/tutorials/more-complex-process.md
+    - Adding more component types: examples/tutorials/more-component-types.md
+    - Running in parallel: examples/tutorials/running-in-parallel.md
+    - Event-driven models: examples/tutorials/event-driven-models.md
   - Configuration: usage/configuration.md
 - Demos:
   - Simple model: examples/demos/001_simple_model/simple-model.ipynb
