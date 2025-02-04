@@ -2,14 +2,14 @@
 
 from __future__ import annotations
 
-from abc import ABC
+from abc import ABC, abstractmethod
 import asyncio
 import typing as _t
 
 from plugboard.connector.connector import Connector
 from plugboard.connector.serde_channel import SerdeChannel
 from plugboard.exceptions import ChannelSetupError
-from plugboard.schemas.connector import ConnectorMode, ConnectorSpec
+from plugboard.schemas.connector import ConnectorMode
 from plugboard.utils import depends_on_optional, gen_rand_str
 
 
@@ -93,8 +93,8 @@ class ZMQChannel(SerdeChannel):
         self._is_recv_closed = True
 
 
-class ZMQConnector(Connector, ABC):
-    """`ZMQConnector` connects components using `ZMQChannel`."""
+class _ZMQConnector(Connector, ABC):
+    """`_ZMQConnector` connects components using `ZMQChannel`."""
 
     # FIXME : If multiple workers call `connect_send` they will each see `_send_channel` null
     #       : on first call and create a new channel. This will lead to multiple channels.
@@ -108,38 +108,28 @@ class ZMQConnector(Connector, ABC):
         super().__init__(*args, **kwargs)
         # Use a Ray queue to ensure sync ZMQ port number
         self._zmq_address = zmq_address
-        self._ray_queue = Queue(maxsize=1)
         self._maxsize = maxsize
+
+    @abstractmethod
+    async def connect_send(self) -> ZMQChannel:
+        """Returns a `ZMQChannel` for sending messages."""
+        pass
+
+    @abstractmethod
+    async def connect_recv(self) -> ZMQChannel:
+        """Returns a `ZMQChannel` for receiving messages."""
+        pass
+
+
+class _ZMQPipelineConnector(_ZMQConnector):
+    """`_ZMQPipelineConnector` connects components in pipeline mode using `ZMQChannel`."""
+
+    def __init__(self, *args: _t.Any, **kwargs: _t.Any) -> None:
+        super().__init__(*args, **kwargs)
+        self._ray_queue = Queue(maxsize=1)
         self._send_channel: _t.Optional[ZMQChannel] = None
         self._recv_channel: _t.Optional[ZMQChannel] = None
         self._confirm_msg = f"{ZMQ_CONFIRM_MSG}:{gen_rand_str()}".encode()
-
-    def __new__(cls, spec: ConnectorSpec, *args: _t.Any, **kwargs: _t.Any) -> ZMQConnector:  # noqa: D102
-        if cls is ZMQConnector:
-            match spec.mode:
-                case ConnectorMode.PIPELINE:
-                    return ZMQPipelineConnector(spec, *args, **kwargs)
-                case ConnectorMode.PUBSUB:
-                    return ZMQPubsubConnector(spec, *args, **kwargs)
-                case _:
-                    raise ValueError(f"Unsupported connector mode: {spec.mode}")
-        return super().__new__(cls)
-
-    @property
-    def zmq_address(self) -> str:
-        """The ZMQ address used for communication."""
-        return self._zmq_address
-
-
-class ZMQPipelineConnector(ZMQConnector):
-    """`ZMQPipelineConnector` connects components in pipeline mode using `ZMQChannel`."""
-
-    def __new__(cls, spec: ConnectorSpec, *args: _t.Any, **kwargs: _t.Any) -> ZMQPipelineConnector:  # noqa: D102
-        if spec.mode != ConnectorMode.PIPELINE:
-            raise ValueError("ZMQPipelineConnector only supports `pipeline` type connections.")
-        obj = super().__new__(cls, spec, *args, **kwargs)
-        obj = _t.cast(ZMQPipelineConnector, obj)
-        return obj
 
     async def connect_send(self) -> ZMQChannel:
         """Returns a `ZMQChannel` for sending messages."""
@@ -168,8 +158,8 @@ class ZMQPipelineConnector(ZMQConnector):
         return self._recv_channel
 
 
-class ZMQPubsubConnector(ZMQConnector):
-    """`ZMQPubsubConnector` connects components in pubsub mode using `ZMQChannel`."""
+class _ZMQPubsubConnector(_ZMQConnector):
+    """`_ZMQPubsubConnector` connects components in pubsub mode using `ZMQChannel`."""
 
     def __init__(self, *args: _t.Any, **kwargs: _t.Any) -> None:
         super().__init__(*args, **kwargs)
@@ -183,13 +173,6 @@ class ZMQPubsubConnector(ZMQConnector):
         self._poller.register(self._xpub_socket, zmq.POLLIN)
         self._poll_task = asyncio.create_task(self._poll())
         _zmq_poller_tasks.add(self._poll_task)
-
-    def __new__(cls, spec: ConnectorSpec, *args: _t.Any, **kwargs: _t.Any) -> ZMQPubsubConnector:  # noqa: D102
-        if spec.mode != ConnectorMode.PUBSUB:
-            raise ValueError("ZMQPubsubConnector only supports `pub-sub` type connections.")
-        obj = super().__new__(cls, spec, *args, **kwargs)
-        obj = _t.cast(ZMQPubsubConnector, obj)
-        return obj
 
     async def _poll(self) -> None:
         poll_fn, xps, xss = self._poller.poll, self._xpub_socket, self._xsub_socket
@@ -229,3 +212,32 @@ def _create_socket(socket_type: int, socket_opts: _zmq_sockopts_t) -> zmq.asynci
     for opt, value in socket_opts:
         socket.setsockopt(opt, value)
     return socket
+
+
+class ZMQConnector(_ZMQConnector):
+    """`ZMQConnector` connects components using `ZMQChannel`."""
+
+    def __init__(self, *args: _t.Any, **kwargs: _t.Any) -> None:
+        super().__init__(*args, **kwargs)
+        zmq_conn_cls: _t.Type[_ZMQConnector] = _ZMQConnector
+        match self.spec.mode:
+            case ConnectorMode.PIPELINE:
+                zmq_conn_cls = _ZMQPipelineConnector
+            case ConnectorMode.PUBSUB:
+                zmq_conn_cls = _ZMQPubsubConnector
+            case _:
+                raise ValueError(f"Unsupported connector mode: {self.spec.mode}")
+        self._zmq_conn_impl: _ZMQConnector = zmq_conn_cls(*args, **kwargs)
+
+    @property
+    def zmq_address(self) -> str:
+        """The ZMQ address used for communication."""
+        return self._zmq_address
+
+    async def connect_send(self) -> ZMQChannel:
+        """Returns a `ZMQChannel` for sending messages."""
+        return await self._zmq_conn_impl.connect_send()
+
+    async def connect_recv(self) -> ZMQChannel:
+        """Returns a `ZMQChannel` for receiving messages."""
+        return await self._zmq_conn_impl.connect_recv()
