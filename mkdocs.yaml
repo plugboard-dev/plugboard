@@ -36,6 +36,7 @@ plugins:
     canonical_version: latest
 
 markdown_extensions:
+- admonition
 # Annotations: https://squidfunk.github.io/mkdocs-material/reference/annotations/
 - attr_list
 - md_in_html
