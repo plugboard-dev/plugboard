@@ -58,11 +58,8 @@ Plugboard is built to help you with two things: defining process models, and exe
 
 A model is made up of one or more components, though Plugboard really shines when you have many! First we start by defining the `Component`s within our model. Components can have only inputs, only outputs, or both. To keep it simple we just have two components here, showing the most basic functionality. Each component has several methods which are called at different stages during model execution: `init` for optional initialisation actions; `step` to take a single step forward through time; `run` to execute all steps; and `destroy` for optional teardown actions.
 ```python
-from contextlib import AsyncExitStack
 import typing as _t
-from aiofile import async_open
-from plugboard.component import Component
-from plugboard.component import IOController as IO
+from plugboard.component import Component, IOController as IO
 
 class A(Component):
     io = IO(outputs=["out_1"])
@@ -88,29 +85,26 @@ class B(Component):
     def __init__(self, path: str, *args: _t.Any, **kwargs: _t.Any) -> None:
         super().__init__(*args, **kwargs)
         self._path = path
-        self._ctx = AsyncExitStack()
 
     async def init(self) -> None:
-        self._f = await self._ctx.enter_async_context(
-            async_open(self._path, "w")
-        )
+        self._f = open(self._path, "w")
 
     async def step(self) -> None:
         out = 2 * self.in_1
-        await self._f.write(f"{out}\n")
+        self._f.write(f"{out}\n")
 
     async def destroy(self) -> None:
-        await self._ctx.aclose()
+        self._f.close()
 ```
 
 Now we take these components, connect them up as a `Process`, and fire off the model. Using the `Process` context handler takes care of calling `init` at the beginning and `destroy` at the end for all `Component`s. Calling `Process.run` triggers all the components to start iterating through all their inputs until a termination condition is reached. Simulations proceed in an event-driven manner: when inputs arrive, the components are triggered to step forward in time. The framework handles the details of the inter-component communication, you just need to specify the logic of your components, and the connections between them.
 ```python
 from plugboard.connector import AsyncioChannel, Connector
-from plugboard.process import Process
+from plugboard.process import LocalProcess
 from plugboard.schemas import ConnectorSpec
 
-process = Process(
-    components=[A(name="a", iters=10), B(name="b", path="b.txt")],
+process = LocalProcess(
+    components=[A(name="a", iters=5), B(name="b", path="b.txt")],
     connectors=[
         Connector(
             spec=ConnectorSpec(source="a.out_1", target="b.in_1"),
