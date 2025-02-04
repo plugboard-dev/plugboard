@@ -69,7 +69,6 @@ class A(Component):
         self._iters = iters
 
     async def init(self) -> None:
-        await super().init()
         self._seq = iter(range(self._iters))
 
     async def step(self) -> None:
