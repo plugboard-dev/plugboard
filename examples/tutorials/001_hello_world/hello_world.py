@@ -13,20 +13,20 @@ from plugboard.schemas import ConnectorSpec
 
 
 class A(Component):
-    io = IO(outputs=["out_1"])
+    io = IO(outputs=["out_1"]) # (1)!
 
     def __init__(self, iters: int, *args: _t.Any, **kwargs: _t.Any) -> None:
         super().__init__(*args, **kwargs)
         self._iters = iters
 
     async def init(self) -> None:
-        self._seq = iter(range(self._iters))
+        self._seq = iter(range(self._iters)) # (2)!
 
     async def step(self) -> None:
         try:
-            self.out_1 = next(self._seq)
+            self.out_1 = next(self._seq) # (3)!
         except StopIteration:
-            await self.io.close()
+            await self.io.close() # (5)!
 
 
 class B(Component):
@@ -44,7 +44,7 @@ class B(Component):
         self._f.write(f"{out}\n")
 
     async def destroy(self) -> None:
-        self._f.close()
+        self._f.close() # (4)!
 # --8<-- [end:components]
 
 
