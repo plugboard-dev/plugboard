@@ -43,6 +43,9 @@ class B(Component):
     async def step(self) -> None:
         out = 2 * self.in_1
         self._f.write(f"{out}\n")
+
+    async def destroy(self) -> None:
+        self._f.close()
 # --8<-- [end:components]
 
 
