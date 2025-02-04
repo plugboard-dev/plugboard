@@ -3,20 +3,13 @@
 # fmt: off
 # --8<-- [start:components]
 import asyncio
-from contextlib import AsyncExitStack
-import time
 import typing as _t
 
-from aiofile import async_open
-import structlog
 
 from plugboard.component import Component, IOController as IO
 from plugboard.connector import AsyncioChannel, Connector
 from plugboard.process import LocalProcess
 from plugboard.schemas import ConnectorSpec
-
-
-logger = structlog.get_logger()
 
 
 class A(Component):
@@ -31,7 +24,6 @@ class A(Component):
         self._seq = iter(range(self._iters))
 
     async def step(self) -> None:
-        self.logger.info("Step")
         try:
             self.out_1 = next(self._seq)
         except StopIteration:
@@ -44,20 +36,13 @@ class B(Component):
     def __init__(self, path: str, *args: _t.Any, **kwargs: _t.Any) -> None:
         super().__init__(*args, **kwargs)
         self._path = path
-        self._ctx = AsyncExitStack()
 
     async def init(self) -> None:
-        self._f = await self._ctx.enter_async_context(
-            async_open(self._path, "w")
-        )
+        self._f = open(self._path, "w")
 
     async def step(self) -> None:
-        self.logger.info("Step")
         out = 2 * self.in_1
-        await self._f.write(f"{out}\n")
-
-    async def destroy(self) -> None:
-        await self._ctx.aclose()
+        self._f.write(f"{out}\n")
 # --8<-- [end:components]
 
 
@@ -78,6 +63,4 @@ async def main() -> None:
 
 
 if __name__ == "__main__":
-    tstart = time.time()
     asyncio.run(main())
-    print(f"Elapsed: {time.time() - tstart:.2f} s")
