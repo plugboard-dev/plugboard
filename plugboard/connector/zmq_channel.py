@@ -219,7 +219,6 @@ class ZMQConnector(_ZMQConnector):
 
     def __init__(self, *args: _t.Any, **kwargs: _t.Any) -> None:
         super().__init__(*args, **kwargs)
-        zmq_conn_cls: _t.Type[_ZMQConnector] = _ZMQConnector
         match self.spec.mode:
             case ConnectorMode.PIPELINE:
                 zmq_conn_cls = _ZMQPipelineConnector
