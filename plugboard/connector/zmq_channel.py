@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 import asyncio
+import multiprocessing
 import typing as _t
 
 from plugboard.connector.connector import Connector
@@ -206,6 +207,85 @@ class _ZMQPubsubConnector(_ZMQConnector):
         return ZMQChannel(recv_socket=recv_socket, topic=self._topic, maxsize=self._maxsize)
 
 
+class _ZMQProxy(multiprocessing.Process):
+    def __init__(self, zmq_address: str = ZMQ_ADDR, maxsize: int = 2000) -> None:
+        super().__init__()
+        self._maxsize = maxsize
+        self._pull_socket = _create_socket(zmq.PULL, [(zmq.RCVHWM, 1)])
+        port = self._pull_socket.bind_to_random_port("tcp://*")
+        self._pull_socket_addr = f"{zmq_address}:{port}"
+        self._xsub_port: _t.Optional[int] = None
+        self._xpub_port: _t.Optional[int] = None
+
+    async def get_proxy_ports(self) -> tuple[int, int]:
+        """Returns tuple of form (xsub port, xpub port) for the ZMQ proxy."""
+        if self._xsub_port is None or self._xpub_port is None:
+            port_data = await self._pull_socket.recv_multipart()
+            self._xsub_port, self._xpub_port = map(int, port_data[0].split(b","))
+        return self._xsub_port, self._xpub_port
+
+    @staticmethod
+    def _create_socket(socket_type: int, socket_opts: _zmq_sockopts_t) -> zmq.Socket:
+        ctx = zmq.Context.instance()
+        socket = ctx.socket(socket_type)
+        for opt, value in socket_opts:
+            socket.setsockopt(opt, value)
+        return socket
+
+    def run(self) -> None:
+        xsub_socket = self._create_socket(zmq.XSUB, [(zmq.RCVHWM, self._maxsize)])
+        xsub_port = xsub_socket.bind_to_random_port("tcp://*")
+        xpub_socket = self._create_socket(zmq.XPUB, [(zmq.SNDHWM, self._maxsize)])
+        xpub_port = xpub_socket.bind_to_random_port("tcp://*")
+
+        push_socket = self._create_socket(zmq.PUSH, [(zmq.RCVHWM, 1)])
+        push_socket.connect(self._pull_socket_addr)
+        push_socket.send_multipart(f"{str(xsub_port)},{str(xpub_port)}")
+
+        zmq.proxy(xsub_socket, xpub_socket)
+
+
+_ZMQ_PROXY: _t.Optional[_ZMQProxy] = None
+
+
+class _ZMQPubsubConnectorProxy(_ZMQConnector):
+    def __init__(self, *args: _t.Any, **kwargs: _t.Any) -> None:
+        super().__init__(*args, **kwargs)
+        self._topic = str(self.spec.source)
+        self._xsub_port: _t.Optional[int] = None
+        self._xpub_port: _t.Optional[int] = None
+
+    async def _get_proxy_ports(self) -> tuple[int, int]:
+        global _ZMQ_PROXY
+        if self._xsub_port is not None and self._xpub_port is not None:
+            return self._xsub_port, self._xpub_port
+        if _ZMQ_PROXY is None:
+            _ZMQ_PROXY = _ZMQProxy(zmq_address=self._zmq_address, maxsize=self._maxsize)
+            _ZMQ_PROXY.start()
+        self._xsub_port, self._xpub_port = await _ZMQ_PROXY.get_proxy_ports()
+        return self._xsub_port, self._xpub_port
+
+    async def connect_send(self) -> ZMQChannel:
+        """Returns a `ZMQChannel` for sending pubsub messages."""
+        await self._get_proxy_ports()
+        send_socket = _create_socket(zmq.PUB, [(zmq.SNDHWM, self._maxsize)])
+        send_socket.connect(f"{self._zmq_address}:{self._xsub_port}")
+        await asyncio.sleep(0.1)  # Ensure connections established before first send. Better way?
+        return ZMQChannel(send_socket=send_socket, topic=self._topic, maxsize=self._maxsize)
+
+    async def connect_recv(self) -> ZMQChannel:
+        """Returns a `ZMQChannel` for receiving pubsub messages."""
+        await self._get_proxy_ports()
+        socket_opts: _zmq_sockopts_t = [
+            (zmq.RCVHWM, self._maxsize),
+            (zmq.SUBSCRIBE, self._topic.encode("utf8")),
+        ]
+        recv_socket = _create_socket(zmq.SUB, socket_opts)
+        recv_socket.connect(f"{self._zmq_address}:{self._xpub_port}")
+        await asyncio.sleep(0.1)  # Ensure connections established before first send. Better way?
+        return ZMQChannel(recv_socket=recv_socket, topic=self._topic, maxsize=self._maxsize)
+
+
 def _create_socket(socket_type: int, socket_opts: _zmq_sockopts_t) -> zmq.asyncio.Socket:
     ctx = zmq.asyncio.Context.instance()
     socket = ctx.socket(socket_type)
@@ -223,7 +303,7 @@ class ZMQConnector(_ZMQConnector):
             case ConnectorMode.PIPELINE:
                 zmq_conn_cls = _ZMQPipelineConnector
             case ConnectorMode.PUBSUB:
-                zmq_conn_cls = _ZMQPubsubConnector
+                zmq_conn_cls = _ZMQPubsubConnectorProxy
             case _:
                 raise ValueError(f"Unsupported connector mode: {self.spec.mode}")
         self._zmq_conn_impl: _ZMQConnector = zmq_conn_cls(*args, **kwargs)
