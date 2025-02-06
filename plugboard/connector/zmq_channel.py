@@ -219,10 +219,12 @@ class _ZMQProxy(multiprocessing.Process):
 
     async def get_proxy_ports(self) -> tuple[int, int]:
         """Returns tuple of form (xsub port, xpub port) for the ZMQ proxy."""
-        if self._xsub_port is None or self._xpub_port is None:
-            port_data = await self._pull_socket.recv_multipart()
-            self._xsub_port, self._xpub_port = map(int, port_data[0].split(b","))
-        return self._xsub_port, self._xpub_port
+        global _ZMQ_PROXY_LOCK
+        async with _ZMQ_PROXY_LOCK:
+            if self._xsub_port is None or self._xpub_port is None:
+                ports_msg = await self._pull_socket.recv_multipart()
+                self._xsub_port, self._xpub_port = map(int, ports_msg)
+            return self._xsub_port, self._xpub_port
 
     @staticmethod
     def _create_socket(socket_type: int, socket_opts: _zmq_sockopts_t) -> zmq.Socket:
@@ -233,19 +235,35 @@ class _ZMQProxy(multiprocessing.Process):
         return socket
 
     def run(self) -> None:
-        xsub_socket = self._create_socket(zmq.XSUB, [(zmq.RCVHWM, self._maxsize)])
-        xsub_port = xsub_socket.bind_to_random_port("tcp://*")
-        xpub_socket = self._create_socket(zmq.XPUB, [(zmq.SNDHWM, self._maxsize)])
-        xpub_port = xpub_socket.bind_to_random_port("tcp://*")
+        xsub_port, xpub_port = self._create_sockets()
+        try:
+            ports_msg = [str(xsub_port).encode(), str(xpub_port).encode()]
+            self._push_socket.send_multipart(ports_msg)
+            zmq.proxy(self._xsub_socket, self._xpub_socket)
+        finally:
+            self._close()
 
-        push_socket = self._create_socket(zmq.PUSH, [(zmq.RCVHWM, 1)])
-        push_socket.connect(self._pull_socket_addr)
-        push_socket.send_multipart(f"{str(xsub_port)},{str(xpub_port)}")
+    def _create_sockets(self) -> _t.Tuple[int, int]:
+        """Creates XSUB, XPUB, and PUSH sockets for proxy and returns XSUB and XPUB ports."""
+        self._xsub_socket = self._create_socket(zmq.XSUB, [(zmq.RCVHWM, self._maxsize)])
+        xsub_port = self._xsub_socket.bind_to_random_port("tcp://*")
 
-        zmq.proxy(xsub_socket, xpub_socket)
+        self._xpub_socket = self._create_socket(zmq.XPUB, [(zmq.SNDHWM, self._maxsize)])
+        xpub_port = self._xpub_socket.bind_to_random_port("tcp://*")
+
+        self._push_socket = self._create_socket(zmq.PUSH, [(zmq.RCVHWM, 1)])
+        self._push_socket.connect(self._pull_socket_addr)
+
+        return xsub_port, xpub_port
+
+    def _close(self) -> None:
+        self._xsub_socket.close(linger=0)
+        self._xpub_socket.close(linger=0)
+        self._push_socket.close(linger=0)
 
 
 _ZMQ_PROXY: _t.Optional[_ZMQProxy] = None
+_ZMQ_PROXY_LOCK: asyncio.Lock = asyncio.Lock()
 
 
 class _ZMQPubsubConnectorProxy(_ZMQConnector):
