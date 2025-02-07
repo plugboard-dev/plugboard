@@ -321,7 +321,9 @@ class ZMQConnector(_ZMQConnector):
             case ConnectorMode.PIPELINE:
                 zmq_conn_cls = _ZMQPipelineConnector
             case ConnectorMode.PUBSUB:
-                zmq_conn_cls = _ZMQPubsubConnectorProxy
+                # FIXME : Remove commented code once WIP work on ZMQ pubsub is complete.
+                # zmq_conn_cls = _ZMQPubsubConnectorProxy
+                zmq_conn_cls = _ZMQPubsubConnector
             case _:
                 raise ValueError(f"Unsupported connector mode: {self.spec.mode}")
         self._zmq_conn_impl: _ZMQConnector = zmq_conn_cls(*args, **kwargs)
