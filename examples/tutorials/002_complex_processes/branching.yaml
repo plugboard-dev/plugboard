@@ -1,0 +1,42 @@
+plugboard:
+  process:
+    args:
+      components:
+      - type: components.Random
+        args:
+          name: "random"
+          iters: 5
+          low: 0
+          high: 10
+      - type: components.Offset
+        args:
+          name: "offset"
+          offset: 10
+      - type: components.Scale
+        args:
+          name: "scale"
+          scale: 2
+      - type: components.Sum
+        args:
+          name: "sum"
+      - type: components.Save
+        args:
+          name: "save-input"
+          path: "input.txt"
+      - type: components.Save
+        args:
+          name: "save-output"
+          path: "output.txt"
+      connectors:
+      - source: "random.x"
+        target: "save-input.value_to_save"
+      - source: "random.x"
+        target: "offset.a"
+      - source: "random.x"
+        target: "scale.a"
+      - source: "offset.x"
+        target: "sum.a"
+      - source: "scale.x"
+        target: "sum.b"
+      - source: "sum.x"
+        target: "save-output.value_to_save"
