@@ -63,3 +63,6 @@ Specifying the process type and channel builder type in the YAML is the only cha
 ```yaml hl_lines="3-5"
 --8<-- "examples/tutorials/004_using_ray/model-ray.yaml"
 ```
+
+1. Tell Plugboard to use a [`RayProcess`][plugboard.process.RayProcess] instead of the default [`LocalProcess`][plugboard.process.LocalProcess].
+2. Also change the channel builder to [`RayChannelBuilder`][plugboard.connector.RayChannelBuilder], which will build [`RayChannel`][plugboard.connector.RayChannel] objects when creating the `Process`.
