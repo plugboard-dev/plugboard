@@ -64,7 +64,7 @@ jobs:
         if: always()
 
       - name: Notebook output cleared
-        run: find . -name '*.ipynb' -exec uv run nbstripout --verify {} +
+        run: find . -name '*.ipynb' -not -path "./.venv/*" -exec uv run nbstripout --verify {} +
         if: always()
 
       - name: Build docs
