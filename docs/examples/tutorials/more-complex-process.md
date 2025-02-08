@@ -1,4 +1,4 @@
-In the last example our `Process` consisted of just two components. Usually we use many more components, allowing you to break down your model into separate parts that you can build/test individually. Plugboard allows for **branching** and **looping** connections between your components.
+In the last example our [`Process`][plugboard.process.Process] consisted of just two components. Usually we use many more components, allowing you to break down your model into separate parts that you can build/test individually. Plugboard allows for **branching** and **looping** connections between your components.
 
 In this tutorial we'll also demonstrate how to make components reusable between different processes.
 
@@ -17,8 +17,8 @@ We can put the code for each of these in `components.py`.
 --8<-- "examples/tutorials/002_complex_processes/components.py:components"
 ```
 
-1. The `Component` needs three different parameters: `iters` to control how many iterations the model runs for, `low` and `high` to control the range of the random number generator.
-2. A `Component` with both inputs and outputs.
+1. The [`Component`][plugboard.component.Component] needs three different parameters: `iters` to control how many iterations the model runs for, `low` and `high` to control the range of the random number generator.
+2. A [`Component`][plugboard.component.Component] with both inputs and outputs.
 3. Here we have multiple inputs.
 
 ## Create branching connections in a `Process`
@@ -53,7 +53,7 @@ Now run `python branching.py` and you will see the `input.txt` and `output.txt` 
 
 In some cases you might want to create a loop in your model. This is commonly the case where you need to include feedback: for example you might have a component modelling the temperature of a heated hot-water tank and another one representing an automatic controller that turns the heating element on and off.
 
-To make models like this work in Plugboard you will need to specify `initial_values` somewhere in the loop: this ensures that each of the `Component` objects can get all their inputs at the first call to `process.step()`, allowing the model to start running.
+To make models like this work in Plugboard you will need to specify `initial_values` somewhere in the loop: this ensures that each of the [`Component`][plugboard.component.Component] objects can get all their inputs at the first call to `process.step()`, allowing the model to start running.
 
 Consider this model in which the `Sum` component will accumulate a scaled part of its value at every iteration:
 
@@ -79,4 +79,4 @@ We'll provide an initial input value of `a = 0` to the `Scale` component, allowi
 
 ## Next steps
 
-You've now learned how to build up complex model layouts in Plugboard. In the next tutorial we'll show how powerful a Plugboard model can be as we start to include different types of `Component`.
+You've now learned how to build up complex model layouts in Plugboard. In the next tutorial we'll show how powerful a Plugboard model can be as we start to include different types of [`Component`][plugboard.component.Component].

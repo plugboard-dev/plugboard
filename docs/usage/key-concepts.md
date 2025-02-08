@@ -6,7 +6,7 @@ This section introduces some of the key concepts in Plugboard and how to apply t
 
 ### Components
 
-**Components** are the basic building blocks of Plugboard models. Typical uses of components are:
+The basic building blocks of Plugboard models are [`Component`][plugboard.component.Component] objects. Typical uses of components are:
 
 * Loading data into and saving data out of models;
 * Preparing data and/or running calculations;
@@ -15,7 +15,8 @@ This section introduces some of the key concepts in Plugboard and how to apply t
 
 When implementing your own components, you will need to:
 
-* Specify its inputs and ouputs using an `IOController`;
+* Subclass the base [`Component`][plugboard.component.Component];
+* Specify its inputs and ouputs using an [`IOController`][plugboard.component.IOController];
 * Define a `step()` method the executes the main logic of your component for a single step; and
 * Optionally define an `init()` method to do any required preparatory steps before the model in run.
 
@@ -48,8 +49,8 @@ Plugboard uses Python's **asynchronous concurrency** to schedule execution of ea
 
 There are two Process classes available:
 
-* `LocalProcess` runs models in a single Python process on your computer. This is useful for initial development, and is often sufficient for models are not computationally demanding.
-* `RayProcess` allows you to execute components on different Python processes using the [Ray Framework](https://docs.ray.io/en/latest/). This supports parallel computation on a single machine and scales out to large-scale [compute clusters](https://docs.ray.io/en/latest/cluster/getting-started.html).
+* [`LocalProcess`][plugboard.process.LocalProcess] runs models in a single Python process on your computer. This is useful for initial development, and is often sufficient for models are not computationally demanding.
+* [`RayProcess`][plugboard.process.RayProcess] allows you to execute components on different Python processes using the [Ray Framework](https://docs.ray.io/en/latest/). This supports parallel computation on a single machine and scales out to large-scale [compute clusters](https://docs.ray.io/en/latest/cluster/getting-started.html).
 
 ## Running models
 

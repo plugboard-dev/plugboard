@@ -2,7 +2,7 @@ Plugboard is built to help you with two things: **defining process models**, and
 
 ## Building models with the Python API
 
-First we start by defining each `Component` we want in our model. Components can have only inputs, only outputs, or both. To keep it simple we just have two components here, showing the most basic functionality. Each component has several methods which are called at different stages during model execution: `init` for optional initialisation actions; `step` to take a single step forward through time; `run` to execute all steps; and `destroy` for optional teardown actions.
+First we start by defining each [`Component`][plugboard.component.Component] we want in our model. Components can have only inputs, only outputs, or both. To keep it simple we just have two components here, showing the most basic functionality. Each component has several methods which are called at different stages during model execution: `init` for optional initialisation actions; `step` to take a single step forward through time; `run` to execute all steps; and `destroy` for optional teardown actions.
 
 !!! info
     A model is made up of one or more components, though Plugboard really shines when you have many!
@@ -14,10 +14,10 @@ Let's define two components, `A` and `B`. `A` puts data into the model by genera
 --8<-- "examples/tutorials/001_hello_world/hello_world.py:components"
 ```
 
-1. This is where we configure the inputs and outputs for each `Component`.
-2. `init` gets called **before** we run the model. It is optional, and used for any setup required on the `Component`.
+1. This is where we configure the inputs and outputs for each [`Component`][plugboard.component.Component].
+2. `init` gets called **before** we run the model. It is optional, and used for any setup required on the [`Component`][plugboard.component.Component].
 3. `step` gets called at each step forward throughout the model execution. This is where the main business logic must be defined.
-4. `destroy` is optional, and can be used to clean up any resources used by the `Component`.
+4. `destroy` is optional, and can be used to clean up any resources used by the [`Component`][plugboard.component.Component].
 5. `A` is responsible for stopping the model when it is complete, which we can do by calling `self.io.close()`.
 
 !!! note
@@ -27,14 +27,14 @@ Let's define two components, `A` and `B`. `A` puts data into the model by genera
 
 ### Setting up a `Process`
 
-Now we take these components, connect them up as a `Process`, and fire off the model. When instantiating each component we must provide a `name`, which we can use to help define the connections between them. Using a `ConnectorSpec` object, we tell Plugboard to connect the `out_1` output of the `a` component to the `in_1` input of `b`. Visually, the model will look like this:
+Now we take these components, connect them up as a [`Process`][plugboard.process.Process], and fire off the model. When instantiating each component we must provide a `name`, which we can use to help define the connections between them. Using a [`ConnectorSpec`][plugboard.schemas.ConnectorSpec] object, we tell Plugboard to connect the `out_1` output of the `a` component to the `in_1` input of `b`. Visually, the model will look like this:
 
 ```mermaid
 graph LR;
     A(a)-->B(b);
 ```
 
-The rest of the code is boilerplate: calling `run()` on the `Process` object triggers all the components to start iterating through all their inputs until a termination condition is reached. We're using `LocalProcess` here, because we are running this model locally with no parallel computation (will explore this in a later tutorial).
+The rest of the code is boilerplate: calling `run()` on the [`Process`][plugboard.process.Process] object triggers all the components to start iterating through all their inputs until a termination condition is reached. We're using [`LocalProcess`][plugboard.process.LocalProcess] here, because we are running this model locally with no parallel computation (will explore this in a later tutorial).
 
 Simulations proceed in an event-driven manner: when inputs arrive, the components are triggered to step forward in time. The framework handles the details of the inter-component communication, you just need to specify the logic of your components, and the connections between them.
 ```python
