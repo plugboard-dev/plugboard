@@ -11,6 +11,7 @@ from typing_extensions import Annotated
 
 from plugboard.process import Process, ProcessBuilder
 from plugboard.schemas import ConfigSpec
+from plugboard.utils import add_sys_path
 
 
 app = typer.Typer(
@@ -62,7 +63,8 @@ def run(
         TextColumn("[progress.description]{task.description}"),
     ) as progress:
         task = progress.add_task(f"Building process from {config}", total=None)
-        process = _build_process(config_spec)
+        with add_sys_path(config.parent):
+            process = _build_process(config_spec)
         progress.update(task, description=f"Running process...")
         asyncio.run(_run_process(process))
         progress.update(task, description=f"[green]Process complete[/green]")
