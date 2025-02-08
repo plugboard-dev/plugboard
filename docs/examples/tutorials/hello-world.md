@@ -48,6 +48,10 @@ In many cases, we want to define components once, with suitable parameters, and 
 --8<-- "examples/tutorials/001_hello_world/model.yaml"
 ```
 
+1. This identifies the `A` class within the `hello_world` module.
+2. The `iters` parameter is required for the component - try adjusting to change how long the model runs for.
+
+
 !!! note
     Notice how we use `type` to tell Plugboard where our components are defined within Python code (within the `hello_world` module). Creating models in yaml format like this also makes it easy to track and adjust their configurable parameters: try editing the file path or `iters` parameter to change the behaviour of the model.
 

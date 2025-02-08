@@ -2,10 +2,10 @@ plugboard:
   process:
     args:
       components:
-      - type: hello_world.A
+      - type: hello_world.A  # (1)!
         args:
           name: "a"
-          iters: 10
+          iters: 10  # (2)!
       - type: hello_world.B
         args:
           name: "b"
