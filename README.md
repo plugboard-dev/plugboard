@@ -130,11 +130,11 @@ plugboard:
   process:
     args:
       components:
-      - type: A
+      - type: hello_world.A
         args:
           name: "a"
           iters: 10
-      - type: B
+      - type: hello_world.B
         args:
           name: "b"
           path: "./b.txt"
@@ -150,7 +150,7 @@ plugboard process run my-model.yaml
 
 ## 📖 Documentation
 
-For more information including a detailed API reference and step-by-step usage examples, refer to the [documentation site](https://docs.plugboard.dev).
+For more information including a detailed API reference and step-by-step usage examples, refer to the [documentation site](https://docs.plugboard.dev). We recommend diving into the [tutorials](https://docs.plugboard.dev/examples/tutorials/hello-world/) for a step-by-step to getting started.
 
 ## 🐾 Roadmap
 
