@@ -1,8 +1,8 @@
 ::: plugboard.connector
     options:
       members:
-      - Connector
-      - ConnectorSpec
       - Channel
+      - Connector      
       - AsyncioChannel
-      - SerdeChannel
+      - RayChannel
+      - ZMQChannel
