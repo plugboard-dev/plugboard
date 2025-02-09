@@ -73,7 +73,7 @@ async def test_branching_process_topology() -> None:
         spec=ConnectorSpec(source="comp_b1.out_1", target="comp_c.in_1"), channel=AsyncioChannel()
     )
     conn_b2c = Connector(
-        spec=ConnectorSpec(source="comp_b2.out_1", target="comp_c.in_1"), channel=AsyncioChannel()
+        spec=ConnectorSpec(source="comp_b2.out_1", target="comp_c.in_2"), channel=AsyncioChannel()
     )
     connectors = [conn_ab1, conn_ab2, conn_b1c, conn_b2c]
 
@@ -85,6 +85,6 @@ async def test_branching_process_topology() -> None:
 
     # Check the final outputs
     assert comp_c.out_1 == 9
-    assert comp_c.out_2 == 8 * 2
+    assert comp_c.out_2 == 9 * 2
 
     assert all(comp.is_finished for comp in components)
