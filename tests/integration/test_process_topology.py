@@ -46,9 +46,45 @@ async def test_circular_process_topology() -> None:
     await process.run()
 
     # Check the final inputs/outputs
-    assert comp_c.in_1 == 9  # type: ignore
-    assert comp_c.in_2 == 8 * 2  # type: ignore
-    assert comp_c.out_1 == 9  # type: ignore
-    assert comp_c.out_2 == 8 * 2  # type: ignore
+    assert comp_c.in_1 == 9
+    assert comp_c.in_2 == 8 * 2
+    assert comp_c.out_1 == 9
+    assert comp_c.out_2 == 8 * 2
+
+    assert all(comp.is_finished for comp in components)
+
+
+@pytest.mark.anyio
+async def test_branching_process_topology() -> None:
+    """Tests a branching `Process` topology."""
+    comp_a = A(name="comp_a", iters=10)
+    comp_b1 = B(name="comp_b1", factor=1)
+    comp_b2 = B(name="comp_b2", factor=2)
+    comp_c = C(name="comp_c")
+    components = [comp_a, comp_b1, comp_b2, comp_c]
+
+    conn_ab1 = Connector(
+        spec=ConnectorSpec(source="comp_a.out_1", target="comp_b1.in_1"), channel=AsyncioChannel()
+    )
+    conn_ab2 = Connector(
+        spec=ConnectorSpec(source="comp_a.out_1", target="comp_b2.in_1"), channel=AsyncioChannel()
+    )
+    conn_b1c = Connector(
+        spec=ConnectorSpec(source="comp_b1.out_1", target="comp_c.in_1"), channel=AsyncioChannel()
+    )
+    conn_b2c = Connector(
+        spec=ConnectorSpec(source="comp_b2.out_1", target="comp_c.in_1"), channel=AsyncioChannel()
+    )
+    connectors = [conn_ab1, conn_ab2, conn_b1c, conn_b2c]
+
+    process = LocalProcess(components, connectors)
+
+    # Process should run without error
+    await process.init()
+    await process.run()
+
+    # Check the final outputs
+    assert comp_c.out_1 == 9
+    assert comp_c.out_2 == 8 * 2
 
     assert all(comp.is_finished for comp in components)
