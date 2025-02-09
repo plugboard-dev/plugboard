@@ -7,11 +7,13 @@ import asyncio
 import multiprocessing
 import typing as _t
 
+from that_depends import Provide, inject
+
 from plugboard.connector.connector import Connector
 from plugboard.connector.serde_channel import SerdeChannel
 from plugboard.exceptions import ChannelSetupError
 from plugboard.schemas.connector import ConnectorMode
-from plugboard.utils import depends_on_optional, gen_rand_str
+from plugboard.utils import DI, Settings, depends_on_optional, gen_rand_str
 
 
 try:
@@ -315,15 +317,19 @@ def _create_socket(socket_type: int, socket_opts: _zmq_sockopts_t) -> zmq.asynci
 class ZMQConnector(_ZMQConnector):
     """`ZMQConnector` connects components using `ZMQChannel`."""
 
-    def __init__(self, *args: _t.Any, **kwargs: _t.Any) -> None:
+    @inject
+    def __init__(
+        self, *args: _t.Any, settings: Settings = Provide[DI.settings], **kwargs: _t.Any
+    ) -> None:
         super().__init__(*args, **kwargs)
         match self.spec.mode:
             case ConnectorMode.PIPELINE:
                 zmq_conn_cls = _ZMQPipelineConnector
             case ConnectorMode.PUBSUB:
-                # FIXME : Remove commented code once WIP work on ZMQ pubsub is complete.
-                # zmq_conn_cls = _ZMQPubsubConnectorProxy
-                zmq_conn_cls = _ZMQPubsubConnector
+                if settings.flags.zmq_pubsub_proxy:
+                    zmq_conn_cls = _ZMQPubsubConnectorProxy
+                else:
+                    zmq_conn_cls = _ZMQPubsubConnector
             case _:
                 raise ValueError(f"Unsupported connector mode: {self.spec.mode}")
         self._zmq_conn_impl: _ZMQConnector = zmq_conn_cls(*args, **kwargs)

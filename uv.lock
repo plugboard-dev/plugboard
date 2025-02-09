@@ -2218,6 +2218,7 @@ dependencies = [
     { name = "pydantic-settings" },
     { name = "rich" },
     { name = "sqlalchemy", extra = ["asyncio"] },
+    { name = "that-depends" },
     { name = "typer" },
 ]
 
@@ -2284,6 +2285,7 @@ requires-dist = [
     { name = "rich", specifier = "~=13.9" },
     { name = "s3fs", marker = "extra == 'aws'", specifier = ">=2024.9.0" },
     { name = "sqlalchemy", extras = ["asyncio"], specifier = "~=2.0" },
+    { name = "that-depends", specifier = ">=1.27.0" },
     { name = "typer", specifier = "~=0.12" },
 ]
 
@@ -3249,6 +3251,15 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/8a/11/965c6fd8e5cc254f1fe142d547387da17a8ebfd75a3455f637c663fb38a0/terminado-0.18.1.tar.gz", hash = "sha256:de09f2c4b85de4765f7714688fff57d3e75bad1f909b589fde880460c753fd2e", size = 32701 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/6a/9e/2064975477fdc887e47ad42157e214526dcad8f317a948dee17e1659a62f/terminado-0.18.1-py3-none-any.whl", hash = "sha256:a4468e1b37bb318f8a86514f65814e1afc977cf29b3992a4500d9dd305dcceb0", size = 14154 },
+]
+
+[[package]]
+name = "that-depends"
+version = "1.27.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/07/39/06e126820b4bc56ca319d7bb625878479e28519991dac15eccdb1aab1670/that_depends-1.27.0.tar.gz", hash = "sha256:9d8b5500c97c1911a678ab88999a8cba1311e46fc6590bcc4740e36ef67f044c", size = 26396 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/1a/37/8bd8e79559f662b6d76884a639d7dc9863c030150906ca987f88e8ef0727/that_depends-1.27.0-py3-none-any.whl", hash = "sha256:bd98ec0a9d069032b2317715bb69658c2eddb1e361cb229ba005ea5c675944da", size = 15396 },
 ]
 
 [[package]]

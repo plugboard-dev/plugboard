@@ -2,6 +2,7 @@
 
 from plugboard.utils.async_utils import gather_except
 from plugboard.utils.dependencies import depends_on_optional
+from plugboard.utils.di import DI
 from plugboard.utils.entities import EntityIdGen
 from plugboard.utils.export_mixin import Exportable, ExportMixin
 from plugboard.utils.random import gen_rand_str
@@ -15,9 +16,10 @@ __all__ = [
     "depends_on_optional",
     "gather_except",
     "gen_rand_str",
+    "ClassRegistry",
+    "DI",
+    "EntityIdGen",
     "Exportable",
     "ExportMixin",
-    "ClassRegistry",
-    "EntityIdGen",
     "Settings",
 ]
