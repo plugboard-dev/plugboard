@@ -7,6 +7,7 @@ from plugboard.utils.export_mixin import Exportable, ExportMixin
 from plugboard.utils.random import gen_rand_str
 from plugboard.utils.ray import build_actor_wrapper
 from plugboard.utils.registry import ClassRegistry
+from plugboard.utils.settings import Settings
 
 
 __all__ = [
@@ -18,4 +19,5 @@ __all__ = [
     "ExportMixin",
     "ClassRegistry",
     "EntityIdGen",
+    "Settings",
 ]
