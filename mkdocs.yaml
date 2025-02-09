@@ -70,6 +70,7 @@ theme:
   custom_dir: docs/overrides
   features:
   - navigation.tabs
+  - navigation.expand
   - content.code.annotate
   - content.code.copy
   palette:
@@ -111,7 +112,10 @@ nav:
     - Event-driven models: examples/tutorials/event-driven-models.md
   - Configuration: usage/configuration.md
 - Demos:
-  - Simple model: examples/demos/001_simple_model/simple-model.ipynb
+  - Fundamentals:
+    - Simple model: examples/demos/fundamentals/001_simple_model/simple-model.ipynb
+  - LLMs:
+    - Data filtering: examples/demos/llm/001_llm_data_filter/llm-filtering.ipynb
 - API Reference:
   - component: api/component/component.md
   - connector: api/connector/connector.md
