@@ -115,7 +115,7 @@ nav:
   - Fundamentals:
     - Simple model: examples/demos/fundamentals/001_simple_model/simple-model.ipynb
   - LLMs:
-    - Data filtering: examples/demos/llm/001_llm_data_filter/llm-filtering.ipynb
+    - Data filtering: examples/demos/llm/001_data_filter/llm-filtering.ipynb
 - API Reference:
   - component: api/component/component.md
   - connector: api/connector/connector.md
