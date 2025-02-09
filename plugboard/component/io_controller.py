@@ -41,8 +41,8 @@ class IOController:
             str(IODirection.INPUT): deque(),
             str(IODirection.OUTPUT): deque(),
         }
-        self._input_channels: dict[str, Channel] = {}
-        self._output_channels: dict[str, Channel] = {}
+        self._input_channels: dict[tuple[str, str], Channel] = {}
+        self._output_channels: dict[tuple[str, str], Channel] = {}
         self._input_event_channels: dict[str, Channel] = {}
         self._output_event_channels: dict[str, Channel] = {}
         self._input_event_types = {Event.safe_type(evt.type) for evt in self.input_events}
@@ -103,7 +103,7 @@ class IOController:
     async def _read_events(self) -> None:
         await self._read_channel_set(
             channel_type="event",
-            channels=self._input_event_channels,
+            channels={(k, ""): ch for k, ch in self._input_event_channels.items()},
             return_when=asyncio.FIRST_COMPLETED,
             store_fn=lambda _, v: self.events[str(IODirection.INPUT)].append(v),
         )
@@ -111,12 +111,12 @@ class IOController:
     async def _read_channel_set(
         self,
         channel_type: str,
-        channels: dict[str, Channel],
+        channels: dict[tuple[str, str], Channel],
         return_when: str,
         store_fn: _t.Callable[[str, _t.Any], None],
     ) -> None:
         read_tasks = []
-        for key, chan in channels.items():
+        for (key, _), chan in channels.items():
             if key not in self._read_tasks:
                 task = asyncio.create_task(self._read_channel(channel_type, key, chan))
                 task.set_name(key)
@@ -156,7 +156,7 @@ class IOController:
 
     async def _write_fields(self) -> None:
         async with asyncio.TaskGroup() as tg:
-            for field, chan in self._output_channels.items():
+            for (field, _), chan in self._output_channels.items():
                 tg.create_task(self._write_field(field, chan))
 
     async def _write_field(self, field: str, channel: Channel) -> None:
@@ -206,12 +206,14 @@ class IOController:
             task.cancel()
         self._is_closed = True
 
-    def _add_channel_for_field(self, field: str, direction: IODirection, channel: Channel) -> None:
+    def _add_channel_for_field(
+        self, field: str, connector_id: str, direction: IODirection, channel: Channel
+    ) -> None:
         io_fields = getattr(self, f"{direction}s")
         if field not in io_fields:
             raise ValueError(f"Unrecognised {direction} field {field}.")
         io_channels = getattr(self, f"_{direction}_channels")
-        io_channels[field] = channel
+        io_channels[(field, connector_id)] = channel
 
     def _add_channel_for_event(
         self, event_type: str, direction: IODirection, channel: Channel
@@ -225,11 +227,17 @@ class IOController:
     def _add_channel(self, connector: Connector) -> None:
         if connector.spec.source.connects_to([self.namespace]):
             self._add_channel_for_field(
-                connector.spec.source.descriptor, IODirection.OUTPUT, connector.channel
+                connector.spec.source.descriptor,
+                connector.spec.id,
+                IODirection.OUTPUT,
+                connector.channel,
             )
         elif connector.spec.target.connects_to([self.namespace]):
             self._add_channel_for_field(
-                connector.spec.target.descriptor, IODirection.INPUT, connector.channel
+                connector.spec.target.descriptor,
+                connector.spec.id,
+                IODirection.INPUT,
+                connector.channel,
             )
         elif connector.spec.source.connects_to(self._output_event_types):
             self._add_channel_for_event(
