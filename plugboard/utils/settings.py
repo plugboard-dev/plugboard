@@ -17,6 +17,7 @@ class _FeatureFlags(BaseSettings):
     model_config = SettingsConfigDict(env_prefix=f"{_ENV_PREFIX}FLAGS_")
 
     zmq_pubsub_proxy: bool = False
+    multiprocessing_fork: bool = False
 
 
 class Settings(BaseSettings):
