@@ -8,6 +8,7 @@ from websockets.asyncio.client import connect
 from websockets.exceptions import ConnectionClosed
 
 from plugboard.component import Component, IOController
+from plugboard.utils import depends_on_optional
 
 
 class WebsocketReader(Component):
@@ -15,6 +16,7 @@ class WebsocketReader(Component):
 
     io = IOController(outputs=["message"])
 
+    @depends_on_optional("websockets")
     def __init__(
         self,
         name: str,
@@ -84,6 +86,7 @@ class WebsocketWriter(Component):
 
     io = IOController(inputs=["message"])
 
+    @depends_on_optional("websockets")
     def __init__(
         self,
         name: str,
