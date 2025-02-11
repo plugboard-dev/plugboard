@@ -5,6 +5,7 @@ import typing as _t
 
 import msgspec.json as json
 from websockets.asyncio.client import connect
+from websockets.exceptions import ConnectionClosed
 
 from plugboard.component import Component, IOController
 
@@ -19,6 +20,7 @@ class WebsocketReader(Component):
         name: str,
         uri: str,
         connect_args: dict[str, _t.Any] | None = None,
+        initial_message: dict | str | None = None,
         parse_json: bool = False,
         *args: _t.Any,
         **kwargs: _t.Any,
@@ -31,7 +33,8 @@ class WebsocketReader(Component):
         Args:
             name: The name of the `WebsocketReader`.
             uri: The URI of the WebSocket server.
-            connect_args: Additional arguments to pass to the WebSocket connection.
+            connect_args: Optional; Additional arguments to pass to the WebSocket connection.
+            initial_message: Optional; The initial message to send to the WebSocket server.
             parse_json: Whether to parse the received data as JSON.
             *args: Additional positional arguments.
             **kwargs: Additional keyword arguments.
@@ -43,15 +46,20 @@ class WebsocketReader(Component):
         self._ctx = AsyncExitStack()
 
     async def init(self) -> None:
-        """Initialises the WebSocket connection."""
+        """Initializes the WebSocket connection."""
         self._conn = await self._ctx.enter_async_context(connect(self._uri, **self._connect_args))
 
     async def step(self) -> None:
         """Reads a message from the WebSocket connection."""
-        message = await self._conn.recv()
-        if self._parse_json:
-            message = json.decode(message)
-        self.message = message
+        # self.logger.info(f"Connected to {self._uri}")
+        try:
+            message = await self._conn.recv()
+            if self._parse_json:
+                message = json.decode(message)
+            self.message = message
+        except ConnectionClosed:
+            # self.logger.warning(f"Connection to {self._uri} closed, reconnecting...")
+            await self.io.close()
 
     async def destroy(self) -> None:
         """Closes the WebSocket connection."""
