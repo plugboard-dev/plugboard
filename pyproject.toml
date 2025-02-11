@@ -29,6 +29,9 @@ ray = ["pyzmq~=26.2", "ray>=2.40.0"]
 llm = [
     "llama-index>=0.12.11",
 ]
+websockets = [
+    "websockets>=14.2",
+]
 
 [dependency-groups]
 dev = [
