@@ -13,7 +13,6 @@ except ImportError:
 
 ZMQ_ADDR: str = r"tcp://127.0.0.1"
 zmq_sockopts_t: _t.TypeAlias = list[tuple[int, int | bytes | str]]
-# ZMQ_PROXY: _t.Optional[ZMQProxy] = None
 ZMQ_PROXY_LOCK: asyncio.Lock = asyncio.Lock()
 
 
@@ -37,6 +36,12 @@ class ZMQProxy(multiprocessing.Process):
         self._xsub_port: _t.Optional[int] = None
         self._xpub_port: _t.Optional[int] = None
         self._proxy_started: bool = False
+
+    def __getstate__(self) -> dict:
+        state = self.__dict__.copy()
+        if "_pull_socket" in state:
+            del state["_pull_socket"]
+        return state
 
     async def start_proxy(self, zmq_address: str = ZMQ_ADDR, maxsize: int = 2000) -> None:
         global ZMQ_PROXY_LOCK
