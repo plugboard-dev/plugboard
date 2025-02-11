@@ -47,19 +47,25 @@ class WebsocketReader(Component):
 
     async def init(self) -> None:
         """Initializes the WebSocket connection."""
-        self._conn = await self._ctx.enter_async_context(connect(self._uri, **self._connect_args))
+        self._conn_iter = connect(self._uri, **self._connect_args).__aiter__()
+        self._conn = await self._get_conn()
+        # self.logger.info(f"Connected to {self._uri}")
+
+    async def _get_conn(self) -> None:
+        return await self._ctx.enter_async_context(await anext(self._conn_iter))
 
     async def step(self) -> None:
         """Reads a message from the WebSocket connection."""
-        # self.logger.info(f"Connected to {self._uri}")
+        if not self._conn:
+            self._conn = await self._get_conn()
         try:
             message = await self._conn.recv()
             if self._parse_json:
                 message = json.decode(message)
             self.message = message
         except ConnectionClosed:
-            # self.logger.warning(f"Connection to {self._uri} closed, reconnecting...")
-            await self.io.close()
+            # self.logger.warning(f"Connection to {self._uri} closed, will reconnect...")
+            self._conn = None
 
     async def destroy(self) -> None:
         """Closes the WebSocket connection."""
