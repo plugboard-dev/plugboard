@@ -22,7 +22,7 @@ class WebsocketReader(Component):
         name: str,
         uri: str,
         connect_args: dict[str, _t.Any] | None = None,
-        initial_message: dict | str | None = None,
+        initial_message: _t.Any | None = None,
         parse_json: bool = False,
         *args: _t.Any,
         **kwargs: _t.Any,
@@ -30,7 +30,8 @@ class WebsocketReader(Component):
         """Instantiates the `WebsocketReader`.
 
         See https://websockets.readthedocs.io/en/stable/reference/asyncio/client.html for possible
-        connection arguments that can be passed using `connect_args`.
+        connection arguments that can be passed using `connect_args`. This `WebsocketReader` will
+        run until interrupted, and automatically reconnect if the server connection is lost.
 
         Args:
             name: The name of the `WebsocketReader`.
