@@ -5,6 +5,7 @@ import typing as _t
 
 import msgspec.json as json
 from websockets.asyncio.client import connect
+from websockets.asyncio.connection import Connection
 from websockets.exceptions import ConnectionClosed
 
 from plugboard.component import Component, IOController
@@ -43,7 +44,7 @@ class WebsocketReader(Component):
             *args: Additional positional arguments.
             **kwargs: Additional keyword arguments.
         """
-        super().__init__(name=name, *args, **kwargs)
+        super().__init__(name, *args, **kwargs)
         self._uri = uri
         self._connect_args = connect_args if connect_args else {}
         if initial_message is not None:
@@ -52,6 +53,7 @@ class WebsocketReader(Component):
             self._initial_message = None
         self._parse_json = parse_json
         self._ctx = AsyncExitStack()
+        self._conn: Connection | None = None
 
     async def init(self) -> None:
         """Initializes the websocket connection."""
@@ -59,7 +61,7 @@ class WebsocketReader(Component):
         self._conn = await self._get_conn()
         # self.logger.info(f"Connected to {self._uri}")
 
-    async def _get_conn(self) -> None:
+    async def _get_conn(self) -> Connection:
         conn = await self._ctx.enter_async_context(await anext(self._conn_iter))
         if self._initial_message is not None:
             # self.logger.info(f"Sending initial message", message=self._initial_message)
@@ -110,7 +112,7 @@ class WebsocketWriter(Component):
             *args: Additional positional arguments.
             **kwargs: Additional keyword arguments.
         """
-        super().__init__(name=name, *args, **kwargs)
+        super().__init__(name, *args, **kwargs)
         self._uri = uri
         self._connect_args = connect_args if connect_args else {}
         self._parse_json = parse_json
@@ -122,7 +124,7 @@ class WebsocketWriter(Component):
         self._conn = await self._get_conn()
         # self.logger.info(f"Connected to {self._uri}")
 
-    async def _get_conn(self) -> None:
+    async def _get_conn(self) -> Connection:
         return await self._ctx.enter_async_context(await anext(self._conn_iter))
 
     async def step(self) -> None:
@@ -130,7 +132,7 @@ class WebsocketWriter(Component):
         message = json.encode(self.message) if self._parse_json else self.message
         while True:
             try:
-                message = await self._conn.send(message)
+                await self._conn.send(message)
                 break
             except ConnectionClosed:
                 # self.logger.warning(f"Connection to {self._uri} closed, will reconnect...")
