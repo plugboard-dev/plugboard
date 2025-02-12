@@ -4,12 +4,17 @@ from contextlib import AsyncExitStack
 import typing as _t
 
 import msgspec.json as json
-from websockets.asyncio.client import connect
-from websockets.asyncio.connection import Connection
-from websockets.exceptions import ConnectionClosed
 
 from plugboard.component import Component, IOController
 from plugboard.utils import depends_on_optional
+
+
+try:
+    from websockets.asyncio.client import connect
+    from websockets.asyncio.connection import Connection
+    from websockets.exceptions import ConnectionClosed
+except ImportError:
+    pass
 
 
 class WebsocketReader(Component):
