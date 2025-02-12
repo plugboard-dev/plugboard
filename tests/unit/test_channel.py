@@ -39,13 +39,14 @@ async def test_channel(channel_builder_cls: type[ChannelBuilder]) -> None:
     # Send remaining items in loop to preserve order in distributed case
     for item in TEST_ITEMS[1:]:
         await channel.send(item)
-    recv_coros = [channel.recv() for _ in TEST_ITEMS[1:]]
 
-    results = [initial_send_recv[1]] + await asyncio.gather(*recv_coros)
+    results = [initial_send_recv[1]]
+    for _ in TEST_ITEMS[1:]:
+        results.append(await channel.recv())
     await channel.close()
 
     # Ensure that the sent and received items are the same.
-    assert results == TEST_ITEMS
+    assert results == TEST_ITEMS, "Failed on iteration: {}".format(iter)
 
     with pytest.raises(ChannelClosedError):
         await channel.recv()
