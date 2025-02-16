@@ -102,6 +102,7 @@ class _ZMQConnector(Connector, ABC):
     #       : This code only works for the special case of exactly one sender and one receiver
     #       : per ZMQConnector.
 
+    @depends_on_optional("ray")
     def __init__(
         self, *args: _t.Any, zmq_address: str = ZMQ_ADDR, maxsize: int = 2000, **kwargs: _t.Any
     ) -> None:
@@ -124,7 +125,6 @@ class _ZMQConnector(Connector, ABC):
 class _ZMQPipelineConnector(_ZMQConnector):
     """`_ZMQPipelineConnector` connects components in pipeline mode using `ZMQChannel`."""
 
-    @depends_on_optional("ray")
     def __init__(self, *args: _t.Any, **kwargs: _t.Any) -> None:
         super().__init__(*args, **kwargs)
         self._ray_queue = Queue(maxsize=1)
@@ -255,7 +255,7 @@ class ZMQConnector(_ZMQConnector):
         super().__init__(*args, **kwargs)
         match self.spec.mode:
             case ConnectorMode.PIPELINE:
-                zmq_conn_cls = _ZMQPipelineConnector
+                zmq_conn_cls: _t.Type[_ZMQConnector] = _ZMQPipelineConnector
             case ConnectorMode.PUBSUB:
                 print(f"{settings=}")
                 if settings.flags.zmq_pubsub_proxy:
