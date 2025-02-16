@@ -77,6 +77,9 @@ async def test_pubsub_channel(
     connector_cls: type[Connector], num_publishers: int, num_subscribers: int, num_messages: int
 ) -> None:
     """Tests the various `Channel` classes."""
+    print(
+        f"Running test with {connector_cls=}, {num_publishers=}, {num_subscribers=}, {num_messages=}"
+    )
     connector_spec = ConnectorSpec(
         source="pubsub-test.publishers",
         target="pubsub-test.subscribers",
@@ -103,3 +106,4 @@ async def test_pubsub_channel(
     received_msgs_hashes = subscriber_recv_tasks.result()
 
     assert all((x == sent_msgs_hash for x in received_msgs_hashes))
+    print("Test passed!")

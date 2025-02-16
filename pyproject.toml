@@ -72,7 +72,7 @@ plugboard = "plugboard.cli:app"
 [tool.pytest.ini_options]  # Orchestrates code testing
 # Note: pytest toml key subject to change:
 # https://docs.pytest.org/en/stable/reference/customize.html#pyproject-toml
-env = []
+# env = []
 asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "function"
 
