@@ -46,4 +46,4 @@ class LocalProcess(Process):
         async with asyncio.TaskGroup() as tg:
             for component in self.components.values():
                 tg.create_task(component.destroy())
-            await self._state.destroy()
+            await super().destroy()

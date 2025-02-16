@@ -102,4 +102,4 @@ class RayProcess(Process):
         """Performs tear-down actions for the `RayProcess` and its `Component`s."""
         coros = [component.destroy.remote() for component in self._component_actors.values()]
         await gather_except(*coros)
-        await self._state.destroy()
+        await super().destroy()
