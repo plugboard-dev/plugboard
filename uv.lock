@@ -2285,7 +2285,7 @@ requires-dist = [
     { name = "rich", specifier = "~=13.9" },
     { name = "s3fs", marker = "extra == 'aws'", specifier = ">=2024.9.0" },
     { name = "sqlalchemy", extras = ["asyncio"], specifier = "~=2.0" },
-    { name = "that-depends", specifier = ">=1.27.0" },
+    { name = "that-depends", specifier = ">2.1.0" },
     { name = "typer", specifier = "~=0.12" },
 ]
 
@@ -3255,11 +3255,11 @@ wheels = [
 
 [[package]]
 name = "that-depends"
-version = "1.27.0"
+version = "2.1.1"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/07/39/06e126820b4bc56ca319d7bb625878479e28519991dac15eccdb1aab1670/that_depends-1.27.0.tar.gz", hash = "sha256:9d8b5500c97c1911a678ab88999a8cba1311e46fc6590bcc4740e36ef67f044c", size = 26396 }
+sdist = { url = "https://files.pythonhosted.org/packages/47/70/3f121bd26456c2c6e78cee23ef0f4254654a120cf423139a2e359905393d/that_depends-2.1.1.tar.gz", hash = "sha256:725c2d3c423761787c67d54d574e7b690f8808d926c61d47bac86e0bd1787418", size = 55764 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/1a/37/8bd8e79559f662b6d76884a639d7dc9863c030150906ca987f88e8ef0727/that_depends-1.27.0-py3-none-any.whl", hash = "sha256:bd98ec0a9d069032b2317715bb69658c2eddb1e361cb229ba005ea5c675944da", size = 15396 },
+    { url = "https://files.pythonhosted.org/packages/95/cd/2453fb653f6736b9f43de89d196d155f8f5eee554cdb3870f418ce50b730/that_depends-2.1.1-py3-none-any.whl", hash = "sha256:de26548e5e332f39d8345fc8e4a9b491e9a708bf97108a8e18d4b36cdbc2bedf", size = 25873 },
 ]
 
 [[package]]

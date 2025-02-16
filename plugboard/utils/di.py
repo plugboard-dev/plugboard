@@ -7,29 +7,32 @@ import typing as _t
 from that_depends import BaseContainer
 from that_depends.providers import Resource, Singleton
 
-from plugboard.connector._zmq import ZMQProxy
+from plugboard.connector import _zmq
 from plugboard.utils.settings import Settings
-
-
-_ZMQ_PROXY: _t.Optional[ZMQProxy] = None
 
 
 def _mp_set_start_method(use_fork: bool = False) -> _t.Iterator[None]:
     print("Setting multiprocessing start method")
-    multiprocessing.get_context(method="fork" if use_fork else "spawn")
+    try:
+        multiprocessing.get_context(method="fork" if use_fork else "spawn")
+    except ValueError:
+        print("Failed to set multiprocessing start method", file=sys.stderr, flush=True)
+        pass
     yield
 
 
-def _zmq_proxy_lifecycle() -> _t.Iterator[ZMQProxy]:
-    global _ZMQ_PROXY
-    _ZMQ_PROXY = ZMQProxy()
-    _t.cast(ZMQProxy, _ZMQ_PROXY)
+def _zmq_proxy_lifecycle(mp_ctx: Resource[None]) -> _t.Iterator[_zmq.ZMQProxy]:
+    if _zmq.ZMQ_PROXY is None:
+        _zmq.ZMQ_PROXY = _zmq.ZMQProxy()
+    zmq_proxy = _t.cast(_zmq.ZMQProxy, _zmq.ZMQ_PROXY)
     try:
         print("Starting ZMQ proxy...", file=sys.stdout, flush=True)
-        yield _ZMQ_PROXY
+        yield zmq_proxy
     finally:
         print("Terminating ZMQ proxy...", file=sys.stdout, flush=True)
-        _ZMQ_PROXY.terminate()
+        if _zmq.ZMQ_PROXY is not None:
+            _zmq.ZMQ_PROXY.terminate()
+            _zmq.ZMQ_PROXY = None
         print("Terminated ZMQ proxy.", file=sys.stdout, flush=True)
 
 
@@ -38,7 +41,4 @@ class DI(BaseContainer):
 
     settings: Singleton[Settings] = Singleton(Settings)
     mp_ctx: Resource[None] = Resource(_mp_set_start_method, settings.flags.multiprocessing_fork)
-    zmq_proxy: Resource[ZMQProxy] = Resource(_zmq_proxy_lifecycle)
-
-
-DI.mp_ctx.sync_resolve()
+    zmq_proxy: Resource[_zmq.ZMQProxy] = Resource(_zmq_proxy_lifecycle, mp_ctx)

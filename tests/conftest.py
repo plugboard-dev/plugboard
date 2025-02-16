@@ -7,7 +7,7 @@ import ray
 
 from plugboard.component import Component, IOController as IO
 from plugboard.component.io_controller import IOStreamClosedError
-from plugboard.connector import _zmq
+from plugboard.utils.di import DI
 
 
 @pytest.fixture(scope="session")
@@ -25,16 +25,10 @@ def ray_context() -> _t.Iterator[None]:
 
 
 @pytest.fixture(scope="function", autouse=True)
-def zmq_proxy_cleanup() -> _t.Iterable[None]:
-    """Cleans up any ZMQ proxy processes after each test.
-
-    Note: this is a quick and dirty approach to avoid hanging tests during WIP development.
-    Requires a cleaner approach such as DI framework to manage lifecycle of ZMQ proxy process.
-    """
+async def DI_teardown() -> _t.AsyncIterable[None]:
+    """Cleans up any resources created in DI container after each test."""
     yield
-    if _zmq.ZMQ_PROXY is not None:
-        _zmq.ZMQ_PROXY.terminate()
-        _zmq.ZMQ_PROXY = None
+    await DI.tear_down()
 
 
 class ComponentTestHelper(Component):

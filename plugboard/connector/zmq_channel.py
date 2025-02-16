@@ -8,8 +8,7 @@ import typing as _t
 
 from that_depends import Provide, inject
 
-from plugboard.connector import _zmq
-from plugboard.connector._zmq import ZMQ_ADDR, create_socket, zmq_sockopts_t
+from plugboard.connector._zmq import ZMQ_ADDR, ZMQProxy, create_socket, zmq_sockopts_t
 from plugboard.connector.connector import Connector
 from plugboard.connector.serde_channel import SerdeChannel
 from plugboard.exceptions import ChannelSetupError
@@ -215,15 +214,10 @@ class _ZMQPubsubConnectorProxy(_ZMQConnector):
         self._xsub_port: _t.Optional[int] = None
         self._xpub_port: _t.Optional[int] = None
 
-    # @inject
-    # async def _get_proxy_ports(
-    #     self, zmq_proxy: ZMQProxy = Provide[DI.zmq_proxy]
-    # ) -> tuple[int, int]:
-    async def _get_proxy_ports(self) -> tuple[int, int]:
-        async with _zmq.ZMQ_PROXY_LOCK:
-            if _zmq.ZMQ_PROXY is None:
-                _zmq.ZMQ_PROXY = _zmq.ZMQProxy()
-        zmq_proxy: _zmq.ZMQProxy = _zmq.ZMQ_PROXY
+    @inject
+    async def _get_proxy_ports(
+        self, zmq_proxy: ZMQProxy = Provide[DI.zmq_proxy]
+    ) -> tuple[int, int]:
         if self._xsub_port is not None and self._xpub_port is not None:
             return self._xsub_port, self._xpub_port
         await zmq_proxy.start_proxy(zmq_address=self._zmq_address, maxsize=self._maxsize)
