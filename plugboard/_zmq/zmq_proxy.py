@@ -1,3 +1,5 @@
+"""Provides ZMQProxy class for proxying ZMQ socket connections."""
+
 from __future__ import annotations
 
 import asyncio

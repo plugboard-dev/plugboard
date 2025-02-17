@@ -7,7 +7,7 @@ import typing as _t
 from that_depends import BaseContainer
 from that_depends.providers import Resource, Singleton
 
-from plugboard.connector._zmq import ZMQProxy
+from plugboard._zmq.zmq_proxy import ZMQProxy
 from plugboard.utils.settings import Settings
 
 

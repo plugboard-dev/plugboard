@@ -8,7 +8,7 @@ import typing as _t
 
 from that_depends import Provide, inject
 
-from plugboard.connector._zmq import ZMQ_ADDR, ZMQProxy, create_socket, zmq_sockopts_t
+from plugboard._zmq.zmq_proxy import ZMQ_ADDR, ZMQProxy, create_socket, zmq_sockopts_t
 from plugboard.connector.connector import Connector
 from plugboard.connector.serde_channel import SerdeChannel
 from plugboard.exceptions import ChannelSetupError
@@ -218,6 +218,7 @@ class _ZMQPubsubConnectorProxy(_ZMQConnector):
     async def _get_proxy_ports(
         self, zmq_proxy: ZMQProxy = Provide[DI.zmq_proxy]
     ) -> tuple[int, int]:
+        # async def _get_proxy_ports(self, zmq_proxy: ZMQProxy = None) -> tuple[int, int]:
         if self._xsub_port is not None and self._xpub_port is not None:
             return self._xsub_port, self._xpub_port
         await zmq_proxy.start_proxy(zmq_address=self._zmq_address, maxsize=self._maxsize)
@@ -252,6 +253,7 @@ class ZMQConnector(_ZMQConnector):
     def __init__(
         self, *args: _t.Any, settings: Settings = Provide[DI.settings], **kwargs: _t.Any
     ) -> None:
+        # def __init__(self, *args: _t.Any, settings: Settings = None, **kwargs: _t.Any) -> None:
         super().__init__(*args, **kwargs)
         match self.spec.mode:
             case ConnectorMode.PIPELINE:
