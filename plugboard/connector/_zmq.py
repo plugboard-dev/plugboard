@@ -13,7 +13,6 @@ except ImportError:
 
 zmq_sockopts_t: _t.TypeAlias = list[tuple[int, int | bytes | str]]
 ZMQ_ADDR: str = r"tcp://127.0.0.1"
-ZMQ_PROXY: _t.Optional[ZMQProxy] = None
 ZMQ_PROXY_LOCK: asyncio.Lock = asyncio.Lock()
 
 
