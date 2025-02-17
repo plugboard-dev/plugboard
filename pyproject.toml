@@ -27,7 +27,7 @@ dependencies = [
 aws = ["s3fs>=2024.9.0"]
 azure = ["adlfs>=2024.7.0"]
 gcp = ["gcsfs>=2024.9.0.post1"]
-ray = ["pyzmq~=26.2", "ray>=2.40.0"]
+ray = ["pyzmq~=26.2", "ray>=2.42.1"]
 
 [dependency-groups]
 dev = [
