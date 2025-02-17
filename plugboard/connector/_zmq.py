@@ -13,7 +13,6 @@ except ImportError:
 
 zmq_sockopts_t: _t.TypeAlias = list[tuple[int, int | bytes | str]]
 ZMQ_ADDR: str = r"tcp://127.0.0.1"
-ZMQ_PROXY_LOCK: asyncio.Lock = asyncio.Lock()
 
 
 def create_socket(socket_type: int, socket_opts: zmq_sockopts_t) -> zmq.asyncio.Socket:
@@ -29,6 +28,7 @@ class ZMQProxy(multiprocessing.Process):
     def __init__(self, zmq_address: str = ZMQ_ADDR, maxsize: int = 2000) -> None:
         super().__init__()
         self._zmq_address = zmq_address
+        self._zmq_proxy_lock = asyncio.Lock()
         self._maxsize = maxsize
         self._pull_socket = create_socket(zmq.PULL, [(zmq.RCVHWM, 1)])
         self._pull_socket_port = self._pull_socket.bind_to_random_port("tcp://*")
@@ -41,11 +41,12 @@ class ZMQProxy(multiprocessing.Process):
         state = self.__dict__.copy()
         if "_pull_socket" in state:
             del state["_pull_socket"]
+        if "_zmq_proxy_lock" in state:
+            del state["_zmq_proxy_lock"]
         return state
 
     async def start_proxy(self, zmq_address: str = ZMQ_ADDR, maxsize: int = 2000) -> None:
-        global ZMQ_PROXY_LOCK
-        async with ZMQ_PROXY_LOCK:
+        async with self._zmq_proxy_lock:
             if self._proxy_started:
                 if zmq_address != self._zmq_address:
                     raise RuntimeError("ZMQ proxy already started with different address.")
@@ -58,8 +59,7 @@ class ZMQProxy(multiprocessing.Process):
 
     async def get_proxy_ports(self) -> tuple[int, int]:
         """Returns tuple of form (xsub port, xpub port) for the ZMQ proxy."""
-        global ZMQ_PROXY_LOCK
-        async with ZMQ_PROXY_LOCK:
+        async with self._zmq_proxy_lock:
             if self._xsub_port is None or self._xpub_port is None:
                 ports_msg = await self._pull_socket.recv_multipart()
                 self._xsub_port, self._xpub_port = map(int, ports_msg)
