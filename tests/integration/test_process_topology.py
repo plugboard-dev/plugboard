@@ -42,8 +42,8 @@ async def test_circular_process_topology() -> None:
     process = LocalProcess(components, connectors)
 
     # Process should run without error
-    await process.init()
-    await process.run()
+    async with process:
+        await process.run()
 
     # Check the final inputs/outputs
     assert comp_c.in_1 == 9
@@ -80,8 +80,8 @@ async def test_branching_process_topology() -> None:
     process = LocalProcess(components, connectors)
 
     # Process should run without error
-    await process.init()
-    await process.run()
+    async with process:
+        await process.run()
 
     # Check the final outputs
     assert comp_c.out_1 == 9
