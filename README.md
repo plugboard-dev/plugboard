@@ -104,16 +104,15 @@ class B(Component):
 
 Now we take these components, connect them up as a `Process`, and fire off the model. Using the `Process` context handler takes care of calling `init` at the beginning and `destroy` at the end for all `Component`s. Calling `Process.run` triggers all the components to start iterating through all their inputs until a termination condition is reached. Simulations proceed in an event-driven manner: when inputs arrive, the components are triggered to step forward in time. The framework handles the details of the inter-component communication, you just need to specify the logic of your components, and the connections between them.
 ```python
-from plugboard.connector import AsyncioChannel, Connector
-from plugboard.process import Process
+from plugboard.connector import AsyncioConnector
+from plugboard.process import LocalProcess
 from plugboard.schemas import ConnectorSpec
 
-process = Process(
+process = LocalProcess(
     components=[A(name="a", iters=10), B(name="b", path="b.txt")],
     connectors=[
-        Connector(
+        AsyncioConnector(
             spec=ConnectorSpec(source="a.out_1", target="b.in_1"),
-            channel=AsyncioChannel(),
         )
     ],
 )
