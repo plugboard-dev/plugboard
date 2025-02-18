@@ -1,5 +1,6 @@
 """Provides the `RayProcess` class for managing components in a Ray cluster."""
 
+import asyncio
 import typing as _t
 
 from plugboard.component import Component
@@ -67,6 +68,9 @@ class RayProcess(Process):
             component.io_connect.remote(connectors) for component in self._component_actors.values()
         ]
         await gather_except(*connect_coros)
+        # Allow time for connections to be established
+        # TODO : Replace with a more robust mechanism
+        await asyncio.sleep(1)
 
     async def _connect_state(self) -> None:
         component_coros = [
