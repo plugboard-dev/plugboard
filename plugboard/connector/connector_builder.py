@@ -1,14 +1,13 @@
 """Provides `ConnectorBuilder` to build `Connector` objects."""
 
-from abc import ABC
 import typing as _t
 
 from plugboard.connector.connector import Connector
 from plugboard.schemas.connector import ConnectorSpec
 
 
-class ConnectorBuilder(ABC):
-    """Base class for `ConnectorBuilder` objects."""
+class ConnectorBuilder:
+    """`ConnectorBuilder` facilitates building `Connector`s with a preset configuration."""
 
     def __init__(self, connector_cls: type[Connector], *args: _t.Any, **kwargs: _t.Any) -> None:
         self._connector_cls: type[Connector] = connector_cls

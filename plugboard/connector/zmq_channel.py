@@ -208,6 +208,8 @@ class _ZMQPubsubConnector(_ZMQConnector):
 
 
 class _ZMQPubsubConnectorProxy(_ZMQConnector):
+    """`_ZMQPubsubConnectorProxy` acts is a python asyncio based proxy for `ZMQChannel` messages."""
+
     def __init__(self, *args: _t.Any, **kwargs: _t.Any) -> None:
         super().__init__(*args, **kwargs)
         self._topic = str(self.spec.source)

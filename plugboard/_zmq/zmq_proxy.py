@@ -1,4 +1,4 @@
-"""Provides ZMQProxy class for proxying ZMQ socket connections."""
+"""Provides `ZMQProxy` class for proxying ZMQ socket connections with libzmq."""
 
 from __future__ import annotations
 
@@ -27,6 +27,8 @@ def create_socket(socket_type: int, socket_opts: zmq_sockopts_t) -> zmq.asyncio.
 
 
 class ZMQProxy(multiprocessing.Process):
+    """`ZMQProxy` proxies ZMQ socket connections with libzmq in a separate process."""
+
     def __init__(self, zmq_address: str = ZMQ_ADDR, maxsize: int = 2000) -> None:
         super().__init__()
         self._zmq_address = zmq_address
@@ -48,6 +50,7 @@ class ZMQProxy(multiprocessing.Process):
         return state
 
     async def start_proxy(self, zmq_address: str = ZMQ_ADDR, maxsize: int = 2000) -> None:
+        """Starts the ZMQ proxy with the given address and maxsize."""
         async with self._zmq_proxy_lock:
             if self._proxy_started:
                 if zmq_address != self._zmq_address:
@@ -76,6 +79,7 @@ class ZMQProxy(multiprocessing.Process):
         return socket
 
     def run(self) -> None:
+        """Multiprocessing entrypoint to run ZMQ proxy."""
         xsub_port, xpub_port = self._create_sockets()
         try:
             ports_msg = [str(xsub_port).encode(), str(xpub_port).encode()]
