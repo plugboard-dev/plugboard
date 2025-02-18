@@ -65,18 +65,65 @@ async def recv_messages(channels: list[Channel]) -> list[int]:
 
 @pytest.mark.anyio
 @pytest.mark.parametrize(
+    "connector_cls, num_subscribers, num_messages",
+    [
+        (ZMQConnector, 1, 1000),
+        (ZMQConnector, 100, 1000),
+    ],
+)
+async def test_pubsub_channel_single_publisher(
+    connector_cls: type[Connector], num_subscribers: int, num_messages: int
+) -> None:
+    """Tests the various pubsub `Channel` classes in pubsub mode.
+
+    In this test there is a single publisher. Messages are expected to be received
+    by all subscribers exactly once and in order.
+    """
+    num_publishers: int = 1
+    connector_spec = ConnectorSpec(
+        source="pubsub-test.publishers",
+        target="pubsub-test.subscribers",
+        mode=ConnectorMode.PUBSUB,
+    )
+    connector = connector_cls(connector_spec)
+
+    async with asyncio.TaskGroup() as tg:
+        publisher_conn_tasks = [
+            tg.create_task(connector.connect_send()) for _ in range(num_publishers)
+        ]
+        subscriber_conn_tasks = [
+            tg.create_task(connector.connect_recv()) for _ in range(num_subscribers)
+        ]
+
+    publishers = [t.result() for t in publisher_conn_tasks]
+    subscribers = [t.result() for t in subscriber_conn_tasks]
+
+    async with asyncio.TaskGroup() as tg:
+        publisher_send_task = tg.create_task(send_messages(publishers, num_messages))
+        subscriber_recv_tasks = tg.create_task(recv_messages(subscribers))
+
+    sent_msgs_hash = publisher_send_task.result()
+    received_msgs_hashes = subscriber_recv_tasks.result()
+
+    assert all((x == sent_msgs_hash for x in received_msgs_hashes))
+
+
+@pytest.mark.anyio
+@pytest.mark.parametrize(
     "connector_cls, num_publishers, num_subscribers, num_messages",
     [
-        (ZMQConnector, 1, 1, 1000),
         (ZMQConnector, 10, 1, 1000),
-        (ZMQConnector, 1, 100, 1000),
         (ZMQConnector, 10, 100, 1000),
     ],
 )
-async def test_pubsub_channel(
+async def test_pubsub_channel_multiple_publshers(
     connector_cls: type[Connector], num_publishers: int, num_subscribers: int, num_messages: int
 ) -> None:
-    """Tests the various `Channel` classes."""
+    """Tests the various pubsub `Channel` classes in pubsub mode.
+
+    In this test there is are multiple publishers. Messages are expected to be received
+    by all subscribers exactly once but they are not expected to be in order.
+    """
     connector_spec = ConnectorSpec(
         source="pubsub-test.publishers",
         target="pubsub-test.subscribers",
