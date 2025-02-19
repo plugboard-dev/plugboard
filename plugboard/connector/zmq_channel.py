@@ -97,17 +97,10 @@ class ZMQChannel(SerdeChannel):
 class _ZMQConnector(Connector, ABC):
     """`_ZMQConnector` connects components using `ZMQChannel`."""
 
-    # FIXME : If multiple workers call `connect_send` they will each see `_send_channel` null
-    #       : on first call and create a new channel. This will lead to multiple channels.
-    #       : This code only works for the special case of exactly one sender and one receiver
-    #       : per ZMQConnector.
-
-    @depends_on_optional("ray")
     def __init__(
         self, *args: _t.Any, zmq_address: str = ZMQ_ADDR, maxsize: int = 2000, **kwargs: _t.Any
     ) -> None:
         super().__init__(*args, **kwargs)
-        # Use a Ray queue to ensure sync ZMQ port number
         self._zmq_address = zmq_address
         self._maxsize = maxsize
 
@@ -125,8 +118,15 @@ class _ZMQConnector(Connector, ABC):
 class _ZMQPipelineConnector(_ZMQConnector):
     """`_ZMQPipelineConnector` connects components in pipeline mode using `ZMQChannel`."""
 
+    # FIXME : If multiple workers call `connect_send` they will each see `_send_channel` null
+    #       : on first call and create a new channel. This will lead to multiple channels.
+    #       : This code only works for the special case of exactly one sender and one receiver
+    #       : per ZMQConnector.
+
+    @depends_on_optional("ray")
     def __init__(self, *args: _t.Any, **kwargs: _t.Any) -> None:
         super().__init__(*args, **kwargs)
+        # Use a Ray queue to ensure sync ZMQ port number
         self._ray_queue = Queue(maxsize=1)
         self._send_channel: _t.Optional[ZMQChannel] = None
         self._recv_channel: _t.Optional[ZMQChannel] = None
