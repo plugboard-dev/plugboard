@@ -99,7 +99,7 @@ async def test_pubsub_channel_single_publisher(
     subscribers = [t.result() for t in subscriber_conn_tasks]
 
     # Give some time to establish connections
-    asyncio.sleep(1)
+    await asyncio.sleep(1)
 
     async with asyncio.TaskGroup() as tg:
         publisher_send_task = tg.create_task(send_messages(publishers, num_messages))
@@ -146,7 +146,7 @@ async def test_pubsub_channel_multiple_publshers(
     subscribers = [t.result() for t in subscriber_conn_tasks]
 
     # Give some time to establish connections
-    asyncio.sleep(1)
+    await asyncio.sleep(1)
 
     async with asyncio.TaskGroup() as tg:
         publisher_send_task = tg.create_task(send_messages(publishers, num_messages))
