@@ -261,10 +261,8 @@ class ZMQConnector(_ZMQConnector):
             case ConnectorMode.PUBSUB:
                 print(f"{settings=}")
                 if settings.flags.zmq_pubsub_proxy:
-                    print("Using ZMQ pubsub connector proxy")
                     zmq_conn_cls = _ZMQPubsubConnectorProxy
                 else:
-                    print("Using ZMQ pubsub connector")
                     zmq_conn_cls = _ZMQPubsubConnector
             case _:
                 raise ValueError(f"Unsupported connector mode: {self.spec.mode}")

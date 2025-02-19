@@ -12,7 +12,6 @@ from plugboard.utils.settings import Settings
 
 
 def _mp_set_start_method(use_fork: bool = False) -> _t.Iterator[None]:
-    print("Setting multiprocessing start method")
     try:
         multiprocessing.get_context(method="fork" if use_fork else "spawn")
     except ValueError:
