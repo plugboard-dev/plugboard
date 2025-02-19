@@ -43,9 +43,10 @@ async def test_channel(connector_cls: type[Connector]) -> None:
     # Send remaining items in loop to preserve order in distributed case
     for item in TEST_ITEMS[1:]:
         await send_channel.send(item)
-    recv_coros = [recv_channel.recv() for _ in TEST_ITEMS[1:]]
 
-    results = [initial_send_recv[1]] + await asyncio.gather(*recv_coros)
+    results = [initial_send_recv[1]]
+    for _ in TEST_ITEMS[1:]:
+        results.append(await recv_channel.recv())
     await send_channel.close()
     await recv_channel.close()
 
