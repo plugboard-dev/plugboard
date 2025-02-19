@@ -27,7 +27,10 @@ def create_socket(socket_type: int, socket_opts: zmq_sockopts_t) -> zmq.asyncio.
 
 
 class ZMQProxy(multiprocessing.Process):
-    """`ZMQProxy` proxies ZMQ socket connections with libzmq in a separate process."""
+    """`ZMQProxy` proxies ZMQ socket connections with libzmq in a separate process.
+
+    This class should be created as a singleton and used to proxy all ZMQ pubsub connections.
+    """
 
     def __init__(self, zmq_address: str = ZMQ_ADDR, maxsize: int = 2000) -> None:
         super().__init__()
