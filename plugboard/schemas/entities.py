@@ -14,7 +14,7 @@ _ENTITY_ID_SUFFIX_REGEX: _t.Final[str] = (
 class Entity(StrEnum):
     """Entity names."""
 
-    Job: str = "Job"
+    Job = "Job"
 
     @property
     def id_prefix(self) -> str:
