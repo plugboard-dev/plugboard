@@ -83,6 +83,8 @@ async def send_messages_unordered(
         val = rng.randint(-1000, 1000)
         await channel.send(val)
         _sum += val
+    # Give some time for messages to be sent before closing channels
+    await asyncio.sleep(1)
     for channel in channels:
         await channel.close()
     return _sum
