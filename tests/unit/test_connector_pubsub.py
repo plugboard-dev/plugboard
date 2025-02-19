@@ -127,8 +127,8 @@ async def test_pubsub_channel_single_publisher(
     """
     num_publishers: int = 1
     connector_spec = ConnectorSpec(
-        source="pubsub-test-1.publishers",
-        target="pubsub-test-1.subscribers",
+        source="pubsub-test-0.publishers",
+        target="pubsub-test-0.subscribers",
         mode=ConnectorMode.PUBSUB,
     )
     connector = connector_cls(connector_spec)
@@ -155,7 +155,7 @@ async def test_pubsub_channel_single_publisher(
     received_msgs_hashes = subscriber_recv_tasks.result()
 
     assert len(set(received_msgs_hashes)) == 1
-    assert all((x == sent_msgs_hash for x in received_msgs_hashes))
+    assert sent_msgs_hash == received_msgs_hashes[0]
 
 
 @pytest.mark.anyio
@@ -175,8 +175,8 @@ async def test_pubsub_channel_multiple_publshers(
     subscribers exactly once but they are not expected to be in order.
     """
     connector_spec = ConnectorSpec(
-        source="pubsub-test-2.publishers",
-        target="pubsub-test-2.subscribers",
+        source="pubsub-test-1.publishers",
+        target="pubsub-test-1.subscribers",
         mode=ConnectorMode.PUBSUB,
     )
     connector = connector_cls(connector_spec)
@@ -203,4 +203,75 @@ async def test_pubsub_channel_multiple_publshers(
     received_msgs_sums = subscriber_recv_tasks.result()
 
     assert len(set(received_msgs_sums)) == 1
-    assert all((x == sent_msgs_sum for x in received_msgs_sums))
+    assert sent_msgs_sum == received_msgs_sums[0]
+
+
+@pytest.mark.anyio
+@pytest.mark.parametrize(
+    "connector_cls, num_topics, num_publishers, num_subscribers, num_messages",
+    [
+        (ZMQConnector, 3, 10, 1, 1000),
+        (ZMQConnector, 3, 10, 100, 1000),
+    ],
+)
+async def test_pubsub_channel_multiple_topics_and_publishers(
+    connector_cls: type[Connector],
+    num_topics: int,
+    num_publishers: int,
+    num_subscribers: int,
+    num_messages: int,
+) -> None:
+    """Tests the various pubsub `Channel` classes in pubsub mode.
+
+    In this test there are multiple topics and publishers. Messages are expected to be received by
+    all subscribers exactly once but they are not expected to be in order.
+    """
+    all_publishers = []
+    all_subscribers = []
+
+    # Create connectors and channels for each topic
+    for i in range(num_topics):
+        connector_spec = ConnectorSpec(
+            source=f"pubsub-test-2-{i}.publishers",
+            target=f"pubsub-test-2-{i}.subscribers",
+            mode=ConnectorMode.PUBSUB,
+        )
+        connector = connector_cls(connector_spec)
+
+        async with asyncio.TaskGroup() as tg:
+            publisher_conn_tasks = [
+                tg.create_task(connector.connect_send()) for _ in range(num_publishers)
+            ]
+            subscriber_conn_tasks = [
+                tg.create_task(connector.connect_recv()) for _ in range(num_subscribers)
+            ]
+
+        publishers = [t.result() for t in publisher_conn_tasks]
+        subscribers = [t.result() for t in subscriber_conn_tasks]
+
+        all_publishers.append(publishers)
+        all_subscribers.append(subscribers)
+
+    # Give some time to establish connections
+    await asyncio.sleep(1)
+
+    publisher_send_tasks = []
+    subscriber_recv_tasks = []
+    async with asyncio.TaskGroup() as tg:
+        for i in range(num_topics):
+            publisher_send_tasks.append(
+                tg.create_task(send_messages_unordered(all_publishers[i], num_messages))
+            )
+            subscriber_recv_tasks.append(
+                tg.create_task(recv_messages_unordered(all_subscribers[i]))
+            )
+
+    sent_msgs_sums = [t.result() for t in publisher_send_tasks]
+    all_received_msgs_sums = [t.result() for t in subscriber_recv_tasks]
+
+    # Each subscriber should receive messages from all topics
+    assert all(len(set(received_msgs_sums)) == 1 for received_msgs_sums in all_received_msgs_sums)
+    assert all(
+        sent_msgs_sum == received_msgs_sums[0]
+        for sent_msgs_sum, received_msgs_sums in zip(sent_msgs_sums, all_received_msgs_sums)
+    )
