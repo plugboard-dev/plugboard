@@ -7,7 +7,7 @@ import pandas as pd
 import pytest
 from sqlalchemy import create_engine, text
 
-from plugboard.connector import AsyncioChannel, Connector
+from plugboard.connector import AsyncioConnector
 from plugboard.exceptions import IOStreamClosedError
 from plugboard.library.sql_io import SQLReader, SQLWriter
 from plugboard.schemas import ConnectorSpec
@@ -107,19 +107,19 @@ async def test_sql_writer(
         chunk_size=chunk_size,
     )
     connectors = {
-        field: Connector(
+        field: AsyncioConnector(
             spec=ConnectorSpec(source="none.none", target=f"file-writer.{field}"),
-            channel=AsyncioChannel(),
         )
         for field in df.columns
     }
-    writer.io.connect(list(connectors.values()))
+    await writer.io.connect(list(connectors.values()))
 
     await writer.init()
 
+    output_channels = {field: await connectors[field].connect_send() for field in df.columns}
     for _, row in df.iterrows():
         for field in df.columns:
-            await connectors[field].channel.send(row[field])
+            await output_channels[field].send(row[field])
         await writer.step()
 
     await writer.io.close()
@@ -143,19 +143,19 @@ async def test_sql_writer_extra_columns(
         field_names=list(df.columns),
     )
     connectors = {
-        field: Connector(
+        field: AsyncioConnector(
             spec=ConnectorSpec(source="none.none", target=f"file-writer.{field}"),
-            channel=AsyncioChannel(),
         )
         for field in df.columns
     }
-    writer.io.connect(list(connectors.values()))
+    await writer.io.connect(list(connectors.values()))
 
     await writer.init()
 
+    output_channels = {field: await connectors[field].connect_send() for field in df.columns}
     for _, row in df.iterrows():
         for field in df.columns:
-            await connectors[field].channel.send(row[field])
+            await output_channels[field].send(row[field])
         await writer.step()
 
     await writer.io.close()

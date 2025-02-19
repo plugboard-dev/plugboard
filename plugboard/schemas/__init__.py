@@ -3,8 +3,8 @@
 from .component import ComponentArgsSpec, ComponentSpec
 from .config import ConfigSpec, ProcessConfigSpec
 from .connector import (
-    ChannelBuilderArgsSpec,
-    ChannelBuilderSpec,
+    ConnectorBuilderArgsSpec,
+    ConnectorBuilderSpec,
     ConnectorMode,
     ConnectorSocket,
     ConnectorSpec,
@@ -16,19 +16,19 @@ from .state import StateBackendArgsSpec, StateBackendSpec
 
 
 __all__ = [
-    "ChannelBuilderSpec",
-    "ChannelBuilderArgsSpec",
     "ComponentSpec",
     "ComponentArgsSpec",
     "ConfigSpec",
+    "ConnectorBuilderArgsSpec",
+    "ConnectorBuilderSpec",
     "ConnectorMode",
     "ConnectorSocket",
     "ConnectorSpec",
     "Entity",
     "IODirection",
-    "StateBackendSpec",
-    "StateBackendArgsSpec",
     "ProcessConfigSpec",
     "ProcessSpec",
     "ProcessArgsSpec",
+    "StateBackendSpec",
+    "StateBackendArgsSpec",
 ]

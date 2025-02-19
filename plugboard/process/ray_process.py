@@ -1,5 +1,6 @@
 """Provides the `RayProcess` class for managing components in a Ray cluster."""
 
+import asyncio
 import typing as _t
 
 from plugboard.component import Component
@@ -61,10 +62,15 @@ class RayProcess(Process):
         for id, state in zip(component_ids, remote_states):
             self.components[id].__dict__.update(state)
 
-    def _connect_components(self) -> None:
+    async def _connect_components(self) -> None:
         connectors = list(self.connectors.values())
-        for component in self._component_actors.values():
-            component.io_connect.remote(connectors)
+        connect_coros = [
+            component.io_connect.remote(connectors) for component in self._component_actors.values()
+        ]
+        await gather_except(*connect_coros)
+        # Allow time for connections to be established
+        # TODO : Replace with a more robust mechanism
+        await asyncio.sleep(1)
 
     async def _connect_state(self) -> None:
         component_coros = [
@@ -79,6 +85,7 @@ class RayProcess(Process):
     async def init(self) -> None:
         """Performs component initialisation actions."""
         await self.connect_state()
+        await self._connect_components()
         coros = [component.init.remote() for component in self._component_actors.values()]
         await gather_except(*coros)
         await self._update_component_attributes()
@@ -99,4 +106,4 @@ class RayProcess(Process):
         """Performs tear-down actions for the `RayProcess` and its `Component`s."""
         coros = [component.destroy.remote() for component in self._component_actors.values()]
         await gather_except(*coros)
-        await self._state.destroy()
+        await super().destroy()

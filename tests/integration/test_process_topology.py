@@ -4,7 +4,7 @@
 import pytest
 
 from plugboard.component import IOController as IO
-from plugboard.connector import AsyncioChannel, Connector
+from plugboard.connector import AsyncioConnector
 from plugboard.process import LocalProcess
 from plugboard.schemas import ConnectorSpec
 from tests.conftest import ComponentTestHelper
@@ -27,16 +27,10 @@ async def test_circular_process_topology() -> None:
     comp_c = C(name="comp_c", initial_values={"in_2": [-1]})
     components = [comp_a, comp_b, comp_c]
 
-    conn_ac = Connector(
-        spec=ConnectorSpec(source="comp_a.out_1", target="comp_c.in_1"), channel=AsyncioChannel()
-    )
-    conn_cb = Connector(
-        spec=ConnectorSpec(source="comp_c.out_1", target="comp_b.in_1"), channel=AsyncioChannel()
-    )
+    conn_ac = AsyncioConnector(spec=ConnectorSpec(source="comp_a.out_1", target="comp_c.in_1"))
+    conn_cb = AsyncioConnector(spec=ConnectorSpec(source="comp_c.out_1", target="comp_b.in_1"))
     # Circular connection
-    conn_bc = Connector(
-        spec=ConnectorSpec(source="comp_b.out_1", target="comp_c.in_2"), channel=AsyncioChannel()
-    )
+    conn_bc = AsyncioConnector(spec=ConnectorSpec(source="comp_b.out_1", target="comp_c.in_2"))
     connectors = [conn_ac, conn_cb, conn_bc]
 
     process = LocalProcess(components, connectors)

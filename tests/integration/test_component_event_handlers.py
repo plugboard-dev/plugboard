@@ -7,7 +7,11 @@ from pydantic import BaseModel
 import pytest
 
 from plugboard.component import Component, IOController
-from plugboard.connector import AsyncioChannel, AsyncioChannelBuilder, ChannelBuilder, Connector
+from plugboard.connector import (
+    AsyncioConnector,
+    Connector,
+    ConnectorBuilder,
+)
 from plugboard.events import Event, EventConnectorBuilder
 from plugboard.schemas import ConnectorSpec
 
@@ -73,16 +77,17 @@ class A(Component):
         self._event_B_count += evt.data.y
 
 
-@pytest.fixture
-def channel_builder() -> ChannelBuilder:
-    """Fixture for an asyncio channel builder."""
-    return AsyncioChannelBuilder()
+@pytest.fixture(scope="module", params=[AsyncioConnector])
+def connector_cls(request: pytest.FixtureRequest) -> _t.Type[Connector]:
+    """Returns a `Connector` class."""
+    return request.param
 
 
 @pytest.fixture
-def event_connectors(channel_builder: ChannelBuilder) -> EventConnectorBuilder:
+def event_connectors(connector_cls: _t.Type[Connector]) -> EventConnectorBuilder:
     """Fixture for an event connectors instance."""
-    return EventConnectorBuilder(channel_builder=channel_builder)
+    connector_builder = ConnectorBuilder(connector_cls=connector_cls)
+    return EventConnectorBuilder(connector_builder=connector_builder)
 
 
 @pytest.mark.anyio
@@ -122,20 +127,22 @@ async def test_component_event_handlers(
     event_connectors_map = event_connectors.build([a])
     connectors = list(event_connectors_map.values())
 
-    a.io.connect(connectors)
+    await a.io.connect(connectors)
 
     assert a.event_A_count == 0
     assert a.event_B_count == 0
 
     evt_A = EventTypeA(data=EventTypeAData(x=2), source="test-driver")
-    await event_connectors_map[evt_A.type].channel.send(evt_A)
+    chan_A = await event_connectors_map[evt_A.type].connect_send()
+    await chan_A.send(evt_A)
     await a.step()
 
     assert a.event_A_count == 2
     assert a.event_B_count == 0
 
     evt_B = EventTypeB(data=EventTypeBData(y=4), source="test-driver")
-    await event_connectors_map[evt_B.type].channel.send(evt_B)
+    chan_B = await event_connectors_map[evt_B.type].connect_send()
+    await chan_B.send(evt_B)
     await a.step()
 
     assert a.event_A_count == 2
@@ -148,18 +155,9 @@ async def test_component_event_handlers(
 def field_connectors() -> list[Connector]:
     """Fixture for a list of field connectors."""
     return [
-        Connector(
-            spec=ConnectorSpec(source="null.in_1", target="a.in_1"),
-            channel=AsyncioChannel(),
-        ),
-        Connector(
-            spec=ConnectorSpec(source="null.in_2", target="a.in_2"),
-            channel=AsyncioChannel(),
-        ),
-        Connector(
-            spec=ConnectorSpec(source="a.out_1", target="null.out_1"),
-            channel=AsyncioChannel(),
-        ),
+        AsyncioConnector(spec=ConnectorSpec(source="null.in_1", target="a.in_1")),
+        AsyncioConnector(spec=ConnectorSpec(source="null.in_2", target="a.in_2")),
+        AsyncioConnector(spec=ConnectorSpec(source="a.out_1", target="null.out_1")),
     ]
 
 
@@ -183,7 +181,7 @@ async def test_component_event_handlers_with_field_inputs(
     event_connectors_map = event_connectors.build([a])
     connectors = list(event_connectors_map.values()) + field_connectors
 
-    a.io.connect(connectors)
+    await a.io.connect(connectors)
 
     # Initially event counters should be zero
     assert a.event_A_count == 0
@@ -193,7 +191,8 @@ async def test_component_event_handlers_with_field_inputs(
 
     # After sending one event of type A, the event_A_count should be 2
     evt_A = EventTypeA(data=EventTypeAData(x=2), source="test-driver")
-    await event_connectors_map[evt_A.type].channel.send(evt_A)
+    chan_A = await event_connectors_map[evt_A.type].connect_send()
+    await chan_A.send(evt_A)
     await a.step()
 
     assert a.event_A_count == 2
@@ -203,7 +202,8 @@ async def test_component_event_handlers_with_field_inputs(
 
     # After sending one event of type B, the event_B_count should be 4
     evt_B = EventTypeB(data=EventTypeBData(y=4), source="test-driver")
-    await event_connectors_map[evt_B.type].channel.send(evt_B)
+    chan_B = await event_connectors_map[evt_B.type].connect_send()
+    await chan_B.send(evt_B)
     await a.step()
 
     assert a.event_A_count == 2
@@ -212,8 +212,10 @@ async def test_component_event_handlers_with_field_inputs(
     assert getattr(a, "in_2", None) is None
 
     # After sending data for input fields, the event counters should remain the same
-    await field_connectors[0].channel.send(1)
-    await field_connectors[1].channel.send(2)
+    chan_0 = await field_connectors[0].connect_send()
+    await chan_0.send(1)
+    chan_1 = await field_connectors[1].connect_send()
+    await chan_1.send(2)
     await a.step()
 
     assert a.event_A_count == 2
@@ -222,12 +224,12 @@ async def test_component_event_handlers_with_field_inputs(
     assert getattr(a, "in_2", None) == 2
 
     # After sending data for only one input field, step should timeout as read tasks are incomplete
-    await field_connectors[0].channel.send(3)
+    await chan_0.send(3)
     with pytest.raises(TimeoutError):
         await asyncio.wait_for(a.step(), timeout=0.1)
 
     # After sending an event of type A before all field data is sent, the event_A_count should be 4
-    await event_connectors_map[evt_A.type].channel.send(evt_A)
+    await chan_A.send(evt_A)
     await a.step()
 
     assert a.event_A_count == 4
@@ -236,7 +238,7 @@ async def test_component_event_handlers_with_field_inputs(
     assert getattr(a, "in_2", None) == 2
 
     # After sending data for the other input field, the event counters should remain the same
-    await field_connectors[1].channel.send(4)
+    await chan_1.send(4)
     await a.step()
 
     assert a.event_A_count == 4
@@ -246,10 +248,10 @@ async def test_component_event_handlers_with_field_inputs(
 
     # After sending data for both input fields and both events, the event counters should
     # eventually be updated after at most two steps
-    await field_connectors[0].channel.send(5)
-    await field_connectors[1].channel.send(6)
-    await event_connectors_map[evt_A.type].channel.send(evt_A)
-    await event_connectors_map[evt_B.type].channel.send(evt_B)
+    await chan_0.send(5)
+    await chan_1.send(6)
+    await chan_A.send(evt_A)
+    await chan_B.send(evt_B)
     await a.step()
     try:
         # All read tasks may have completed in a single step, so timeout rather than wait forever
