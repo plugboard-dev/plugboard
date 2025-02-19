@@ -3,6 +3,7 @@
 import asyncio
 from functools import lru_cache
 from itertools import cycle
+import random
 import string
 import time
 import typing as _t
@@ -27,10 +28,10 @@ def _get_hash(x: _t.Any) -> int:
     return hash(x)
 
 
-async def send_messages(channels: list[Channel], num_messages: int) -> int:
+async def send_messages_ordered(channels: list[Channel], num_messages: int) -> int:
     """Test helper function to send messages over publisher channels.
 
-    Returns aggregated hash of all sent messages for the publishers.
+    Returns aggregated hash of all sent messages for the publishers to check for ordered delivery.
     """
     channel_cycle = cycle(channels)
     input_cycle = cycle(TEST_ITEMS)
@@ -45,10 +46,11 @@ async def send_messages(channels: list[Channel], num_messages: int) -> int:
     return _hash
 
 
-async def recv_messages(channels: list[Channel]) -> list[int]:
+async def recv_messages_ordered(channels: list[Channel]) -> list[int]:
     """Test helper function to receive messages over multiple subscriber channels.
 
-    Returns list of aggregated hashes of all received messages for each subscriber.
+    Returns list of aggregated hashes of all received messages for each subscriber to check for
+    receipt in correct order.
     """
     hashes = [_get_hash(_HASH_SEED)] * len(channels)
     try:
@@ -61,6 +63,48 @@ async def recv_messages(channels: list[Channel]) -> list[int]:
     except* ChannelClosedError:
         pass
     return hashes
+
+
+async def send_messages_unordered(
+    channels: list[Channel], num_messages: int, seed: int | float | None = None
+) -> int:
+    """Test helper function to send messages over publisher channels.
+
+    Returns sum of all values in sent messages for the publishers to check for delivery of all
+    messages exactly once.
+    """
+    # Setup random number generator with random seed
+    rng = random.Random(seed or time.time())
+    _sum = 0
+    channel_cycle = cycle(channels)
+    for _ in range(num_messages):
+        channel = next(channel_cycle)
+        # Generate a random number between -1000 and +1000
+        val = rng.randint(-1000, 1000)
+        await channel.send(val)
+        _sum += val
+    for channel in channels:
+        await channel.close()
+    return _sum
+
+
+async def recv_messages_unordered(channels: list[Channel]) -> list[int]:
+    """Test helper function to receive messages over multiple subscriber channels.
+
+    Returns list of message sums of all received messages for each subscriber to confirm all
+    messages received exactly once.
+    """
+    sums = [0] * len(channels)
+    try:
+        while True:
+            async with asyncio.TaskGroup() as tg:
+                tasks = [tg.create_task(channel.recv()) for channel in channels]
+            for i, task in enumerate(tasks):
+                msg = task.result()
+                sums[i] += msg
+    except* ChannelClosedError:
+        pass
+    return sums
 
 
 @pytest.mark.anyio
@@ -76,13 +120,13 @@ async def test_pubsub_channel_single_publisher(
 ) -> None:
     """Tests the various pubsub `Channel` classes in pubsub mode.
 
-    In this test there is a single publisher. Messages are expected to be received
-    by all subscribers exactly once and in order.
+    In this test there is a single publisher. Messages are expected to be received by all
+    subscribers exactly once and in order.
     """
     num_publishers: int = 1
     connector_spec = ConnectorSpec(
-        source="pubsub-test.publishers",
-        target="pubsub-test.subscribers",
+        source="pubsub-test-1.publishers",
+        target="pubsub-test-1.subscribers",
         mode=ConnectorMode.PUBSUB,
     )
     connector = connector_cls(connector_spec)
@@ -102,8 +146,8 @@ async def test_pubsub_channel_single_publisher(
     await asyncio.sleep(1)
 
     async with asyncio.TaskGroup() as tg:
-        publisher_send_task = tg.create_task(send_messages(publishers, num_messages))
-        subscriber_recv_tasks = tg.create_task(recv_messages(subscribers))
+        publisher_send_task = tg.create_task(send_messages_ordered(publishers, num_messages))
+        subscriber_recv_tasks = tg.create_task(recv_messages_ordered(subscribers))
 
     sent_msgs_hash = publisher_send_task.result()
     received_msgs_hashes = subscriber_recv_tasks.result()
@@ -124,12 +168,12 @@ async def test_pubsub_channel_multiple_publshers(
 ) -> None:
     """Tests the various pubsub `Channel` classes in pubsub mode.
 
-    In this test there is are multiple publishers. Messages are expected to be received
-    by all subscribers exactly once but they are not expected to be in order.
+    In this test there are multiple publishers. Messages are expected to be received by all
+    subscribers exactly once but they are not expected to be in order.
     """
     connector_spec = ConnectorSpec(
-        source="pubsub-test.publishers",
-        target="pubsub-test.subscribers",
+        source="pubsub-test-2.publishers",
+        target="pubsub-test-2.subscribers",
         mode=ConnectorMode.PUBSUB,
     )
     connector = connector_cls(connector_spec)
@@ -149,10 +193,10 @@ async def test_pubsub_channel_multiple_publshers(
     await asyncio.sleep(1)
 
     async with asyncio.TaskGroup() as tg:
-        publisher_send_task = tg.create_task(send_messages(publishers, num_messages))
-        subscriber_recv_tasks = tg.create_task(recv_messages(subscribers))
+        publisher_send_task = tg.create_task(send_messages_unordered(publishers, num_messages))
+        subscriber_recv_tasks = tg.create_task(recv_messages_unordered(subscribers))
 
-    sent_msgs_hash = publisher_send_task.result()
-    received_msgs_hashes = subscriber_recv_tasks.result()
+    sent_msgs_sum = publisher_send_task.result()
+    received_msgs_sums = subscriber_recv_tasks.result()
 
-    assert all((x == sent_msgs_hash for x in received_msgs_hashes))
+    assert all((x == sent_msgs_sum for x in received_msgs_sums))
