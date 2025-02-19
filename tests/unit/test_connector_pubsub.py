@@ -152,6 +152,7 @@ async def test_pubsub_channel_single_publisher(
     sent_msgs_hash = publisher_send_task.result()
     received_msgs_hashes = subscriber_recv_tasks.result()
 
+    assert len(set(received_msgs_hashes)) == 1
     assert all((x == sent_msgs_hash for x in received_msgs_hashes))
 
 
@@ -199,4 +200,5 @@ async def test_pubsub_channel_multiple_publshers(
     sent_msgs_sum = publisher_send_task.result()
     received_msgs_sums = subscriber_recv_tasks.result()
 
+    assert len(set(received_msgs_sums)) == 1
     assert all((x == sent_msgs_sum for x in received_msgs_sums))
