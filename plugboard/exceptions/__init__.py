@@ -49,6 +49,12 @@ class NotFoundError(StateBackendError):
     pass
 
 
+class NotInitialisedError(StateBackendError):
+    """Raised attempting to step or run a `Process` or `Component` that has not been initialised."""
+
+    pass
+
+
 class EventError(Exception):
     """Raised for event related errors."""
 
