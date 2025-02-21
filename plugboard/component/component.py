@@ -6,11 +6,11 @@ from functools import wraps
 import typing as _t
 
 from plugboard.component.io_controller import (
-    IOController,
+    IOController as IO,
     IODirection,
     IOStreamClosedError,
 )
-from plugboard.events import Event, EventHandlers
+from plugboard.events import Event, EventHandlers, StopEvent
 from plugboard.exceptions import UnrecognisedEventError, ValidationError
 from plugboard.state import StateBackend
 from plugboard.utils import DI, ClassRegistry, ExportMixin, is_on_ray_worker
@@ -26,7 +26,7 @@ class Component(ABC, ExportMixin):
             in addition to input and output fields.
     """
 
-    io: IOController
+    io: IO = IO(input_events=[StopEvent], output_events=[StopEvent])
     exports: _t.Optional[list[str]] = None
 
     def __init__(
@@ -44,7 +44,7 @@ class Component(ABC, ExportMixin):
         self._parameters = parameters or {}
         self._state: _t.Optional[StateBackend] = state
         self._state_is_connected = False
-        self.io = IOController(
+        self.io = IO(
             inputs=self.__class__.io.inputs,
             outputs=self.__class__.io.outputs,
             initial_values=initial_values,
@@ -164,6 +164,12 @@ class Component(ABC, ExportMixin):
         res = await handler(self, event)
         if isinstance(res, Event):
             self.io.queue_event(res)
+
+    @StopEvent.handler
+    async def _stop_event_handler(self, event: StopEvent) -> None:
+        """Stops the component on receiving the system `StopEvent`."""
+        self.io.queue_event(event)
+        await self.io.close()
 
     async def run(self) -> None:
         """Executes component logic for all steps to completion."""
