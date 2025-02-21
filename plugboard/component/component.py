@@ -2,6 +2,7 @@
 
 from abc import ABC, abstractmethod
 import asyncio
+from collections import defaultdict
 from functools import wraps
 import typing as _t
 
@@ -62,9 +63,40 @@ class Component(ABC, ExportMixin):
         if is_on_ray_worker():
             # Required until https://github.com/ray-project/ray/issues/42823 is resolved
             return
-        if not hasattr(cls, "io"):
-            raise NotImplementedError(f"{cls.__name__} must define an `io` attribute.")
+        cls._configure_io()
         ComponentRegistry.add(cls)
+
+    @classmethod
+    def _configure_io(cls) -> None:
+        # Get all parent classes that are Component subclasses
+        parent_comps = [c for c in cls.__bases__ if issubclass(c, Component)]
+        # Create combined set of all io arguments from this class and all parents
+        io_args: dict[str, set] = defaultdict(set)
+        for c in parent_comps + [cls]:
+            if {c_io := getattr(c, "io")}:
+                io_args["inputs"].update(c_io.inputs)
+                io_args["outputs"].update(c_io.outputs)
+                io_args["input_events"].update(c_io.input_events)
+                io_args["output_events"].update(c_io.output_events)
+        # Check that subclass io arguments is superset of abstract base class Component io arguments
+        is_abc = issubclass(cls, ABC)
+        extends_base_io_args = (
+            io_args["inputs"] > set(Component.io.inputs)
+            or io_args["outputs"] > set(Component.io.outputs)
+            or io_args["input_events"] > set(Component.io.input_events)
+            or io_args["output_events"] > set(Component.io.output_events)
+        )
+        if not is_abc and not extends_base_io_args:
+            raise ValueError(
+                f"{cls.__name__} must extend Component abstract base class io arguments"
+            )
+        # Set io arguments for subclass
+        cls.io = IO(
+            inputs=sorted(io_args["inputs"], key=str),
+            outputs=sorted(io_args["outputs"], key=str),
+            input_events=sorted(io_args["input_events"], key=str),
+            output_events=sorted(io_args["output_events"], key=str),
+        )
 
     # Prevents type-checker errors on public component IO attributes
     def __getattr__(self, key: str) -> _t.Any:
