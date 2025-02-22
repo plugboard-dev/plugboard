@@ -1,5 +1,6 @@
 """Provides `AsDictMixin` class."""
 
+from copy import deepcopy
 from functools import wraps
 import inspect
 import typing as _t
@@ -55,18 +56,19 @@ class ExportMixin:
             return obj
 
     @staticmethod
-    def _dict_inject_wrapper(method: _t.Callable) -> _t.Callable:
+    def _dict_inject_and_copy(method: _t.Callable) -> _t.Callable:
         @wraps(method)
         def _wrapper(self: _t.Any) -> dict:
-            inject_data = ExportMixin.dict(self)
+            injected_data = ExportMixin.dict(self)
             data = method(self)
-            return {**inject_data, **data}
+            data_copy = deepcopy({**injected_data, **data})
+            return data_copy
 
         return _wrapper
 
     def __init_subclass__(cls, *args: _t.Any, **kwargs: _t.Any) -> None:
         cls.__init__ = ExportMixin._save_args_wrapper(cls.__init__, _SAVE_ARGS_INIT_KEY)  # type: ignore # noqa: E501,W505
-        cls.dict = ExportMixin._dict_inject_wrapper(cls.dict)  # type: ignore
+        cls.dict = ExportMixin._dict_inject_and_copy(cls.dict)  # type: ignore
 
     def export(self) -> dict:
         """Returns dict representation of object for later reconstruction."""
