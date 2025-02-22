@@ -79,14 +79,14 @@ class Component(ABC, ExportMixin):
                 io_args["input_events"].update(c_io.input_events)
                 io_args["output_events"].update(c_io.output_events)
         # Check that subclass io arguments is superset of abstract base class Component io arguments
-        is_abc = issubclass(cls, ABC)
+        cls_is_concrete = not issubclass(cls, ABC)
         extends_base_io_args = (
             io_args["inputs"] > set(Component.io.inputs)
             or io_args["outputs"] > set(Component.io.outputs)
             or io_args["input_events"] > set(Component.io.input_events)
             or io_args["output_events"] > set(Component.io.output_events)
         )
-        if not is_abc and not extends_base_io_args:
+        if cls_is_concrete and not extends_base_io_args:
             raise ValueError(
                 f"{cls.__name__} must extend Component abstract base class io arguments"
             )
