@@ -79,7 +79,8 @@ class Component(ABC, ExportMixin):
                 io_args["input_events"].update(c_io.input_events)
                 io_args["output_events"].update(c_io.output_events)
         # Check that subclass io arguments is superset of abstract base class Component io arguments
-        cls_is_concrete = not issubclass(cls, ABC)
+        # Note: can't check cls.__abstractmethods__ as it's unset at this point. Maybe brittle...
+        cls_is_concrete = ABC not in cls.__bases__
         extends_base_io_args = (
             io_args["inputs"] > set(Component.io.inputs)
             or io_args["outputs"] > set(Component.io.outputs)

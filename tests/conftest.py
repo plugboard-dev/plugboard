@@ -1,5 +1,6 @@
 """Configuration for the test suite."""
 
+from abc import ABC, abstractmethod
 import typing as _t
 
 import pytest
@@ -31,7 +32,7 @@ async def DI_teardown() -> _t.AsyncIterable[None]:
     await DI.tear_down()
 
 
-class ComponentTestHelper(Component):
+class ComponentTestHelper(Component, ABC):
     """`ComponentTestHelper` is a component class for testing purposes."""
 
     io = IO(inputs=[], outputs=[])
@@ -60,6 +61,7 @@ class ComponentTestHelper(Component):
         self._is_initialised = True
         await super().init()
 
+    @abstractmethod
     async def step(self) -> None:  # noqa: D102
         self._step_count += 1
 
