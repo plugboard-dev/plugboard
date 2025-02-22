@@ -20,7 +20,10 @@ from tests.integration.conftest import (
 class A(ComponentTestHelper):
     """`A` component class with no input or output fields."""
 
-    io = IOController()
+    io = IOController(outputs=["out_1"])
+
+    async def step(self) -> None:  # noqa: D102
+        await super().step()
 
 
 class B(ComponentTestHelper):
@@ -28,11 +31,17 @@ class B(ComponentTestHelper):
 
     io = IOController(inputs=["in_1", "in_2"], outputs=["out_1", "out_2"])
 
+    async def step(self) -> None:  # noqa: D102
+        await super().step()
+
 
 class C(ComponentTestHelper):
     """`C` component class with input and output fields."""
 
     io = IOController(inputs=["in_1", "in_2"], outputs=["out_1", "out_2"])
+
+    async def step(self) -> None:  # noqa: D102
+        await super().step()
 
 
 @pytest.fixture
