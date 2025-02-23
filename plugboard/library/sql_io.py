@@ -8,6 +8,7 @@ from sqlalchemy.engine import Engine, Row, create_engine
 from sqlalchemy.exc import InvalidRequestError
 from sqlalchemy.ext.asyncio import AsyncEngine, create_async_engine
 
+from plugboard.component.io_controller import IOController as IO
 from plugboard.exceptions import NoMoreDataException
 from .data_reader import DataReader, DataReaderArgsSpec
 from .data_writer import DataWriter, DataWriterArgsSpec
@@ -19,6 +20,8 @@ class SQLReader(DataReader):
     The underlying database connection is managed by SQLAlchemy: both synchronous and asynchronous
     drivers are supported.
     """
+
+    io: IO = IO(outputs=["_unset"])
 
     def __init__(
         self,
@@ -105,6 +108,8 @@ class SQLWriter(DataWriter):
     The underlying database connection is managed by SQLAlchemy: both synchronous and asynchronous
     drivers are supported.
     """
+
+    io: IO = IO(inputs=["_unset"])
 
     def __init__(
         self,

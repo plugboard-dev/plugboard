@@ -13,7 +13,7 @@ from plugboard.events import Event, EventHandlers
 class A(Component):
     """A test component."""
 
-    io: IOController = IOController()
+    io: IOController = IOController(outputs=["out_1"])
 
     async def step(self) -> None:
         """A test step."""

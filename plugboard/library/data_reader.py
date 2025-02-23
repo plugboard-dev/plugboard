@@ -45,7 +45,13 @@ class DataReader(Component, ABC):
         super().__init__(**kwargs)
         self._buffer: dict[str, deque] = dict()
         self._chunk_size = chunk_size
-        self.io = IOController(inputs=None, outputs=field_names, namespace=self.name)
+        self.io = IOController(
+            inputs=None,
+            outputs=field_names,
+            input_events=self.__class__.io.input_events,
+            output_events=self.__class__.io.output_events,
+            namespace=self.name,
+        )
         self._task: _t.Optional[Task] = None
 
     @abstractmethod

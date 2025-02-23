@@ -44,7 +44,13 @@ class DataWriter(Component, ABC):
         super().__init__(**kwargs)
         self._buffer: dict[str, deque] = defaultdict(deque)
         self._chunk_size = chunk_size
-        self.io = IOController(inputs=field_names, outputs=None, namespace=self.name)
+        self.io = IOController(
+            inputs=field_names,
+            outputs=None,
+            input_events=self.__class__.io.input_events,
+            output_events=self.__class__.io.output_events,
+            namespace=self.name,
+        )
         self._task: _t.Optional[Task] = None
 
     @abstractmethod

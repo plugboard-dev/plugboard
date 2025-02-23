@@ -7,6 +7,7 @@ import typing as _t
 import pandas as pd
 import pytest
 
+from plugboard.component.io_controller import IOController as IO
 from plugboard.connector import AsyncioConnector
 from plugboard.exceptions import IOStreamClosedError, NoMoreDataException
 from plugboard.library import DataReader, DataWriter
@@ -23,6 +24,8 @@ def df() -> pd.DataFrame:
 
 class MockDataReader(DataReader):
     """Mock DataReader class for testing purposes."""
+
+    io: IO = IO(outputs=["_unset"])
 
     def __init__(self, *args: _t.Any, df: pd.DataFrame, **kwargs: _t.Any) -> None:
         super().__init__(*args, **kwargs)
@@ -47,6 +50,8 @@ class MockDataReader(DataReader):
 
 class MockDataWriter(DataWriter):
     """Mock DataWriter class for testing purposes."""
+
+    io: IO = IO(inputs=["_unset"])
 
     def __init__(self, *args: _t.Any, **kwargs: _t.Any) -> None:
         super().__init__(*args, **kwargs)
