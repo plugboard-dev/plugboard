@@ -163,7 +163,7 @@ class Component(ABC, ExportMixin):
 
     async def destroy(self) -> None:
         """Performs tear-down actions for `Component`."""
-        pass
+        self.logger.info("Component destroyed")
 
     def dict(self) -> dict[str, _t.Any]:  # noqa: D102
         return {

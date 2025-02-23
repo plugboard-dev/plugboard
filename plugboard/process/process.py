@@ -101,6 +101,7 @@ class Process(ExportMixin, ABC):
         """Performs tear-down actions for the `Process` and its `Component`s."""
         await self._state.destroy()
         await DI.tear_down()
+        self.logger.info("Process destroyed")
 
     async def __aenter__(self) -> Process:
         """Enters the context manager."""
