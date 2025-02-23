@@ -31,6 +31,7 @@ class LocalProcess(Process):
             await self._connect_components()
             for component in self.components.values():
                 tg.create_task(component.init())
+        self._logger.info("Process initialised")
 
     async def step(self) -> None:
         """Executes a single step for the process."""
@@ -40,9 +41,11 @@ class LocalProcess(Process):
 
     async def run(self) -> None:
         """Runs the process to completion."""
+        self._logger.info("Starting process run")
         async with asyncio.TaskGroup() as tg:
             for component in self.components.values():
                 tg.create_task(component.run())
+        self._logger.info("Process run complete")
 
     async def destroy(self) -> None:
         """Performs tear-down actions for the `LocalProcess` and its `Component`s."""
