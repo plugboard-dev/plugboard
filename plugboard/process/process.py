@@ -45,7 +45,6 @@ class Process(ExportMixin, ABC):
         self.parameters: dict = parameters or {}
         self._state: StateBackend = state or self._default_state_cls()
         self._state_is_connected: bool = False
-        self._connect_components()
         self.logger = logger.bind(
             cls=self.__class__.__name__, name=self.name, job_id=self.state.job_id
         )
