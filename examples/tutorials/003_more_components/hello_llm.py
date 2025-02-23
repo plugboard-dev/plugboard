@@ -8,7 +8,8 @@ import httpx
 from pydantic import BaseModel
 
 from plugboard.component import Component, IOController as IO
-from plugboard.connector import AsyncioChannel, Connector
+from plugboard.connector import AsyncioConnector
+
 from plugboard.process import LocalProcess
 from plugboard.schemas import ConnectorSpec
 from plugboard.library import FileReader, FileWriter, LLMChat
@@ -44,21 +45,26 @@ class WeatherAPI(Component):
 # --8<-- [end:components]
 
 
+# --8<-- [start:response_structure]
+class Location(BaseModel):  # (1)!
+    location: str
+    latitude: float
+    longitude: float
+
+
+# --8<-- [end:response_structure]
+
+
 async def main() -> None:
     # --8<-- [start:load-save]
     load_text = FileReader(name="load-text", path="input.csv", field_names=["text"])
     save_output = FileWriter(
         name="save-results",
         path="output.csv",
-        field_names=["location", "temperature", "wind_speed"]
+        field_names=["location", "temperature", "wind_speed"],
     )
     # --8<-- [end:load-save]
     # --8<-- [start:llm]
-    class Location(BaseModel):  # (1)!
-        location: str
-        latitude: float
-        longitude: float
-
     llm = LLMChat(
         name="llm",
         system_prompt="Identify a geographical location from the input and provide its latitude and longitude",
@@ -73,29 +79,19 @@ async def main() -> None:
     process = LocalProcess(
         components=[load_text, llm, weather, save_output],
         connectors=[
-            Connector(
-                spec=ConnectorSpec(source="load_text.text", target="llm.prompt"),
-                channel=AsyncioChannel(),
+            AsyncioConnector(spec=ConnectorSpec(source="load_text.text", target="llm.prompt")),
+            AsyncioConnector(spec=ConnectorSpec(source="llm.latitude", target="weather.latitude")),
+            AsyncioConnector(
+                spec=ConnectorSpec(source="llm.longitude", target="weather.longitude")
             ),
-            Connector(
-                spec=ConnectorSpec(source="llm.latitude", target="weather.latitude"),
-                channel=AsyncioChannel(),
+            AsyncioConnector(
+                spec=ConnectorSpec(source="llm.location", target="save-results.location")
             ),
-            Connector(
-                spec=ConnectorSpec(source="llm.longitude", target="weather.longitude"),
-                channel=AsyncioChannel(),
+            AsyncioConnector(
+                spec=ConnectorSpec(source="weather.temperature", target="save-results.wind_speed")
             ),
-            Connector(
-                spec=ConnectorSpec(source="llm.location", target="save-results.location"),
-                channel=AsyncioChannel(),
-            ),
-            Connector(
-                spec=ConnectorSpec(source="weather.temperature", target="save-results.wind_speed"),
-                channel=AsyncioChannel(),
-            ),
-            Connector(
-                spec=ConnectorSpec(source="weather.wind_speed", target="save-results.wind_speed"),
-                channel=AsyncioChannel(),
+            AsyncioConnector(
+                spec=ConnectorSpec(source="weather.wind_speed", target="save-results.wind_speed")
             ),
         ],
     )

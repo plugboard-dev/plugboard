@@ -20,7 +20,7 @@ plugboard:
         args:
           name: "llm"
           system_prompt: "Identify a geographical location from the input and provide its latitude and longitude"
-          response_model: TODO: fix this!!
+          response_model: hello_llm.Location
           expand_response: true
       - type: hello_llm.WeatherAPI
         args:
