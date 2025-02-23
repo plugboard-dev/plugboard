@@ -9,9 +9,9 @@ from plugboard.component import IOController as IO
 from plugboard.events import Event
 from plugboard.process import ProcessBuilder
 from plugboard.schemas import (
-    ChannelBuilderArgsSpec,
-    ChannelBuilderSpec,
     ComponentSpec,
+    ConnectorBuilderArgsSpec,
+    ConnectorBuilderSpec,
     ConnectorSpec,
     ProcessArgsSpec,
     ProcessSpec,
@@ -87,9 +87,9 @@ def process_spec() -> ProcessSpec:
                 args={"job_id": None, "metadata": {"hello": "world"}},
             ),
         ),
-        channel_builder=ChannelBuilderSpec(
-            type="plugboard.connector.AsyncioChannelBuilder",
-            args=ChannelBuilderArgsSpec(),
+        connector_builder=ConnectorBuilderSpec(
+            type="plugboard.connector.AsyncioConnector",
+            args=ConnectorBuilderArgsSpec(),
         ),
     )
 
@@ -107,9 +107,7 @@ async def test_process_builder_build(process_spec: ProcessSpec) -> None:
     # Must build a process with the correct component names
     assert process.components.keys() == {"A", "B", "C", "D"}
     # Must build connectors with the correct channel types
-    assert all(
-        con.channel.__class__.__name__ == "AsyncioChannel" for con in process.connectors.values()
-    )
+    assert all(con.__class__.__name__ == "AsyncioConnector" for con in process.connectors.values())
     # Must build a process with the correct state backend
     async with process:
         input_job_id = process_spec.args.state.args.model_dump().get("job_id")

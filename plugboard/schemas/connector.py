@@ -10,23 +10,19 @@ from pydantic import Field, field_validator
 from plugboard.schemas._common import PlugboardBaseModel
 
 
-DEFAULT_CHANNEL_CLS_PATH: str = "plugboard.connector.AsyncioChannelBuilder"
+DEFAULT_CONNECTOR_CLS_PATH: str = "plugboard.connector.AsyncioConnector"
 
 
 class ConnectorMode(StrEnum):
     """Defines the mode of a connector.
 
     Attributes:
-        ONE_TO_ONE: Specifies a one-to-one connection.
-        ONE_TO_MANY: Specifies a one-to-many connection.
-        MANY_TO_ONE: Specifies a many-to-one connection.
-        MANY_TO_MANY: Specifies a many-to-many connection.
+        PIPELINE: one-in-one-out task queue.
+        PUBSUB: one-to-many event distribution.
     """
 
-    ONE_TO_ONE = "one-to-one"
-    ONE_TO_MANY = "one-to-many"
-    MANY_TO_ONE = "many-to-one"
-    MANY_TO_MANY = "many-to-many"
+    PIPELINE = "pipeline"
+    PUBSUB = "pubsub"
 
 
 class ConnectorSocket(PlugboardBaseModel):
@@ -84,7 +80,7 @@ class ConnectorSpec(PlugboardBaseModel):
 
     source: ConnectorSocket
     target: ConnectorSocket
-    mode: ConnectorMode = Field(default=ConnectorMode.ONE_TO_ONE, validate_default=True)
+    mode: ConnectorMode = Field(default=ConnectorMode.PIPELINE, validate_default=True)
 
     @field_validator("source", "target", mode="before")
     @classmethod
@@ -102,23 +98,23 @@ class ConnectorSpec(PlugboardBaseModel):
         return self.id
 
 
-class ChannelBuilderArgsSpec(PlugboardBaseModel, extra="allow"):
-    """Specification of the [`Channel`][plugboard.connector.Channel] constructor arguments.
+class ConnectorBuilderArgsSpec(PlugboardBaseModel, extra="allow"):
+    """Specification of the [`Connector`][plugboard.connector.Connector] constructor arguments.
 
     Attributes:
-        parameters: Parameters for the `Channel`.
+        parameters: Parameters for the `Connector`.
     """
 
     parameters: dict = {}
 
 
-class ChannelBuilderSpec(PlugboardBaseModel):
-    """Specification of a `ChannelBuilder`.
+class ConnectorBuilderSpec(PlugboardBaseModel):
+    """Specification of a `ConnectorBuilder`.
 
     Attributes:
-        type: The type of the `ChannelBuilder`.
-        args: Optional; The arguments for the `ChannelBuilder`.
+        type: The type of the `ConnectorBuilder`.
+        args: Optional; The arguments for the `ConnectorBuilder`.
     """
 
-    type: str = DEFAULT_CHANNEL_CLS_PATH
-    args: ChannelBuilderArgsSpec = ChannelBuilderArgsSpec()
+    type: str = DEFAULT_CONNECTOR_CLS_PATH
+    args: ConnectorBuilderArgsSpec = ConnectorBuilderArgsSpec()

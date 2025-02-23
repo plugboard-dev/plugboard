@@ -4,7 +4,8 @@ from asyncio import Queue
 import typing as _t
 
 from plugboard.connector.channel import CHAN_MAXSIZE, Channel
-from plugboard.connector.channel_builder import ChannelBuilder
+from plugboard.connector.connector import Connector
+from plugboard.schemas.connector import ConnectorMode
 
 
 class AsyncioChannel(Channel):
@@ -30,7 +31,19 @@ class AsyncioChannel(Channel):
         return item
 
 
-class AsyncioChannelBuilder(ChannelBuilder):
-    """`AsyncioChannelBuilder` builds `AsyncioChannel` objects."""
+class AsyncioConnector(Connector):
+    """`AsyncioConnector` connects components using `AsyncioChannel`."""
 
-    channel_cls = AsyncioChannel
+    def __init__(self, *args: _t.Any, **kwargs: _t.Any) -> None:
+        super().__init__(*args, **kwargs)
+        if self.spec.mode != ConnectorMode.PIPELINE:
+            raise ValueError("AsyncioConnector only supports `PIPELINE` type connections.")
+        self._channel = AsyncioChannel()
+
+    async def connect_send(self) -> AsyncioChannel:
+        """Returns an `AsyncioChannel` for sending messages."""
+        return self._channel
+
+    async def connect_recv(self) -> AsyncioChannel:
+        """Returns an `AsyncioChannel` for receiving messages."""
+        return self._channel
