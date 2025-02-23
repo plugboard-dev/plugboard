@@ -64,12 +64,12 @@ class WebsocketReader(Component):
         """Initializes the websocket connection."""
         self._conn_iter = aiter(connect(self._uri, **self._connect_args))
         self._conn = await self._get_conn()
-        # self.logger.info(f"Connected to {self._uri}")
+        self._logger.info(f"Connected to {self._uri}")
 
     async def _get_conn(self) -> Connection:
         conn = await self._ctx.enter_async_context(await anext(self._conn_iter))
         if self._initial_message is not None:
-            # self.logger.info(f"Sending initial message", message=self._initial_message)
+            self._logger.info(f"Sending initial message", message=self._initial_message)
             await conn.send(self._initial_message)
         return conn
 
@@ -81,7 +81,7 @@ class WebsocketReader(Component):
             message = await self._conn.recv()
             self.message = json.decode(message) if self._parse_json else message
         except ConnectionClosed:
-            # self.logger.warning(f"Connection to {self._uri} closed, will reconnect...")
+            self._logger.warning(f"Connection to {self._uri} closed, will reconnect...")
             self._conn = None
 
     async def destroy(self) -> None:
@@ -127,7 +127,7 @@ class WebsocketWriter(Component):
         """Initializes the websocket connection."""
         self._conn_iter = aiter(connect(self._uri, **self._connect_args))
         self._conn = await self._get_conn()
-        # self.logger.info(f"Connected to {self._uri}")
+        self._logger.info(f"Connected to {self._uri}")
 
     async def _get_conn(self) -> Connection:
         return await self._ctx.enter_async_context(await anext(self._conn_iter))
@@ -140,7 +140,7 @@ class WebsocketWriter(Component):
                 await self._conn.send(message)
                 break
             except ConnectionClosed:
-                # self.logger.warning(f"Connection to {self._uri} closed, will reconnect...")
+                self._logger.warning(f"Connection to {self._uri} closed, will reconnect...")
                 await self._ctx.aclose()
                 self._conn = await self._get_conn()
 
