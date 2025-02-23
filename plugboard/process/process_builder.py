@@ -4,8 +4,8 @@ from pydoc import locate
 import typing as _t
 
 from plugboard.component.component import Component, ComponentRegistry
-from plugboard.connector.channel_builder import ChannelBuilder
 from plugboard.connector.connector import Connector
+from plugboard.connector.connector_builder import ConnectorBuilder
 from plugboard.events.event_connector_builder import EventConnectorBuilder
 from plugboard.process.process import Process
 from plugboard.schemas import ProcessSpec
@@ -58,16 +58,15 @@ class ProcessBuilder:
 
     @classmethod
     def _build_connectors(cls, spec: ProcessSpec, components: list[Component]) -> list[Connector]:
-        channel_builder_class: _t.Optional[_t.Any] = locate(spec.channel_builder.type)
-        if not channel_builder_class or not issubclass(channel_builder_class, ChannelBuilder):
-            raise ValueError(f"ChannelBuilder class {spec.channel_builder.type} not found")
-        channel_builder = channel_builder_class()
-        event_connector_builder = EventConnectorBuilder(channel_builder=channel_builder)
+        connector_class: _t.Optional[_t.Any] = locate(spec.connector_builder.type)
+        if not connector_class or not issubclass(connector_class, Connector):
+            raise ValueError(f"Connector class {spec.connector_builder.type} not found")
+        connector_builder = ConnectorBuilder(
+            connector_cls=connector_class, **dict(spec.connector_builder.args)
+        )
+        event_connector_builder = EventConnectorBuilder(connector_builder=connector_builder)
         event_connectors = list(event_connector_builder.build(components).values())
-        spec_connectors = [
-            Connector(cs, channel_builder.build(**dict(spec.channel_builder.args)))
-            for cs in spec.args.connectors
-        ]
+        spec_connectors = [connector_builder.build(cs) for cs in spec.args.connectors]
         return sorted(
             {conn.id: conn for conn in event_connectors + spec_connectors}.values(),
             key=lambda c: c.id,

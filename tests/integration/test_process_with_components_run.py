@@ -9,7 +9,7 @@ from aiofile import async_open
 import pytest
 
 from plugboard.component import IOController as IO
-from plugboard.connector import AsyncioChannel, Channel, Connector, RayChannel
+from plugboard.connector import AsyncioConnector, Connector, RayConnector
 from plugboard.process import LocalProcess, Process, RayProcess
 from plugboard.schemas import ConnectorSpec
 from tests.conftest import ComponentTestHelper
@@ -69,10 +69,10 @@ def tempfile_path() -> _t.Generator[Path, None, None]:
 
 @pytest.mark.anyio
 @pytest.mark.parametrize(
-    "process_cls, channel_cls",
+    "process_cls, connector_cls",
     [
-        (LocalProcess, AsyncioChannel),
-        (RayProcess, RayChannel),
+        (LocalProcess, AsyncioConnector),
+        (RayProcess, RayConnector),
     ],
 )
 @pytest.mark.parametrize(
@@ -84,7 +84,7 @@ def tempfile_path() -> _t.Generator[Path, None, None]:
 )
 async def test_process_with_components_run(
     process_cls: type[Process],
-    channel_cls: type[Channel],
+    connector_cls: type[Connector],
     iters: int,
     factor: float,
     tempfile_path: Path,
@@ -94,12 +94,8 @@ async def test_process_with_components_run(
     comp_c = C(path=str(tempfile_path), name="comp_c")
     components = [comp_a, comp_b, comp_c]
 
-    conn_ab = Connector(
-        spec=ConnectorSpec(source="comp_a.out_1", target="comp_b.in_1"), channel=channel_cls()
-    )
-    conn_bc = Connector(
-        spec=ConnectorSpec(source="comp_b.out_1", target="comp_c.in_1"), channel=channel_cls()
-    )
+    conn_ab = connector_cls(spec=ConnectorSpec(source="comp_a.out_1", target="comp_b.in_1"))
+    conn_bc = connector_cls(spec=ConnectorSpec(source="comp_b.out_1", target="comp_c.in_1"))
     connectors = [conn_ab, conn_bc]
 
     process = process_cls(components, connectors)

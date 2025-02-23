@@ -6,7 +6,7 @@ import typing as _t
 import pytest
 
 from plugboard.component import Component, IOController as IO
-from plugboard.connector import AsyncioChannel, Connector
+from plugboard.connector import AsyncioConnector
 from plugboard.schemas import ConnectorSpec
 
 
@@ -25,24 +25,20 @@ async def test_component_initial_values(initial_values: dict[str, _t.Iterable]) 
     """Tests the initial values of a `Component`."""
     component = A(name="init_values", initial_values=initial_values)
     connectors = {
-        "a": Connector(
-            spec=ConnectorSpec(source="none.none", target=f"init_values.a"),
-            channel=AsyncioChannel(),
-        ),
-        "b": Connector(
-            spec=ConnectorSpec(source="none.none", target=f"init_values.b"),
-            channel=AsyncioChannel(),
-        ),
+        "a": AsyncioConnector(spec=ConnectorSpec(source="none.none", target=f"init_values.a")),
+        "b": AsyncioConnector(spec=ConnectorSpec(source="none.none", target=f"init_values.b")),
     }
-    component.io.connect(list(connectors.values()))
+    await component.io.connect(list(connectors.values()))
     await component.init()
 
     n_init = {field: len(list(initial_values.get(field, []))) for field in {"a", "b"}}
 
+    send_channels = {field: await connectors[field].connect_send() for field in ("a", "b")}
+
     for input_idx in range(5):
         # Send input_idx to all inputs
         for field in {"a", "b"}:
-            await connectors[field].channel.send(input_idx)
+            await send_channels[field].send(input_idx)
         await component.step()
 
         # Initial values must be set where specified

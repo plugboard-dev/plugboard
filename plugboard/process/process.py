@@ -11,7 +11,7 @@ import structlog
 from plugboard.component import Component
 from plugboard.connector import Connector
 from plugboard.state import DictStateBackend, StateBackend
-from plugboard.utils import ExportMixin, gen_rand_str
+from plugboard.utils import DI, ExportMixin, gen_rand_str
 
 
 logger = structlog.get_logger()
@@ -74,7 +74,7 @@ class Process(ExportMixin, ABC):
         self._state_is_connected = True
 
     @abstractmethod
-    def _connect_components(self) -> None:
+    async def _connect_components(self) -> None:
         """Connect components."""
         pass
 
@@ -98,10 +98,10 @@ class Process(ExportMixin, ABC):
         """Runs the process to completion."""
         pass
 
-    @abstractmethod
     async def destroy(self) -> None:
         """Performs tear-down actions for the `Process` and its `Component`s."""
-        pass
+        await self._state.destroy()
+        await DI.tear_down()
 
     async def __aenter__(self) -> Process:
         """Enters the context manager."""
