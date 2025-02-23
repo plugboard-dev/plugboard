@@ -12,6 +12,11 @@ import pytest
 from plugboard.library.llm import LLMChat
 
 
+class ExpectedResponse(BaseModel):  # noqa: D101
+    x: int
+    y: str
+
+
 @pytest.fixture
 def openai_mock() -> _t.Iterator[openai_responses.OpenAIMock]:
     """Mock OpenAI API."""
@@ -81,19 +86,18 @@ async def test_llm_chat(
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("expand_response", [False, True])
+@pytest.mark.parametrize(
+    "response_model", [ExpectedResponse, "tests.unit.test_llm.ExpectedResponse"]
+)
 async def test_openai_structured_chat(
     openai_mock: openai_responses.OpenAIMock,
     expand_response: bool,
+    response_model: _t.Type[BaseModel] | str,
 ) -> None:
     """Test the `LLMChat` component with structured output."""
-
-    class ExpectedResponse(BaseModel):
-        x: int
-        y: str
-
     llm = LLMChat(
         name="llm",
-        response_model=ExpectedResponse,
+        response_model=response_model,
         system_prompt="Help the user solve for x and y",
         expand_response=expand_response,
         llm_kwargs={"model": "gpt-4o-mini"},
