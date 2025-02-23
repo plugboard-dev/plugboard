@@ -35,8 +35,8 @@ class StateBackend(ABC, ExportMixin):
             kwargs: Additional keyword arguments.
         """
         self._local_state = {"job_id": job_id, "metadata": metadata, **kwargs}
-        self.logger = logger.bind(cls=self.__class__.__name__, job_id=job_id)
-        self.logger.info("StateBackend created")
+        self._logger = logger.bind(cls=self.__class__.__name__, job_id=job_id)
+        self._logger.info("StateBackend created")
 
     async def init(self) -> None:
         """Initialises the `StateBackend`."""

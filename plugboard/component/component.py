@@ -50,8 +50,8 @@ class Component(ABC, ExportMixin):
         )
         self.init = self._handle_init_wrapper()  # type: ignore
         self.step = self._handle_step_wrapper()  # type: ignore
-        self.logger = logger.bind(cls=self.__class__.__name__, name=self.name)
-        self.logger.info("Component created")
+        self._logger = logger.bind(cls=self.__class__.__name__, name=self.name)
+        self._logger.info("Component created")
 
     def __init_subclass__(cls, *args: _t.Any, **kwargs: _t.Any) -> None:
         super().__init_subclass__(*args, **kwargs)
@@ -163,7 +163,7 @@ class Component(ABC, ExportMixin):
 
     async def destroy(self) -> None:
         """Performs tear-down actions for `Component`."""
-        self.logger.info("Component destroyed")
+        self._logger.info("Component destroyed")
 
     def dict(self) -> dict[str, _t.Any]:  # noqa: D102
         return {

@@ -32,8 +32,8 @@ class Channel(ABC):
         self._is_recv_closed = False
         self.send = self._handle_send_wrapper()  # type: ignore
         self.recv = self._handle_recv_wrapper()  # type: ignore
-        self.logger = logger.bind(cls=self.__class__.__name__)
-        self.logger.info("Channel created")
+        self._logger = logger.bind(cls=self.__class__.__name__)
+        self._logger.info("Channel created")
 
     @property
     def maxsize(self) -> int:
@@ -69,7 +69,7 @@ class Channel(ABC):
             return
         await self.send(CHAN_CLOSE_MSG)
         self._is_send_closed = True
-        self.logger.info("Channel closed")
+        self._logger.info("Channel closed")
 
     def _handle_send_wrapper(self) -> _t.Callable:
         self._send = self.send
