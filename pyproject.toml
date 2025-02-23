@@ -15,7 +15,6 @@ dependencies = [
     "msgspec[yaml]~=0.18",
     "pandas>=1.0,<3",
     "pyarrow~=17.0",
-    "pydantic-settings>=2.7.1",
     "pydantic~=2.8",
     "pydantic-settings>=2.7.1",
     "rich~=13.9",
