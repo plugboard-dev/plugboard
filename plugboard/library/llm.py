@@ -39,7 +39,7 @@ class LLMChat(Component):
         llm: str = "llama_index.llms.openai.OpenAI",
         system_prompt: _t.Optional[str] = None,
         context_window: int = 0,
-        response_model: _t.Optional[_t.Type[BaseModel]] = None,
+        response_model: _t.Optional[_t.Type[BaseModel] | str] = None,
         expand_response: bool = False,
         llm_kwargs: _t.Optional[dict[str, _t.Any]] = None,
     ) -> None:
@@ -50,7 +50,8 @@ class LLMChat(Component):
             llm: The LLM class to use from llama-index.
             system_prompt: Optional; System prompt to prepend to the context window.
             context_window: The number of previous messages to include in the context window.
-            response_model: Optional; A Pydantic model to structure the response.
+            response_model: Optional; A Pydantic model to structure the response. Can be specified
+                as a string identifying the namespaced class to use.
             expand_response: Setting this to `True` when using a structured response model will
                 cause the individual attributes of the response model to be added as output fields.
             llm_kwargs: Additional keyword arguments for the LLM.
@@ -61,6 +62,11 @@ class LLMChat(Component):
             raise ValueError(f"LLM class {llm} not found in llama-index.")
         llm_kwargs = llm_kwargs or {}
         self._llm: LLM = _llm_cls(**llm_kwargs)
+        if response_model is not None and isinstance(response_model, str):
+            model = locate(response_model)
+            if model is None or not isinstance(model, type) or not issubclass(model, BaseModel):
+                raise ValueError(f"Response model {response_model} not found.")
+            response_model = model
         self._structured = response_model is not None
         self._expand_response = expand_response and self._structured
         if self._expand_response and response_model is not None:
