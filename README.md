@@ -17,6 +17,7 @@
 
 
 Plugboard is an **event-driven modelling and orchestration framework** in Python for simulating and driving complex processes with many interconnected stateful components.
+Plugboard is an **event-driven modelling and orchestration framework** in Python for simulating and driving complex processes with many interconnected stateful components.
 
 You can use it to **define models** in Python and **connect them together easily** so that data automatically moves between them. After running your model on a laptop, you can then scale out on multiple processors, or go to a compute cluster in the cloud.
 
@@ -100,11 +101,14 @@ Now we take these components, connect them up as a `Process`, and fire off the m
 ```python
 from plugboard.connector import AsyncioConnector
 from plugboard.process import LocalProcess
+from plugboard.connector import AsyncioConnector
+from plugboard.process import LocalProcess
 from plugboard.schemas import ConnectorSpec
 
 process = LocalProcess(
     components=[A(name="a", iters=5), B(name="b", path="b.txt")],
     connectors=[
+        AsyncioConnector(
         AsyncioConnector(
             spec=ConnectorSpec(source="a.out_1", target="b.in_1"),
         )

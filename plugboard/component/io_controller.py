@@ -43,8 +43,6 @@ class IOController:
         }
         self._input_channels: dict[tuple[str, str], Channel] = {}
         self._output_channels: dict[tuple[str, str], Channel] = {}
-        self._input_channels: dict[tuple[str, str], Channel] = {}
-        self._output_channels: dict[tuple[str, str], Channel] = {}
         self._input_event_channels: dict[str, Channel] = {}
         self._output_event_channels: dict[str, Channel] = {}
         self._input_event_types = {Event.safe_type(evt.type) for evt in self.input_events}
