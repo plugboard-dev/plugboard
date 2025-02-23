@@ -16,8 +16,11 @@ dependencies = [
     "pandas>=1.0,<3",
     "pyarrow~=17.0",
     "pydantic~=2.8",
+    "pydantic-settings>=2.7.1",
     "rich~=13.9",
     "sqlalchemy[asyncio]~=2.0",
+    "structlog>=25.1.0",
+    "that-depends>2.1.0",
     "typer~=0.12",
 ]
 
@@ -25,7 +28,7 @@ dependencies = [
 aws = ["s3fs>=2024.9.0"]
 azure = ["adlfs>=2024.7.0"]
 gcp = ["gcsfs>=2024.9.0.post1"]
-ray = ["pyzmq~=26.2", "ray>=2.40.0"]
+ray = ["pyzmq~=26.2", "ray>=2.42.1"]
 llm = [
     "llama-index>=0.12.11",
 ]
@@ -76,7 +79,7 @@ plugboard = "plugboard.cli:app"
 [tool.pytest.ini_options]  # Orchestrates code testing
 # Note: pytest toml key subject to change:
 # https://docs.pytest.org/en/stable/reference/customize.html#pyproject-toml
-env = []
+# env = []
 asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "function"
 

@@ -6,7 +6,7 @@ import asyncio
 import typing as _t
 
 from plugboard.component import Component, IOController as IO
-from plugboard.connector import AsyncioChannel, Connector
+from plugboard.connector import AsyncioConnector
 from plugboard.process import LocalProcess
 from plugboard.schemas import ConnectorSpec
 
@@ -50,9 +50,8 @@ async def main() -> None:
     process = LocalProcess(
         components=[A(name="a", iters=5), B(name="b", path="b.txt")],
         connectors=[
-            Connector(
+            AsyncioConnector(
                 spec=ConnectorSpec(source="a.out_1", target="b.in_1"),
-                channel=AsyncioChannel(),
             )
         ],
     )

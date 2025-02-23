@@ -7,6 +7,7 @@ import ray
 
 from plugboard.component import Component, IOController as IO
 from plugboard.component.io_controller import IOStreamClosedError
+from plugboard.utils.di import DI
 
 
 @pytest.fixture(scope="session")
@@ -21,6 +22,13 @@ def ray_context() -> _t.Iterator[None]:
     ray.init(num_cpus=2, num_gpus=0, include_dashboard=False)
     yield
     ray.shutdown()
+
+
+@pytest.fixture(scope="function", autouse=True)
+async def DI_teardown() -> _t.AsyncIterable[None]:
+    """Cleans up any resources created in DI container after each test."""
+    yield
+    await DI.tear_down()
 
 
 class ComponentTestHelper(Component):

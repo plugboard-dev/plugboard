@@ -7,7 +7,7 @@ import pytest
 from ray.util.multiprocessing import Pool
 
 from plugboard.component import Component, IOController
-from plugboard.connector import Connector, ZMQChannel
+from plugboard.connector import Connector, ZMQConnector
 from plugboard.process import LocalProcess
 from plugboard.schemas.connector import ConnectorSpec
 from plugboard.state import DictStateBackend, StateBackend
@@ -38,11 +38,11 @@ def components() -> list[Component]:
     ]
 
 
-class ConnectorTestHelper(Connector):
+class ConnectorTestHelper(ZMQConnector):
     """`ConnectorTestHelper` tracks and outputs more data for storing in the state."""
 
-    def __init__(self, spec: ConnectorSpec, channel: ZMQChannel) -> None:
-        super().__init__(spec=spec, channel=channel)
+    def __init__(self, *args: _t.Any, **kwargs: _t.Any) -> None:
+        super().__init__(*args, **kwargs)
         self.times_upserted: int = 0
 
     def dict(self) -> dict:  # noqa: D102
@@ -55,22 +55,10 @@ class ConnectorTestHelper(Connector):
 def connectors() -> list[Connector]:
     """Returns a list of connectors."""
     return [
-        ConnectorTestHelper(
-            spec=ConnectorSpec(source="A1.out_1", target="B1.in_1"),
-            channel=ZMQChannel(),
-        ),
-        ConnectorTestHelper(
-            spec=ConnectorSpec(source="A1.out_2", target="B1.in_2"),
-            channel=ZMQChannel(),
-        ),
-        ConnectorTestHelper(
-            spec=ConnectorSpec(source="A2.out_1", target="B2.in_1"),
-            channel=ZMQChannel(),
-        ),
-        ConnectorTestHelper(
-            spec=ConnectorSpec(source="A2.out_2", target="B2.in_2"),
-            channel=ZMQChannel(),
-        ),
+        ConnectorTestHelper(spec=ConnectorSpec(source="A1.out_1", target="B1.in_1")),
+        ConnectorTestHelper(spec=ConnectorSpec(source="A1.out_2", target="B1.in_2")),
+        ConnectorTestHelper(spec=ConnectorSpec(source="A2.out_1", target="B2.in_1")),
+        ConnectorTestHelper(spec=ConnectorSpec(source="A2.out_2", target="B2.in_2")),
     ]
 
 

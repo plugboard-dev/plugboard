@@ -7,7 +7,7 @@ from datetime import datetime, timezone
 from types import TracebackType
 import typing as _t
 
-from plugboard.utils import EntityIdGen, ExportMixin
+from plugboard.utils import DI, EntityIdGen, ExportMixin
 
 
 if _t.TYPE_CHECKING:
@@ -30,6 +30,8 @@ class StateBackend(ABC, ExportMixin):
             kwargs: Additional keyword arguments.
         """
         self._local_state = {"job_id": job_id, "metadata": metadata, **kwargs}
+        self._logger = DI.logger.sync_resolve().bind(cls=self.__class__.__name__, job_id=job_id)
+        self._logger.info("StateBackend created")
 
     async def init(self) -> None:
         """Initialises the `StateBackend`."""
