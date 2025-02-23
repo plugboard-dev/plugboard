@@ -57,18 +57,10 @@ async def test_branching_process_topology() -> None:
     comp_c = C(name="comp_c")
     components = [comp_a, comp_b1, comp_b2, comp_c]
 
-    conn_ab1 = Connector(
-        spec=ConnectorSpec(source="comp_a.out_1", target="comp_b1.in_1"), channel=AsyncioChannel()
-    )
-    conn_ab2 = Connector(
-        spec=ConnectorSpec(source="comp_a.out_1", target="comp_b2.in_1"), channel=AsyncioChannel()
-    )
-    conn_b1c = Connector(
-        spec=ConnectorSpec(source="comp_b1.out_1", target="comp_c.in_1"), channel=AsyncioChannel()
-    )
-    conn_b2c = Connector(
-        spec=ConnectorSpec(source="comp_b2.out_1", target="comp_c.in_2"), channel=AsyncioChannel()
-    )
+    conn_ab1 = AsyncioConnector(spec=ConnectorSpec(source="comp_a.out_1", target="comp_b1.in_1"))
+    conn_ab2 = AsyncioConnector(spec=ConnectorSpec(source="comp_a.out_1", target="comp_b2.in_1"))
+    conn_b1c = AsyncioConnector(spec=ConnectorSpec(source="comp_b1.out_1", target="comp_c.in_1"))
+    conn_b2c = AsyncioConnector(spec=ConnectorSpec(source="comp_b2.out_1", target="comp_c.in_2"))
     connectors = [conn_ab1, conn_ab2, conn_b1c, conn_b2c]
 
     process = LocalProcess(components, connectors)
