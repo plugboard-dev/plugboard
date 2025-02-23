@@ -40,6 +40,10 @@ class Process(ExportMixin, ABC):
         self.parameters: dict = parameters or {}
         self._state: StateBackend = state or self._default_state_cls()
         self._state_is_connected: bool = False
+        self._logger = DI.logger.sync_resolve().bind(
+            cls=self.__class__.__name__, name=self.name, job_id=self.state.job_id
+        )
+        self._logger.info("Process created")
 
     @property
     def id(self) -> str:
@@ -92,6 +96,7 @@ class Process(ExportMixin, ABC):
         """Performs tear-down actions for the `Process` and its `Component`s."""
         await self._state.destroy()
         await DI.tear_down()
+        self._logger.info("Process destroyed")
 
     async def __aenter__(self) -> Process:
         """Enters the context manager."""
