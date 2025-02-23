@@ -1,8 +1,8 @@
 plugboard:
   process:
     type: "plugboard.process.RayProcess"  # (1)!
-    channel_builder:
-      type: "plugboard.connector.RayChannelBuilder"  # (2)!
+    connector_builder:
+      type: "plugboard.connector.RayConnector"  # (2)!
     args:
       components:
       - type: hello_ray.Iterator

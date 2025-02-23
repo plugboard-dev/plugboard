@@ -10,13 +10,15 @@ import time
 import ray
 
 from plugboard.component import Component, IOController as IO
-from plugboard.connector import AsyncioChannel, Connector, RayChannel
+from plugboard.connector import RayConnector, AsyncioConnector
 from plugboard.library import FileWriter
 from plugboard.process import LocalProcess, RayProcess
 from plugboard.schemas import ConnectorSpec
 
 
 class Iterator(Component):
+    """Creates a sequence of numbers."""
+
     io = IO(outputs=["x"])
 
     def __init__(self, iters: int, *args: _t.Any, **kwargs: _t.Any) -> None:
@@ -68,26 +70,15 @@ async def local_main() -> None:
             FileWriter(name="save-results", path="local.csv", field_names=["timestamp"]),
         ],
         connectors=[
-            Connector(
-                spec=ConnectorSpec(source="input.x", target="slow-sleep.x"),
-                channel=AsyncioChannel(),
+            AsyncioConnector(spec=ConnectorSpec(source="input.x", target="slow-sleep.x")),
+            AsyncioConnector(spec=ConnectorSpec(source="input.x", target="very-slow-sleep.x")),
+            AsyncioConnector(spec=ConnectorSpec(source="slow-sleep.y", target="timestamper.x")),
+            AsyncioConnector(
+                spec=ConnectorSpec(source="very-slow-sleep.y", target="timestamper.y")
             ),
-            Connector(
-                spec=ConnectorSpec(source="input.x", target="very-slow-sleep.x"),
-                channel=AsyncioChannel(),
+            AsyncioConnector(
+                spec=ConnectorSpec(source="timestamper.timestamp", target="save-results.timestamp")
             ),
-            Connector(
-                spec=ConnectorSpec(source="slow-sleep.y", target="timestamper.x"),
-                channel=AsyncioChannel(),
-            ),
-            Connector(
-                spec=ConnectorSpec(source="very-slow-sleep.y", target="timestamper.y"),
-                channel=AsyncioChannel(),
-            ),
-            Connector(
-                spec=ConnectorSpec(source="timestamper.timestamp", target="save-results.timestamp"),
-                channel=AsyncioChannel(),
-            )
         ],
     )
     async with process:
@@ -106,26 +97,13 @@ async def ray_main() -> None:
             FileWriter(name="save-results", path="ray.csv", field_names=["timestamp"]),
         ],
         connectors=[
-            Connector(
-                spec=ConnectorSpec(source="input.x", target="slow-sleep.x"),
-                channel=RayChannel(),
+            RayConnector(spec=ConnectorSpec(source="input.x", target="slow-sleep.x")),
+            RayConnector(spec=ConnectorSpec(source="input.x", target="very-slow-sleep.x")),
+            RayConnector(spec=ConnectorSpec(source="slow-sleep.y", target="timestamper.x")),
+            RayConnector(spec=ConnectorSpec(source="very-slow-sleep.y", target="timestamper.y")),
+            RayConnector(
+                spec=ConnectorSpec(source="timestamper.timestamp", target="save-results.timestamp")
             ),
-            Connector(
-                spec=ConnectorSpec(source="input.x", target="very-slow-sleep.x"),
-                channel=RayChannel(),
-            ),
-            Connector(
-                spec=ConnectorSpec(source="slow-sleep.y", target="timestamper.x"),
-                channel=RayChannel(),
-            ),
-            Connector(
-                spec=ConnectorSpec(source="very-slow-sleep.y", target="timestamper.y"),
-                channel=RayChannel(),
-            ),
-            Connector(
-                spec=ConnectorSpec(source="timestamper.timestamp", target="save-results.timestamp"),
-                channel=RayChannel(),
-            )
         ],
     )
     async with process:
