@@ -7,18 +7,13 @@ from datetime import datetime, timezone
 from types import TracebackType
 import typing as _t
 
-import structlog
-
-from plugboard.utils import EntityIdGen, ExportMixin
+from plugboard.utils import DI, EntityIdGen, ExportMixin
 
 
 if _t.TYPE_CHECKING:
     from plugboard.component import Component
     from plugboard.connector import Connector
     from plugboard.process import Process
-
-
-logger = structlog.get_logger()
 
 
 class StateBackend(ABC, ExportMixin):
@@ -35,7 +30,7 @@ class StateBackend(ABC, ExportMixin):
             kwargs: Additional keyword arguments.
         """
         self._local_state = {"job_id": job_id, "metadata": metadata, **kwargs}
-        self._logger = logger.bind(cls=self.__class__.__name__, job_id=job_id)
+        self._logger = DI.logger.sync_resolve().bind(cls=self.__class__.__name__, job_id=job_id)
         self._logger.info("StateBackend created")
 
     async def init(self) -> None:

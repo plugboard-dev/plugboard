@@ -4,16 +4,12 @@ from abc import ABC, abstractmethod
 from functools import wraps
 import typing as _t
 
-import structlog
-
 from plugboard.exceptions import ChannelClosedError
+from plugboard.utils import DI
 
 
 CHAN_MAXSIZE = 0  # Max number of items in the channel. Value <= 0 implies unlimited.
 CHAN_CLOSE_MSG = "__PLUGBOARD_CHAN_CLOSE_MSG__"
-
-
-logger = structlog.get_logger()
 
 
 class Channel(ABC):
@@ -32,7 +28,7 @@ class Channel(ABC):
         self._is_recv_closed = False
         self.send = self._handle_send_wrapper()  # type: ignore
         self.recv = self._handle_recv_wrapper()  # type: ignore
-        self._logger = logger.bind(cls=self.__class__.__name__)
+        self._logger = DI.logger.sync_resolve().bind(cls=self.__class__.__name__)
         self._logger.info("Channel created")
 
     @property

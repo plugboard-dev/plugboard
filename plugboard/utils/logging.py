@@ -5,9 +5,7 @@ import typing as _t
 
 from msgspec import json
 import structlog
-from that_depends import Provide, inject
 
-from plugboard.utils.di import DI
 from plugboard.utils.settings import Settings
 
 
@@ -15,8 +13,7 @@ def _serialiser(obj: _t.Any, default: _t.Callable | None) -> bytes:
     return json.encode(obj)
 
 
-@inject
-def configure_logging(settings: Settings = Provide[DI.settings]) -> None:
+def configure_logging(settings: Settings) -> None:
     """Configures logging."""
     log_level = getattr(logging, settings.log_level)
     common_processors = [

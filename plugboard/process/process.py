@@ -6,15 +6,10 @@ from abc import ABC, abstractmethod
 from types import TracebackType
 import typing as _t
 
-import structlog
-
 from plugboard.component import Component
 from plugboard.connector import Connector
 from plugboard.state import DictStateBackend, StateBackend
 from plugboard.utils import DI, ExportMixin, gen_rand_str
-
-
-logger = structlog.get_logger()
 
 
 class Process(ExportMixin, ABC):
@@ -45,7 +40,7 @@ class Process(ExportMixin, ABC):
         self.parameters: dict = parameters or {}
         self._state: StateBackend = state or self._default_state_cls()
         self._state_is_connected: bool = False
-        self._logger = logger.bind(
+        self._logger = DI.logger.sync_resolve().bind(
             cls=self.__class__.__name__, name=self.name, job_id=self.state.job_id
         )
         self._logger.info("Process created")

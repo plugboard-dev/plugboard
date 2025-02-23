@@ -5,8 +5,6 @@ import asyncio
 from functools import wraps
 import typing as _t
 
-import structlog
-
 from plugboard.component.io_controller import (
     IOController,
     IODirection,
@@ -15,10 +13,7 @@ from plugboard.component.io_controller import (
 from plugboard.events import Event, EventHandlers
 from plugboard.exceptions import UnrecognisedEventError
 from plugboard.state import StateBackend
-from plugboard.utils import ClassRegistry, ExportMixin
-
-
-logger = structlog.get_logger()
+from plugboard.utils import DI, ClassRegistry, ExportMixin
 
 
 class Component(ABC, ExportMixin):
@@ -50,7 +45,7 @@ class Component(ABC, ExportMixin):
         )
         self.init = self._handle_init_wrapper()  # type: ignore
         self.step = self._handle_step_wrapper()  # type: ignore
-        self._logger = logger.bind(cls=self.__class__.__name__, name=self.name)
+        self._logger = DI.logger.sync_resolve().bind(cls=self.__class__.__name__, name=self.name)
         self._logger.info("Component created")
 
     def __init_subclass__(cls, *args: _t.Any, **kwargs: _t.Any) -> None:
