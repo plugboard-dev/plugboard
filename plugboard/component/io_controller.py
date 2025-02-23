@@ -228,18 +228,12 @@ class IOController:
         if connector.spec.source.connects_to([self.namespace]):
             channel = await connector.connect_send()
             self._add_channel_for_field(
-                connector.spec.source.descriptor,
-                connector.spec.id,
-                IODirection.OUTPUT,
-                connector.channel,
+                connector.spec.source.descriptor, connector.spec.id, IODirection.OUTPUT, channel
             )
         if connector.spec.target.connects_to([self.namespace]):
             channel = await connector.connect_recv()
             self._add_channel_for_field(
-                connector.spec.target.descriptor,
-                connector.spec.id,
-                IODirection.INPUT,
-                connector.channel,
+                connector.spec.target.descriptor, connector.spec.id, IODirection.INPUT, channel
             )
         if connector.spec.source.connects_to(self._output_event_types):
             channel = await connector.connect_send()
