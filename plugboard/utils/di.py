@@ -41,4 +41,4 @@ class DI(BaseContainer):
     settings: Singleton[Settings] = Singleton(Settings)
     mp_ctx: Resource[None] = Resource(_mp_set_start_method, settings.flags.multiprocessing_fork)
     zmq_proxy: Resource[ZMQProxy] = Resource(_zmq_proxy, mp_ctx)
-    logger: Singleton[structlog.BoundLogger] = Singleton(_logger, settings)
+    logger: Singleton[structlog.BoundLogger] = Singleton(_logger, settings)  # type: ignore[arg-type]
