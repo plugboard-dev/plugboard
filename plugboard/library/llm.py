@@ -64,7 +64,9 @@ class LLMChat(Component):
         self._structured = response_model is not None
         self._expand_response = expand_response and self._structured
         if self._expand_response and response_model is not None:
-            self.io = IO(inputs=["prompt"], outputs=list(response_model.model_fields.keys()))
+            self.io = IO(
+                inputs=["prompt"], outputs=list(response_model.model_fields.keys()), namespace=name
+            )
         if self._structured and response_model is not None:
             self._llm = self._llm.as_structured_llm(output_cls=response_model)
         # Memory 2x context window size for both prompt and response
@@ -76,7 +78,7 @@ class LLMChat(Component):
     async def step(self) -> None:  # noqa: D102
         if not self.prompt:
             return
-        prompt_message = ChatMessage.from_str(role="user", content=self.prompt)
+        prompt_message = ChatMessage.from_str(role="user", content=str(self.prompt))
         full_prompt = [*self._system_prompt, *self._memory, prompt_message]
         response = await self._llm.achat(full_prompt)
         self._memory.extend([prompt_message, response.message])
