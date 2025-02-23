@@ -23,6 +23,7 @@ class _FeatureFlags(BaseSettings):
 
     Attributes:
         zmq_pubsub_proxy: If set to true, runs a ZMQ proxy in a separate process for pubsub.
+        multiprocessing_fork: If set to true, uses fork mode for multiprocessing.
     """
 
     model_config = SettingsConfigDict(env_prefix=f"{_ENV_PREFIX}FLAGS_")
