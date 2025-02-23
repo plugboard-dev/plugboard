@@ -4,7 +4,7 @@
 # --8<-- [start:main]
 import asyncio
 
-from plugboard.connector import AsyncioChannel, Connector
+from plugboard.connector import AsyncioConnector
 from plugboard.process import LocalProcess
 from plugboard.schemas import ConnectorSpec
 
@@ -23,29 +23,15 @@ async def main() -> None:
             Save(name="save-output", path="output.txt"),
         ],
         connectors=[  # (2)!
-            Connector(
-                spec=ConnectorSpec(source="random.x", target="save-input.value_to_save"),
-                channel=AsyncioChannel(),
+            AsyncioConnector(
+                spec=ConnectorSpec(source="random.x", target="save-input.value_to_save")
             ),
-            Connector(
-                spec=ConnectorSpec(source="random.x", target="offset.a"),
-                channel=AsyncioChannel(),
-            ),
-            Connector(
-                spec=ConnectorSpec(source="random.x", target="scale.a"),
-                channel=AsyncioChannel(),
-            ),
-            Connector(
-                spec=ConnectorSpec(source="offset.x", target="sum.a"),
-                channel=AsyncioChannel(),
-            ),
-            Connector(
-                spec=ConnectorSpec(source="scale.x", target="sum.b"),
-                channel=AsyncioChannel(),
-            ),
-            Connector(
-                spec=ConnectorSpec(source="sum.x", target="save-output.value_to_save"),
-                channel=AsyncioChannel(),
+            AsyncioConnector(spec=ConnectorSpec(source="random.x", target="offset.a")),
+            AsyncioConnector(spec=ConnectorSpec(source="random.x", target="scale.a")),
+            AsyncioConnector(spec=ConnectorSpec(source="offset.x", target="sum.a")),
+            AsyncioConnector(spec=ConnectorSpec(source="scale.x", target="sum.b")),
+            AsyncioConnector(
+                spec=ConnectorSpec(source="sum.x", target="save-output.value_to_save")
             ),
         ],
     )
