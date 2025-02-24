@@ -2,13 +2,13 @@ plugboard:
   process:
     args:
       components:
-      - type: plugboard.library.FileReader
+      - type: plugboard.library.file_io.FileReader
         args:
           name: "load-text"
           path: "input.csv"
           field_names:
           - text
-      - type: plugboard.library.FileWriter
+      - type: plugboard.library.file_io.FileWriter
         args:
           name: "save-results"
           path: "output.csv"
@@ -16,7 +16,7 @@ plugboard:
           - location
           - temperature
           - wind_speed
-      - type: plugboard.library.LLMChat
+      - type: plugboard.library.llm.LLMChat
         args:
           name: "llm"
           system_prompt: "Identify a geographical location from the input and provide its latitude and longitude"
