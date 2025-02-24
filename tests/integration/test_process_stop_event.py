@@ -6,7 +6,7 @@ import typing as _t
 
 import pytest
 
-from plugboard.component import IOController as IO
+from plugboard.component import Component, IOController as IO
 from plugboard.connector import (
     Connector,
     ConnectorBuilder,
@@ -81,16 +81,16 @@ async def test_process_stop_event(
 
     comp_a = A(iters=max_iters, sleep_time=sleep_time, name="comp_a")
     comp_b1, comp_b2, comp_b3, comp_b4, comp_b5 = [B(name=f"comp_b{i}") for i in range(1, 6)]
-    components = [comp_a, comp_b1, comp_b2, comp_b3, comp_b4, comp_b5]
+    components: list[Component] = [comp_a, comp_b1, comp_b2, comp_b3, comp_b4, comp_b5]
 
     conn_ab1, conn_ab2, conn_ab3, conn_ab4, conn_ab5 = [
         connector_cls(spec=ConnectorSpec(source="comp_a.out_1", target=f"comp_b{i}.in_1"))
         for i in range(1, 6)
     ]
-    field_connectors = [conn_ab1, conn_ab2, conn_ab3, conn_ab4, conn_ab5]
+    field_connectors: list[Connector] = [conn_ab1, conn_ab2, conn_ab3, conn_ab4, conn_ab5]
 
     event_connectors_map = event_connectors.build(components)
-    connectors = list(event_connectors_map.values()) + field_connectors
+    connectors: list[Connector] = list(event_connectors_map.values()) + field_connectors
 
     process = process_cls(components, connectors)
 
