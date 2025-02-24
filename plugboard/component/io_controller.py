@@ -180,7 +180,7 @@ class IOController:
 
     async def _write_event(self, event: Event) -> None:
         try:
-            chan = self._output_event_channels[event.type]
+            chan = self._output_event_channels[event.safe_type()]
         except KeyError as e:
             raise ValueError(f"Unrecognised output event {event.type}.") from e
         try:
@@ -199,7 +199,7 @@ class IOController:
         """Queues an event for output."""
         if self._is_closed:
             raise IOStreamClosedError("Attempted queue_event on a closed io controller.")
-        if event.type not in self._output_event_channels:
+        if event.safe_type() not in self._output_event_channels:
             raise ValueError(f"Unrecognised output event {event.type}.")
         self.events[str(IODirection.OUTPUT)].append(event)
 
