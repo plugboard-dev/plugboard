@@ -51,6 +51,7 @@ def configure_logging(settings: Settings) -> None:
         processors=processors,  # type: ignore[arg-type]
         # Use BytesLoggerFactory when using msgspec serialization to bytes
         logger_factory=structlog.BytesLoggerFactory()
+        # See https://github.com/hynek/structlog/issues/417
         if settings.log_structured and not _is_ipython()
         else None,
     )
