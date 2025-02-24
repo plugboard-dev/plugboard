@@ -17,7 +17,7 @@ class AsyncioChannel(Channel):
         Args:
             maxsize: Optional; Queue maximum item capacity.
         """
-        super().__init__(*args, **kwargs)  # type: ignore
+        super().__init__(*args, **kwargs)
         self._queue: Queue = Queue(maxsize=maxsize)
 
     async def send(self, item: _t.Any) -> None:

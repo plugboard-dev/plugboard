@@ -67,8 +67,8 @@ class ExportMixin:
         return _wrapper
 
     def __init_subclass__(cls, *args: _t.Any, **kwargs: _t.Any) -> None:
-        cls.__init__ = ExportMixin._save_args_wrapper(cls.__init__, _SAVE_ARGS_INIT_KEY)  # type: ignore # noqa: E501,W505
-        cls.dict = ExportMixin._dict_inject_and_copy(cls.dict)  # type: ignore
+        setattr(cls, "__init__", ExportMixin._save_args_wrapper(cls.__init__, _SAVE_ARGS_INIT_KEY))
+        setattr(cls, "dict", ExportMixin._dict_inject_and_copy(cls.dict))
 
     def export(self) -> dict:
         """Returns dict representation of object for later reconstruction."""

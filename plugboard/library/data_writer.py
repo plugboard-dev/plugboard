@@ -89,4 +89,5 @@ class DataWriter(Component, ABC):
         await super().run()
         # Flush any remaining data in the buffer after completion
         await self._save_chunk()
-        await self._task  # type: ignore
+        if self._task is not None:
+            await self._task

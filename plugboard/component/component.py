@@ -53,8 +53,8 @@ class Component(ABC, ExportMixin):
             output_events=self.__class__.io.output_events,
             namespace=name,
         )
-        self.init = self._handle_init_wrapper()  # type: ignore
-        self.step = self._handle_step_wrapper()  # type: ignore
+        setattr(self, "init", self._handle_init_wrapper())
+        setattr(self, "step", self._handle_step_wrapper())
         self._logger = DI.logger.sync_resolve().bind(cls=self.__class__.__name__, name=self.name)
         self._logger.info("Component created")
 
