@@ -50,8 +50,6 @@ class Location(BaseModel):  # (1)!
     location: str
     latitude: float
     longitude: float
-
-
 # --8<-- [end:response_structure]
 
 
@@ -79,7 +77,7 @@ async def main() -> None:
     process = LocalProcess(
         components=[load_text, llm, weather, save_output],
         connectors=[
-            AsyncioConnector(spec=ConnectorSpec(source="load_text.text", target="llm.prompt")),
+            AsyncioConnector(spec=ConnectorSpec(source="load-text.text", target="llm.prompt")),
             AsyncioConnector(spec=ConnectorSpec(source="llm.latitude", target="weather.latitude")),
             AsyncioConnector(
                 spec=ConnectorSpec(source="llm.longitude", target="weather.longitude")
@@ -88,7 +86,7 @@ async def main() -> None:
                 spec=ConnectorSpec(source="llm.location", target="save-results.location")
             ),
             AsyncioConnector(
-                spec=ConnectorSpec(source="weather.temperature", target="save-results.wind_speed")
+                spec=ConnectorSpec(source="weather.temperature", target="save-results.temperature")
             ),
             AsyncioConnector(
                 spec=ConnectorSpec(source="weather.wind_speed", target="save-results.wind_speed")
