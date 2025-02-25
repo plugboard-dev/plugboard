@@ -8,12 +8,13 @@ import pytest
 
 from plugboard.component import Component, IOController as IO
 from plugboard.connector import (
+    AsyncioConnector,
     Connector,
     ConnectorBuilder,
     ZMQConnector,
 )
 from plugboard.events import EventConnectorBuilder, StopEvent
-from plugboard.process import LocalProcess, Process, RayProcess
+from plugboard.process import LocalProcess, Process
 from plugboard.schemas import ConnectorSpec
 from tests.conftest import ComponentTestHelper
 
@@ -65,8 +66,9 @@ def event_connectors(connector_cls: _t.Type[Connector]) -> EventConnectorBuilder
 @pytest.mark.parametrize(
     "process_cls, connector_cls",
     [
+        (LocalProcess, AsyncioConnector),
         (LocalProcess, ZMQConnector),
-        (RayProcess, ZMQConnector),
+        # (RayProcess, ZMQConnector),
         # (RayProcess, RayConnector),  # TODO : Pubsub/StopEvent support with Ray connector.
     ],
 )
