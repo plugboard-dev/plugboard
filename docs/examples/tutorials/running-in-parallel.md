@@ -26,7 +26,7 @@ graph LR;
 
 Let's define the various components that we need. The `Timestamper` component simply emits the current time in ISO format so that our output file will contain a record of how long each step of the model took. We can again use [`FileWriter`][plugboard.library.FileWriter] to save the output to CSV.
 ```python
---8<-- "examples/tutorials/004_using_ray/hello_ray.py:components"
+--8<-- "examples/tutorials/004_using_ray/components.py:components"
 ```
 
 1. We're using `time.sleep` here and not `asyncio.sleep` because we're deliberately blocking execution to simulate a computationally intensive component.
@@ -38,7 +38,7 @@ First we can setup the [`LocalProcess`][plugboard.process.LocalProcess] and run 
 --8<-- "examples/tutorials/004_using_ray/hello_ray.py:local"
 ```
 
-Running 10 iterations takes around 15 seconds, because each step of the model contains 1.5s of computation.
+Running 20 iterations takes around 30 seconds, because each step of the model contains 1.5s of computation.
 
 ### Running in parallel using `RayProcess`
 
@@ -53,7 +53,7 @@ With some small changes we can make the same model run in parallel on Ray. First
 --8<-- "examples/tutorials/004_using_ray/hello_ray.py:ray"
 ```
 
-Now the 10 iteration model takes around 10s, because the two different `Sleep` components are being executed in parallel.
+Now the 20 iteration model takes around 23s, because the two different `Sleep` components are being executed in parallel (20s compute time plus a little overhead).
 
 ## Using YAML config
 
