@@ -11,7 +11,7 @@ from plugboard.utils.settings import Settings
 
 def _is_ipython() -> bool:
     try:
-        from builtins import get_ipython  # noqa: F401
+        from builtins import get_ipython  # type: ignore [attr-defined]  # noqa: F401
     except ImportError:
         return False
     return True
