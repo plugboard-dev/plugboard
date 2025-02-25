@@ -26,7 +26,7 @@ plugboard:
         args:
           name: "weather"
       connectors:
-      - source: "load_text.text"
+      - source: "load-text.text"
         target: "llm.prompt"
       - source: "llm.latitude"
         target: "weather.latitude"
