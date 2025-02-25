@@ -78,7 +78,6 @@ class A(Component):
         except StopIteration:
             await self.io.close()
 
-
 class B(Component):
     io = IO(inputs=["in_1"])
 
@@ -101,14 +100,11 @@ Now we take these components, connect them up as a `Process`, and fire off the m
 ```python
 from plugboard.connector import AsyncioConnector
 from plugboard.process import LocalProcess
-from plugboard.connector import AsyncioConnector
-from plugboard.process import LocalProcess
 from plugboard.schemas import ConnectorSpec
 
 process = LocalProcess(
     components=[A(name="a", iters=5), B(name="b", path="b.txt")],
     connectors=[
-        AsyncioConnector(
         AsyncioConnector(
             spec=ConnectorSpec(source="a.out_1", target="b.in_1"),
         )
