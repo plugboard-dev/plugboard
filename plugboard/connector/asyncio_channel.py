@@ -1,6 +1,8 @@
 """Provides `AsyncioChannel` class."""
 
-from asyncio import Queue
+from __future__ import annotations
+
+import asyncio
 import typing as _t
 
 from plugboard.connector.channel import CHAN_MAXSIZE, Channel
@@ -11,18 +13,32 @@ from plugboard.schemas.connector import ConnectorMode
 class AsyncioChannel(Channel):
     """`AsyncioChannel` enables async data exchange between coroutines on the same host."""
 
-    def __init__(self, *args: _t.Any, maxsize: int = CHAN_MAXSIZE, **kwargs: _t.Any):  # noqa: D417
+    def __init__(
+        self,
+        *args: _t.Any,
+        maxsize: int = CHAN_MAXSIZE,
+        queue: _t.Optional[asyncio.Queue] = None,
+        subscribers: _t.Optional[set[asyncio.Queue]] = None,
+        **kwargs: _t.Any,
+    ):  # noqa: D417
         """Instantiates `AsyncioChannel`.
 
         Args:
             maxsize: Optional; Queue maximum item capacity.
+            queue: Optional; asyncio.Queue to use for data exchange.
+            subscribers: Optional; Set of output asyncio.Queues in pubsub mode.
         """
         super().__init__(*args, **kwargs)
-        self._queue: Queue = Queue(maxsize=maxsize)
+        self._queue: asyncio.Queue = queue or asyncio.Queue(maxsize=maxsize)
+        self._subscribers: _t.Optional[set[asyncio.Queue]] = subscribers
 
     async def send(self, item: _t.Any) -> None:
         """Sends an item through the `Channel`."""
-        await self._queue.put(item)
+        if self._subscribers is None:
+            return await self._queue.put(item)
+        async with asyncio.TaskGroup() as tg:
+            for queue in self._subscribers:
+                tg.create_task(queue.put(item))
 
     async def recv(self) -> _t.Any:
         """Returns an item received from the `Channel`."""
@@ -34,16 +50,25 @@ class AsyncioChannel(Channel):
 class AsyncioConnector(Connector):
     """`AsyncioConnector` connects components using `AsyncioChannel`."""
 
-    def __init__(self, *args: _t.Any, **kwargs: _t.Any) -> None:
+    def __init__(self, *args: _t.Any, maxsize: int = CHAN_MAXSIZE, **kwargs: _t.Any) -> None:
         super().__init__(*args, **kwargs)
-        if self.spec.mode != ConnectorMode.PIPELINE:
-            raise ValueError("AsyncioConnector only supports `PIPELINE` type connections.")
-        self._channel = AsyncioChannel()
+        self._maxsize: int = maxsize
+        self._subscribers: _t.Optional[set[asyncio.Queue]] = (
+            set() if self.spec.mode == ConnectorMode.PUBSUB else None
+        )
+        self._send_channel: AsyncioChannel = AsyncioChannel(
+            maxsize=self._maxsize, subscribers=self._subscribers
+        )
 
     async def connect_send(self) -> AsyncioChannel:
         """Returns an `AsyncioChannel` for sending messages."""
-        return self._channel
+        return self._send_channel
 
     async def connect_recv(self) -> AsyncioChannel:
         """Returns an `AsyncioChannel` for receiving messages."""
-        return self._channel
+        if self.spec.mode == ConnectorMode.PIPELINE:
+            return self._send_channel
+        queue = asyncio.Queue(maxsize=self._maxsize)
+        recv_channel = AsyncioChannel(queue=queue, subscribers=None)
+        self._subscribers.add(queue)
+        return recv_channel
