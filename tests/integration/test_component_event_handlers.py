@@ -11,6 +11,7 @@ from plugboard.connector import (
     AsyncioConnector,
     Connector,
     ConnectorBuilder,
+    ZMQConnector,
 )
 from plugboard.events import Event, EventConnectorBuilder
 from plugboard.schemas import ConnectorSpec
@@ -77,7 +78,7 @@ class A(Component):
         self._event_B_count += evt.data.y
 
 
-@pytest.fixture(scope="module", params=[AsyncioConnector])
+@pytest.fixture(scope="module", params=[AsyncioConnector, ZMQConnector])
 def connector_cls(request: pytest.FixtureRequest) -> _t.Type[Connector]:
     """Returns a `Connector` class."""
     return request.param
@@ -152,12 +153,12 @@ async def test_component_event_handlers(
 
 
 @pytest.fixture
-def field_connectors() -> list[Connector]:
+def field_connectors(connector_cls: _t.Type[Connector]) -> list[Connector]:
     """Fixture for a list of field connectors."""
     return [
-        AsyncioConnector(spec=ConnectorSpec(source="null.in_1", target="a.in_1")),
-        AsyncioConnector(spec=ConnectorSpec(source="null.in_2", target="a.in_2")),
-        AsyncioConnector(spec=ConnectorSpec(source="a.out_1", target="null.out_1")),
+        connector_cls(spec=ConnectorSpec(source="null.in_1", target="a.in_1")),
+        connector_cls(spec=ConnectorSpec(source="null.in_2", target="a.in_2")),
+        connector_cls(spec=ConnectorSpec(source="a.out_1", target="null.out_1")),
     ]
 
 
