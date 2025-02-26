@@ -17,25 +17,23 @@ class DataWriter(Component, ABC):
 
     def __init__(
         self,
-        *args: _t.Any,
-        name: str,
         field_names: list[str],
         chunk_size: _t.Optional[int] = None,
+        *args: _t.Any,
         **kwargs: _t.Any,
     ) -> None:
         """Instantiates the `DataWriter`.
 
         Args:
-            name: The name of the `DataWriter`.
             field_names: The names of the fields to write to the data source.
             chunk_size: The size of the data chunk to read from the DataFrame.
-            *args: Additional positional arguments.
-            **kwargs: Additional keyword arguments.
+            *args: Additional positional arguments for [`Component`][Component].
+            **kwargs: Additional keyword arguments for [`Component`][Component].
         """
-        super().__init__(name, *args, **kwargs)
+        super().__init__(*args, **kwargs)
         self._buffer: dict[str, deque] = defaultdict(deque)
         self._chunk_size = chunk_size
-        self.io = IOController(inputs=field_names, outputs=None, namespace=name)
+        self.io = IOController(inputs=field_names, outputs=None, namespace=self.name)
         self._task: _t.Optional[Task] = None
 
     @abstractmethod
