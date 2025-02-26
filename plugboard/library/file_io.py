@@ -22,8 +22,6 @@ class FileReader(DataReader):
     def __init__(
         self,
         path: str | Path,
-        field_names: list[str],
-        chunk_size: _t.Optional[int] = None,
         storage_options: _t.Optional[dict[str, _t.Any]] = None,
         *args: _t.Any,
         **kwargs: _t.Any,
@@ -32,13 +30,11 @@ class FileReader(DataReader):
 
         Args:
             path: The path to the file to read.
-            field_names: The names of the fields to read from the file.
-            chunk_size: Optional; The size of the data chunks to read from the file.
             storage_options: Optional; Additional options for the fsspec-compatible filesystem.
-            *args: Additional positional arguments for [`Component`][plugboard.component.Component].
-            **kwargs: Additional keyword arguments for [`Component`][plugboard.component.Component].
+            *args: Additional positional arguments for [`DataReader`][plugboard.library.DataReader].
+            **kwargs: Additional keyword arguments for [`DataReader`][plugboard.library.DataReader].
         """
-        super().__init__(*args, field_names=field_names, chunk_size=chunk_size, **kwargs)
+        super().__init__(*args, **kwargs)
         self._file_path = str(path)
         # Use .suffixes to handle files with multiple extensions (e.g. .csv.gz)
         self._extension = "".join(Path(path).suffixes).lower()
@@ -92,8 +88,6 @@ class FileWriter(DataWriter):
     def __init__(
         self,
         path: str | Path,
-        field_names: list[str],
-        chunk_size: _t.Optional[int] = None,
         storage_options: _t.Optional[dict[str, _t.Any]] = None,
         *args: _t.Any,
         **kwargs: _t.Any,
@@ -102,13 +96,11 @@ class FileWriter(DataWriter):
 
         Args:
             path: The path to the file to write.
-            field_names: The names of the fields to write to the file.
-            chunk_size: Optional; The size of the data chunks to read from the file.
             storage_options: Optional; Additional options for the fsspec-compatible filesystem.
-            *args: Additional positional arguments for [`Component`][plugboard.component.Component].
-            **kwargs: Additional keyword arguments for [`Component`][plugboard.component.Component].
+            *args: Additional positional arguments for [`DataWriter`][plugboard.library.DataWriter].
+            **kwargs: Additional keyword arguments for [`DataWriter`][plugboard.library.DataWriter].
         """
-        super().__init__(*args, field_names=field_names, chunk_size=chunk_size, **kwargs)
+        super().__init__(*args, **kwargs)
         self._file_path = str(path)
         # Use .suffixes to handle files with multiple extensions (e.g. .csv.gz)
         self._extension = "".join(Path(path).suffixes).lower()

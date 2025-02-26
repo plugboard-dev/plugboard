@@ -23,10 +23,8 @@ class SQLReader(DataReader):
     def __init__(
         self,
         connection_string: str,
-        field_names: list[str],
         query: str,
         params: _t.Optional[dict[str, _t.Any]] = None,
-        chunk_size: _t.Optional[int] = None,
         connect_args: _t.Optional[dict[str, _t.Any]] = None,
         *args: _t.Any,
         **kwargs: _t.Any,
@@ -35,15 +33,13 @@ class SQLReader(DataReader):
 
         Args:
             connection_string: The connection string for the database.
-            field_names: The names of the fields to be read.
             query: The SQL query to run on the database.
             params: Optional; Parameters to pass to the query.
-            chunk_size: Optional; The size of the data chunks to read from the file.
             connect_args: Optional; Additional options for the database connection.
-            *args: Additional positional arguments for [`Component`][plugboard.component.Component].
-            **kwargs: Additional keyword arguments for [`Component`][plugboard.component.Component].
+            *args: Additional positional arguments for [`DataReader`][plugboard.library.DataReader].
+            **kwargs: Additional keyword arguments for [`DataReader`][plugboard.library.DataReader].
         """
-        super().__init__(*args, field_names=field_names, chunk_size=chunk_size, **kwargs)
+        super().__init__(*args, **kwargs)
         self._connection_string = connection_string
         self._query = query
         self._params = params or {}
@@ -116,8 +112,6 @@ class SQLWriter(DataWriter):
         self,
         connection_string: str,
         table: str,
-        field_names: list[str],
-        chunk_size: _t.Optional[int] = None,
         connect_args: _t.Optional[dict[str, _t.Any]] = None,
         *args: _t.Any,
         **kwargs: _t.Any,
@@ -127,13 +121,11 @@ class SQLWriter(DataWriter):
         Args:
             connection_string: The connection string for the database.
             table: The name of the table to write to, which must already exist.
-            field_names: The names of the fields to write to the data source.
-            chunk_size: Optional; The size of the data chunks to read from the file.
             connect_args: Optional; Additional options for the database connection.
-            *args: Additional positional arguments for [`Component`][plugboard.component.Component].
-            **kwargs: Additional keyword arguments for [`Component`][plugboard.component.Component].
+            *args: Additional positional arguments for [`DataWriter`][plugboard.library.DataWriter].
+            **kwargs: Additional keyword arguments for [`DataWriter`][plugboard.library.DataWriter].
         """
-        super().__init__(*args, field_names=field_names, chunk_size=chunk_size, **kwargs)
+        super().__init__(*args, **kwargs)
         self._connection_string = connection_string
         self._table_name = table
         self._connect_args = {
