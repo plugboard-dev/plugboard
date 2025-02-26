@@ -44,8 +44,8 @@ class WebsocketReader(Component):
             initial_message: Optional; The initial message to send to the WebSocket server on
                 connection. Can be used to subscribe to a specific topic.
             parse_json: Whether to parse the received data as JSON.
-            *args: Additional positional arguments for [`Component`][Component].
-            **kwargs: Additional keyword arguments for [`Component`][Component].
+            *args: Additional positional arguments for [`Component`][plugboard.component.Component].
+            **kwargs: Additional keyword arguments for [`Component`][plugboard.component.Component].
         """
         super().__init__(*args, **kwargs)
         self._uri = uri
@@ -110,8 +110,8 @@ class WebsocketWriter(Component):
             uri: The URI of the WebSocket server.
             connect_args: Optional; Additional arguments to pass to the websocket connection.
             parse_json: Whether to convert the data to JSON before sending.
-            *args: Additional positional arguments for [`Component`][Component].
-            **kwargs: Additional keyword arguments for [`Component`][Component].
+            *args: Additional positional arguments for [`Component`][plugboard.component.Component].
+            **kwargs: Additional keyword arguments for [`Component`][plugboard.component.Component].
         """
         super().__init__(*args, **kwargs)
         self._uri = uri

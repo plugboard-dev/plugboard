@@ -27,8 +27,8 @@ class DataWriter(Component, ABC):
         Args:
             field_names: The names of the fields to write to the data source.
             chunk_size: The size of the data chunk to read from the DataFrame.
-            *args: Additional positional arguments for [`Component`][Component].
-            **kwargs: Additional keyword arguments for [`Component`][Component].
+            *args: Additional positional arguments for [`Component`][plugboard.component.Component].
+            **kwargs: Additional keyword arguments for [`Component`][plugboard.component.Component].
         """
         super().__init__(*args, **kwargs)
         self._buffer: dict[str, deque] = defaultdict(deque)

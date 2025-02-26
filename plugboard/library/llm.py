@@ -47,7 +47,6 @@ class LLMChat(Component):
         """Instantiates `LLMChat`.
 
         Args:
-            name: The name of the `LLMChat` component.
             llm: The LLM class to use from llama-index.
             system_prompt: Optional; System prompt to prepend to the context window.
             context_window: The number of previous messages to include in the context window.
@@ -56,8 +55,8 @@ class LLMChat(Component):
             expand_response: Setting this to `True` when using a structured response model will
                 cause the individual attributes of the response model to be added as output fields.
             llm_kwargs: Additional keyword arguments for the LLM.
-            *args: Additional positional arguments for [`Component`][Component].
-            **kwargs: Additional keyword arguments for [`Component`][Component].
+            *args: Additional positional arguments for [`Component`][plugboard.component.Component].
+            **kwargs: Additional keyword arguments for [`Component`][plugboard.component.Component].
         """
         super().__init__(*args, **kwargs)
         _llm_cls = locate(llm)

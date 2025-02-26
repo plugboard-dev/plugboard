@@ -35,8 +35,8 @@ class FileReader(DataReader):
             field_names: The names of the fields to read from the file.
             chunk_size: Optional; The size of the data chunks to read from the file.
             storage_options: Optional; Additional options for the fsspec-compatible filesystem.
-            *args: Additional positional arguments for [`Component`][Component].
-            **kwargs: Additional keyword arguments for [`Component`][Component].
+            *args: Additional positional arguments for [`Component`][plugboard.component.Component].
+            **kwargs: Additional keyword arguments for [`Component`][plugboard.component.Component].
         """
         super().__init__(*args, field_names=field_names, chunk_size=chunk_size, **kwargs)
         self._file_path = str(path)
@@ -105,8 +105,8 @@ class FileWriter(DataWriter):
             field_names: The names of the fields to write to the file.
             chunk_size: Optional; The size of the data chunks to read from the file.
             storage_options: Optional; Additional options for the fsspec-compatible filesystem.
-            *args: Additional positional arguments for [`Component`][Component].
-            **kwargs: Additional keyword arguments for [`Component`][Component].
+            *args: Additional positional arguments for [`Component`][plugboard.component.Component].
+            **kwargs: Additional keyword arguments for [`Component`][plugboard.component.Component].
         """
         super().__init__(*args, field_names=field_names, chunk_size=chunk_size, **kwargs)
         self._file_path = str(path)
