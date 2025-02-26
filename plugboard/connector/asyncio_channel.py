@@ -66,9 +66,9 @@ class AsyncioConnector(Connector):
 
     async def connect_recv(self) -> AsyncioChannel:
         """Returns an `AsyncioChannel` for receiving messages."""
-        if self.spec.mode == ConnectorMode.PIPELINE:
+        if self._subscribers is None:
             return self._send_channel
-        queue = asyncio.Queue(maxsize=self._maxsize)
+        queue: asyncio.Queue = asyncio.Queue(maxsize=self._maxsize)
         recv_channel = AsyncioChannel(queue=queue, subscribers=None)
         self._subscribers.add(queue)
         return recv_channel
