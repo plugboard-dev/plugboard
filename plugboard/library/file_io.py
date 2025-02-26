@@ -15,7 +15,7 @@ from .data_writer import DataWriter
 class FileReader(DataReader):
     """Reads data from a file.
 
-    Support formats: CSV, GZIP-compressed CSV, Parquet.
+    Supported formats: CSV, GZIP-compressed CSV, Parquet.
     The file can be stored locally or on an fsspec-compatible cloud storage service.
     """
 
@@ -81,7 +81,7 @@ class FileReader(DataReader):
 class FileWriter(DataWriter):
     """Writes data to a file. If the file already exists, it will be overwritten.
 
-    Support formats: CSV, GZIP-compressed CSV, Parquet.
+    Supported formats: CSV, GZIP-compressed CSV, Parquet.
     The file can be stored locally or on an fsspec-compatible cloud storage service.
     """
 
