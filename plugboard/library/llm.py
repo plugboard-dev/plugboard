@@ -35,18 +35,18 @@ class LLMChat(Component):
     @depends_on_optional("llama_index", "llm")
     def __init__(
         self,
-        name: str,
         llm: str = "llama_index.llms.openai.OpenAI",
         system_prompt: _t.Optional[str] = None,
         context_window: int = 0,
         response_model: _t.Optional[_t.Type[BaseModel] | str] = None,
         expand_response: bool = False,
         llm_kwargs: _t.Optional[dict[str, _t.Any]] = None,
+        *args: _t.Any,
+        **kwargs: _t.Any,
     ) -> None:
         """Instantiates `LLMChat`.
 
         Args:
-            name: The name of the component.
             llm: The LLM class to use from llama-index.
             system_prompt: Optional; System prompt to prepend to the context window.
             context_window: The number of previous messages to include in the context window.
@@ -55,8 +55,10 @@ class LLMChat(Component):
             expand_response: Setting this to `True` when using a structured response model will
                 cause the individual attributes of the response model to be added as output fields.
             llm_kwargs: Additional keyword arguments for the LLM.
+            *args: Additional positional arguments for [`Component`][plugboard.component.Component].
+            **kwargs: Additional keyword arguments for [`Component`][plugboard.component.Component].
         """
-        super().__init__(name=name)
+        super().__init__(*args, **kwargs)
         _llm_cls = locate(llm)
         if _llm_cls is None or not isinstance(_llm_cls, type) or not issubclass(_llm_cls, LLM):
             raise ValueError(f"LLM class {llm} not found in llama-index.")
@@ -71,7 +73,9 @@ class LLMChat(Component):
         self._expand_response = expand_response and self._structured
         if self._expand_response and response_model is not None:
             self.io = IO(
-                inputs=["prompt"], outputs=list(response_model.model_fields.keys()), namespace=name
+                inputs=["prompt"],
+                outputs=list(response_model.model_fields.keys()),
+                namespace=self.name,
             )
         if self._structured and response_model is not None:
             self._llm = self._llm.as_structured_llm(output_cls=response_model)

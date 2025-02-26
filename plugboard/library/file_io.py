@@ -15,28 +15,26 @@ from .data_writer import DataWriter
 class FileReader(DataReader):
     """Reads data from a file.
 
-    Support formats: CSV, GZIP-compressed CSV, Parquet.
+    Supported formats: CSV, GZIP-compressed CSV, Parquet.
     The file can be stored locally or on an fsspec-compatible cloud storage service.
     """
 
     def __init__(
         self,
-        name: str,
         path: str | Path,
-        field_names: list[str],
-        chunk_size: _t.Optional[int] = None,
         storage_options: _t.Optional[dict[str, _t.Any]] = None,
+        *args: _t.Any,
+        **kwargs: _t.Any,
     ) -> None:
         """Instantiates the `FileReader`.
 
         Args:
-            name: The name of the `FileReader`.
             path: The path to the file to read.
-            field_names: The names of the fields to read from the file.
-            chunk_size: Optional; The size of the data chunks to read from the file.
             storage_options: Optional; Additional options for the fsspec-compatible filesystem.
+            *args: Additional positional arguments for [`DataReader`][plugboard.library.DataReader].
+            **kwargs: Additional keyword arguments for [`DataReader`][plugboard.library.DataReader].
         """
-        super().__init__(name=name, field_names=field_names, chunk_size=chunk_size)
+        super().__init__(*args, **kwargs)
         self._file_path = str(path)
         # Use .suffixes to handle files with multiple extensions (e.g. .csv.gz)
         self._extension = "".join(Path(path).suffixes).lower()
@@ -83,28 +81,26 @@ class FileReader(DataReader):
 class FileWriter(DataWriter):
     """Writes data to a file. If the file already exists, it will be overwritten.
 
-    Support formats: CSV, GZIP-compressed CSV, Parquet.
+    Supported formats: CSV, GZIP-compressed CSV, Parquet.
     The file can be stored locally or on an fsspec-compatible cloud storage service.
     """
 
     def __init__(
         self,
-        name: str,
         path: str | Path,
-        field_names: list[str],
-        chunk_size: _t.Optional[int] = None,
         storage_options: _t.Optional[dict[str, _t.Any]] = None,
+        *args: _t.Any,
+        **kwargs: _t.Any,
     ) -> None:
         """Instantiates the `FileWriter`.
 
         Args:
-            name: The name of the `FileWriter`.
             path: The path to the file to write.
-            field_names: The names of the fields to write to the file.
-            chunk_size: Optional; The size of the data chunks to read from the file.
             storage_options: Optional; Additional options for the fsspec-compatible filesystem.
+            *args: Additional positional arguments for [`DataWriter`][plugboard.library.DataWriter].
+            **kwargs: Additional keyword arguments for [`DataWriter`][plugboard.library.DataWriter].
         """
-        super().__init__(name=name, field_names=field_names, chunk_size=chunk_size)
+        super().__init__(*args, **kwargs)
         self._file_path = str(path)
         # Use .suffixes to handle files with multiple extensions (e.g. .csv.gz)
         self._extension = "".join(Path(path).suffixes).lower()
