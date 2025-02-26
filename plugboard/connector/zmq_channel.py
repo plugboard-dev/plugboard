@@ -97,6 +97,9 @@ class ZMQChannel(SerdeChannel):
 class _ZMQConnector(Connector, ABC):
     """`_ZMQConnector` connects components using `ZMQChannel`."""
 
+    # TODO : Remove dependence on Ray from ZMQConnector. Introduce separate RayZMQConnector
+    #      : for Ray based ZMQChannel. Improve test coverage for Process and Connector combos.
+
     def __init__(
         self, *args: _t.Any, zmq_address: str = ZMQ_ADDR, maxsize: int = 2000, **kwargs: _t.Any
     ) -> None:

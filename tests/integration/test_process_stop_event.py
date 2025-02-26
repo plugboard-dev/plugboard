@@ -67,8 +67,8 @@ def event_connectors(connector_cls: _t.Type[Connector]) -> EventConnectorBuilder
     "process_cls, connector_cls",
     [
         (LocalProcess, AsyncioConnector),
-        (LocalProcess, ZMQConnector),
-        # (RayProcess, ZMQConnector),
+        # (LocalProcess, ZMQConnector),  # FIXME : pipeline ZMQConnector requires Ray.
+        # (RayProcess, ZMQConnector),  # FIXME : pipeline ZMQConnector hangs in Ray.
         # (RayProcess, RayConnector),  # TODO : Pubsub/StopEvent support with Ray connector.
     ],
 )
