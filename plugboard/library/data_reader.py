@@ -18,25 +18,23 @@ class DataReader(Component, ABC):
 
     def __init__(
         self,
-        *args: _t.Any,
-        name: str,
         field_names: list[str],
         chunk_size: _t.Optional[int] = None,
+        *args: _t.Any,
         **kwargs: _t.Any,
     ) -> None:
         """Instantiates the `DataReader`.
 
         Args:
-            name: The name of the `DataReader`.
             field_names: The names of the fields to read from the data source.
             chunk_size: The size of the data chunk to read from the data source.
-            *args: Additional positional arguments.
-            **kwargs: Additional keyword arguments.
+            *args: Additional positional arguments for [`Component`][plugboard.component.Component].
+            **kwargs: Additional keyword arguments for [`Component`][plugboard.component.Component].
         """
-        super().__init__(name, *args, **kwargs)
+        super().__init__(*args, **kwargs)
         self._buffer: dict[str, deque] = dict()
         self._chunk_size = chunk_size
-        self.io = IOController(inputs=None, outputs=field_names, namespace=name)
+        self.io = IOController(inputs=None, outputs=field_names, namespace=self.name)
         self._task: _t.Optional[Task] = None
 
     @abstractmethod

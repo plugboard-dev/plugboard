@@ -25,7 +25,6 @@ class WebsocketReader(Component):
     @depends_on_optional("websockets")
     def __init__(
         self,
-        name: str,
         uri: str,
         connect_args: dict[str, _t.Any] | None = None,
         initial_message: _t.Any | None = None,
@@ -40,16 +39,15 @@ class WebsocketReader(Component):
         run until interrupted, and automatically reconnect if the server connection is lost.
 
         Args:
-            name: The name of the `WebsocketReader`.
             uri: The URI of the WebSocket server.
             connect_args: Optional; Additional arguments to pass to the WebSocket connection.
             initial_message: Optional; The initial message to send to the WebSocket server on
                 connection. Can be used to subscribe to a specific topic.
             parse_json: Whether to parse the received data as JSON.
-            *args: Additional positional arguments.
-            **kwargs: Additional keyword arguments.
+            *args: Additional positional arguments for [`Component`][plugboard.component.Component].
+            **kwargs: Additional keyword arguments for [`Component`][plugboard.component.Component].
         """
-        super().__init__(name, *args, **kwargs)
+        super().__init__(*args, **kwargs)
         self._uri = uri
         self._connect_args = connect_args if connect_args else {}
         if initial_message is not None:
@@ -97,7 +95,6 @@ class WebsocketWriter(Component):
     @depends_on_optional("websockets")
     def __init__(
         self,
-        name: str,
         uri: str,
         connect_args: dict[str, _t.Any] | None = None,
         parse_json: bool = False,
@@ -110,14 +107,13 @@ class WebsocketWriter(Component):
         connection arguments that can be passed using `connect_args`.
 
         Args:
-            name: The name of the `WebsocketWriter`.
             uri: The URI of the WebSocket server.
             connect_args: Optional; Additional arguments to pass to the websocket connection.
             parse_json: Whether to convert the data to JSON before sending.
-            *args: Additional positional arguments.
-            **kwargs: Additional keyword arguments.
+            *args: Additional positional arguments for [`Component`][plugboard.component.Component].
+            **kwargs: Additional keyword arguments for [`Component`][plugboard.component.Component].
         """
-        super().__init__(name, *args, **kwargs)
+        super().__init__(*args, **kwargs)
         self._uri = uri
         self._connect_args = connect_args if connect_args else {}
         self._parse_json = parse_json
