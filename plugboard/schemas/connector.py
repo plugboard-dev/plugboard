@@ -5,7 +5,7 @@ from enum import StrEnum
 import re
 import typing as _t
 
-from pydantic import Field, field_validator
+from pydantic import ConfigDict, Field, field_validator, with_config
 
 from plugboard.schemas._common import PlugboardBaseModel
 
@@ -98,14 +98,15 @@ class ConnectorSpec(PlugboardBaseModel):
         return self.id
 
 
-class ConnectorBuilderArgsSpec(PlugboardBaseModel, extra="allow"):
+@with_config(ConfigDict(extra="allow"))
+class ConnectorBuilderArgsSpec(_t.TypedDict):
     """Specification of the [`Connector`][plugboard.connector.Connector] constructor arguments.
 
     Attributes:
         parameters: Parameters for the `Connector`.
     """
 
-    parameters: dict = {}
+    parameters: _t.Annotated[dict[str, _t.Any], Field(default_factory=dict)]
 
 
 class ConnectorBuilderSpec(PlugboardBaseModel):
