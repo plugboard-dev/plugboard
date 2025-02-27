@@ -1,6 +1,7 @@
 """Provides logging utilities."""
 
 import logging
+import os
 import typing as _t
 
 from msgspec import json
@@ -38,7 +39,8 @@ def configure_logging(settings: Settings) -> None:
         ]
 
     structlog.configure(
-        cache_logger_on_first_use=True,
+        # Do not cache logger when testing: https://www.structlog.org/en/stable/testing.html
+        cache_logger_on_first_use="PYTEST_CURRENT_TEST" not in os.environ,
         wrapper_class=structlog.make_filtering_bound_logger(log_level),
         processors=processors,  # type: ignore[arg-type]
         # Use BytesLoggerFactory when using msgspec serialization to bytes
