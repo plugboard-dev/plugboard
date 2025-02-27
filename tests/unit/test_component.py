@@ -5,6 +5,7 @@ import typing as _t
 
 import pytest
 
+from plugboard import exceptions
 from plugboard.component import Component, IOController as IO
 from plugboard.connector import AsyncioConnector
 from plugboard.schemas import ConnectorSpec
@@ -47,3 +48,22 @@ async def test_component_initial_values(initial_values: dict[str, _t.Iterable]) 
                 assert component.c.get(field) == list(initial_values[field])[input_idx]
             else:
                 assert component.c.get(field) == input_idx - n_init[field]
+
+
+@pytest.mark.anyio
+async def test_component_validation() -> None:
+    """Tests that invalid components are detected."""
+
+    class NoSuperCall(Component):
+        io = IO(inputs=["x"], outputs=["y"])
+
+        def __init__(*args: _t.Any, **kwargs: _t.Any):
+            pass
+
+        async def step(self) -> None:
+            self.y = self.x
+
+    invalid_component = NoSuperCall(name="test-no-super")
+
+    with pytest.raises(exceptions.ValidationError):
+        await invalid_component.init()
