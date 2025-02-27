@@ -7,7 +7,6 @@ import typing as _t
 import fsspec
 import pandas as pd
 
-from plugboard.component.io_controller import IOController as IO
 from plugboard.exceptions import NoMoreDataException
 from .data_reader import DataReader, DataReaderArgsSpec
 from .data_writer import DataWriter, DataWriterArgsSpec
@@ -19,8 +18,6 @@ class FileReader(DataReader):
     Supported formats: CSV, GZIP-compressed CSV, Parquet.
     The file can be stored locally or on an fsspec-compatible cloud storage service.
     """
-
-    io: IO = IO(outputs=["_unset"])
 
     def __init__(
         self,
@@ -85,8 +82,6 @@ class FileWriter(DataWriter):
     Supported formats: CSV, GZIP-compressed CSV, Parquet.
     The file can be stored locally or on an fsspec-compatible cloud storage service.
     """
-
-    io: IO = IO(inputs=["_unset"])
 
     def __init__(
         self,

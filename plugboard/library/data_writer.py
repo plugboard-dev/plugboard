@@ -8,6 +8,7 @@ import typing as _t
 
 from plugboard.component import Component
 from plugboard.component.io_controller import IOController, IODirection
+from plugboard.exceptions import IOSetupError
 from plugboard.schemas import ComponentArgsDict
 
 
@@ -52,6 +53,14 @@ class DataWriter(Component, ABC):
             namespace=self.name,
         )
         self._task: _t.Optional[Task] = None
+
+    def __init_subclass__(cls, *args: _t.Any, **kwargs: _t.Any) -> None:
+        try:
+            return super().__init_subclass__(*args, **kwargs)
+        except IOSetupError:
+            # Concrete subclasses of the abstract data io classes represent a special case for io
+            # setup. They receive io args at run time, not declaration time, so skip error.
+            pass
 
     @abstractmethod
     async def _save(self, data: _t.Any) -> None:

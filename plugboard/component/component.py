@@ -79,6 +79,13 @@ class Component(ABC, ExportMixin):
                 io_args["outputs"].update(c_io.outputs)
                 io_args["input_events"].update(c_io.input_events)
                 io_args["output_events"].update(c_io.output_events)
+        # Set io arguments for subclass
+        cls.io = IO(
+            inputs=sorted(io_args["inputs"], key=str),
+            outputs=sorted(io_args["outputs"], key=str),
+            input_events=sorted(io_args["input_events"], key=str),
+            output_events=sorted(io_args["output_events"], key=str),
+        )
         # Check that subclass io arguments is superset of abstract base class Component io arguments
         # Note: can't check cls.__abstractmethods__ as it's unset at this point. Maybe brittle...
         cls_is_concrete = ABC not in cls.__bases__
@@ -92,13 +99,6 @@ class Component(ABC, ExportMixin):
             raise IOSetupError(
                 f"{cls.__name__} must extend Component abstract base class io arguments"
             )
-        # Set io arguments for subclass
-        cls.io = IO(
-            inputs=sorted(io_args["inputs"], key=str),
-            outputs=sorted(io_args["outputs"], key=str),
-            input_events=sorted(io_args["input_events"], key=str),
-            output_events=sorted(io_args["output_events"], key=str),
-        )
 
     # Prevents type-checker errors on public component IO attributes
     def __getattr__(self, key: str) -> _t.Any:
