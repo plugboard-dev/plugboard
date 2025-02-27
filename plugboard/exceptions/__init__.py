@@ -65,3 +65,9 @@ class UnrecognisedEventError(EventError):
     """Raised when an unrecognised event is encountered."""
 
     pass
+
+
+class ValidationError(Exception):
+    """Raised when an invalid `Process` or `Component` is encountered."""
+
+    pass
