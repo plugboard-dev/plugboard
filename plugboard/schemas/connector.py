@@ -118,4 +118,4 @@ class ConnectorBuilderSpec(PlugboardBaseModel):
     """
 
     type: str = DEFAULT_CONNECTOR_CLS_PATH
-    args: ConnectorBuilderArgsSpec = ConnectorBuilderArgsSpec()
+    args: ConnectorBuilderArgsSpec = ConnectorBuilderArgsSpec(parameters={})
