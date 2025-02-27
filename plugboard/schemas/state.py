@@ -3,7 +3,7 @@
 from datetime import datetime, timezone
 import typing as _t
 
-from pydantic import Field
+from pydantic import ConfigDict, Field, with_config
 
 from plugboard.schemas._common import PlugboardBaseModel
 from plugboard.schemas.entities import Entity
@@ -12,7 +12,8 @@ from plugboard.schemas.entities import Entity
 DEFAULT_STATE_BACKEND_CLS_PATH: str = "plugboard.state.DictStateBackend"
 
 
-class StateBackendArgsSpec(PlugboardBaseModel, extra="allow"):
+@with_config(ConfigDict(extra="allow"))
+class StateBackendArgsSpec(_t.TypedDict):
     """Specification of the [`StateBackend`][plugboard.state.StateBackend] constructor arguments.
 
     Attributes:
@@ -20,8 +21,8 @@ class StateBackendArgsSpec(PlugboardBaseModel, extra="allow"):
         metadata: Metadata for a run.
     """
 
-    job_id: _t.Optional[str] = Field(default=None, pattern=Entity.Job.id_regex)
-    metadata: dict = {}
+    job_id: _t.Annotated[_t.Optional[str], Field(default=None, pattern=Entity.Job.id_regex)]
+    metadata: _t.Annotated[dict[str, _t.Any], Field(default_factory=dict)]
 
 
 class StateBackendSpec(PlugboardBaseModel):
@@ -33,7 +34,7 @@ class StateBackendSpec(PlugboardBaseModel):
     """
 
     type: str = DEFAULT_STATE_BACKEND_CLS_PATH
-    args: StateBackendArgsSpec = StateBackendArgsSpec()
+    args: StateBackendArgsSpec = StateBackendArgsSpec(job_id=None, metadata={})
 
 
 class StateSchema(PlugboardBaseModel):
