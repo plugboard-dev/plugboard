@@ -19,7 +19,6 @@ class Process(ExportMixin, ABC):
 
     def __init__(
         self,
-        *,
         components: _t.Iterable[Component],
         connectors: _t.Iterable[Connector],
         name: _t.Optional[str] = None,
