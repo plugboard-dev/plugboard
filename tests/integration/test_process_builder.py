@@ -99,7 +99,7 @@ async def test_process_builder_build(process_spec: ProcessSpec) -> None:
     """Tests building a process."""
     process = ProcessBuilder.build(process_spec)
     # Must build a process with the correct type
-    process.__class__.__name__ == process_spec.args.state.type.split(".")[-1]
+    process.__class__.__name__ == process_spec.args["state"].type.split(".")[-1]
     # Must build a process with the correct components and connectors
     assert len(process.components) == 4
     # Number of connectors must be sum of those specified in config and those built for events
@@ -110,7 +110,7 @@ async def test_process_builder_build(process_spec: ProcessSpec) -> None:
     assert all(con.__class__.__name__ == "AsyncioConnector" for con in process.connectors.values())
     # Must build a process with the correct state backend
     async with process:
-        input_job_id = process_spec.args.state.args.model_dump().get("job_id")
+        input_job_id = process_spec.args["state"].args.model_dump().get("job_id")
         if input_job_id is not None:
             assert process.state.job_id == input_job_id
         assert EntityIdGen.is_job_id(process.state.job_id)
