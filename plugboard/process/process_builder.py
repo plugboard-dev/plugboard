@@ -35,26 +35,26 @@ class ProcessBuilder:
         return process_class(
             components=components,
             connectors=connectors,
-            name=spec.args.name,
-            parameters=spec.args.parameters,
+            name=spec.args["name"],
+            parameters=spec.args["parameters"],
             state=state,
         )
 
     @classmethod
     def _build_statebackend(cls, spec: ProcessSpec) -> StateBackend:
-        state_spec = spec.args.state
+        state_spec = spec.args["state"]
         statebackend_class: _t.Optional[_t.Any] = locate(state_spec.type)
         if not statebackend_class or not issubclass(statebackend_class, StateBackend):
-            raise ValueError(f"StateBackend class {spec.args.state.type} not found.")
-        return statebackend_class(**dict(spec.args.state.args))
+            raise ValueError(f"StateBackend class {spec.args['state'].type} not found.")
+        return statebackend_class(**dict(spec.args["state"].args))
 
     @classmethod
     def _build_components(cls, spec: ProcessSpec) -> list[Component]:
-        for c in spec.args.components:
+        for c in spec.args["components"]:
             component_class: _t.Optional[_t.Any] = locate(c.type)
             if not component_class or not issubclass(component_class, Component):
                 raise ValueError(f"Component class {c.type} not found.")
-        return [ComponentRegistry.build(c.type, **dict(c.args)) for c in spec.args.components]
+        return [ComponentRegistry.build(c.type, **dict(c.args)) for c in spec.args["components"]]
 
     @classmethod
     def _build_connectors(cls, spec: ProcessSpec, components: list[Component]) -> list[Connector]:
@@ -66,7 +66,7 @@ class ProcessBuilder:
         )
         event_connector_builder = EventConnectorBuilder(connector_builder=connector_builder)
         event_connectors = list(event_connector_builder.build(components).values())
-        spec_connectors = [connector_builder.build(cs) for cs in spec.args.connectors]
+        spec_connectors = [connector_builder.build(cs) for cs in spec.args["connectors"]]
         return sorted(
             {conn.id: conn for conn in event_connectors + spec_connectors}.values(),
             key=lambda c: c.id,

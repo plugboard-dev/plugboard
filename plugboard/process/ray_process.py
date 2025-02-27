@@ -45,7 +45,13 @@ class RayProcess(Process):
             for c in components
         }
 
-        super().__init__(components, connectors, name, parameters, state)
+        super().__init__(
+            components=components,
+            connectors=connectors,
+            name=name,
+            parameters=parameters,
+            state=state,
+        )
 
     def _create_component_actor(self, component: Component) -> _t.Any:
         name = component.id
