@@ -6,13 +6,14 @@ from collections import defaultdict
 from functools import wraps
 import typing as _t
 
-from plugboard.component.io_controller import (
-    IOController as IO,
-    IODirection,
-    IOStreamClosedError,
-)
+from plugboard.component.io_controller import IOController as IO, IODirection
 from plugboard.events import Event, EventHandlers, StopEvent
-from plugboard.exceptions import UnrecognisedEventError, ValidationError
+from plugboard.exceptions import (
+    IOSetupError,
+    IOStreamClosedError,
+    UnrecognisedEventError,
+    ValidationError,
+)
 from plugboard.state import StateBackend
 from plugboard.utils import DI, ClassRegistry, ExportMixin, is_on_ray_worker
 
@@ -88,7 +89,7 @@ class Component(ABC, ExportMixin):
             or io_args["output_events"] > set(Component.io.output_events)
         )
         if cls_is_concrete and not extends_base_io_args:
-            raise ValueError(
+            raise IOSetupError(
                 f"{cls.__name__} must extend Component abstract base class io arguments"
             )
         # Set io arguments for subclass

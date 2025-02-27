@@ -9,6 +9,7 @@ import pytest
 from plugboard.component import IOController as IO
 from plugboard.component.component import Component
 from plugboard.events import Event
+from plugboard.exceptions import IOSetupError
 
 
 class EventType1(Event):
@@ -23,7 +24,7 @@ class EventType2(Event):
     type: _t.ClassVar[str] = "event_2"
 
 
-@pytest.mark.parametrize("io_args, exc", [({}, ValueError), ({"inputs": ["in_1", "in_2"]}, None)])
+@pytest.mark.parametrize("io_args, exc", [({}, IOSetupError), ({"inputs": ["in_1", "in_2"]}, None)])
 def test_io_inheritance(io_args: dict[str, _t.Any], exc: _t.Optional[type[Exception]]) -> None:
     """Tests that `Component` subclasses inherit `IOController` attributes."""
     with pytest.raises(exc) if exc is not None else nullcontext():
