@@ -13,6 +13,9 @@ from plugboard.utils import DI
 
 IO_NS_UNSET = "__UNSET__"
 
+_io_key_in: str = str(IODirection.INPUT)
+_io_key_out: str = str(IODirection.OUTPUT)
+
 
 class IOController:
     """`IOController` manages input/output to/from components."""
@@ -34,14 +37,8 @@ class IOController:
         self.output_events = output_events or []
         if set(self.initial_values.keys()) - set(self.inputs):
             raise ValueError("Initial values must be for input fields only.")
-        self.data: dict[str, dict[str, _t.Any]] = {
-            str(IODirection.INPUT): {},
-            str(IODirection.OUTPUT): {},
-        }
-        self.events: dict[str, deque[Event]] = {
-            str(IODirection.INPUT): deque(),
-            str(IODirection.OUTPUT): deque(),
-        }
+        self.data: dict[str, dict[str, _t.Any]] = {_io_key_in: {}, _io_key_out: {}}
+        self.events: dict[str, deque[Event]] = {_io_key_in: deque(), _io_key_out: deque()}
         self._input_channels: dict[tuple[str, str], Channel] = {}
         self._output_channels: dict[tuple[str, str], Channel] = {}
         self._input_event_channels: dict[str, Channel] = {}
@@ -111,7 +108,7 @@ class IOController:
             channel_type="field",
             channels=self._input_channels,
             return_when=asyncio.ALL_COMPLETED,
-            store_fn=lambda k, v: self.data[str(IODirection.INPUT)].update({k: v}),
+            store_fn=lambda k, v: self.data[_io_key_in].update({k: v}),
         )
 
     async def _read_events(self) -> None:
@@ -119,7 +116,7 @@ class IOController:
             channel_type="event",
             channels={(k, ""): ch for k, ch in self._input_event_channels.items()},
             return_when=asyncio.FIRST_COMPLETED,
-            store_fn=lambda _, v: self.events[str(IODirection.INPUT)].append(v),
+            store_fn=lambda _, v: self.events[_io_key_in].append(v),
         )
 
     async def _read_channel_set(
@@ -174,14 +171,14 @@ class IOController:
                 tg.create_task(self._write_field(field, chan))
 
     async def _write_field(self, field: str, channel: Channel) -> None:
-        item = self.data[str(IODirection.OUTPUT)][field]
+        item = self.data[_io_key_out][field]
         try:
             await channel.send(item)
         except ChannelClosedError as e:
             raise ChannelClosedError(f"Channel closed for field: {field}.") from e
 
     async def _write_events(self) -> None:
-        queue = self.events[str(IODirection.OUTPUT)]
+        queue = self.events[_io_key_out]
         async with asyncio.TaskGroup() as tg:
             for _ in range(len(queue)):
                 event = queue.popleft()
@@ -210,7 +207,7 @@ class IOController:
             raise IOStreamClosedError("Attempted queue_event on a closed io controller.")
         if event.safe_type() not in self._output_event_channels:
             raise ValueError(f"Unrecognised output event {event.type}.")
-        self.events[str(IODirection.OUTPUT)].append(event)
+        self.events[_io_key_out].append(event)
 
     async def close(self) -> None:
         """Closes all input/output channels."""
