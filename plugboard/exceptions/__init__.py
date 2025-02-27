@@ -49,7 +49,7 @@ class NotFoundError(StateBackendError):
     pass
 
 
-class NotInitialisedError(StateBackendError):
+class NotInitialisedError(Exception):
     """Raised attempting to step or run a `Process` or `Component` that has not been initialised."""
 
     pass
