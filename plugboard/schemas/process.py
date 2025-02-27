@@ -2,8 +2,7 @@
 
 import typing as _t
 
-from annotated_types import Len
-from pydantic import model_validator
+from pydantic import ConfigDict, Field, model_validator, with_config
 from typing_extensions import Self
 
 from plugboard.schemas._common import PlugboardBaseModel
@@ -12,7 +11,8 @@ from .connector import DEFAULT_CONNECTOR_CLS_PATH, ConnectorBuilderSpec, Connect
 from .state import StateBackendSpec
 
 
-class ProcessArgsSpec(PlugboardBaseModel, extra="allow"):
+@with_config(ConfigDict(extra="allow"))
+class ProcessArgsSpec(_t.TypedDict):
     """Specification of the [`Process`][plugboard.process.Process] constructor arguments.
 
     Attributes:
@@ -23,11 +23,11 @@ class ProcessArgsSpec(PlugboardBaseModel, extra="allow"):
         state: Optional; Specifies the `StateBackend` used for the `Process`.
     """
 
-    components: _t.Annotated[list[ComponentSpec], Len(min_length=1)]
-    connectors: list[ConnectorSpec] = []
-    name: _t.Optional[str] = None
-    parameters: dict = {}
-    state: StateBackendSpec = StateBackendSpec()
+    components: _t.Annotated[list[ComponentSpec], Field(min_length=1)]
+    connectors: _t.Annotated[list[ConnectorSpec], Field(default_factory=list)]
+    name: _t.Annotated[_t.Optional[str], Field(default=None)]
+    parameters: _t.Annotated[dict[str, _t.Any], Field(default_factory=dict)]
+    state: _t.Annotated[StateBackendSpec, Field(default_factory=StateBackendSpec)]
 
 
 class ProcessSpec(PlugboardBaseModel):
