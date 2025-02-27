@@ -2,11 +2,12 @@
 
 import typing as _t
 
-from pydantic import ConfigDict, Field
+from pydantic import ConfigDict, Field, with_config
 
 from plugboard.schemas._common import PlugboardBaseModel
 
 
+@with_config(ConfigDict(extra="allow"))
 class ComponentArgsSpec(_t.TypedDict):
     """Specification of the [`Component`][plugboard.component.Component] constructor arguments.
 
@@ -21,8 +22,6 @@ class ComponentArgsSpec(_t.TypedDict):
     initial_values: _t.Annotated[dict[str, _t.Any], Field(default_factory=dict)]
     parameters: _t.Annotated[dict[str, _t.Any], Field(default_factory=dict)]
     constraints: _t.Annotated[dict[str, _t.Any], Field(default_factory=dict)]
-
-    __pydantic_config__ = ConfigDict(extra="allow")
 
 
 class ComponentSpec(PlugboardBaseModel):
