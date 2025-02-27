@@ -81,9 +81,12 @@ class IOController:
             read_tasks.append(task)
         if len(read_tasks) == 0:
             return
+        timeout = 1e-3 if len(self.inputs) == 0 and len(self.outputs) > 0 else None
         try:
             try:
-                done, pending = await asyncio.wait(read_tasks, return_when=asyncio.FIRST_COMPLETED)
+                done, pending = await asyncio.wait(
+                    read_tasks, return_when=asyncio.FIRST_COMPLETED, timeout=timeout
+                )
                 for task in done:
                     if (e := task.exception()) is not None:
                         raise e
