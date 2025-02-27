@@ -13,15 +13,15 @@ class ComponentArgsSpec(_t.TypedDict):
 
     Attributes:
         name: The name of the `Component`.
-        initial_values: Initial values for the `Component`.
-        parameters: Parameters for the `Component`.
-        constraints: Constraints for the `Component`.
+        initial_values: Optional; initial values for the `Component`.
+        parameters: Optional; parameters for the `Component`.
+        constraints: Optional; constraints for the `Component`.
     """
 
     name: _t.Annotated[str, Field(pattern=r"^([a-zA-Z_][a-zA-Z0-9_-]*)$")]
-    initial_values: _t.Annotated[dict[str, _t.Any], Field(default_factory=dict)]
-    parameters: _t.Annotated[dict[str, _t.Any], Field(default_factory=dict)]
-    constraints: _t.Annotated[dict[str, _t.Any], Field(default_factory=dict)]
+    initial_values: _t.Annotated[_t.Optional[dict[str, _t.Any] | None], Field(default=None)]
+    parameters: _t.Annotated[_t.Optional[dict[str, _t.Any]], Field(default=None)]
+    constraints: _t.Annotated[_t.Optional[dict[str, _t.Any]], Field(default=None)]
 
 
 class ComponentSpec(PlugboardBaseModel):
