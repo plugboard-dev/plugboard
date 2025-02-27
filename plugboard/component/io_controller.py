@@ -64,11 +64,17 @@ class IOController:
     async def read(self) -> None:
         """Reads data and/or events from input channels.
 
-        Read behaviour is dependent on the specific combination of input fields and events.
-        If there are no input events, only input fields, then the method will only return
-        once data has been received for all input fields. If there are input events, then
-        the method will either return immediately when any event is received, or when data
-        has been received for all input fields, whichever occurs first.
+        Read behaviour is dependent on the specific combination of input fields, output fields,
+        and input events. In general, all components will have at a minimum the system defined
+        input events, such as `StopEvent`. Logic for the various cases is as follows:
+
+        - At least one input field: the method waits until either all input fields have received
+          data or an input event is received, and returns after whichever occurs first.
+        - No input fields but at least one output field: the method waits for a short amount of
+          time to give chance for input events to be received before returning so that the control
+          flow can continue on to processing output events.
+        - No input fields or output fields: this is the pure event driven case where the method
+          waits until an input event is received, and returns after the first received event.
         """
         if self._is_closed:
             raise IOStreamClosedError("Attempted read on a closed io controller.")
