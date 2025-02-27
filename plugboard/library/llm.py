@@ -7,6 +7,7 @@ import typing as _t
 from pydantic import BaseModel
 
 from plugboard.component import Component, IOController as IO
+from plugboard.schemas import ComponentArgsSpec
 from plugboard.utils import depends_on_optional
 
 
@@ -41,8 +42,7 @@ class LLMChat(Component):
         response_model: _t.Optional[_t.Type[BaseModel] | str] = None,
         expand_response: bool = False,
         llm_kwargs: _t.Optional[dict[str, _t.Any]] = None,
-        *args: _t.Any,
-        **kwargs: _t.Any,
+        **kwargs: _t.Unpack[ComponentArgsSpec],
     ) -> None:
         """Instantiates `LLMChat`.
 
@@ -55,10 +55,9 @@ class LLMChat(Component):
             expand_response: Setting this to `True` when using a structured response model will
                 cause the individual attributes of the response model to be added as output fields.
             llm_kwargs: Additional keyword arguments for the LLM.
-            *args: Additional positional arguments for [`Component`][plugboard.component.Component].
             **kwargs: Additional keyword arguments for [`Component`][plugboard.component.Component].
         """
-        super().__init__(*args, **kwargs)
+        super().__init__(**kwargs)
         _llm_cls = locate(llm)
         if _llm_cls is None or not isinstance(_llm_cls, type) or not issubclass(_llm_cls, LLM):
             raise ValueError(f"LLM class {llm} not found in llama-index.")

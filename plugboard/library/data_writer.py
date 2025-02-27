@@ -8,6 +8,19 @@ import typing as _t
 
 from plugboard.component import Component
 from plugboard.component.io_controller import IOController, IODirection
+from plugboard.schemas import ComponentArgsSpec
+
+
+class DataWriterArgsSpec(ComponentArgsSpec):
+    """Specification of the `DataWriter` constructor arguments.
+
+    Attributes:
+        field_names: The names of the fields to write to the data source.
+        chunk_size: The size of the data chunk to read from the DataFrame.
+    """
+
+    field_names: list[str]
+    chunk_size: _t.Optional[int]
 
 
 class DataWriter(Component, ABC):
@@ -19,18 +32,16 @@ class DataWriter(Component, ABC):
         self,
         field_names: list[str],
         chunk_size: _t.Optional[int] = None,
-        *args: _t.Any,
-        **kwargs: _t.Any,
+        **kwargs: _t.Unpack[ComponentArgsSpec],
     ) -> None:
         """Instantiates the `DataWriter`.
 
         Args:
             field_names: The names of the fields to write to the data source.
             chunk_size: The size of the data chunk to read from the DataFrame.
-            *args: Additional positional arguments for [`Component`][plugboard.component.Component].
             **kwargs: Additional keyword arguments for [`Component`][plugboard.component.Component].
         """
-        super().__init__(*args, **kwargs)
+        super().__init__(**kwargs)
         self._buffer: dict[str, deque] = defaultdict(deque)
         self._chunk_size = chunk_size
         self.io = IOController(inputs=field_names, outputs=None, namespace=self.name)
