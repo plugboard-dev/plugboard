@@ -2,6 +2,7 @@
 
 import asyncio
 from collections import deque
+from functools import cached_property
 import typing as _t
 
 from plugboard.connector import Channel, Connector
@@ -58,6 +59,18 @@ class IOController:
         """Returns `True` if the `IOController` is closed, `False` otherwise."""
         return self._is_closed
 
+    @cached_property
+    def _has_field_inputs(self) -> bool:
+        return len(self._input_channels) > 0
+
+    @cached_property
+    def _has_field_outputs(self) -> bool:
+        return len(self._output_channels) > 0
+
+    @cached_property
+    def _has_event_inputs(self) -> bool:
+        return len(self._input_event_channels) > 0
+
     async def read(self) -> None:
         """Reads data and/or events from input channels.
 
@@ -76,16 +89,16 @@ class IOController:
         if self._is_closed:
             raise IOStreamClosedError("Attempted read on a closed io controller.")
         read_tasks = []
-        if len(self._input_channels) > 0:
+        if self._has_field_inputs:
             task = asyncio.create_task(self._read_fields())
             read_tasks.append(task)
-        if len(self._input_event_channels) > 0:
+        if self._has_event_inputs:
             task = asyncio.create_task(self._read_events())
             read_tasks.append(task)
         if len(read_tasks) == 0:
             return
-        # If there are outputs but no inputs, wait for a short time to receive input events
-        timeout = 1e-3 if len(self.inputs) == 0 and len(self.outputs) > 0 else None
+        # If there are field outputs but not inputs, wait for a short time to receive input events
+        timeout = 1e-3 if self._has_field_outputs and not self._has_field_inputs else None
         try:
             try:
                 done, pending = await asyncio.wait(
