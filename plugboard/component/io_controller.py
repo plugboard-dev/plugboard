@@ -129,6 +129,7 @@ class IOController:
     ) -> None:
         read_tasks = []
         for (key, _), chan in channels.items():
+            # FIXME : Looks like multiple channels for same field will trample each other
             if key not in self._read_tasks:
                 task = asyncio.create_task(self._read_channel(channel_type, key, chan))
                 task.set_name(key)
