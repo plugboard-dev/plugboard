@@ -84,6 +84,7 @@ class IOController:
             read_tasks.append(task)
         if len(read_tasks) == 0:
             return
+        # If there are outputs but no inputs, wait for a short time to receive input events
         timeout = 1e-3 if len(self.inputs) == 0 and len(self.outputs) > 0 else None
         try:
             try:
