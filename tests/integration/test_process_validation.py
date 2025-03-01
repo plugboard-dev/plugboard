@@ -5,6 +5,7 @@ import typing as _t
 
 import pytest
 from structlog.testing import capture_logs
+from structlog.typing import EventDict
 
 from plugboard import exceptions
 from plugboard.component import Component, IOController as IO
@@ -17,7 +18,7 @@ from tests.integration.test_process_with_components_run import A, B, C
 # TODO: Update these tests when we implement full graph validation
 
 
-def filter_logs(logs: list[dict], field: str, regex: str) -> list[dict]:
+def filter_logs(logs: list[EventDict], field: str, regex: str) -> list[EventDict]:
     """Filters the log output by applying regex to a field."""
     pattern = re.compile(regex)
     return [l for l in logs if pattern.match(l[field])]
