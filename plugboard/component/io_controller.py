@@ -210,6 +210,7 @@ class IOController:
         for task in self._read_tasks.values():
             task.cancel()
         self._is_closed = True
+        self._logger.info("IOController closed")
 
     def _add_channel_for_field(
         self, field: str, connector_id: str, direction: IODirection, channel: Channel
@@ -260,3 +261,4 @@ class IOController:
             )
         if unconnected_outputs := set(self.outputs) - connected_outputs:
             self._logger.warning("Output fields not connected", unconnected=unconnected_outputs)
+        self._logger.info("IOController connected")
