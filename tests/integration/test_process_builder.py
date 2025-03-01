@@ -89,7 +89,7 @@ def process_spec() -> ProcessSpec:
         ),
         connector_builder=ConnectorBuilderSpec(
             type="plugboard.connector.AsyncioConnector",
-            args=ConnectorBuilderArgsSpec(),
+            args=ConnectorBuilderArgsSpec(parameters={}),
         ),
     )
 

@@ -16,11 +16,11 @@ class DataWriterArgsSpec(ComponentArgsSpec):
 
     Attributes:
         field_names: The names of the fields to write to the data source.
-        chunk_size: The size of the data chunk to read from the DataFrame.
+        chunk_size: Optional; The size of the data chunk to read from the DataFrame.
     """
 
     field_names: list[str]
-    chunk_size: _t.Optional[int]
+    chunk_size: _t.NotRequired[int | None]
 
 
 class DataWriter(Component, ABC):

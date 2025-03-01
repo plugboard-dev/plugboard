@@ -17,11 +17,11 @@ class DataReaderArgsSpec(ComponentArgsSpec):
 
     Attributes:
         field_names: The names of the fields to read from the data source.
-        chunk_size: The size of the data chunk to read from the data source.
+        chunk_size: Optional; The size of the data chunk to read from the data source.
     """
 
     field_names: list[str]
-    chunk_size: _t.Optional[int]
+    chunk_size: _t.NotRequired[int | None]
 
 
 class DataReader(Component, ABC):

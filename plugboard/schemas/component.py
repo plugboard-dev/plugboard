@@ -19,9 +19,9 @@ class ComponentArgsSpec(_t.TypedDict):
     """
 
     name: _t.Annotated[str, Field(pattern=r"^([a-zA-Z_][a-zA-Z0-9_-]*)$")]
-    initial_values: _t.Annotated[_t.Optional[dict[str, _t.Any] | None], Field(default=None)]
-    parameters: _t.Annotated[_t.Optional[dict[str, _t.Any]], Field(default=None)]
-    constraints: _t.Annotated[_t.Optional[dict[str, _t.Any]], Field(default=None)]
+    initial_values: _t.NotRequired[dict[str, _t.Any] | None]
+    parameters: _t.NotRequired[dict[str, _t.Any] | None]
+    constraints: _t.NotRequired[dict[str, _t.Any] | None]
 
 
 class ComponentSpec(PlugboardBaseModel):

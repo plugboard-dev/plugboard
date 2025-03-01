@@ -35,8 +35,8 @@ class ProcessBuilder:
         return process_class(
             components=components,
             connectors=connectors,
-            name=spec.args["name"],
-            parameters=spec.args["parameters"],
+            name=spec.args.get("name"),
+            parameters=spec.args.get("parameters"),
             state=state,
         )
 

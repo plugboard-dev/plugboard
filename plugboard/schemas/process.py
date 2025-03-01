@@ -18,14 +18,14 @@ class ProcessArgsSpec(_t.TypedDict):
     Attributes:
         components: Specifies each `Component` in the `Process`.
         connectors: Specifies the connections between each `Component`.
-        name: Unique identifier for `Process`.
+        name: Optional; Unique identifier for `Process`.
         parameters: Parameters for the `Process`.
         state: Optional; Specifies the `StateBackend` used for the `Process`.
     """
 
     components: _t.Annotated[list[ComponentSpec], Field(min_length=1)]
     connectors: _t.Annotated[list[ConnectorSpec], Field(default_factory=list)]
-    name: _t.Annotated[_t.Optional[str], Field(default=None)]
+    name: _t.NotRequired[str | None]
     parameters: _t.Annotated[dict[str, _t.Any], Field(default_factory=dict)]
     state: _t.Annotated[StateBackendSpec, Field(default_factory=StateBackendSpec)]
 
