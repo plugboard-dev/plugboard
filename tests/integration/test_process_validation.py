@@ -35,8 +35,8 @@ async def test_missing_connections() -> None:
         await p_missing_input.init()
 
     # Must contain an error-level log indicating that input is not connected
-    logs = filter_logs(logs, "level", "error")
-    logs = filter_logs(logs, "event", "input not connected")
+    logs = filter_logs(logs, "log_level", "error")
+    logs = filter_logs(logs, "event", "Input fields not connected")
     assert logs, "Logs do not indicate missing connection"
 
     p_missing_output = LocalProcess(
@@ -48,8 +48,8 @@ async def test_missing_connections() -> None:
         await p_missing_output.init()
 
     # Must contain an error-level log indicating that input is not connected
-    logs = filter_logs(logs, "level", "warning")
-    logs = filter_logs(logs, "event", "output not connected")
+    logs = filter_logs(logs, "log_level", "warning")
+    logs = filter_logs(logs, "event", "Output fields not connected")
     assert logs, "Logs do not indicate missing connection"
 
 

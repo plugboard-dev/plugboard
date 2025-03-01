@@ -8,6 +8,7 @@ from plugboard.connector import Channel, Connector
 from plugboard.events import Event
 from plugboard.exceptions import ChannelClosedError, IOStreamClosedError
 from plugboard.schemas.io import IODirection
+from plugboard.utils import DI
 
 
 IO_NS_UNSET = "__UNSET__"
@@ -50,6 +51,10 @@ class IOController:
         self._read_tasks: dict[str, asyncio.Task] = {}
         self._initial_values = {k: deque(v) for k, v in self.initial_values.items()}
         self._is_closed = False
+        self._logger = DI.logger.sync_resolve().bind(
+            cls=self.__class__.__name__, namespace=self.namespace
+        )
+        self._logger.info("IOController created")
 
     @property
     def is_closed(self) -> bool:
@@ -247,3 +252,11 @@ class IOController:
         async with asyncio.TaskGroup() as tg:
             for conn in connectors:
                 tg.create_task(self._add_channel(conn))
+        connected_inputs = set(k for k, _ in self._input_channels.keys())
+        connected_outputs = set(k for k, _ in self._output_channels.keys())
+        if unconnected_inputs := set(self.inputs) - connected_inputs:
+            self._logger.error(
+                "Input fields not connected, process may hang", unconnected=unconnected_inputs
+            )
+        if unconnected_outputs := set(self.outputs) - connected_outputs:
+            self._logger.warning("Output fields not connected", unconnected=unconnected_outputs)
