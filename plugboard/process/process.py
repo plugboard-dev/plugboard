@@ -8,6 +8,7 @@ import typing as _t
 
 from plugboard.component import Component
 from plugboard.connector import Connector
+from plugboard.exceptions import NotInitialisedError
 from plugboard.state import DictStateBackend, StateBackend
 from plugboard.utils import DI, ExportMixin, gen_rand_str
 
@@ -40,6 +41,8 @@ class Process(ExportMixin, ABC):
         self.parameters: dict = parameters or {}
         self._state: StateBackend = state or self._default_state_cls()
         self._state_is_connected: bool = False
+        # TODO: Replace when we have state tracking in StateBackend
+        self.initialised: bool = False
         self._logger = DI.logger.sync_resolve().bind(
             cls=self.__class__.__name__, name=self.name, job_id=self.state.job_id
         )
@@ -80,7 +83,7 @@ class Process(ExportMixin, ABC):
     @abstractmethod
     async def init(self) -> None:
         """Performs component initialisation actions."""
-        pass
+        self.initialised = True
 
     @abstractmethod
     async def step(self) -> None:
@@ -90,7 +93,8 @@ class Process(ExportMixin, ABC):
     @abstractmethod
     async def run(self) -> None:
         """Runs the process to completion."""
-        pass
+        if not self.initialised:
+            raise NotInitialisedError("Process must be initialised before running")
 
     async def destroy(self) -> None:
         """Performs tear-down actions for the `Process` and its `Component`s."""

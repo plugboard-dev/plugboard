@@ -8,6 +8,7 @@ import typing as _t
 from aiofile import async_open
 import pytest
 
+from plugboard import exceptions
 from plugboard.component import IOController as IO
 from plugboard.connector import AsyncioConnector, Connector, RayConnector
 from plugboard.process import LocalProcess, Process, RayProcess
@@ -99,6 +100,10 @@ async def test_process_with_components_run(
     connectors = [conn_ab, conn_bc]
 
     process = process_cls(components, connectors)
+
+    # Running before initialisation should raise an error
+    with pytest.raises(exceptions.NotInitialisedError):
+        await process.run()
 
     await process.init()
     # TODO: Work out how to re-enable this
