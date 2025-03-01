@@ -58,5 +58,7 @@ async def test_component_validation() -> None:
         ],
     )
 
-    with pytest.raises(exceptions.ValidationError):
+    with pytest.raises(ExceptionGroup) as exc_info:
         await process.init()
+
+    assert exc_info.group_contains(exceptions.ValidationError), "No ValidationError raised"
