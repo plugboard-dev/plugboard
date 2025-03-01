@@ -8,7 +8,9 @@ from structlog.testing import capture_logs
 
 from plugboard import exceptions
 from plugboard.component import Component, IOController as IO
+from plugboard.connector import AsyncioConnector
 from plugboard.process import LocalProcess
+from plugboard.schemas import ConnectorSpec
 from tests.integration.test_process_with_components_run import A, C
 
 
@@ -50,8 +52,11 @@ async def test_component_validation() -> None:
             self.y = self.x
 
     process = LocalProcess(
-        components=[A(name="a", iters=10), NoSuperCall(name="test-no-super")], connectors=[]
+        components=[A(name="a", iters=10), NoSuperCall(name="test-no-super")],
+        connectors=[
+            AsyncioConnector(spec=ConnectorSpec(source="a.out_1", target="test-no-super.x"))
+        ],
     )
 
-    with pytest.raises(exceptions.ComponentValidationError):
+    with pytest.raises(exceptions.ValidationError):
         await process.init()
