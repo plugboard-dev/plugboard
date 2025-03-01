@@ -106,7 +106,6 @@ async def test_process_with_components_run(
         await process.run()
 
     await process.init()
-    # TODO: Work out how to re-enable this
     for c in components:
         assert c.is_initialised
 
