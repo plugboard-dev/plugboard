@@ -47,10 +47,21 @@ async def test_missing_connections() -> None:
     with capture_logs() as logs:
         await p_missing_output.init()
 
-    # Must contain an error-level log indicating that input is not connected
+    # Must contain an warning-level log indicating that output is not connected
     logs = filter_logs(logs, "log_level", "warning")
     logs = filter_logs(logs, "event", "Output fields not connected")
     assert logs, "Logs do not indicate missing connection"
+
+    p_fully_connected = LocalProcess(
+        components=[A(name="a", iters=10), C(name="c", path="test-out.csv")],
+        connectors=[AsyncioConnector(spec=ConnectorSpec(source="a.out_1", target="c.in_1"))],
+    )
+    with capture_logs() as logs:
+        await p_fully_connected.init()
+
+    # No missing connections, so no errors/warnings should be logged
+    logs = filter_logs(logs, "event", "not connected")
+    assert not logs, "Logs indicate missing connection"
 
 
 @pytest.mark.anyio
