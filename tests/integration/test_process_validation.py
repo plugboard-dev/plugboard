@@ -11,7 +11,7 @@ from plugboard.component import Component, IOController as IO
 from plugboard.connector import AsyncioConnector
 from plugboard.process import LocalProcess
 from plugboard.schemas import ConnectorSpec
-from tests.integration.test_process_with_components_run import A, C
+from tests.integration.test_process_with_components_run import A, B, C
 
 
 # TODO: Update these tests when we implement full graph validation
@@ -26,15 +26,30 @@ def filter_logs(logs: list[dict], field: str, regex: str) -> list[dict]:
 @pytest.mark.anyio
 async def test_missing_connections() -> None:
     """Tests that missing connections are logged."""
-    process = LocalProcess(
-        components=[A(name="a", iters=10), C(name="c", path="test-out.csv")], connectors=[]
+    p_missing_input = LocalProcess(
+        components=[A(name="a", iters=10), C(name="c", path="test-out.csv")],
+        # c.in_1 is not connected
+        connectors=[AsyncioConnector(spec=ConnectorSpec(source="a.out_1", target="unknown.x"))],
     )
     with capture_logs() as logs:
-        await process.init()
+        await p_missing_input.init()
 
     # Must contain an error-level log indicating that input is not connected
     logs = filter_logs(logs, "level", "error")
     logs = filter_logs(logs, "event", "input not connected")
+    assert logs, "Logs do not indicate missing connection"
+
+    p_missing_output = LocalProcess(
+        components=[A(name="a", iters=10), B(name="b")],
+        # b.out_1 is not connected
+        connectors=[AsyncioConnector(spec=ConnectorSpec(source="a.out_1", target="b.in_1"))],
+    )
+    with capture_logs() as logs:
+        await p_missing_output.init()
+
+    # Must contain an error-level log indicating that input is not connected
+    logs = filter_logs(logs, "level", "warning")
+    logs = filter_logs(logs, "event", "output not connected")
     assert logs, "Logs do not indicate missing connection"
 
 
