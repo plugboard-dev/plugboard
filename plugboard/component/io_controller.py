@@ -57,7 +57,7 @@ class IOController:
         )
         self._logger.info("IOController created")
 
-        self._received_events = deque()
+        self._received_events: deque[Event] = deque()
         self._has_received_events = asyncio.Event()
         self._has_received_events_lock = asyncio.Lock()
 
