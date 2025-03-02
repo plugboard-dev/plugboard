@@ -14,6 +14,7 @@ from plugboard.events import Event, EventHandlers
 from plugboard.exceptions import UnrecognisedEventError
 from plugboard.state import StateBackend
 from plugboard.utils import DI, ClassRegistry, ExportMixin
+from plugboard.utils.ray import is_on_ray_worker
 
 
 class Component(ABC, ExportMixin):
@@ -58,6 +59,9 @@ class Component(ABC, ExportMixin):
 
     def __init_subclass__(cls, *args: _t.Any, **kwargs: _t.Any) -> None:
         super().__init_subclass__(*args, **kwargs)
+        if is_on_ray_worker():
+            # Required until https://github.com/ray-project/ray/issues/42823 is resolved
+            return
         if not hasattr(cls, "io"):
             raise NotImplementedError(f"{cls.__name__} must define an `io` attribute.")
         ComponentRegistry.add(cls)
