@@ -35,6 +35,7 @@ class ComponentTestHelper(Component):
     """`ComponentTestHelper` is a component class for testing purposes."""
 
     io = IO(inputs=[], outputs=[])
+    exports = ["_is_initialised", "_is_finished", "_step_count"]
 
     @property
     def is_initialised(self) -> bool:  # noqa: D102
