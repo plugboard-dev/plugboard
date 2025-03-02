@@ -13,8 +13,7 @@ from plugboard.component.io_controller import (
 from plugboard.events import Event, EventHandlers
 from plugboard.exceptions import UnrecognisedEventError
 from plugboard.state import StateBackend
-from plugboard.utils import DI, ClassRegistry, ExportMixin
-from plugboard.utils.ray import is_on_ray_worker
+from plugboard.utils import DI, ClassRegistry, ExportMixin, is_on_ray_worker
 
 
 class Component(ABC, ExportMixin):
