@@ -200,8 +200,11 @@ class Component(ABC, ExportMixin):
     @StopEvent.handler
     async def _stop_event_handler(self, event: StopEvent) -> None:
         """Stops the component on receiving the system `StopEvent`."""
-        self.io.queue_event(event)
-        await self.io.close()
+        try:
+            self.io.queue_event(event)
+            await self.io.close()
+        except IOStreamClosedError:
+            pass
 
     async def run(self) -> None:
         """Executes component logic for all steps to completion."""
