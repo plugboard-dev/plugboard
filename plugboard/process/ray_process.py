@@ -57,7 +57,7 @@ class RayProcess(Process):
         """Updates attributes on local components from remote actors."""
         component_ids = [c.id for c in self.components.values()]
         remote_states = await gather_except(
-            *[self._component_actors[id].getattr.remote("__dict__") for id in component_ids]
+            *[self._component_actors[id].getattr.remote("exportable") for id in component_ids]
         )
         for id, state in zip(component_ids, remote_states):
             self.components[id].__dict__.update(state)
