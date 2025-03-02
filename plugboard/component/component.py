@@ -17,9 +17,17 @@ from plugboard.utils import DI, ClassRegistry, ExportMixin
 
 
 class Component(ABC, ExportMixin):
-    """`Component` base class for all components in a process model."""
+    """`Component` base class for all components in a process model.
+
+    Attributes:
+        name: The name of the component.
+        io: The `IOController` for the component, specifying inputs, outputs, and events.
+        exports: Optional; The exportable fields from the component during distributed runs
+            in addition to input and output fields.
+    """
 
     io: IOController
+    exports: _t.Optional[list[str]] = None
 
     def __init__(
         self,
