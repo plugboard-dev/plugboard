@@ -95,6 +95,35 @@ class IOController:
         """
         if self._is_closed:
             raise IOStreamClosedError("Attempted read on a closed io controller.")
+        read_tasks = self._set_read_tasks()
+        if len(read_tasks) == 0:
+            return
+        # If there are field outputs but not inputs, wait for a short time to receive input events
+        timeout = 1e-3 if self._has_field_outputs and not self._has_field_inputs else None
+        try:
+            try:
+                done, _ = await asyncio.wait(
+                    read_tasks, return_when=asyncio.FIRST_COMPLETED, timeout=timeout
+                )
+                for task in done:
+                    if (e := task.exception()) is not None:
+                        raise e
+                    self._read_tasks.pop(task.get_name())
+                    self._set_read_tasks()
+                if self._has_received_events.is_set():
+                    async with self._has_received_events_lock:
+                        self._has_received_events.clear()
+                        self.events[_io_key_in].extend(self._received_events)
+                        self._received_events.clear()
+            except* ChannelClosedError as eg:
+                await self.close()
+                raise self._build_io_stream_error(IODirection.INPUT, eg) from eg
+        except asyncio.CancelledError:
+            for task in read_tasks:
+                task.cancel()
+            raise
+
+    def _set_read_tasks(self) -> list[asyncio.Task]:
         read_tasks: list[asyncio.Task] = []
         if self._has_field_inputs:
             if _fields_read_task not in self._read_tasks:
@@ -112,38 +141,7 @@ class IOController:
                 wait_for_events_task.set_name(_events_wait_task)
                 self._read_tasks[_events_wait_task] = wait_for_events_task
             read_tasks.append(self._read_tasks[_events_wait_task])
-        if len(read_tasks) == 0:
-            return
-        # If there are field outputs but not inputs, wait for a short time to receive input events
-        timeout = 1e-3 if self._has_field_outputs and not self._has_field_inputs else None
-        try:
-            try:
-                done, _ = await asyncio.wait(
-                    read_tasks, return_when=asyncio.FIRST_COMPLETED, timeout=timeout
-                )
-                for task in done:
-                    if (e := task.exception()) is not None:
-                        raise e
-                    if (task_name := task.get_name()) == _fields_read_task:
-                        read_fields_task = asyncio.create_task(self._read_fields())
-                        read_fields_task.set_name(_fields_read_task)
-                        self._read_tasks[_fields_read_task] = read_fields_task
-                    elif task_name == _events_wait_task:
-                        wait_for_events_task = asyncio.create_task(self._has_received_events.wait())
-                        wait_for_events_task.set_name(_events_wait_task)
-                        self._read_tasks[_events_wait_task] = wait_for_events_task
-                if self._has_received_events.is_set():
-                    async with self._has_received_events_lock:
-                        self._has_received_events.clear()
-                        self.events[_io_key_in].extend(self._received_events)
-                        self._received_events.clear()
-            except* ChannelClosedError as eg:
-                await self.close()
-                raise self._build_io_stream_error(IODirection.INPUT, eg) from eg
-        except asyncio.CancelledError:
-            for task in read_tasks:
-                task.cancel()
-            raise
+        return read_tasks
 
     async def _read_fields(
         self,
