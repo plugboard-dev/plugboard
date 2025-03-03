@@ -95,8 +95,7 @@ class IOController:
         """
         if self._is_closed:
             raise IOStreamClosedError("Attempted read on a closed io controller.")
-        read_tasks = self._set_read_tasks()
-        if len(read_tasks) == 0:
+        if len(read_tasks := self._set_read_tasks()) == 0:
             return
         # If there are field outputs but not inputs, wait for a short time to receive input events
         timeout = 1e-3 if self._has_field_outputs and not self._has_field_inputs else None
@@ -110,11 +109,7 @@ class IOController:
                         raise e
                     self._read_tasks.pop(task.get_name())
                     self._set_read_tasks()
-                if self._has_received_events.is_set():
-                    async with self._has_received_events_lock:
-                        self._has_received_events.clear()
-                        self.events[_io_key_in].extend(self._received_events)
-                        self._received_events.clear()
+                    await self._flush_event_buffer()
             except* ChannelClosedError as eg:
                 await self.close()
                 raise self._build_io_stream_error(IODirection.INPUT, eg) from eg
@@ -142,6 +137,13 @@ class IOController:
                 self._read_tasks[_events_wait_task] = wait_for_events_task
             read_tasks.append(self._read_tasks[_events_wait_task])
         return read_tasks
+
+    async def _flush_event_buffer(self) -> None:
+        if self._has_received_events.is_set():
+            async with self._has_received_events_lock:
+                self._has_received_events.clear()
+                self.events[_io_key_in].extend(self._received_events)
+                self._received_events.clear()
 
     async def _read_fields(
         self,
