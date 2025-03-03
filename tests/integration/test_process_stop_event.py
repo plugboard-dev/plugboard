@@ -29,7 +29,7 @@ class A(ComponentTestHelper):
 
     async def init(self) -> None:
         await super().init()
-        self._seq = iter(range(self._iters))
+        self._seq = iter(range(1, self._iters + 1))
 
     async def step(self) -> None:
         try:
@@ -111,10 +111,20 @@ async def test_process_stop_event(
             tg.create_task(process.run())
             tg.create_task(stop_after())
 
-        for c in components:
-            assert c.is_finished
-            assert c.step_count == iters_before_stop
-
-        assert comp_a.out_1 == iters_before_stop - 1
+        # StopEvent is sent half way through iter after iter n, where n=iters_before_stop.
+        # The event will be processed by component A in the iter following this one, hence n+2.
+        assert comp_a.step_count == iters_before_stop + 2
+        # Because A sleeps for sleep_time seconds before sending outputs, the B components, which
+        # block will waiting for field or event inputs, will receive the StopEvent before A sends
+        # the final output and then shutdown, hence n+1.
         for c in [comp_b1, comp_b2, comp_b3, comp_b4, comp_b5]:
-            assert c.out_1 == iters_before_stop - 1
+            assert c.is_finished
+            assert c.step_count == iters_before_stop + 1
+
+        # A performs n+1 full steps and is interrupted on step n+2 before a final update of out_1,
+        # hence n+2.
+        assert comp_a.out_1 == iters_before_stop + 2
+        # Because the B components receive the StopEvent on iter n+1, they will only receive n
+        # outputs from A before shutting down the IOController, hence n.
+        for c in [comp_b1, comp_b2, comp_b3, comp_b4, comp_b5]:
+            assert c.out_1 == iters_before_stop
