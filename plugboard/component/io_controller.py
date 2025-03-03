@@ -165,33 +165,6 @@ class IOController:
             self.data[_io_key_in][key] = task.result()
 
     async def _read_events(self) -> None:
-        # TODO : Simpler way to continuously iterate over multiple input event channels?
-        read_tasks = []
-        for key, chan in self._input_event_channels.items():
-            if key not in self._read_tasks:
-                task = asyncio.create_task(self._read_channel("event", key, chan))
-                task.set_name(key)
-                self._read_tasks[key] = task
-            read_tasks.append(self._read_tasks[key])
-        if len(read_tasks) == 0:
-            return
-        while True:
-            done, _ = await asyncio.wait(read_tasks, return_when=asyncio.FIRST_COMPLETED)
-            for task in done:
-                # Add the result of completed tasks to the event queue
-                key = task.get_name()
-                if (e := task.exception()) is not None:
-                    raise e
-                async with self._has_received_events_lock:
-                    self._received_events.append(task.result())
-                    self._has_received_events.set()
-                # Launch another read task to get the next event for this channel
-                chan = self._input_event_channels[key]
-                new_task = asyncio.create_task(self._read_channel("event", key, chan))
-                new_task.set_name(key)
-                self._read_tasks[key] = new_task
-
-    async def _read_events_(self) -> None:
         fan_in = AsyncioChannel()
 
         async def _iter_event_channel(chan: Channel) -> None:
