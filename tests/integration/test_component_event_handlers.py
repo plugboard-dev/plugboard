@@ -227,12 +227,13 @@ async def test_component_event_handlers_with_field_inputs(
 
     # After sending data for only one input field, step should timeout as read tasks are incomplete
     await chan_0.send(3)
+    step_task = asyncio.create_task(a.step())
     with pytest.raises(TimeoutError):
-        await asyncio.wait_for(a.step(), timeout=0.1)
+        await asyncio.wait_for(asyncio.shield(step_task), timeout=0.1)
 
     # After sending an event of type A before all field data is sent, the event_A_count should be 4
     await chan_A.send(evt_A)
-    await a.step()
+    await step_task
 
     assert a.event_A_count == 4
     assert a.event_B_count == 4
