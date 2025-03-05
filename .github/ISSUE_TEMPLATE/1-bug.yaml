@@ -1,0 +1,37 @@
+name: Bug report
+description: Report an error or unexpected behavior
+title: "bug: "
+labels: ["bug"]
+body:
+  - type: textarea
+    attributes:
+      label: Summary
+      description: |
+        A clear and concise description of the bug, including a minimal reproducible example (MRE).
+        If we cannot reproduce the bug, it is unlikely that we will be able to help you.
+    validations:
+      required: true
+
+  - type: input
+    attributes:
+      label: Platform
+      description: What operating system and architecture are you using? (see `uname -orsm`)
+      placeholder: e.g., macOS 14 arm64, Windows 11 x86_64, Ubuntu 20.04 amd64
+    validations:
+      required: true
+
+  - type: input
+    attributes:
+      label: Version
+      description: What version of Plugboard are you using? (see `plugboard --help`)
+      placeholder: e.g., 0.1.0
+    validations:
+      required: true
+
+  - type: input
+    attributes:
+      label: Python version
+      description: What version of Python are you using? (see `python --version`)
+      placeholder: e.g., Python 3.12.8
+    validations:
+      required: false

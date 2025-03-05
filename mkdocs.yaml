@@ -30,12 +30,13 @@ plugins:
           show_signature_annotations: true
           merge_init_into_class: true
           separate_signature: true
-
+- mkdocs-jupyter
 - mike:
     alias_type: symlink
     canonical_version: latest
 
 markdown_extensions:
+- admonition
 # Annotations: https://squidfunk.github.io/mkdocs-material/reference/annotations/
 - attr_list
 - md_in_html
@@ -59,6 +60,8 @@ extra_css:
 
 extra_javascript:
 - https://buttons.github.io/buttons.js
+- javascripts/extra.js
+
 
 theme:
   name: material
@@ -67,6 +70,8 @@ theme:
   custom_dir: docs/overrides
   features:
   - navigation.tabs
+  - navigation.expand
+  - navigation.indexes
   - content.code.annotate
   - content.code.copy
   palette:
@@ -91,15 +96,29 @@ theme:
 watch:
 - mkdocs.yaml
 - docs
+- examples
 - plugboard
 - README.md
 - CONTRIBUTING.md
 
 nav:
 - Home: index.md
-- Examples:
-  - Hello world: examples/001_hello_world/hello-world.md
-  - Simple model: examples/002_simple_model/simple-model.md
+- Usage:
+  - Key Concepts: usage/key-concepts.md
+  - Tutorials:
+    - Hello world: examples/tutorials/hello-world.md
+    - A more complex process: examples/tutorials/more-complex-process.md
+    - More components: examples/tutorials/more-components.md
+    - Running in parallel: examples/tutorials/running-in-parallel.md
+    - Event-driven models: examples/tutorials/event-driven-models.md
+  - Configuration: usage/configuration.md
+- Demos:
+  - Fundamentals:
+    - Simple model: examples/demos/fundamentals/001_simple_model/simple-model.ipynb
+  - LLMs:
+    - Data filtering: examples/demos/llm/001_data_filter/llm-filtering.ipynb
+  - Physics-based models:
+    - Hot water tank: examples/demos/physics-models/001-hot-water-tank/hot-water-tank.ipynb
 - API Reference:
   - component: api/component/component.md
   - connector: api/connector/connector.md
@@ -108,5 +127,7 @@ nav:
   - process: api/process/process.md
   - schemas: api/schemas/schemas.md
   - state: api/state/state.md
-  - utils: api/utils/utils.md
+  - utils:
+    - api/utils/index.md
+    - settings: api/utils/settings/settings.md
 - Contributing: contributing.md

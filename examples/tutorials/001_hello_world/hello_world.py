@@ -3,35 +3,28 @@
 # fmt: off
 # --8<-- [start:components]
 import asyncio
-from contextlib import AsyncExitStack
 import typing as _t
 
-from aiofile import async_open
-
-from plugboard.component import Component
-from plugboard.component import IOController as IO
+from plugboard.component import Component, IOController as IO
 from plugboard.connector import AsyncioConnector
 from plugboard.process import LocalProcess
 from plugboard.schemas import ConnectorSpec
 
-
 class A(Component):
-    io = IO(outputs=["out_1"])
+    io = IO(outputs=["out_1"]) # (1)!
 
     def __init__(self, iters: int, *args: _t.Any, **kwargs: _t.Any) -> None:
         super().__init__(*args, **kwargs)
         self._iters = iters
 
     async def init(self) -> None:
-        await super().init()
-        self._seq = iter(range(self._iters))
+        self._seq = iter(range(self._iters)) # (2)!
 
     async def step(self) -> None:
         try:
-            self.out_1 = next(self._seq)
+            self.out_1 = next(self._seq) # (3)!
         except StopIteration:
-            await self.io.close()
-
+            await self.io.close() # (5)!
 
 class B(Component):
     io = IO(inputs=["in_1"])
@@ -39,26 +32,23 @@ class B(Component):
     def __init__(self, path: str, *args: _t.Any, **kwargs: _t.Any) -> None:
         super().__init__(*args, **kwargs)
         self._path = path
-        self._ctx = AsyncExitStack()
 
     async def init(self) -> None:
-        self._f = await self._ctx.enter_async_context(
-            async_open(self._path, "w")
-        )
+        self._f = open(self._path, "w")
 
     async def step(self) -> None:
         out = 2 * self.in_1
-        await self._f.write(f"{out}\n")
+        self._f.write(f"{out}\n")
 
     async def destroy(self) -> None:
-        await self._ctx.aclose()
+        self._f.close() # (4)!
 # --8<-- [end:components]
 
 
 async def main() -> None:
     # --8<-- [start:main]
     process = LocalProcess(
-        components=[A(name="a", iters=10), B(name="b", path="b.txt")],
+        components=[A(name="a", iters=5), B(name="b", path="b.txt")],
         connectors=[
             AsyncioConnector(
                 spec=ConnectorSpec(source="a.out_1", target="b.in_1"),
