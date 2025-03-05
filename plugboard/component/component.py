@@ -11,7 +11,7 @@ from plugboard.component.io_controller import (
     IOStreamClosedError,
 )
 from plugboard.events import Event, EventHandlers
-from plugboard.exceptions import UnrecognisedEventError
+from plugboard.exceptions import UnrecognisedEventError, ValidationError
 from plugboard.state import StateBackend
 from plugboard.utils import DI, ClassRegistry, ExportMixin
 
@@ -72,8 +72,13 @@ class Component(ABC, ExportMixin):
 
     async def connect_state(self, state: _t.Optional[StateBackend] = None) -> None:
         """Connects the `Component` to the `StateBackend`."""
-        if self._state_is_connected:
-            return
+        try:
+            if self._state_is_connected:
+                return
+        except AttributeError as e:
+            raise ValidationError(
+                "Component invalid: did you forget to call super().__init__ in the constructor?"
+            ) from e
         self._state = state or self._state
         if self._state is None:
             return
