@@ -13,8 +13,11 @@ from components import Offset, Random, Save, Scale, Sum
 
 async def main() -> None:
     # --8<-- [start:main]
+    connect = lambda in_, out_: AsyncioConnector(  # (1)!
+        spec=ConnectorSpec(source=in_, target=out_)
+    )
     process = LocalProcess(
-        components=[  # (1)!
+        components=[  # (2)!
             Random(name="random", iters=5, low=0, high=10),
             Offset(name="offset", offset=10),
             Scale(name="scale", scale=2),
@@ -22,17 +25,13 @@ async def main() -> None:
             Save(name="save-input", path="input.txt"),
             Save(name="save-output", path="output.txt"),
         ],
-        connectors=[  # (2)!
-            AsyncioConnector(
-                spec=ConnectorSpec(source="random.x", target="save-input.value_to_save")
-            ),
-            AsyncioConnector(spec=ConnectorSpec(source="random.x", target="offset.a")),
-            AsyncioConnector(spec=ConnectorSpec(source="random.x", target="scale.a")),
-            AsyncioConnector(spec=ConnectorSpec(source="offset.x", target="sum.a")),
-            AsyncioConnector(spec=ConnectorSpec(source="scale.x", target="sum.b")),
-            AsyncioConnector(
-                spec=ConnectorSpec(source="sum.x", target="save-output.value_to_save")
-            ),
+        connectors=[  # (3)!
+            connect("random.x", "save-input.value_to_save"),
+            connect("random.x", "offset.a"),
+            connect("random.x", "scale.a"),
+            connect("offset.x", "sum.a"),
+            connect("scale.x", "sum.b"),
+            connect("sum.x", "save-output.value_to_save"),
         ],
     )
     async with process:  # (3)!

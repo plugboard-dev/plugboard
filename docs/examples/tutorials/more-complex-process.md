@@ -43,9 +43,10 @@ Now in `branching.py` we import these components, connect them together and run 
 --8<-- "examples/tutorials/002_complex_processes/branching.py:main"
 ```
 
-1. Instantiate each of the components here with any necessary parameters.
-2. Here is where we define all of the connections in our model: `source` and `target` are of the form `component_name.io_name`. So the first item connects the `x` output on the `random` component to the `value_to_save` input on `save-input`.
-3. As in the previous tutorial, this is equivalent to calling `await process.init()`, followed by `await process.run()` and then `await process.destroy()`.
+1. We'll use this lambda to abbreviate the connectors below.
+2. Instantiate each of the components here with any necessary parameters.
+3. Here is where we define all of the connections in our model: `source` and `target` are of the form `component_name.io_name`. So the first item connects the `x` output on the `random` component to the `value_to_save` input on `save-input`.
+4. As in the previous tutorial, this is equivalent to calling `await process.init()`, followed by `await process.run()` and then `await process.destroy()`.
 
 Now run `python branching.py` and you will see the `input.txt` and `output.txt` files generated showing that the model has run.
 

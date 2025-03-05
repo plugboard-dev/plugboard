@@ -13,6 +13,9 @@ from components import Random, Save, Scale, Sum
 
 async def main() -> None:
     # --8<-- [start:main]
+    connect = lambda in_, out_: AsyncioConnector(
+        spec=ConnectorSpec(source=in_, target=out_)
+    )
     process = LocalProcess(
         components=[
             Random(name="random", iters=5, low=0, high=10),
@@ -21,12 +24,10 @@ async def main() -> None:
             Save(name="save-output", path="cumulative-sum.txt"),
         ],
         connectors=[
-            AsyncioConnector(spec=ConnectorSpec(source="random.x", target="sum.a")),
-            AsyncioConnector(spec=ConnectorSpec(source="sum.x", target="scale.a")),
-            AsyncioConnector(spec=ConnectorSpec(source="scale.x", target="sum.b")),
-            AsyncioConnector(
-                spec=ConnectorSpec(source="sum.x", target="save-output.value_to_save")
-            ),
+            connect("random.x", "sum.a"),
+            connect("sum.x", "scale.a"),
+            connect("scale.x", "sum.b"),
+            connect("sum.x", "save-output.value_to_save"),
         ],
     )
     async with process:

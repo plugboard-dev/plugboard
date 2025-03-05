@@ -74,23 +74,18 @@ async def main() -> None:
     weather = WeatherAPI(name="weather")
     # --8<-- [end:weather]
     # --8<-- [start:main]
+    connect = lambda in_, out_: AsyncioConnector(
+        spec=ConnectorSpec(source=in_, target=out_)
+    )
     process = LocalProcess(
         components=[load_text, llm, weather, save_output],
         connectors=[
-            AsyncioConnector(spec=ConnectorSpec(source="load-text.text", target="llm.prompt")),
-            AsyncioConnector(spec=ConnectorSpec(source="llm.latitude", target="weather.latitude")),
-            AsyncioConnector(
-                spec=ConnectorSpec(source="llm.longitude", target="weather.longitude")
-            ),
-            AsyncioConnector(
-                spec=ConnectorSpec(source="llm.location", target="save-results.location")
-            ),
-            AsyncioConnector(
-                spec=ConnectorSpec(source="weather.temperature", target="save-results.temperature")
-            ),
-            AsyncioConnector(
-                spec=ConnectorSpec(source="weather.wind_speed", target="save-results.wind_speed")
-            ),
+            connect("load-text.text", "llm.prompt"),
+            connect("llm.latitude", "weather.latitude"),
+            connect("llm.longitude", "weather.longitude"),
+            connect("llm.location", "save-results.location"),
+            connect("weather.temperature", "save-results.temperature"),
+            connect("weather.wind_speed", "save-results.wind_speed"),
         ],
     )
     async with process:
