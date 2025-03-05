@@ -26,7 +26,7 @@ graph LR;
 
 Let's define the various components that we need. The `Timestamper` component simply emits the current time in ISO format so that our output file will contain a record of how long each step of the model took. We can again use [`FileWriter`][plugboard.library.FileWriter] to save the output to CSV.
 ```python
---8<-- "examples/tutorials/004_using_ray/components.py:components"
+--8<-- "examples/tutorials/004_using_ray/hello_ray.py:components"
 ```
 
 1. We're using `time.sleep` here and not `asyncio.sleep` because we're deliberately blocking execution to simulate a computationally intensive component.

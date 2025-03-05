@@ -5,19 +5,19 @@ plugboard:
       type: "plugboard.connector.RayConnector"  # (2)!
     args:
       components:
-      - type: components.Iterator
+      - type: hello_ray.Iterator
         args:
           name: "input"
           iters: 10
-      - type: components.Sleep
+      - type: hello_ray.Sleep
         args:
           name: "slow-sleep"
           sleep_seconds: 0.5
-      - type: components.Sleep
+      - type: hello_ray.Sleep
         args:
           name: "very-slow-sleep"
           sleep_seconds: 1
-      - type: components.Timestamper
+      - type: hello_ray.Timestamper
         args:
           name: "timestamper"
       - type: plugboard.library.file_io.FileWriter
