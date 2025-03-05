@@ -19,6 +19,7 @@ When implementing your own components, you will need to:
 * Specify its inputs and ouputs using an [`IOController`][plugboard.component.IOController];
 * Define a `step()` method the executes the main logic of your component for a single step; and
 * Optionally define an `init()` method to do any required preparatory steps before the model in run.
+* In the case of event based models, define custom `Event` subclasses and corresponding event handler methods decorated with `Event.handler`.
 
 ### Connectors
 
