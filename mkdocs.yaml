@@ -71,6 +71,7 @@ theme:
   features:
   - navigation.tabs
   - navigation.expand
+  - navigation.indexes
   - content.code.annotate
   - content.code.copy
   palette:
@@ -126,5 +127,7 @@ nav:
   - process: api/process/process.md
   - schemas: api/schemas/schemas.md
   - state: api/state/state.md
-  - utils: api/utils/utils.md
+  - utils:
+    - api/utils/index.md
+    - settings: api/utils/settings/settings.md
 - Contributing: contributing.md
