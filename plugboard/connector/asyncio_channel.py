@@ -20,7 +20,7 @@ class AsyncioChannel(Channel):
         queue: _t.Optional[asyncio.Queue] = None,
         subscribers: _t.Optional[set[asyncio.Queue]] = None,
         **kwargs: _t.Any,
-    ):  # noqa: D417
+    ):
         """Instantiates `AsyncioChannel`.
 
         Args:
