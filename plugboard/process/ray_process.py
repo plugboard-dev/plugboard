@@ -4,6 +4,7 @@ import asyncio
 import typing as _t
 
 from plugboard.component import Component
+from plugboard.component.io_controller import IODirection
 from plugboard.connector import Connector
 from plugboard.process.process import Process
 from plugboard.state import RayStateBackend, StateBackend
@@ -57,10 +58,16 @@ class RayProcess(Process):
         """Updates attributes on local components from remote actors."""
         component_ids = [c.id for c in self.components.values()]
         remote_states = await gather_except(
-            *[self._component_actors[id].getattr.remote("__dict__") for id in component_ids]
+            *[self._component_actors[id].dict.remote() for id in component_ids]
         )
         for id, state in zip(component_ids, remote_states):
-            self.components[id].__dict__.update(state)
+            self.components[id].__dict__.update(
+                {
+                    **state[str(IODirection.INPUT)],
+                    **state[str(IODirection.OUTPUT)],
+                    **state["exports"],
+                }
+            )
 
     async def _connect_components(self) -> None:
         connectors = list(self.connectors.values())

@@ -13,13 +13,21 @@ from plugboard.component.io_controller import (
 from plugboard.events import Event, EventHandlers
 from plugboard.exceptions import UnrecognisedEventError, ValidationError
 from plugboard.state import StateBackend
-from plugboard.utils import DI, ClassRegistry, ExportMixin
+from plugboard.utils import DI, ClassRegistry, ExportMixin, is_on_ray_worker
 
 
 class Component(ABC, ExportMixin):
-    """`Component` base class for all components in a process model."""
+    """`Component` base class for all components in a process model.
+
+    Attributes:
+        name: The name of the component.
+        io: The `IOController` for the component, specifying inputs, outputs, and events.
+        exports: Optional; The exportable fields from the component during distributed runs
+            in addition to input and output fields.
+    """
 
     io: IOController
+    exports: _t.Optional[list[str]] = None
 
     def __init__(
         self,
@@ -50,6 +58,9 @@ class Component(ABC, ExportMixin):
 
     def __init_subclass__(cls, *args: _t.Any, **kwargs: _t.Any) -> None:
         super().__init_subclass__(*args, **kwargs)
+        if is_on_ray_worker():
+            # Required until https://github.com/ray-project/ray/issues/42823 is resolved
+            return
         if not hasattr(cls, "io"):
             raise NotImplementedError(f"{cls.__name__} must define an `io` attribute.")
         ComponentRegistry.add(cls)
@@ -170,6 +181,7 @@ class Component(ABC, ExportMixin):
             "id": self.id,
             "name": self.name,
             **self.io.data,
+            "exports": {name: getattr(self, name, None) for name in self.exports or []},
         }
 
 
