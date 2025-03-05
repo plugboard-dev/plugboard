@@ -2,9 +2,16 @@
 # ruff: noqa: D101,D102,D103
 
 import pytest
+import ray
 
 from plugboard.exceptions import RegistryError
-from plugboard.utils import ClassRegistry, build_actor_wrapper, depends_on_optional, gather_except
+from plugboard.utils import (
+    ClassRegistry,
+    build_actor_wrapper,
+    depends_on_optional,
+    gather_except,
+    is_on_ray_worker,
+)
 
 
 class BaseA:
@@ -180,3 +187,14 @@ async def test_gather_except() -> None:
         await gather_except(coro_ok(), coro_err())
     assert len(e.value.exceptions) == 1
     assert isinstance(e.value.exceptions[0], ValueError)
+
+
+def test_is_on_ray() -> None:
+    """Tests the `is_on_ray_worker` utility."""
+    assert is_on_ray_worker() is False
+
+    @ray.remote
+    def remote_func() -> bool:
+        return is_on_ray_worker()
+
+    assert ray.get(remote_func.remote()) is True
