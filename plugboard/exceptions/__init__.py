@@ -49,7 +49,7 @@ class NotFoundError(StateBackendError):
     pass
 
 
-class NotInitialisedError(StateBackendError):
+class NotInitialisedError(Exception):
     """Raised attempting to step or run a `Process` or `Component` that has not been initialised."""
 
     pass
@@ -63,5 +63,11 @@ class EventError(Exception):
 
 class UnrecognisedEventError(EventError):
     """Raised when an unrecognised event is encountered."""
+
+    pass
+
+
+class ValidationError(Exception):
+    """Raised when an invalid `Process` or `Component` is encountered."""
 
     pass
