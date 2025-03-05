@@ -1,0 +1,32 @@
+plugboard:
+  process:
+    args:
+      components:
+      - type: components.Random
+        args:
+          name: "random"
+          iters: 5
+          low: 0
+          high: 10
+      - type: components.Scale
+        args:
+          name: "scale"
+          scale: 2
+          initial_values:
+            a: [0]
+      - type: components.Sum
+        args:
+          name: "sum"
+      - type: components.Save
+        args:
+          name: "save-output"
+          path: "cumulative-sum.txt"
+      connectors:
+      - source: "random.x"
+        target: "sum.a"
+      - source: "sum.x"
+        target: "scale.a"
+      - source: "scale.x"
+        target: "sum.b"
+      - source: "sum.x"
+        target: "save-output.value_to_save"

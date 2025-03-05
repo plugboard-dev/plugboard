@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+- name: Documentation
+  url: https://docs.plugboard.dev/
+  about: Please consult the documentation before creating an issue.
+- name: I have a question / I need help
+  url: https://github.com/plugboard-dev/plugboard/discussions/new?category=q-a
+  about: Ask and answer questions in the Discussions tab.

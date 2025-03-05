@@ -1,0 +1,40 @@
+plugboard:
+  process:
+    args:
+      components:
+      - type: plugboard.library.file_io.FileReader
+        args:
+          name: "load-text"
+          path: "input.csv"
+          field_names:
+          - text
+      - type: plugboard.library.file_io.FileWriter
+        args:
+          name: "save-results"
+          path: "output.csv"
+          field_names:
+          - location
+          - temperature
+          - wind_speed
+      - type: plugboard.library.llm.LLMChat
+        args:
+          name: "llm"
+          system_prompt: "Identify a geographical location from the input and provide its latitude and longitude"
+          response_model: hello_llm.Location
+          expand_response: true
+      - type: hello_llm.WeatherAPI
+        args:
+          name: "weather"
+      connectors:
+      - source: "load-text.text"
+        target: "llm.prompt"
+      - source: "llm.latitude"
+        target: "weather.latitude"
+      - source: "llm.longitude"
+        target: "weather.longitude"
+      - source: "llm.location"
+        target: "save-results.location"
+      - source: "weather.temperature"
+        target: "save-results.temperature"
+      - source: "weather.wind_speed"
+        target: "save-results.wind_speed"
