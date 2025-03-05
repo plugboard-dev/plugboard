@@ -60,6 +60,6 @@ We can now run this model using the plugboard CLI with the command:
 plugboard process run model.yaml
 ```
 
-You should see that an output `.txt` file has been created, showing the the model as run successfully. Congratulation - you have built and run your first Plugboard model!
+You should see that an output `.txt` file has been created, showing the the model as run successfully. Congratulations - you have built and run your first Plugboard model!
 
 In the following tutorials we will build up some more complex components and processes to demonstrate the power of the framework.
