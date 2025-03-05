@@ -52,7 +52,7 @@ Plugboard supports both bounded and unbounded data streams. That is to say, you 
 
 Plugboard uses Python's **asynchronous concurrency** to schedule execution of each of the components. Don't worry if asynchronous Python is unfamiliar to you: Plugboard takes care of all the details, so that you can focus on the logic of your model.
 
-There are two Process classes available:
+These Process classes are currently available which can be extended with custom implementations:
 
 * [`LocalProcess`][plugboard.process.LocalProcess] runs models in a single Python process on your computer. This is useful for initial development, and is often sufficient for models are not computationally demanding.
 * [`RayProcess`][plugboard.process.RayProcess] allows you to execute components on different Python processes using the [Ray Framework](https://docs.ray.io/en/latest/). This supports parallel computation on a single machine and scales out to large-scale [compute clusters](https://docs.ray.io/en/latest/cluster/getting-started.html).
