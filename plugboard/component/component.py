@@ -176,7 +176,7 @@ class Component(ABC, ExportMixin):
             "id": self.id,
             "name": self.name,
             **self.io.data,
-            "exports": {name: getattr(self, name) for name in self.exports or []},
+            "exports": {name: getattr(self, name, None) for name in self.exports or []},
         }
 
 
