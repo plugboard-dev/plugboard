@@ -46,7 +46,9 @@ For models with explicitly declared input and output fields, connectors for each
 
 ### Processes
 
-Components and connectors are collected together under a **Process**. This top-level class takes care of starting the model and running it until completion. Running a model means repeatedly calling `step()` on each of the components until all of the available has flowed through the model.
+Components and connectors are collected together under a **Process**. This top-level class takes care of starting the model and running it until completion. Model execution is broken down into discrete _steps_. Running a model means executing all steps for each component until all of the available data has flowed through the model. The `step()` method advances the model forward by a single step. The `run()` method will repeatedly call `step()` until completion.
+
+Plugboard supports both bounded and unbounded data streams. That is to say, you can either run a model with a fixed size input data set until completion, or run a model indefinitely which will continuously process new inputs as they arrive until a shutdown signal is received.
 
 Plugboard uses Python's **asynchronous concurrency** to schedule execution of each of the components. Don't worry if asynchronous Python is unfamiliar to you: Plugboard takes care of all the details, so that you can focus on the logic of your model.
 
