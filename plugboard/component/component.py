@@ -77,12 +77,6 @@ class Component(ABC, ExportMixin):
         return self.name
 
     @property
-    def exportable(self) -> dict[str, _t.Any]:
-        """Exportable attributes for the component."""
-        extras = self.exports or []
-        return {name: getattr(self, name) for name in [*extras, *self.io.inputs, *self.io.outputs]}
-
-    @property
     def state(self) -> _t.Optional[StateBackend]:
         """State backend for the process."""
         return self._state
@@ -182,6 +176,7 @@ class Component(ABC, ExportMixin):
             "id": self.id,
             "name": self.name,
             **self.io.data,
+            "exports": {name: getattr(self, name) for name in self.exports or []},
         }
 
 
