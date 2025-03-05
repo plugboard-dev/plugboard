@@ -42,6 +42,8 @@ graph LR;
     A(Load data)-->D(Record output);
 ```
 
+For models with explicitly declared input and output fields, connectors for each input-output pair must be defined explicitly using one of the `Connector` implementations. Connectors required for any events used in the model will be created for you automatically. 
+
 ### Processes
 
 Components and connectors are collected together under a **Process**. This top-level class takes care of starting the model and running it until completion. Running a model means repeatedly calling `step()` on each of the components until all of the available has flowed through the model.
