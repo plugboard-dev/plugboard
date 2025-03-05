@@ -42,7 +42,7 @@ class Process(ExportMixin, ABC):
         self._state: StateBackend = state or self._default_state_cls()
         self._state_is_connected: bool = False
         # TODO: Replace when we have state tracking in StateBackend
-        self.initialised: bool = False
+        self._is_initialised: bool = False
         self._logger = DI.logger.sync_resolve().bind(
             cls=self.__class__.__name__, name=self.name, job_id=self.state.job_id
         )
@@ -57,6 +57,11 @@ class Process(ExportMixin, ABC):
     def state(self) -> StateBackend:
         """State backend for the process."""
         return self._state
+
+    @property
+    def is_initialised(self) -> bool:
+        """Returns whether the `Process` is initialised."""
+        return self._is_initialised
 
     async def connect_state(self, state: _t.Optional[StateBackend] = None) -> None:
         """Connects the `Process` to the `StateBackend`."""
@@ -83,7 +88,7 @@ class Process(ExportMixin, ABC):
     @abstractmethod
     async def init(self) -> None:
         """Performs component initialisation actions."""
-        self.initialised = True
+        self._is_initialised = True
 
     @abstractmethod
     async def step(self) -> None:
@@ -93,7 +98,7 @@ class Process(ExportMixin, ABC):
     @abstractmethod
     async def run(self) -> None:
         """Runs the process to completion."""
-        if not self.initialised:
+        if not self._is_initialised:
             raise NotInitialisedError("Process must be initialised before running")
 
     async def destroy(self) -> None:
