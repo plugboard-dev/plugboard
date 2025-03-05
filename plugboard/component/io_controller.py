@@ -255,13 +255,13 @@ class IOController:
                 tg.create_task(self._add_channel(conn))
         self._validate_connections()
         self._logger.info("IOController connected")
-        
-        def _validate_connections(self) -> None:
-            connected_inputs = set(k for k, _ in self._input_channels.keys())
-            connected_outputs = set(k for k, _ in self._output_channels.keys())
-            if unconnected_inputs := set(self.inputs) - connected_inputs:
-                self._logger.error(
-                    "Input fields not connected, process may hang", unconnected=unconnected_inputs
-                )
-            if unconnected_outputs := set(self.outputs) - connected_outputs:
-                self._logger.warning("Output fields not connected", unconnected=unconnected_outputs)
+
+    def _validate_connections(self) -> None:
+        connected_inputs = set(k for k, _ in self._input_channels.keys())
+        connected_outputs = set(k for k, _ in self._output_channels.keys())
+        if unconnected_inputs := set(self.inputs) - connected_inputs:
+            self._logger.error(
+                "Input fields not connected, process may hang", unconnected=unconnected_inputs
+            )
+        if unconnected_outputs := set(self.outputs) - connected_outputs:
+            self._logger.warning("Output fields not connected", unconnected=unconnected_outputs)
