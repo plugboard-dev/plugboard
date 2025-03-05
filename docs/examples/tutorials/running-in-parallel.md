@@ -65,4 +65,4 @@ Specifying the process type and channel builder type in the YAML is the only cha
 ```
 
 1. Tell Plugboard to use a [`RayProcess`][plugboard.process.RayProcess] instead of the default [`LocalProcess`][plugboard.process.LocalProcess].
-2. Also change the channel builder to [`RayChannelBuilder`][plugboard.connector.RayChannelBuilder], which will build [`RayChannel`][plugboard.connector.RayChannel] objects when creating the `Process`.
+2. Also change the connector builder to [`RayConnector`][plugboard.connector.RayConnector], which will build [`RayChannel`][plugboard.connector.RayChannel] objects when creating the `Process`.
