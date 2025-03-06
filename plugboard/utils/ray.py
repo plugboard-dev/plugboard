@@ -5,6 +5,11 @@ import inspect
 import typing as _t
 
 
+try:
+    import ray
+except ImportError:
+    pass
+
 T = _t.TypeVar("T")
 
 
@@ -75,3 +80,15 @@ def build_actor_wrapper(cls: type[T]) -> type[_ActorWrapper[T]]:
     """
     methods = dict(_wrap_methods(cls, tuple()))
     return type(f"{cls.__name__}Actor", (_ActorWrapper,), {**methods, "_cls": cls})
+
+
+def is_on_ray_worker() -> bool:
+    """Returns `True` if called from a Ray worker."""
+    try:
+        if ray.is_initialized():
+            ctx = ray.get_runtime_context()
+            if ctx.worker.mode == ray.WORKER_MODE:
+                return True
+    except NameError:
+        pass
+    return False

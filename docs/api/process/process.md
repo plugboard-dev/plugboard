@@ -2,3 +2,5 @@
     options:
       members:
       - Process
+      - LocalProcess
+      - RayProcess

@@ -1,0 +1,19 @@
+name: Documentation
+description: Point at unclear, missing or outdated documentation.
+title: "docs: "
+labels: ["documentation"]
+body:
+  - type: textarea
+    attributes:
+      label: Summary
+      description: Is something unclear, missing or outdated in our documentation?
+    validations:
+      required: true
+
+  - type: input
+    attributes:
+      label: Link
+      description: Add a link to the relevant section of our documentation
+      placeholder: https://docs.plugboard.dev
+    validations:
+      required: false

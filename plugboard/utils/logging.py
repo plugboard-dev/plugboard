@@ -9,6 +9,14 @@ import structlog
 from plugboard.utils.settings import Settings
 
 
+def _is_ipython() -> bool:
+    try:
+        from builtins import get_ipython  # type: ignore [attr-defined]  # noqa: F401
+    except ImportError:
+        return False
+    return True
+
+
 def _serialiser(obj: _t.Any, default: _t.Callable | None) -> bytes:
     return json.encode(obj)
 
@@ -42,5 +50,8 @@ def configure_logging(settings: Settings) -> None:
         wrapper_class=structlog.make_filtering_bound_logger(log_level),
         processors=processors,  # type: ignore[arg-type]
         # Use BytesLoggerFactory when using msgspec serialization to bytes
-        logger_factory=structlog.BytesLoggerFactory() if settings.log_structured else None,
+        logger_factory=structlog.BytesLoggerFactory()
+        # See https://github.com/hynek/structlog/issues/417
+        if settings.log_structured and not _is_ipython()
+        else None,
     )

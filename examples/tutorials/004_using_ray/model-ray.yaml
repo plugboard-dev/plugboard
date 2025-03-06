@@ -1,0 +1,39 @@
+plugboard:
+  process:
+    type: "plugboard.process.RayProcess"  # (1)!
+    connector_builder:
+      type: "plugboard.connector.RayConnector"  # (2)!
+    args:
+      components:
+      - type: hello_ray.Iterator
+        args:
+          name: "input"
+          iters: 10
+      - type: hello_ray.Sleep
+        args:
+          name: "slow-sleep"
+          sleep_seconds: 0.5
+      - type: hello_ray.Sleep
+        args:
+          name: "very-slow-sleep"
+          sleep_seconds: 1
+      - type: hello_ray.Timestamper
+        args:
+          name: "timestamper"
+      - type: plugboard.library.file_io.FileWriter
+        args:
+          name: "save-results"
+          path: "ray.csv"
+          field_names:
+          - timestamp
+      connectors:
+      - source: "input.x"
+        target: "slow-sleep.x"
+      - source: "input.x"
+        target: "very-slow-sleep.x"
+      - source: "slow-sleep.y"
+        target: "timestamper.x"
+      - source: "very-slow-sleep.y"
+        target: "timestamper.y"
+      - source: "timestamper.timestamp"
+        target: "save-results.timestamp"

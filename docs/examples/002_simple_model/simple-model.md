@@ -1,1 +1,0 @@
-The notebook at [simple-model.ipynb](simple-model.ipynb) demonstrates a simple 3-node simulation. Here we have both input and output data feeds provided by CSV files, and we implement our own component to do some basic processing of the data.
