@@ -8,10 +8,10 @@ import typing as _t
 
 from plugboard.component import Component
 from plugboard.component.io_controller import IOController, IODirection
-from plugboard.schemas import ComponentArgsSpec
+from plugboard.schemas import ComponentArgsDict
 
 
-class DataWriterArgsSpec(ComponentArgsSpec):
+class DataWriterArgsSpec(ComponentArgsDict):
     """Specification of the `DataWriter` constructor arguments.
 
     Attributes:
@@ -32,7 +32,7 @@ class DataWriter(Component, ABC):
         self,
         field_names: list[str],
         chunk_size: _t.Optional[int] = None,
-        **kwargs: _t.Unpack[ComponentArgsSpec],
+        **kwargs: _t.Unpack[ComponentArgsDict],
     ) -> None:
         """Instantiates the `DataWriter`.
 

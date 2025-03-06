@@ -9,10 +9,10 @@ import typing as _t
 from plugboard.component import Component
 from plugboard.component.io_controller import IOController
 from plugboard.exceptions import NoMoreDataException
-from plugboard.schemas import ComponentArgsSpec
+from plugboard.schemas import ComponentArgsDict
 
 
-class DataReaderArgsSpec(ComponentArgsSpec):
+class DataReaderArgsSpec(ComponentArgsDict):
     """Specification of the `DataReader` constructor arguments.
 
     Attributes:
@@ -33,7 +33,7 @@ class DataReader(Component, ABC):
         self,
         field_names: list[str],
         chunk_size: _t.Optional[int] = None,
-        **kwargs: _t.Unpack[ComponentArgsSpec],
+        **kwargs: _t.Unpack[ComponentArgsDict],
     ) -> None:
         """Instantiates the `DataReader`.
 

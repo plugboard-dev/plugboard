@@ -6,7 +6,7 @@ import typing as _t
 import msgspec.json as json
 
 from plugboard.component import Component, IOController
-from plugboard.schemas import ComponentArgsSpec
+from plugboard.schemas import ComponentArgsDict
 from plugboard.utils import depends_on_optional
 
 
@@ -30,7 +30,7 @@ class WebsocketReader(Component):
         connect_args: dict[str, _t.Any] | None = None,
         initial_message: _t.Any | None = None,
         parse_json: bool = False,
-        **kwargs: _t.Unpack[ComponentArgsSpec],
+        **kwargs: _t.Unpack[ComponentArgsDict],
     ) -> None:
         """Instantiates the `WebsocketReader`.
 
@@ -97,7 +97,7 @@ class WebsocketWriter(Component):
         uri: str,
         connect_args: dict[str, _t.Any] | None = None,
         parse_json: bool = False,
-        **kwargs: _t.Unpack[ComponentArgsSpec],
+        **kwargs: _t.Unpack[ComponentArgsDict],
     ) -> None:
         """Instantiates the `WebsocketWriter`.
 
