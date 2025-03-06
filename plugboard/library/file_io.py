@@ -8,8 +8,8 @@ import fsspec
 import pandas as pd
 
 from plugboard.exceptions import NoMoreDataException
-from .data_reader import DataReader
-from .data_writer import DataWriter
+from .data_reader import DataReader, DataReaderArgsSpec
+from .data_writer import DataWriter, DataWriterArgsSpec
 
 
 class FileReader(DataReader):
@@ -23,18 +23,16 @@ class FileReader(DataReader):
         self,
         path: str | Path,
         storage_options: _t.Optional[dict[str, _t.Any]] = None,
-        *args: _t.Any,
-        **kwargs: _t.Any,
+        **kwargs: _t.Unpack[DataReaderArgsSpec],
     ) -> None:
         """Instantiates the `FileReader`.
 
         Args:
             path: The path to the file to read.
             storage_options: Optional; Additional options for the fsspec-compatible filesystem.
-            *args: Additional positional arguments for [`DataReader`][plugboard.library.DataReader].
             **kwargs: Additional keyword arguments for [`DataReader`][plugboard.library.DataReader].
         """
-        super().__init__(*args, **kwargs)
+        super().__init__(**kwargs)
         self._file_path = str(path)
         # Use .suffixes to handle files with multiple extensions (e.g. .csv.gz)
         self._extension = "".join(Path(path).suffixes).lower()
@@ -89,18 +87,16 @@ class FileWriter(DataWriter):
         self,
         path: str | Path,
         storage_options: _t.Optional[dict[str, _t.Any]] = None,
-        *args: _t.Any,
-        **kwargs: _t.Any,
+        **kwargs: _t.Unpack[DataWriterArgsSpec],
     ) -> None:
         """Instantiates the `FileWriter`.
 
         Args:
             path: The path to the file to write.
             storage_options: Optional; Additional options for the fsspec-compatible filesystem.
-            *args: Additional positional arguments for [`DataWriter`][plugboard.library.DataWriter].
             **kwargs: Additional keyword arguments for [`DataWriter`][plugboard.library.DataWriter].
         """
-        super().__init__(*args, **kwargs)
+        super().__init__(**kwargs)
         self._file_path = str(path)
         # Use .suffixes to handle files with multiple extensions (e.g. .csv.gz)
         self._extension = "".join(Path(path).suffixes).lower()

@@ -60,12 +60,13 @@ A model is made up of one or more components, though Plugboard really shines whe
 ```python
 import typing as _t
 from plugboard.component import Component, IOController as IO
+from plugboard.schemas import ComponentArgsDict
 
 class A(Component):
     io = IO(outputs=["out_1"])
 
-    def __init__(self, iters: int, *args: _t.Any, **kwargs: _t.Any) -> None:
-        super().__init__(*args, **kwargs)
+    def __init__(self, iters: int, **kwargs: _t.Unpack[ComponentArgsDict]) -> None:
+        super().__init__(**kwargs)
         self._iters = iters
 
     async def init(self) -> None:
@@ -77,11 +78,12 @@ class A(Component):
         except StopIteration:
             await self.io.close()
 
+
 class B(Component):
     io = IO(inputs=["in_1"])
 
-    def __init__(self, path: str, *args: _t.Any, **kwargs: _t.Any) -> None:
-        super().__init__(*args, **kwargs)
+    def __init__(self, path: str, **kwargs: _t.Unpack[ComponentArgsDict]) -> None:
+        super().__init__(**kwargs)
         self._path = path
 
     async def init(self) -> None:

@@ -1,8 +1,19 @@
 """Provides `ComponentSpec` class."""
 
+import typing as _t
+
 from pydantic import Field
 
 from plugboard.schemas._common import PlugboardBaseModel
+
+
+class ComponentArgsDict(_t.TypedDict):
+    """`TypedDict` of the [`Component`][plugboard.component.Component] constructor arguments."""
+
+    name: str
+    initial_values: _t.NotRequired[dict[str, _t.Any] | None]
+    parameters: _t.NotRequired[dict[str, _t.Any] | None]
+    constraints: _t.NotRequired[dict[str, _t.Any] | None]
 
 
 class ComponentArgsSpec(PlugboardBaseModel, extra="allow"):
@@ -16,9 +27,9 @@ class ComponentArgsSpec(PlugboardBaseModel, extra="allow"):
     """
 
     name: str = Field(pattern=r"^([a-zA-Z_][a-zA-Z0-9_-]*)$")
-    initial_values: dict = {}
-    parameters: dict = {}
-    constraints: dict = {}
+    initial_values: dict[str, _t.Any] = {}
+    parameters: dict[str, _t.Any] = {}
+    constraints: dict[str, _t.Any] = {}
 
 
 class ComponentSpec(PlugboardBaseModel):

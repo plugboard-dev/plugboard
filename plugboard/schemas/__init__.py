@@ -1,8 +1,15 @@
-"""Provides Pydantic models used for specifying Plugboard objects."""
+"""Provides schemas used in Plugboard.
 
-from .component import ComponentArgsSpec, ComponentSpec
+This includes:
+
+* Pydantic models for specifying Plugboard objects;
+* `TypeDict` definitions for constructor `**kwargs`.
+"""
+
+from .component import ComponentArgsDict, ComponentArgsSpec, ComponentSpec
 from .config import ConfigSpec, ProcessConfigSpec
 from .connector import (
+    ConnectorBuilderArgsDict,
     ConnectorBuilderArgsSpec,
     ConnectorBuilderSpec,
     ConnectorMode,
@@ -11,14 +18,16 @@ from .connector import (
 )
 from .entities import Entity
 from .io import IODirection
-from .process import ProcessArgsSpec, ProcessSpec
-from .state import StateBackendArgsSpec, StateBackendSpec
+from .process import ProcessArgsDict, ProcessArgsSpec, ProcessSpec
+from .state import StateBackendArgsDict, StateBackendArgsSpec, StateBackendSpec
 
 
 __all__ = [
     "ComponentSpec",
+    "ComponentArgsDict",
     "ComponentArgsSpec",
     "ConfigSpec",
+    "ConnectorBuilderArgsDict",
     "ConnectorBuilderArgsSpec",
     "ConnectorBuilderSpec",
     "ConnectorMode",
@@ -28,7 +37,9 @@ __all__ = [
     "IODirection",
     "ProcessConfigSpec",
     "ProcessSpec",
+    "ProcessArgsDict",
     "ProcessArgsSpec",
     "StateBackendSpec",
+    "StateBackendArgsDict",
     "StateBackendArgsSpec",
 ]
