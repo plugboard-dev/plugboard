@@ -1,6 +1,7 @@
 """Provides schemas used in Plugboard.
 
 This includes:
+
 * Pydantic models for specifying Plugboard objects;
 * `TypeDict` definitions for constructor `**kwargs`.
 """
