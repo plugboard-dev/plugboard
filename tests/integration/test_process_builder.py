@@ -99,7 +99,7 @@ async def test_process_builder_build(process_spec: ProcessSpec) -> None:
     """Tests building a process."""
     process = ProcessBuilder.build(process_spec)
     # Must build a process with the correct type
-    process.__class__.__name__ == process_spec.args["state"].type.split(".")[-1]
+    process.__class__.__name__ == process_spec.args.state.type.split(".")[-1]
     # Must build a process with the correct components and connectors
     assert len(process.components) == 4
     # Number of connectors must be sum of those specified in config and those built for events
