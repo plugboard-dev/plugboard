@@ -12,7 +12,7 @@ from plugboard.component import Component, IOController as IO
 from plugboard.connector import RayConnector, AsyncioConnector
 from plugboard.library import FileWriter
 from plugboard.process import LocalProcess, RayProcess
-from plugboard.schemas import ConnectorSpec
+from plugboard.schemas import ComponentArgsDict, ConnectorSpec
 
 
 # --8<-- [start:components]
@@ -21,8 +21,8 @@ class Iterator(Component):
 
     io = IO(outputs=["x"])
 
-    def __init__(self, iters: int, *args: _t.Any, **kwargs: _t.Any) -> None:
-        super().__init__(*args, **kwargs)
+    def __init__(self, iters: int, **kwargs: _t.Unpack[ComponentArgsDict]) -> None:
+        super().__init__(**kwargs)
         self._iters = iters
 
     async def init(self) -> None:
@@ -40,8 +40,8 @@ class Sleep(Component):
 
     io = IO(inputs=["x"], outputs=["y"])
 
-    def __init__(self, sleep_seconds: float, *args: _t.Any, **kwargs: _t.Any) -> None:
-        super().__init__(*args, **kwargs)
+    def __init__(self, sleep_seconds: float, **kwargs: _t.Unpack[ComponentArgsDict]) -> None:
+        super().__init__(**kwargs)
         self._duration = sleep_seconds
 
     async def step(self) -> None:

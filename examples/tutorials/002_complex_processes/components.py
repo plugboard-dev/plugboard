@@ -6,6 +6,7 @@ import random
 import typing as _t
 
 from plugboard.component import Component, IOController as IO
+from plugboard.schemas import ComponentArgsDict
 
 class Random(Component):
     io = IO(outputs=["x"])
@@ -15,10 +16,9 @@ class Random(Component):
             iters: int,  # (1)!
             low: float = 0,
             high: float = 10,
-            *args: _t.Any,
-            **kwargs: _t.Any
+            **kwargs: _t.Unpack[ComponentArgsDict]
         ) -> None:
-        super().__init__(*args, **kwargs)
+        super().__init__(**kwargs)
         self._iters = 0
         self._low = low
         self._high = high
@@ -35,8 +35,8 @@ class Offset(Component):
     """Implements `x = a + offset`."""
     io = IO(inputs=["a"], outputs=["x"]) # (2)!
 
-    def __init__(self, offset: float = 0, *args: _t.Any, **kwargs: _t.Any) -> None:
-        super().__init__(*args, **kwargs)
+    def __init__(self, offset: float = 0, **kwargs: _t.Unpack[ComponentArgsDict]) -> None:
+        super().__init__(**kwargs)
         self._offset = offset
 
     async def step(self) -> None:
@@ -46,8 +46,8 @@ class Scale(Component):
     """Implements `x = a * scale`."""
     io = IO(inputs=["a"], outputs=["x"])
 
-    def __init__(self, scale: float = 1, *args: _t.Any, **kwargs: _t.Any) -> None:
-        super().__init__(*args, **kwargs)
+    def __init__(self, scale: float = 1, **kwargs: _t.Unpack[ComponentArgsDict]) -> None:
+        super().__init__(**kwargs)
         self._scale = scale
 
     async def step(self) -> None:
@@ -63,8 +63,8 @@ class Sum(Component):
 class Save(Component):
     io = IO(inputs=["value_to_save"])
 
-    def __init__(self, path: str, *args: _t.Any, **kwargs: _t.Any) -> None:
-        super().__init__(*args, **kwargs)
+    def __init__(self, path: str, **kwargs: _t.Unpack[ComponentArgsDict]) -> None:
+        super().__init__(**kwargs)
         self._path = path
 
     async def init(self) -> None:

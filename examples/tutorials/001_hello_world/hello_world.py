@@ -8,13 +8,13 @@ import typing as _t
 from plugboard.component import Component, IOController as IO
 from plugboard.connector import AsyncioConnector
 from plugboard.process import LocalProcess
-from plugboard.schemas import ConnectorSpec
+from plugboard.schemas import ComponentArgsDict, ConnectorSpec
 
 class A(Component):
     io = IO(outputs=["out_1"]) # (1)!
 
-    def __init__(self, iters: int, *args: _t.Any, **kwargs: _t.Any) -> None:
-        super().__init__(*args, **kwargs)
+    def __init__(self, iters: int, **kwargs: _t.Unpack[ComponentArgsDict]) -> None:
+        super().__init__(**kwargs)
         self._iters = iters
 
     async def init(self) -> None:
@@ -29,8 +29,8 @@ class A(Component):
 class B(Component):
     io = IO(inputs=["in_1"])
 
-    def __init__(self, path: str, *args: _t.Any, **kwargs: _t.Any) -> None:
-        super().__init__(*args, **kwargs)
+    def __init__(self, path: str, **kwargs: _t.Unpack[ComponentArgsDict]) -> None:
+        super().__init__(**kwargs)
         self._path = path
 
     async def init(self) -> None:
