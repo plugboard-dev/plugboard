@@ -7,7 +7,7 @@ import typing as _t
 from pydantic import BaseModel
 
 from plugboard.component import Component, IOController as IO
-from plugboard.schemas import ComponentArgsSpec
+from plugboard.schemas import ComponentArgsDict
 from plugboard.utils import depends_on_optional
 
 
@@ -42,7 +42,7 @@ class LLMChat(Component):
         response_model: _t.Optional[_t.Type[BaseModel] | str] = None,
         expand_response: bool = False,
         llm_kwargs: _t.Optional[dict[str, _t.Any]] = None,
-        **kwargs: _t.Unpack[ComponentArgsSpec],
+        **kwargs: _t.Unpack[ComponentArgsDict],
     ) -> None:
         """Instantiates `LLMChat`.
 

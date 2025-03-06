@@ -110,7 +110,7 @@ async def test_process_builder_build(process_spec: ProcessSpec) -> None:
     assert all(con.__class__.__name__ == "AsyncioConnector" for con in process.connectors.values())
     # Must build a process with the correct state backend
     async with process:
-        input_job_id = process_spec.args["state"].args.get("job_id")
+        input_job_id = process_spec.args.state.args.get("job_id")
         if input_job_id is not None:
             assert process.state.job_id == input_job_id
         assert EntityIdGen.is_job_id(process.state.job_id)
