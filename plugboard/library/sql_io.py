@@ -9,8 +9,8 @@ from sqlalchemy.exc import InvalidRequestError
 from sqlalchemy.ext.asyncio import AsyncEngine, create_async_engine
 
 from plugboard.exceptions import NoMoreDataException
-from .data_reader import DataReader
-from .data_writer import DataWriter
+from .data_reader import DataReader, DataReaderArgsSpec
+from .data_writer import DataWriter, DataWriterArgsSpec
 
 
 class SQLReader(DataReader):
@@ -26,8 +26,7 @@ class SQLReader(DataReader):
         query: str,
         params: _t.Optional[dict[str, _t.Any]] = None,
         connect_args: _t.Optional[dict[str, _t.Any]] = None,
-        *args: _t.Any,
-        **kwargs: _t.Any,
+        **kwargs: _t.Unpack[DataReaderArgsSpec],
     ) -> None:
         """Instantiates the `SQLReader`.
 
@@ -36,10 +35,9 @@ class SQLReader(DataReader):
             query: The SQL query to run on the database.
             params: Optional; Parameters to pass to the query.
             connect_args: Optional; Additional options for the database connection.
-            *args: Additional positional arguments for [`DataReader`][plugboard.library.DataReader].
             **kwargs: Additional keyword arguments for [`DataReader`][plugboard.library.DataReader].
         """
-        super().__init__(*args, **kwargs)
+        super().__init__(**kwargs)
         self._connection_string = connection_string
         self._query = query
         self._params = params or {}
@@ -113,8 +111,7 @@ class SQLWriter(DataWriter):
         connection_string: str,
         table: str,
         connect_args: _t.Optional[dict[str, _t.Any]] = None,
-        *args: _t.Any,
-        **kwargs: _t.Any,
+        **kwargs: _t.Unpack[DataWriterArgsSpec],
     ) -> None:
         """Instantiates the `SQLWriter`.
 
@@ -122,10 +119,9 @@ class SQLWriter(DataWriter):
             connection_string: The connection string for the database.
             table: The name of the table to write to, which must already exist.
             connect_args: Optional; Additional options for the database connection.
-            *args: Additional positional arguments for [`DataWriter`][plugboard.library.DataWriter].
             **kwargs: Additional keyword arguments for [`DataWriter`][plugboard.library.DataWriter].
         """
-        super().__init__(*args, **kwargs)
+        super().__init__(**kwargs)
         self._connection_string = connection_string
         self._table_name = table
         self._connect_args = {

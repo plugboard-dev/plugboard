@@ -98,6 +98,12 @@ class ConnectorSpec(PlugboardBaseModel):
         return self.id
 
 
+class ConnectorBuilderArgsDict(_t.TypedDict):
+    """`TypedDict` of the [`Connector`][plugboard.connector.Connector] constructor arguments."""
+
+    parameters: dict[str, _t.Any]
+
+
 class ConnectorBuilderArgsSpec(PlugboardBaseModel, extra="allow"):
     """Specification of the [`Connector`][plugboard.connector.Connector] constructor arguments.
 
@@ -105,7 +111,7 @@ class ConnectorBuilderArgsSpec(PlugboardBaseModel, extra="allow"):
         parameters: Parameters for the `Connector`.
     """
 
-    parameters: dict = {}
+    parameters: dict[str, _t.Any] = {}
 
 
 class ConnectorBuilderSpec(PlugboardBaseModel):

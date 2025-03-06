@@ -11,7 +11,7 @@ from plugboard.component import Component, IOController as IO
 from plugboard.connector import AsyncioConnector
 
 from plugboard.process import LocalProcess
-from plugboard.schemas import ConnectorSpec
+from plugboard.schemas import ComponentArgsDict, ConnectorSpec
 from plugboard.library import FileReader, FileWriter, LLMChat
 
 
@@ -21,8 +21,8 @@ class WeatherAPI(Component):
 
     io = IO(inputs=["latitude", "longitude"], outputs=["temperature", "wind_speed"])
 
-    def __init__(self, *args: _t.Any, **kwargs: _t.Any) -> None:
-        super().__init__(*args, **kwargs)
+    def __init__(self, **kwargs: _t.Unpack[ComponentArgsDict]) -> None:
+        super().__init__(**kwargs)
         self._client = httpx.AsyncClient()
 
     async def step(self) -> None:

@@ -9,6 +9,19 @@ import typing as _t
 from plugboard.component import Component
 from plugboard.component.io_controller import IOController
 from plugboard.exceptions import NoMoreDataException
+from plugboard.schemas import ComponentArgsDict
+
+
+class DataReaderArgsSpec(ComponentArgsDict):
+    """Specification of the `DataReader` constructor arguments.
+
+    Attributes:
+        field_names: The names of the fields to read from the data source.
+        chunk_size: Optional; The size of the data chunk to read from the data source.
+    """
+
+    field_names: list[str]
+    chunk_size: _t.NotRequired[int | None]
 
 
 class DataReader(Component, ABC):
@@ -20,18 +33,16 @@ class DataReader(Component, ABC):
         self,
         field_names: list[str],
         chunk_size: _t.Optional[int] = None,
-        *args: _t.Any,
-        **kwargs: _t.Any,
+        **kwargs: _t.Unpack[ComponentArgsDict],
     ) -> None:
         """Instantiates the `DataReader`.
 
         Args:
             field_names: The names of the fields to read from the data source.
             chunk_size: The size of the data chunk to read from the data source.
-            *args: Additional positional arguments for [`Component`][plugboard.component.Component].
             **kwargs: Additional keyword arguments for [`Component`][plugboard.component.Component].
         """
-        super().__init__(*args, **kwargs)
+        super().__init__(**kwargs)
         self._buffer: dict[str, deque] = dict()
         self._chunk_size = chunk_size
         self.io = IOController(inputs=None, outputs=field_names, namespace=self.name)

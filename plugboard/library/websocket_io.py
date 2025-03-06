@@ -6,6 +6,7 @@ import typing as _t
 import msgspec.json as json
 
 from plugboard.component import Component, IOController
+from plugboard.schemas import ComponentArgsDict
 from plugboard.utils import depends_on_optional
 
 
@@ -29,8 +30,7 @@ class WebsocketReader(Component):
         connect_args: dict[str, _t.Any] | None = None,
         initial_message: _t.Any | None = None,
         parse_json: bool = False,
-        *args: _t.Any,
-        **kwargs: _t.Any,
+        **kwargs: _t.Unpack[ComponentArgsDict],
     ) -> None:
         """Instantiates the `WebsocketReader`.
 
@@ -44,10 +44,9 @@ class WebsocketReader(Component):
             initial_message: Optional; The initial message to send to the WebSocket server on
                 connection. Can be used to subscribe to a specific topic.
             parse_json: Whether to parse the received data as JSON.
-            *args: Additional positional arguments for [`Component`][plugboard.component.Component].
             **kwargs: Additional keyword arguments for [`Component`][plugboard.component.Component].
         """
-        super().__init__(*args, **kwargs)
+        super().__init__(**kwargs)
         self._uri = uri
         self._connect_args = connect_args if connect_args else {}
         if initial_message is not None:
@@ -98,8 +97,7 @@ class WebsocketWriter(Component):
         uri: str,
         connect_args: dict[str, _t.Any] | None = None,
         parse_json: bool = False,
-        *args: _t.Any,
-        **kwargs: _t.Any,
+        **kwargs: _t.Unpack[ComponentArgsDict],
     ) -> None:
         """Instantiates the `WebsocketWriter`.
 
@@ -110,10 +108,9 @@ class WebsocketWriter(Component):
             uri: The URI of the WebSocket server.
             connect_args: Optional; Additional arguments to pass to the websocket connection.
             parse_json: Whether to convert the data to JSON before sending.
-            *args: Additional positional arguments for [`Component`][plugboard.component.Component].
             **kwargs: Additional keyword arguments for [`Component`][plugboard.component.Component].
         """
-        super().__init__(*args, **kwargs)
+        super().__init__(**kwargs)
         self._uri = uri
         self._connect_args = connect_args if connect_args else {}
         self._parse_json = parse_json

@@ -31,6 +31,7 @@ class Component(ABC, ExportMixin):
 
     def __init__(
         self,
+        *,
         name: str,
         initial_values: _t.Optional[dict[str, _t.Iterable]] = None,
         parameters: _t.Optional[dict] = None,

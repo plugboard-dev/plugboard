@@ -12,6 +12,13 @@ from plugboard.schemas.entities import Entity
 DEFAULT_STATE_BACKEND_CLS_PATH: str = "plugboard.state.DictStateBackend"
 
 
+class StateBackendArgsDict(_t.TypedDict):
+    """`TypedDict` of the [`StateBackend`][plugboard.state.StateBackend] constructor arguments."""
+
+    job_id: _t.NotRequired[str | None]
+    metadata: _t.NotRequired[dict[str, _t.Any] | None]
+
+
 class StateBackendArgsSpec(PlugboardBaseModel, extra="allow"):
     """Specification of the [`StateBackend`][plugboard.state.StateBackend] constructor arguments.
 
@@ -21,7 +28,7 @@ class StateBackendArgsSpec(PlugboardBaseModel, extra="allow"):
     """
 
     job_id: _t.Optional[str] = Field(default=None, pattern=Entity.Job.id_regex)
-    metadata: dict = {}
+    metadata: dict[str, _t.Any] = {}
 
 
 class StateBackendSpec(PlugboardBaseModel):

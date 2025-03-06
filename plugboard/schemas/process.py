@@ -12,6 +12,16 @@ from .connector import DEFAULT_CONNECTOR_CLS_PATH, ConnectorBuilderSpec, Connect
 from .state import StateBackendSpec
 
 
+class ProcessArgsDict(_t.TypedDict):
+    """`TypedDict` of the [`Process`][plugboard.process.Process] constructor arguments."""
+
+    components: list[ComponentSpec]
+    connectors: list[ConnectorSpec]
+    name: _t.NotRequired[str | None]
+    parameters: dict[str, _t.Any]
+    state: _t.NotRequired[StateBackendSpec | None]
+
+
 class ProcessArgsSpec(PlugboardBaseModel, extra="allow"):
     """Specification of the [`Process`][plugboard.process.Process] constructor arguments.
 
@@ -26,7 +36,7 @@ class ProcessArgsSpec(PlugboardBaseModel, extra="allow"):
     components: _t.Annotated[list[ComponentSpec], Len(min_length=1)]
     connectors: list[ConnectorSpec] = []
     name: _t.Optional[str] = None
-    parameters: dict = {}
+    parameters: dict[str, _t.Any] = {}
     state: StateBackendSpec = StateBackendSpec()
 
 
