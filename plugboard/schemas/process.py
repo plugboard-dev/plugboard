@@ -2,7 +2,8 @@
 
 import typing as _t
 
-from pydantic import ConfigDict, Field, model_validator, with_config
+from annotated_types import Len
+from pydantic import model_validator
 from typing_extensions import Self
 
 from plugboard.schemas._common import PlugboardBaseModel
@@ -11,23 +12,32 @@ from .connector import DEFAULT_CONNECTOR_CLS_PATH, ConnectorBuilderSpec, Connect
 from .state import StateBackendSpec
 
 
-@with_config(ConfigDict(extra="allow"))
-class ProcessArgsSpec(_t.TypedDict):
+class ProcessArgsDict(_t.TypedDict):
+    """`TypedDict` of the [`Process`][plugboard.process.Process] constructor arguments."""
+
+    components: list[ComponentSpec]
+    connectors: list[ConnectorSpec]
+    name: _t.NotRequired[str | None]
+    parameters: dict[str, _t.Any]
+    state: _t.NotRequired[StateBackendSpec | None]
+
+
+class ProcessArgsSpec(PlugboardBaseModel, extra="allow"):
     """Specification of the [`Process`][plugboard.process.Process] constructor arguments.
 
     Attributes:
         components: Specifies each `Component` in the `Process`.
         connectors: Specifies the connections between each `Component`.
-        name: Optional; Unique identifier for `Process`.
+        name: Unique identifier for `Process`.
         parameters: Parameters for the `Process`.
         state: Optional; Specifies the `StateBackend` used for the `Process`.
     """
 
-    components: _t.Annotated[list[ComponentSpec], Field(min_length=1)]
-    connectors: _t.Annotated[list[ConnectorSpec], Field(default_factory=list)]
-    name: _t.NotRequired[str | None]
-    parameters: _t.Annotated[dict[str, _t.Any], Field(default_factory=dict)]
-    state: _t.Annotated[StateBackendSpec, Field(default_factory=StateBackendSpec)]
+    components: _t.Annotated[list[ComponentSpec], Len(min_length=1)]
+    connectors: list[ConnectorSpec] = []
+    name: _t.Optional[str] = None
+    parameters: dict[str, _t.Any] = {}
+    state: StateBackendSpec = StateBackendSpec()
 
 
 class ProcessSpec(PlugboardBaseModel):

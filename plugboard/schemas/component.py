@@ -2,26 +2,34 @@
 
 import typing as _t
 
-from pydantic import ConfigDict, Field, with_config
+from pydantic import Field
 
 from plugboard.schemas._common import PlugboardBaseModel
 
 
-@with_config(ConfigDict(extra="allow"))
-class ComponentArgsSpec(_t.TypedDict):
+class ComponentArgsDict(_t.TypedDict):
+    """`TypedDict` of the [`Component`][plugboard.component.Component] constructor arguments."""
+
+    name: str
+    initial_values: _t.NotRequired[dict[str, _t.Any] | None]
+    parameters: _t.NotRequired[dict[str, _t.Any] | None]
+    constraints: _t.NotRequired[dict[str, _t.Any] | None]
+
+
+class ComponentArgsSpec(PlugboardBaseModel, extra="allow"):
     """Specification of the [`Component`][plugboard.component.Component] constructor arguments.
 
     Attributes:
         name: The name of the `Component`.
-        initial_values: Optional; initial values for the `Component`.
-        parameters: Optional; parameters for the `Component`.
-        constraints: Optional; constraints for the `Component`.
+        initial_values: Initial values for the `Component`.
+        parameters: Parameters for the `Component`.
+        constraints: Constraints for the `Component`.
     """
 
-    name: _t.Annotated[str, Field(pattern=r"^([a-zA-Z_][a-zA-Z0-9_-]*)$")]
-    initial_values: _t.NotRequired[dict[str, _t.Any] | None]
-    parameters: _t.NotRequired[dict[str, _t.Any] | None]
-    constraints: _t.NotRequired[dict[str, _t.Any] | None]
+    name: str = Field(pattern=r"^([a-zA-Z_][a-zA-Z0-9_-]*)$")
+    initial_values: dict[str, _t.Any] = {}
+    parameters: dict[str, _t.Any] = {}
+    constraints: dict[str, _t.Any] = {}
 
 
 class ComponentSpec(PlugboardBaseModel):
