@@ -46,16 +46,25 @@ class Component(ABC, ExportMixin):
         self._parameters = parameters or {}
         self._state: _t.Optional[StateBackend] = state
         self._state_is_connected = False
+
+        setattr(self, "init", self._handle_init_wrapper())
+        setattr(self, "step", self._handle_step_wrapper())
+
+        if is_on_ray_worker():
+            # Required until https://github.com/ray-project/ray/issues/42823 is resolved
+            try:
+                self.__class__._configure_io()
+            except IOSetupError:
+                pass
         self.io = IO(
             inputs=self.__class__.io.inputs,
             outputs=self.__class__.io.outputs,
-            initial_values=initial_values,
+            initial_values=self._initial_values,
             input_events=self.__class__.io.input_events,
             output_events=self.__class__.io.output_events,
-            namespace=name,
+            namespace=self.name,
         )
-        setattr(self, "init", self._handle_init_wrapper())
-        setattr(self, "step", self._handle_step_wrapper())
+
         self._logger = DI.logger.sync_resolve().bind(cls=self.__class__.__name__, name=self.name)
         self._logger.info("Component created")
 
