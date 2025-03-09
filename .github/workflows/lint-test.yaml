@@ -86,6 +86,6 @@ jobs:
         working-directory: ./dist
         run: pip install *.whl
 
-      - name: Test build
+      - name: Smoke test package
         working-directory: ./dist
         run: python -c "from plugboard import library"
