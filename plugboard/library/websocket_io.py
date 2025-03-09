@@ -63,7 +63,7 @@ class WebsocketReader(Component):
         self._conn = await self._get_conn()
         self._logger.info(f"Connected to {self._uri}")
 
-    async def _get_conn(self) -> Connection:
+    async def _get_conn(self) -> "Connection":
         conn = await self._ctx.enter_async_context(await anext(self._conn_iter))
         if self._initial_message is not None:
             self._logger.info(f"Sending initial message", message=self._initial_message)
@@ -122,7 +122,7 @@ class WebsocketWriter(Component):
         self._conn = await self._get_conn()
         self._logger.info(f"Connected to {self._uri}")
 
-    async def _get_conn(self) -> Connection:
+    async def _get_conn(self) -> "Connection":
         return await self._ctx.enter_async_context(await anext(self._conn_iter))
 
     async def step(self) -> None:
