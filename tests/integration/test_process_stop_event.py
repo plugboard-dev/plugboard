@@ -67,9 +67,9 @@ def event_connectors(connector_cls: _t.Type[Connector]) -> EventConnectorBuilder
     "process_cls, connector_cls",
     [
         (LocalProcess, AsyncioConnector),
-        # (LocalProcess, ZMQConnector),  # FIXME : pipeline ZMQConnector requires Ray.
-        # (RayProcess, ZMQConnector),  # FIXME : pipeline ZMQConnector hangs in Ray.
-        # (RayProcess, RayConnector),  # TODO : Pubsub/StopEvent support with Ray connector.
+        (LocalProcess, ZMQConnector),
+        # (RayProcess, ZMQConnector),  # FIXME : Test assertion fails. See https://github.com/plugboard-dev/plugboard/issues/101.
+        # (RayProcess, RayConnector),  # TODO : Pubsub/StopEvent support. See https://github.com/plugboard-dev/plugboard/issues/101.
     ],
 )
 async def test_process_stop_event(
