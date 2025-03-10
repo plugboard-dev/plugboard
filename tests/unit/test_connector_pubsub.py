@@ -114,8 +114,8 @@ async def recv_messages_unordered(channels: list[Channel]) -> list[int]:
 @pytest.mark.parametrize(
     "connector_cls, num_subscribers, num_messages",
     [
-        (AsyncioConnector, 1, 100),
-        (AsyncioConnector, 10, 100),
+        (AsyncioConnector, 1, 1000),
+        (AsyncioConnector, 10, 1000),
         (ZMQConnector, 1, 1000),
         (ZMQConnector, 100, 1000),
     ],
@@ -165,8 +165,8 @@ async def test_pubsub_channel_single_publisher(
 @pytest.mark.parametrize(
     "connector_cls, num_publishers, num_subscribers, num_messages",
     [
-        (AsyncioConnector, 5, 1, 100),
-        (AsyncioConnector, 5, 10, 100),
+        (AsyncioConnector, 10, 1, 1000),
+        (AsyncioConnector, 10, 10, 1000),
         (ZMQConnector, 10, 1, 1000),
         (ZMQConnector, 10, 100, 1000),
     ],
@@ -215,8 +215,8 @@ async def test_pubsub_channel_multiple_publshers(
 @pytest.mark.parametrize(
     "connector_cls, num_topics, num_publishers, num_subscribers, num_messages",
     [
-        (AsyncioConnector, 3, 5, 1, 100),
-        (AsyncioConnector, 3, 5, 10, 100),
+        (AsyncioConnector, 3, 10, 1, 1000),
+        (AsyncioConnector, 3, 10, 10, 1000),
         (ZMQConnector, 3, 10, 1, 1000),
         (ZMQConnector, 3, 10, 100, 1000),
     ],
