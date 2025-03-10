@@ -36,16 +36,26 @@ async def connected_client() -> _t.AsyncIterable[ClientConnection]:
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
-    "parse_json,initial_message",
-    [(True, None), (False, None), (True, {"msg": "hello!"}), (False, "G'day!")],
+    "parse_json,initial_message,n_skip_messages",
+    [
+        (True, None, 0),
+        (False, None, 1),
+        (True, {"msg": "hello!"}, 0),
+        (True, {"msg": "hello!"}, 3),
+        (False, "G'day!", 0),
+    ],
 )
 async def test_websocket_reader(
-    connected_client: ClientConnection, parse_json: bool, initial_message: _t.Any
+    connected_client: ClientConnection,
+    parse_json: bool,
+    initial_message: _t.Any,
+    n_skip_messages: int,
 ) -> None:
     """Tests the `WebsocketReader`."""
     reader = WebsocketReader(
         name="test-websocket",
         uri=f"ws://{HOST}:{PORT}",
+        skip_messages=n_skip_messages,
         parse_json=parse_json,
         initial_message=initial_message,
     )
@@ -55,14 +65,16 @@ async def test_websocket_reader(
     for message in messages:
         await connected_client.send(json.dumps(message))
 
-    # If initial message set, it should be received first
-    if initial_message is not None:
-        await reader.step()
-        assert initial_message == reader.message
+    # Prepare the expected messages: intitial message + messages
+    expected_messages = [json.dumps(message) if not parse_json else message for message in messages]
+    expected_messages = (
+        [initial_message] + expected_messages if initial_message is not None else expected_messages
+    )
+    expected_messages = expected_messages[n_skip_messages:]
     # Check that the reader receives the messages, correctly parsed
-    for message in messages:
+    for message in expected_messages:
         await reader.step()
-        assert message == reader.message if parse_json else json.loads(reader.message)
+        assert message == reader.message
 
     await reader.destroy()
 

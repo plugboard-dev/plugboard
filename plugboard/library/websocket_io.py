@@ -29,6 +29,7 @@ class WebsocketReader(Component):
         uri: str,
         connect_args: dict[str, _t.Any] | None = None,
         initial_message: _t.Any | None = None,
+        skip_messages: int = 0,
         parse_json: bool = False,
         **kwargs: _t.Unpack[ComponentArgsDict],
     ) -> None:
@@ -43,6 +44,7 @@ class WebsocketReader(Component):
             connect_args: Optional; Additional arguments to pass to the WebSocket connection.
             initial_message: Optional; The initial message to send to the WebSocket server on
                 connection. Can be used to subscribe to a specific topic.
+            skip_messages: The number of messages to ignore before starting to read messages.
             parse_json: Whether to parse the received data as JSON.
             **kwargs: Additional keyword arguments for [`Component`][plugboard.component.Component].
         """
@@ -53,6 +55,8 @@ class WebsocketReader(Component):
             self._initial_message = json.encode(initial_message) if parse_json else initial_message
         else:
             self._initial_message = None
+        self._skip_messages = skip_messages
+        self._skip_count = 0
         self._parse_json = parse_json
         self._ctx = AsyncExitStack()
         self._conn: Connection | None = None
@@ -68,6 +72,7 @@ class WebsocketReader(Component):
         if self._initial_message is not None:
             self._logger.info(f"Sending initial message", message=self._initial_message)
             await conn.send(self._initial_message)
+        self._skip_count = self._skip_messages
         return conn
 
     async def step(self) -> None:
@@ -75,6 +80,10 @@ class WebsocketReader(Component):
         if not self._conn:
             self._conn = await self._get_conn()
         try:
+            while self._skip_count > 0:
+                message = await self._conn.recv()
+                self._logger.info(f"Skipping message", message=message)
+                self._skip_count -= 1
             message = await self._conn.recv()
             self.message = json.decode(message) if self._parse_json else message
         except ConnectionClosed:
