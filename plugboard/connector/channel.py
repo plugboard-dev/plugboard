@@ -26,8 +26,8 @@ class Channel(ABC):
         self._maxsize = maxsize
         self._is_send_closed = False
         self._is_recv_closed = False
-        self.send = self._handle_send_wrapper()  # type: ignore
-        self.recv = self._handle_recv_wrapper()  # type: ignore
+        setattr(self, "send", self._handle_send_wrapper())
+        setattr(self, "recv", self._handle_recv_wrapper())
         self._logger = DI.logger.sync_resolve().bind(cls=self.__class__.__name__)
         self._logger.info("Channel created")
 

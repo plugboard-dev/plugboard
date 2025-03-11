@@ -13,7 +13,7 @@ from plugboard.utils import depends_on_optional
 
 try:
     # Llama-index is an optional dependency
-    from llama_index.core.llms import LLM, ChatMessage
+    from llama_index.core.llms import LLM, ChatMessage, ChatResponse
 except ImportError:
     pass
 
@@ -89,10 +89,10 @@ class LLMChat(Component):
             return
         prompt_message = ChatMessage.from_str(role="user", content=str(self.prompt))
         full_prompt = [*self._system_prompt, *self._memory, prompt_message]
-        response = await self._llm.achat(full_prompt)
+        response: ChatResponse = await self._llm.achat(full_prompt)
         self._memory.extend([prompt_message, response.message])
         if not self._expand_response:
-            self.response = response.message.content
+            self.response: str | None = response.message.content
         else:
             for field, value in response.raw.model_dump().items():  # type: ignore[union-attr]
                 setattr(self, field, value)

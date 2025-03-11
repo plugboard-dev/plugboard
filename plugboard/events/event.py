@@ -70,12 +70,34 @@ class Event(PlugboardBaseModel, ABC):
         if not re.match(_REGEX_EVENT_TYPE, cls.type):
             raise ValueError(f"Invalid event type: {cls.type}")
 
-    @staticmethod
-    def safe_type(event_type: str) -> str:
+    @classmethod
+    def safe_type(cls, event_type: _t.Optional[str] = None) -> str:
         """Returns a safe event type string for use in broker topic strings."""
-        return event_type.replace(".", "_").replace("-", "_")
+        return (event_type or cls.type).replace(".", "_").replace("-", "_")
 
     @classmethod
     def handler(cls, method: AsyncCallable) -> AsyncCallable:
         """Registers a class method as an event handler."""
         return EventHandlers.add(cls)(method)
+
+
+class SystemEvent(Event, ABC):
+    """`SystemEvent` is a base model for system events.
+
+    Attributes:
+        type: Type of the `SystemEvent`.
+        id: UUID v4 unique identifier for the `SystemEvent`.
+        timestamp: UTC timestamp for the `SystemEvent`.
+        source: Source of the `SystemEvent`.
+        version: Version of the `SystemEvent`.
+        data: Data associated with the `SystemEvent`.
+        metadata: Metadata for the `SystemEvent`.
+    """
+
+    type: _t.ClassVar[str] = "system"
+
+
+class StopEvent(SystemEvent):
+    """`StopEvent` is a system event to stop the application."""
+
+    type: _t.ClassVar[str] = "system.stop"

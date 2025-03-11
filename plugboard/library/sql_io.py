@@ -142,7 +142,7 @@ class SQLWriter(DataWriter):
                     self._metadata.reflect,
                     only=[self._table_name],
                 )
-                self._table = Table(self._table_name, self._metadata, autoload_with=self._engine)  # type: ignore
+                self._table = Table(self._table_name, self._metadata, autoload_with=self._engine)  # type: ignore[arg-type]
             await conn.execute(insert(self._table).values(data))
 
     def _save_rows_sync(self, data: list[dict[str, _t.Any]]) -> None:

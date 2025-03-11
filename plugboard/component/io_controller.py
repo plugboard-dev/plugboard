@@ -2,9 +2,10 @@
 
 import asyncio
 from collections import deque
+from functools import cached_property
 import typing as _t
 
-from plugboard.connector import Channel, Connector
+from plugboard.connector import AsyncioChannel, Channel, Connector
 from plugboard.events import Event
 from plugboard.exceptions import ChannelClosedError, IOStreamClosedError
 from plugboard.schemas.io import IODirection
@@ -12,6 +13,12 @@ from plugboard.utils import DI
 
 
 IO_NS_UNSET = "__UNSET__"
+
+_io_key_in: str = str(IODirection.INPUT)
+_io_key_out: str = str(IODirection.OUTPUT)
+_fields_read_task: str = "__READ_FIELDS__"
+_events_read_task: str = "__READ_EVENTS__"
+_events_wait_task: str = "__AWAIT_EVENTS__"
 
 
 class IOController:
@@ -34,14 +41,8 @@ class IOController:
         self.output_events = output_events or []
         if set(self.initial_values.keys()) - set(self.inputs):
             raise ValueError("Initial values must be for input fields only.")
-        self.data: dict[str, dict[str, _t.Any]] = {
-            str(IODirection.INPUT): {},
-            str(IODirection.OUTPUT): {},
-        }
-        self.events: dict[str, deque[Event]] = {
-            str(IODirection.INPUT): deque(),
-            str(IODirection.OUTPUT): deque(),
-        }
+        self.data: dict[str, dict[str, _t.Any]] = {_io_key_in: {}, _io_key_out: {}}
+        self.events: dict[str, deque[Event]] = {_io_key_in: deque(), _io_key_out: deque()}
         self._input_channels: dict[tuple[str, str], Channel] = {}
         self._output_channels: dict[tuple[str, str], Channel] = {}
         self._input_event_channels: dict[str, Channel] = {}
@@ -56,39 +57,59 @@ class IOController:
         )
         self._logger.info("IOController created")
 
+        self._received_events: deque[Event] = deque()
+        self._has_received_events = asyncio.Event()
+        self._has_received_events_lock = asyncio.Lock()
+
     @property
     def is_closed(self) -> bool:
         """Returns `True` if the `IOController` is closed, `False` otherwise."""
         return self._is_closed
 
+    @cached_property
+    def _has_field_inputs(self) -> bool:
+        return len(self._input_channels) > 0
+
+    @cached_property
+    def _has_field_outputs(self) -> bool:
+        return len(self._output_channels) > 0
+
+    @cached_property
+    def _has_event_inputs(self) -> bool:
+        return len(self._input_event_channels) > 0
+
     async def read(self) -> None:
         """Reads data and/or events from input channels.
 
-        Read behaviour is dependent on the specific combination of input fields and events.
-        If there are no input events, only input fields, then the method will only return
-        once data has been received for all input fields. If there are input events, then
-        the method will either return immediately when any event is received, or when data
-        has been received for all input fields, whichever occurs first.
+        Read behaviour is dependent on the specific combination of input fields, output fields,
+        and input events. In general, all components will have at a minimum the system defined
+        input events, such as `StopEvent`. Logic for the various cases is as follows:
+
+        - At least one input field: the method waits until either all input fields have received
+          data or an input event is received, and returns after whichever occurs first.
+        - No input fields but at least one output field: the method waits for a short amount of
+          time to give chance for input events to be received before returning so that the control
+          flow can continue on to processing output events.
+        - No input fields or output fields: this is the pure event driven case where the method
+          waits until an input event is received, and returns after the first received event.
         """
         if self._is_closed:
             raise IOStreamClosedError("Attempted read on a closed io controller.")
-        read_tasks = []
-        if len(self._input_channels) > 0:
-            task = asyncio.create_task(self._read_fields())
-            read_tasks.append(task)
-        if len(self._input_event_channels) > 0:
-            task = asyncio.create_task(self._read_events())
-            read_tasks.append(task)
-        if len(read_tasks) == 0:
+        if len(read_tasks := self._set_read_tasks()) == 0:
             return
+        # If there are field outputs but not inputs, wait for a short time to receive input events
+        timeout = 1e-3 if self._has_field_outputs and not self._has_field_inputs else None
         try:
             try:
-                done, pending = await asyncio.wait(read_tasks, return_when=asyncio.FIRST_COMPLETED)
+                done, _ = await asyncio.wait(
+                    read_tasks, return_when=asyncio.FIRST_COMPLETED, timeout=timeout
+                )
                 for task in done:
                     if (e := task.exception()) is not None:
                         raise e
-                for task in pending:
-                    task.cancel()
+                    self._read_tasks.pop(task.get_name())
+                    self._set_read_tasks()
+                    await self._flush_event_buffer()
             except* ChannelClosedError as eg:
                 await self.close()
                 raise self._build_io_stream_error(IODirection.INPUT, eg) from eg
@@ -97,45 +118,71 @@ class IOController:
                 task.cancel()
             raise
 
-    async def _read_fields(self) -> None:
-        await self._read_channel_set(
-            channel_type="field",
-            channels=self._input_channels,
-            return_when=asyncio.ALL_COMPLETED,
-            store_fn=lambda k, v: self.data[str(IODirection.INPUT)].update({k: v}),
-        )
+    def _set_read_tasks(self) -> list[asyncio.Task]:
+        read_tasks: list[asyncio.Task] = []
+        if self._has_field_inputs:
+            if _fields_read_task not in self._read_tasks:
+                read_fields_task = asyncio.create_task(self._read_fields())
+                read_fields_task.set_name(_fields_read_task)
+                self._read_tasks[_fields_read_task] = read_fields_task
+            read_tasks.append(self._read_tasks[_fields_read_task])
+        if self._has_event_inputs:
+            if _events_read_task not in self._read_tasks:
+                read_events_task = asyncio.create_task(self._read_events())
+                read_events_task.set_name(_events_read_task)
+                self._read_tasks[_events_read_task] = read_events_task
+            if _events_wait_task not in self._read_tasks:
+                wait_for_events_task = asyncio.create_task(self._has_received_events.wait())
+                wait_for_events_task.set_name(_events_wait_task)
+                self._read_tasks[_events_wait_task] = wait_for_events_task
+            read_tasks.append(self._read_tasks[_events_wait_task])
+        return read_tasks
 
-    async def _read_events(self) -> None:
-        await self._read_channel_set(
-            channel_type="event",
-            channels={(k, ""): ch for k, ch in self._input_event_channels.items()},
-            return_when=asyncio.FIRST_COMPLETED,
-            store_fn=lambda _, v: self.events[str(IODirection.INPUT)].append(v),
-        )
+    async def _flush_event_buffer(self) -> None:
+        if self._has_received_events.is_set():
+            async with self._has_received_events_lock:
+                self._has_received_events.clear()
+                self.events[_io_key_in].extend(self._received_events)
+                self._received_events.clear()
 
-    async def _read_channel_set(
+    async def _read_fields(
         self,
-        channel_type: str,
-        channels: dict[tuple[str, str], Channel],
-        return_when: str,
-        store_fn: _t.Callable[[str, _t.Any], None],
     ) -> None:
         read_tasks = []
-        for (key, _), chan in channels.items():
+        for (key, _), chan in self._input_channels.items():
+            # FIXME : Looks like multiple channels for same field will trample each other
             if key not in self._read_tasks:
-                task = asyncio.create_task(self._read_channel(channel_type, key, chan))
+                task = asyncio.create_task(self._read_channel("field", key, chan))
                 task.set_name(key)
                 self._read_tasks[key] = task
             read_tasks.append(self._read_tasks[key])
         if len(read_tasks) == 0:
             return
-        done, _ = await asyncio.wait(read_tasks, return_when=return_when)
+        done, _ = await asyncio.wait(read_tasks, return_when=asyncio.ALL_COMPLETED)
         for task in done:
             key = task.get_name()
             self._read_tasks.pop(key)
             if (e := task.exception()) is not None:
                 raise e
-            store_fn(key, task.result())
+            self.data[_io_key_in][key] = task.result()
+
+    async def _read_events(self) -> None:
+        fan_in = AsyncioChannel()
+
+        async def _iter_event_channel(chan: Channel) -> None:
+            while True:
+                result = await chan.recv()
+                await fan_in.send(result)
+
+        async with asyncio.TaskGroup() as tg:
+            for chan in self._input_event_channels.values():
+                tg.create_task(_iter_event_channel(chan))
+
+            while True:
+                event = await fan_in.recv()
+                async with self._has_received_events_lock:
+                    self._received_events.append(event)
+                    self._has_received_events.set()
 
     async def _read_channel(self, channel_type: str, key: str, channel: Channel) -> _t.Any:
         try:
@@ -165,14 +212,14 @@ class IOController:
                 tg.create_task(self._write_field(field, chan))
 
     async def _write_field(self, field: str, channel: Channel) -> None:
-        item = self.data[str(IODirection.OUTPUT)][field]
+        item = self.data[_io_key_out][field]
         try:
             await channel.send(item)
         except ChannelClosedError as e:
             raise ChannelClosedError(f"Channel closed for field: {field}.") from e
 
     async def _write_events(self) -> None:
-        queue = self.events[str(IODirection.OUTPUT)]
+        queue = self.events[_io_key_out]
         async with asyncio.TaskGroup() as tg:
             for _ in range(len(queue)):
                 event = queue.popleft()
@@ -180,7 +227,7 @@ class IOController:
 
     async def _write_event(self, event: Event) -> None:
         try:
-            chan = self._output_event_channels[event.type]
+            chan = self._output_event_channels[event.safe_type()]
         except KeyError as e:
             raise ValueError(f"Unrecognised output event {event.type}.") from e
         try:
@@ -199,9 +246,9 @@ class IOController:
         """Queues an event for output."""
         if self._is_closed:
             raise IOStreamClosedError("Attempted queue_event on a closed io controller.")
-        if event.type not in self._output_event_channels:
+        if event.safe_type() not in self._output_event_channels:
             raise ValueError(f"Unrecognised output event {event.type}.")
-        self.events[str(IODirection.OUTPUT)].append(event)
+        self.events[_io_key_out].append(event)
 
     async def close(self) -> None:
         """Closes all input/output channels."""

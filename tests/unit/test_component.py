@@ -47,3 +47,5 @@ async def test_component_initial_values(initial_values: dict[str, _t.Iterable]) 
                 assert component.c.get(field) == list(initial_values[field])[input_idx]
             else:
                 assert component.c.get(field) == input_idx - n_init[field]
+
+    await component.io.close()

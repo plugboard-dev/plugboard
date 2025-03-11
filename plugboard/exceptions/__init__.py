@@ -1,26 +1,44 @@
 """Provides exceptions for Plugboard."""
 
 
-class ChannelClosedError(Exception):
+class ChannelError(Exception):
+    """Raised for channel related errors."""
+
+    pass
+
+
+class ChannelClosedError(ChannelError):
     """Raised when a closed channel is accessed."""
 
     pass
 
 
-class ChannelNotConnectedError(Exception):
+class ChannelNotConnectedError(ChannelError):
     """Raised when using a channel that is not connected."""
 
     pass
 
 
-class ChannelSetupError(Exception):
+class ChannelSetupError(ChannelError):
     """Raised when a channel is setup incorrectly."""
 
     pass
 
 
-class IOStreamClosedError(Exception):
+class IOControllerError(Exception):
+    """Raised for IO controller related errors."""
+
+    pass
+
+
+class IOStreamClosedError(IOControllerError):
     """`IOStreamClosedError` is raised when an IO stream is closed."""
+
+    pass
+
+
+class IOSetupError(IOControllerError):
+    """Raised when an IO controller is setup incorrectly."""
 
     pass
 

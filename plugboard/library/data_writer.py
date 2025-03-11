@@ -8,6 +8,7 @@ import typing as _t
 
 from plugboard.component import Component
 from plugboard.component.io_controller import IOController, IODirection
+from plugboard.exceptions import IOSetupError
 from plugboard.schemas import ComponentArgsDict
 
 
@@ -44,8 +45,22 @@ class DataWriter(Component, ABC):
         super().__init__(**kwargs)
         self._buffer: dict[str, deque] = defaultdict(deque)
         self._chunk_size = chunk_size
-        self.io = IOController(inputs=field_names, outputs=None, namespace=self.name)
+        self.io = IOController(
+            inputs=field_names,
+            outputs=None,
+            input_events=self.__class__.io.input_events,
+            output_events=self.__class__.io.output_events,
+            namespace=self.name,
+        )
         self._task: _t.Optional[Task] = None
+
+    def __init_subclass__(cls, *args: _t.Any, **kwargs: _t.Any) -> None:
+        try:
+            return super().__init_subclass__(*args, **kwargs)
+        except IOSetupError:
+            # Concrete subclasses of the abstract data io classes represent a special case for io
+            # setup. They receive io args at run time, not declaration time, so skip error.
+            pass
 
     @abstractmethod
     async def _save(self, data: _t.Any) -> None:
@@ -83,4 +98,5 @@ class DataWriter(Component, ABC):
         await super().run()
         # Flush any remaining data in the buffer after completion
         await self._save_chunk()
-        await self._task  # type: ignore
+        if self._task is not None:
+            await self._task

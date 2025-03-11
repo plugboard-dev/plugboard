@@ -6,7 +6,7 @@ import typing as _t
 
 from plugboard.connector import Connector
 from plugboard.events.event import Event
-from plugboard.schemas import ConnectorSocket, ConnectorSpec
+from plugboard.schemas import ConnectorMode, ConnectorSocket, ConnectorSpec
 
 
 if _t.TYPE_CHECKING:
@@ -45,5 +45,5 @@ class EventConnectorBuilder:
         evt_type_safe = Event.safe_type(evt_type)
         source = ConnectorSocket(entity=evt_type_safe, descriptor=self._source_descriptor)
         target = ConnectorSocket(entity=evt_type_safe, descriptor=self._target_descriptor)
-        spec = ConnectorSpec(source=source, target=target)
+        spec = ConnectorSpec(source=source, target=target, mode=ConnectorMode.PUBSUB)
         return self._connector_builder.build(spec)

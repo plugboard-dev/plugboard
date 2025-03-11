@@ -12,7 +12,7 @@ from plugboard.library.websocket_io import WebsocketReader, WebsocketWriter
 
 HOST = "localhost"
 PORT = 8767
-CLIENTS = set()
+CLIENTS: set[ServerConnection] = set()
 
 
 async def _handler(websocket: ServerConnection) -> None:
