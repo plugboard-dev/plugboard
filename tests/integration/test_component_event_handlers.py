@@ -73,13 +73,7 @@ class A(Component):
         self._event_B_count += evt.data.y
 
 
-# FIXME : Issues in test when using `ZMQConnector`. See https://github.com/plugboard-dev/plugboard/issues/101.
-#       : - With `PLUGBOARD_FLAGS_ZMQ_PUBSUB_PROXY=true` tests should pass but hangs probably due
-#       :   to unconnected fields
-#       : - With `PLUGBOARD_FLAGS_ZMQ_PUBSUB_PROXY=false` there appears to be issues with
-#       :   serialisation due to zmq poll async generator created in `ZMQConnector` constructor.
 @pytest.fixture(scope="module", params=[AsyncioConnector, ZMQConnector])
-# @pytest.fixture(scope="module", params=[AsyncioConnector])
 def connector_cls(request: pytest.FixtureRequest) -> _t.Type[Connector]:
     """Returns a `Connector` class."""
     return request.param
