@@ -20,11 +20,17 @@ class A(ComponentTestHelper):
 
     io = IOController(outputs=["out_1", "out_2"])
 
+    async def step(self) -> None:  # noqa: D102
+        pass
+
 
 class B(ComponentTestHelper):
     """`B` component class with input and output fields."""
 
     io = IOController(inputs=["in_1", "in_2"])
+
+    async def step(self) -> None:  # noqa: D102
+        pass
 
 
 @pytest.fixture

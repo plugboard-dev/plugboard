@@ -97,6 +97,9 @@ class ZMQChannel(SerdeChannel):
 class _ZMQConnector(Connector, ABC):
     """`_ZMQConnector` connects components using `ZMQChannel`."""
 
+    # TODO : Remove dependence on Ray from ZMQConnector. Introduce separate RayZMQConnector
+    #      : for Ray based ZMQChannel. Improve test coverage for Process and Connector combos.
+
     def __init__(
         self, *args: _t.Any, zmq_address: str = ZMQ_ADDR, maxsize: int = 2000, **kwargs: _t.Any
     ) -> None:
@@ -174,6 +177,14 @@ class _ZMQPubsubConnector(_ZMQConnector):
         self._poller.register(self._xpub_socket, zmq.POLLIN)
         self._poll_task = asyncio.create_task(self._poll())
         _zmq_poller_tasks.add(self._poll_task)
+
+    def __getstate__(self) -> dict:
+        state = self.__dict__.copy()
+        # Remove non-serializable attributes
+        for attr in ("_poller", "_poll_task", "_xsub_socket", "_xpub_socket"):
+            if attr in state:
+                del state[attr]
+        return state
 
     async def _poll(self) -> None:
         poll_fn, xps, xss = self._poller.poll, self._xpub_socket, self._xsub_socket

@@ -2,5 +2,7 @@
     options:
       members:
       - Event
+      - SystemEvent
+      - StopEvent
       - EventConnectorBuilder
       - EventHandlers

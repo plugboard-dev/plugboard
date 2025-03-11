@@ -114,6 +114,7 @@ exclude = ["examples/*"]
 
 [tool.ruff.lint.pydocstyle]
 convention = "google"
+ignore-var-parameters = true
 
 [tool.ruff.lint.isort]
 known-first-party = ["plugboard"]

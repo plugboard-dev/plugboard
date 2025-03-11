@@ -24,7 +24,7 @@ def _serialiser(obj: _t.Any, default: _t.Callable | None) -> bytes:
 def configure_logging(settings: Settings) -> None:
     """Configures logging."""
     log_level = getattr(logging, settings.log_level)
-    common_processors = [
+    common_processors: _t.Iterable[structlog.typing.Processor] = [
         structlog.stdlib.add_log_level,
         structlog.processors.TimeStamper(fmt="iso"),
         structlog.processors.CallsiteParameterAdder(
@@ -36,11 +36,11 @@ def configure_logging(settings: Settings) -> None:
     ]
 
     if not settings.log_structured:
-        processors = common_processors + [
+        processors = list(common_processors) + [
             structlog.dev.ConsoleRenderer(),
         ]
     else:
-        processors = common_processors + [
+        processors = list(common_processors) + [
             structlog.processors.dict_tracebacks,
             structlog.processors.JSONRenderer(serializer=_serialiser),
         ]
@@ -48,7 +48,7 @@ def configure_logging(settings: Settings) -> None:
     structlog.configure(
         cache_logger_on_first_use=True,
         wrapper_class=structlog.make_filtering_bound_logger(log_level),
-        processors=processors,  # type: ignore[arg-type]
+        processors=processors,
         # Use BytesLoggerFactory when using msgspec serialization to bytes
         logger_factory=structlog.BytesLoggerFactory()
         # See https://github.com/hynek/structlog/issues/417

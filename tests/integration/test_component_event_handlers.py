@@ -7,11 +7,7 @@ from pydantic import BaseModel
 import pytest
 
 from plugboard.component import Component, IOController
-from plugboard.connector import (
-    AsyncioConnector,
-    Connector,
-    ConnectorBuilder,
-)
+from plugboard.connector import AsyncioConnector, Connector, ConnectorBuilder, ZMQConnector
 from plugboard.events import Event, EventConnectorBuilder
 from plugboard.schemas import ConnectorSpec
 
@@ -77,7 +73,7 @@ class A(Component):
         self._event_B_count += evt.data.y
 
 
-@pytest.fixture(scope="module", params=[AsyncioConnector])
+@pytest.fixture(scope="module", params=[AsyncioConnector, ZMQConnector])
 def connector_cls(request: pytest.FixtureRequest) -> _t.Type[Connector]:
     """Returns a `Connector` class."""
     return request.param
@@ -152,12 +148,12 @@ async def test_component_event_handlers(
 
 
 @pytest.fixture
-def field_connectors() -> list[Connector]:
+def field_connectors(connector_cls: _t.Type[Connector]) -> list[Connector]:
     """Fixture for a list of field connectors."""
     return [
-        AsyncioConnector(spec=ConnectorSpec(source="null.in_1", target="a.in_1")),
-        AsyncioConnector(spec=ConnectorSpec(source="null.in_2", target="a.in_2")),
-        AsyncioConnector(spec=ConnectorSpec(source="a.out_1", target="null.out_1")),
+        connector_cls(spec=ConnectorSpec(source="null.in_1", target="a.in_1")),
+        connector_cls(spec=ConnectorSpec(source="null.in_2", target="a.in_2")),
+        connector_cls(spec=ConnectorSpec(source="a.out_1", target="null.out_1")),
     ]
 
 
@@ -181,7 +177,15 @@ async def test_component_event_handlers_with_field_inputs(
     event_connectors_map = event_connectors.build([a])
     connectors = list(event_connectors_map.values()) + field_connectors
 
-    await a.io.connect(connectors)
+    # FIXME : With `ZMQConnector` both send and recv side must be connected to avoid hanging.
+    #       : See https://github.com/plugboard-dev/plugboard/issues/101.
+    conn_in1, conn_in2, conn_out1 = field_connectors
+    async with asyncio.TaskGroup() as tg:
+        tg.create_task(a.io.connect(connectors))
+        t_in1 = tg.create_task(conn_in1.connect_send())
+        t_in2 = tg.create_task(conn_in2.connect_send())
+        tg.create_task(conn_out1.connect_recv())
+    chan_in1, chan_in2 = t_in1.result(), t_in2.result()
 
     # Initially event counters should be zero
     assert a.event_A_count == 0
@@ -212,10 +216,8 @@ async def test_component_event_handlers_with_field_inputs(
     assert getattr(a, "in_2", None) is None
 
     # After sending data for input fields, the event counters should remain the same
-    chan_0 = await field_connectors[0].connect_send()
-    await chan_0.send(1)
-    chan_1 = await field_connectors[1].connect_send()
-    await chan_1.send(2)
+    await chan_in1.send(1)
+    await chan_in2.send(2)
     await a.step()
 
     assert a.event_A_count == 2
@@ -224,13 +226,14 @@ async def test_component_event_handlers_with_field_inputs(
     assert getattr(a, "in_2", None) == 2
 
     # After sending data for only one input field, step should timeout as read tasks are incomplete
-    await chan_0.send(3)
+    await chan_in1.send(3)
+    step_task = asyncio.create_task(a.step())
     with pytest.raises(TimeoutError):
-        await asyncio.wait_for(a.step(), timeout=0.1)
+        await asyncio.wait_for(asyncio.shield(step_task), timeout=0.1)
 
     # After sending an event of type A before all field data is sent, the event_A_count should be 4
     await chan_A.send(evt_A)
-    await a.step()
+    await step_task
 
     assert a.event_A_count == 4
     assert a.event_B_count == 4
@@ -238,7 +241,7 @@ async def test_component_event_handlers_with_field_inputs(
     assert getattr(a, "in_2", None) == 2
 
     # After sending data for the other input field, the event counters should remain the same
-    await chan_1.send(4)
+    await chan_in2.send(4)
     await a.step()
 
     assert a.event_A_count == 4
@@ -248,8 +251,8 @@ async def test_component_event_handlers_with_field_inputs(
 
     # After sending data for both input fields and both events, the event counters should
     # eventually be updated after at most two steps
-    await chan_0.send(5)
-    await chan_1.send(6)
+    await chan_in1.send(5)
+    await chan_in2.send(6)
     await chan_A.send(evt_A)
     await chan_B.send(evt_B)
     await a.step()

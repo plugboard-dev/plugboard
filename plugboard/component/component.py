@@ -2,16 +2,18 @@
 
 from abc import ABC, abstractmethod
 import asyncio
+from collections import defaultdict
 from functools import wraps
 import typing as _t
 
-from plugboard.component.io_controller import (
-    IOController,
-    IODirection,
+from plugboard.component.io_controller import IOController as IO, IODirection
+from plugboard.events import Event, EventHandlers, StopEvent
+from plugboard.exceptions import (
+    IOSetupError,
     IOStreamClosedError,
+    UnrecognisedEventError,
+    ValidationError,
 )
-from plugboard.events import Event, EventHandlers
-from plugboard.exceptions import UnrecognisedEventError, ValidationError
 from plugboard.state import StateBackend
 from plugboard.utils import DI, ClassRegistry, ExportMixin, is_on_ray_worker
 
@@ -26,7 +28,7 @@ class Component(ABC, ExportMixin):
             in addition to input and output fields.
     """
 
-    io: IOController
+    io: IO = IO(input_events=[StopEvent], output_events=[StopEvent])
     exports: _t.Optional[list[str]] = None
 
     def __init__(
@@ -44,16 +46,25 @@ class Component(ABC, ExportMixin):
         self._parameters = parameters or {}
         self._state: _t.Optional[StateBackend] = state
         self._state_is_connected = False
-        self.io = IOController(
+
+        setattr(self, "init", self._handle_init_wrapper())
+        setattr(self, "step", self._handle_step_wrapper())
+
+        if is_on_ray_worker():
+            # Required until https://github.com/ray-project/ray/issues/42823 is resolved
+            try:
+                self.__class__._configure_io()
+            except IOSetupError:
+                pass
+        self.io = IO(
             inputs=self.__class__.io.inputs,
             outputs=self.__class__.io.outputs,
-            initial_values=initial_values,
+            initial_values=self._initial_values,
             input_events=self.__class__.io.input_events,
             output_events=self.__class__.io.output_events,
-            namespace=name,
+            namespace=self.name,
         )
-        self.init = self._handle_init_wrapper()  # type: ignore
-        self.step = self._handle_step_wrapper()  # type: ignore
+
         self._logger = DI.logger.sync_resolve().bind(cls=self.__class__.__name__, name=self.name)
         self._logger.info("Component created")
 
@@ -62,9 +73,41 @@ class Component(ABC, ExportMixin):
         if is_on_ray_worker():
             # Required until https://github.com/ray-project/ray/issues/42823 is resolved
             return
-        if not hasattr(cls, "io"):
-            raise NotImplementedError(f"{cls.__name__} must define an `io` attribute.")
+        cls._configure_io()
         ComponentRegistry.add(cls)
+
+    @classmethod
+    def _configure_io(cls) -> None:
+        # Get all parent classes that are Component subclasses
+        parent_comps = [c for c in cls.__bases__ if issubclass(c, Component)]
+        # Create combined set of all io arguments from this class and all parents
+        io_args: dict[str, set] = defaultdict(set)
+        for c in parent_comps + [cls]:
+            if {c_io := getattr(c, "io")}:
+                io_args["inputs"].update(c_io.inputs)
+                io_args["outputs"].update(c_io.outputs)
+                io_args["input_events"].update(c_io.input_events)
+                io_args["output_events"].update(c_io.output_events)
+        # Set io arguments for subclass
+        cls.io = IO(
+            inputs=sorted(io_args["inputs"], key=str),
+            outputs=sorted(io_args["outputs"], key=str),
+            input_events=sorted(io_args["input_events"], key=str),
+            output_events=sorted(io_args["output_events"], key=str),
+        )
+        # Check that subclass io arguments is superset of abstract base class Component io arguments
+        # Note: can't check cls.__abstractmethods__ as it's unset at this point. Maybe brittle...
+        cls_is_concrete = ABC not in cls.__bases__
+        extends_base_io_args = (
+            io_args["inputs"] > set(Component.io.inputs)
+            or io_args["outputs"] > set(Component.io.outputs)
+            or io_args["input_events"] > set(Component.io.input_events)
+            or io_args["output_events"] > set(Component.io.output_events)
+        )
+        if cls_is_concrete and not extends_base_io_args:
+            raise IOSetupError(
+                f"{cls.__name__} must extend Component abstract base class io arguments"
+            )
 
     # Prevents type-checker errors on public component IO attributes
     def __getattr__(self, key: str) -> _t.Any:
@@ -133,7 +176,6 @@ class Component(ABC, ExportMixin):
 
     def _bind_inputs(self) -> None:
         """Binds input fields to component fields."""
-        # TODO : Correct behaviour for missing fields (can happen when using events)?
         for field in self.io.inputs:
             field_default = getattr(self, field, None)
             value = self.io.data[str(IODirection.INPUT)].get(field, field_default)
@@ -141,7 +183,6 @@ class Component(ABC, ExportMixin):
 
     def _bind_outputs(self) -> None:
         """Binds component fields to output fields."""
-        # TODO : Correct behaviour for missing fields (can happen when using events)?
         for field in self.io.outputs:
             field_default = getattr(self, field, None)
             self.io.data[str(IODirection.OUTPUT)][field] = field_default
@@ -164,6 +205,15 @@ class Component(ABC, ExportMixin):
         res = await handler(self, event)
         if isinstance(res, Event):
             self.io.queue_event(res)
+
+    @StopEvent.handler
+    async def _stop_event_handler(self, event: StopEvent) -> None:
+        """Stops the component on receiving the system `StopEvent`."""
+        try:
+            self.io.queue_event(event)
+            await self.io.close()
+        except IOStreamClosedError:
+            pass
 
     async def run(self) -> None:
         """Executes component logic for all steps to completion."""

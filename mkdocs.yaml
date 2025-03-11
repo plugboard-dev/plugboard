@@ -122,6 +122,7 @@ nav:
 - API Reference:
   - component: api/component/component.md
   - connector: api/connector/connector.md
+  - events: api/events/events.md
   - exceptions: api/exceptions/exceptions.md
   - library: api/library/library.md
   - process: api/process/process.md
