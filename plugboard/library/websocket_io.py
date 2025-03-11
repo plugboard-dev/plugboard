@@ -29,8 +29,8 @@ class WebsocketArgsDict(ComponentArgsDict):
 class WebsocketBase(Component, ABC):
     """Base [`Component`][plugboard.component.Component] for websocket connections.
 
-    See [websockets](https://websockets.readthedocs.io/en/stable/reference/asyncio/client.html) for
-    possible connection arguments.
+    See [websockets](https://websockets.readthedocs.io/en/stable/index.html) for nmore info on the
+    underlying websocket library.
     """
 
     io = IOController()
@@ -145,7 +145,6 @@ class WebsocketWriter(WebsocketBase):
 
     io = IOController(inputs=["message"])
 
-    @depends_on_optional("websockets")
     def __init__(
         self,
         parse_json: bool = False,
