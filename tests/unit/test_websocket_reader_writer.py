@@ -7,7 +7,7 @@ import pytest
 from websockets.asyncio.client import ClientConnection, connect
 from websockets.asyncio.server import ServerConnection, serve
 
-from plugboard.library.websocket_io import WebsocketReader, WebsocketWriter
+from plugboard.library.websocket_io import WebsocketBase, WebsocketReader, WebsocketWriter
 
 
 HOST = "localhost"
@@ -72,9 +72,9 @@ async def test_websocket_reader(
     )
     expected_messages = expected_messages[n_skip_messages:]
     # Check that the reader receives the messages, correctly parsed
-    for message in expected_messages:
+    for received_message in expected_messages:
         await reader.step()
-        assert message == reader.message
+        assert received_message == reader.message
 
     await reader.destroy()
 
@@ -91,7 +91,7 @@ async def test_websocket_writer(connected_client: ClientConnection, parse_json: 
     await writer.init()
     messages = [{"test-msg": x} for x in range(5)]
     for message in messages:
-        writer.message = message if parse_json else json.dumps(message)
+        writer.message = message if parse_json else json.dumps(message)  # type: ignore [attr-defined]
         await writer.step()
         # Now retrieve the message from the broadcast
         response = await connected_client.recv()
@@ -102,7 +102,7 @@ async def test_websocket_writer(connected_client: ClientConnection, parse_json: 
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("component", [WebsocketReader, WebsocketWriter])
-async def test_websocket_error(component: _t.Type[WebsocketReader | WebsocketWriter]) -> None:
+async def test_websocket_error(component: _t.Type[WebsocketBase]) -> None:
     """Tests the error handling of the websocket components."""
     c = component(
         name="test-websocket", uri=f"ws://{HOST}:{PORT}", connect_args={"open_timeout": 0.01}

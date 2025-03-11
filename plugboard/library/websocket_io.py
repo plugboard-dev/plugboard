@@ -15,6 +15,7 @@ try:
     from websockets.asyncio.client import connect, process_exception
     from websockets.asyncio.connection import Connection
     from websockets.exceptions import ConnectionClosed
+    from websockets.typing import Data
 except ImportError:
     pass
 
@@ -54,7 +55,6 @@ class WebsocketBase(Component, ABC):
         self._connect_args = {"process_exception": self._process_exception, **(connect_args or {})}
         self._connection_success = False
         self._ctx = AsyncExitStack()
-        self._conn: Connection | None = None
 
     def _process_exception(self, exc: Exception) -> Exception | None:
         if not self._connection_success:
@@ -124,20 +124,28 @@ class WebsocketReader(WebsocketBase):
         self._skip_count = self._skip_messages
         return conn
 
-    async def step(self) -> None:
-        """Reads a message from the websocket connection."""
-        if not self._conn:
-            self._conn = await self._get_conn()
+    async def _recv_websocket(self) -> _t.Optional["Data"]:
         try:
-            while self._skip_count > 0:
-                message = await self._conn.recv()
-                self._logger.info(f"Skipping message", message=message)
-                self._skip_count -= 1
-            message = await self._conn.recv()
-            self.message = json.decode(message) if self._parse_json else message
+            return await self._conn.recv()
         except ConnectionClosed:
             self._logger.warning(f"Connection to {self._uri} closed, will reconnect...")
-            self._conn = None
+            await self._ctx.aclose()
+            self._conn = await self._get_conn()
+        return None
+
+    async def step(self) -> None:
+        """Reads a message from the websocket connection."""
+        while self._skip_count > 0:
+            message = await self._recv_websocket()
+            if message is None:
+                continue
+            self._logger.info(f"Skipping message", message=message)
+            self._skip_count -= 1
+        while True:
+            message = await self._recv_websocket()
+            if message is not None:
+                break
+        self.message = json.decode(message) if self._parse_json else message
 
 
 class WebsocketWriter(WebsocketBase):
@@ -163,14 +171,20 @@ class WebsocketWriter(WebsocketBase):
         super().__init__(**kwargs)
         self._parse_json = parse_json
 
+    async def _send_websocket(self, message: _t.Any) -> bool:
+        try:
+            await self._conn.send(message)
+            return True
+        except ConnectionClosed:
+            self._logger.warning(f"Connection to {self._uri} closed, will reconnect...")
+            await self._ctx.aclose()
+            self._conn = await self._get_conn()
+        return False
+
     async def step(self) -> None:
         """Writes a message to the websocket connection."""
         message = json.encode(self.message) if self._parse_json else self.message
         while True:
-            try:
-                await self._conn.send(message)
+            success = await self._send_websocket(message)
+            if success:
                 break
-            except ConnectionClosed:
-                self._logger.warning(f"Connection to {self._uri} closed, will reconnect...")
-                await self._ctx.aclose()
-                self._conn = await self._get_conn()
