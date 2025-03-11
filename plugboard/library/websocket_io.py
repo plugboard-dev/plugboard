@@ -29,8 +29,8 @@ class WebsocketArgsDict(ComponentArgsDict):
 class WebsocketBase(Component, ABC):
     """Base [`Component`][plugboard.component.Component] for websocket connections.
 
-    See https://websockets.readthedocs.io/en/stable/reference/asyncio/client.html for possible
-        connection arguments.
+    See [websockets](https://websockets.readthedocs.io/en/stable/reference/asyncio/client.html) for
+    possible connection arguments.
     """
 
     io = IOController()
@@ -94,9 +94,10 @@ class WebsocketReader(WebsocketBase):
     ) -> None:
         """Instantiates the `WebsocketReader`.
 
-        See https://websockets.readthedocs.io/en/stable/reference/asyncio/client.html for possible
-        connection arguments that can be passed using `connect_args`. This `WebsocketReader` will
-        run until interrupted, and automatically reconnect if the server connection is lost.
+        See [here](https://websockets.readthedocs.io/en/stable/reference/asyncio/client.html) for
+        possible connection arguments that can be passed using `connect_args`. This
+        `WebsocketReader` will run until interrupted, and automatically reconnect if the server
+        connection is lost.
 
         Args:
             initial_message: Optional; The initial message to send to the WebSocket server on
@@ -152,8 +153,8 @@ class WebsocketWriter(WebsocketBase):
     ) -> None:
         """Instantiates the `WebsocketWriter`.
 
-        See https://websockets.readthedocs.io/en/stable/reference/asyncio/client.html for possible
-        connection arguments that can be passed using `connect_args`.
+        See [here](https://websockets.readthedocs.io/en/stable/reference/asyncio/client.html) for
+        possible connection arguments that can be passed using `connect_args`.
 
         Args:
             parse_json: Whether to convert the data to JSON before sending.
@@ -162,13 +163,6 @@ class WebsocketWriter(WebsocketBase):
         """
         super().__init__(**kwargs)
         self._parse_json = parse_json
-
-    async def init(self) -> None:
-        """Initializes the websocket connection."""
-        self._conn_iter = aiter(connect(self._uri, **self._connect_args))
-        self._conn = await self._get_conn()
-        self._connection_success = True
-        self._logger.info(f"Connected to {self._uri}")
 
     async def step(self) -> None:
         """Writes a message to the websocket connection."""
@@ -181,7 +175,3 @@ class WebsocketWriter(WebsocketBase):
                 self._logger.warning(f"Connection to {self._uri} closed, will reconnect...")
                 await self._ctx.aclose()
                 self._conn = await self._get_conn()
-
-    async def destroy(self) -> None:
-        """Closes the websocket connection."""
-        await self._ctx.aclose()
