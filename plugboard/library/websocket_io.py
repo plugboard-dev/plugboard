@@ -11,7 +11,7 @@ from plugboard.utils import depends_on_optional
 
 
 try:
-    from websockets.asyncio.client import connect
+    from websockets.asyncio.client import connect, process_exception
     from websockets.asyncio.connection import Connection
     from websockets.exceptions import ConnectionClosed
 except ImportError:
@@ -50,7 +50,7 @@ class WebsocketReader(Component):
         """
         super().__init__(**kwargs)
         self._uri = uri
-        self._connect_args = connect_args if connect_args else {}
+        self._connect_args = {"process_exception": self._process_exception, **(connect_args or {})}
         if initial_message is not None:
             self._initial_message = json.encode(initial_message) if parse_json else initial_message
         else:
@@ -58,13 +58,23 @@ class WebsocketReader(Component):
         self._skip_messages = skip_messages
         self._skip_count = 0
         self._parse_json = parse_json
+        self._connection_success = False
         self._ctx = AsyncExitStack()
         self._conn: Connection | None = None
+
+    def _process_exception(self, exc: Exception) -> Exception | None:
+        if not self._connection_success:
+            self._logger.error("Error connecting to websocket", exc_info=exc)
+            return exc
+        # If connection was established, use the default exception handler
+        self._logger.info("Error raised in websocket connection", exc_info=exc)
+        return process_exception(exc)
 
     async def init(self) -> None:
         """Initializes the websocket connection."""
         self._conn_iter = aiter(connect(self._uri, **self._connect_args))
         self._conn = await self._get_conn()
+        self._connection_success = True
         self._logger.info(f"Connected to {self._uri}")
 
     async def _get_conn(self) -> "Connection":
@@ -121,14 +131,24 @@ class WebsocketWriter(Component):
         """
         super().__init__(**kwargs)
         self._uri = uri
-        self._connect_args = connect_args if connect_args else {}
+        self._connect_args = {"process_exception": self._process_exception, **(connect_args or {})}
         self._parse_json = parse_json
+        self._connection_success = False
         self._ctx = AsyncExitStack()
+
+    def _process_exception(self, exc: Exception) -> Exception | None:
+        if not self._connection_success:
+            self._logger.error("Error connecting to websocket", exc_info=exc)
+            return exc
+        # If connection was established, use the default exception handler
+        self._logger.info("Error raised in websocket connection", exc_info=exc)
+        return process_exception(exc)
 
     async def init(self) -> None:
         """Initializes the websocket connection."""
         self._conn_iter = aiter(connect(self._uri, **self._connect_args))
         self._conn = await self._get_conn()
+        self._connection_success = True
         self._logger.info(f"Connected to {self._uri}")
 
     async def _get_conn(self) -> "Connection":

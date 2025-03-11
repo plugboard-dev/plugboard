@@ -98,3 +98,14 @@ async def test_websocket_writer(connected_client: ClientConnection, parse_json: 
         assert message == json.loads(response) if parse_json else response
 
     await writer.destroy()
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("component", [WebsocketReader, WebsocketWriter])
+async def test_websocket_error(component: _t.Type[WebsocketReader | WebsocketWriter]) -> None:
+    """Tests the error handling of the websocket components."""
+    c = component(
+        name="test-websocket", uri=f"ws://{HOST}:{PORT}", connect_args={"open_timeout": 0.01}
+    )
+    with pytest.raises(OSError):
+        await c.init()
