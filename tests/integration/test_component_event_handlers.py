@@ -177,6 +177,8 @@ async def test_component_event_handlers_with_field_inputs(
     event_connectors_map = event_connectors.build([a])
     connectors = list(event_connectors_map.values()) + field_connectors
 
+    # FIXME : With `ZMQConnector` both send and recv side must be connected to avoid hanging.
+    #       : See https://github.com/plugboard-dev/plugboard/issues/101.
     conn_in1, conn_in2, conn_out1 = field_connectors
     async with asyncio.TaskGroup() as tg:
         tg.create_task(a.io.connect(connectors))
