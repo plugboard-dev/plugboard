@@ -49,34 +49,23 @@ class B(ComponentTestHelper):
         await super().step()
 
 
-@pytest.fixture(scope="module", params=[ZMQConnector])
-def connector_cls(request: pytest.FixtureRequest) -> _t.Type[Connector]:
-    """Returns a `Connector` class."""
-    return request.param
-
-
-@pytest.fixture
-def event_connectors(connector_cls: _t.Type[Connector]) -> EventConnectorBuilder:
-    """Fixture for an event connectors instance."""
-    connector_builder = ConnectorBuilder(connector_cls=connector_cls)
-    return EventConnectorBuilder(connector_builder=connector_builder)
-
-
 @pytest.mark.anyio
 @pytest.mark.parametrize(
     "process_cls, connector_cls",
     [
         (LocalProcess, AsyncioConnector),
         (LocalProcess, ZMQConnector),
+        # (RayProcess, RayConnector),  # TODO : Pubsub/StopEvent unsupported. See https://github.com/plugboard-dev/plugboard/issues/101.
         # (RayProcess, ZMQConnector),  # FIXME : Test assertion fails. See https://github.com/plugboard-dev/plugboard/issues/101.
-        # (RayProcess, RayConnector),  # TODO : Pubsub/StopEvent support. See https://github.com/plugboard-dev/plugboard/issues/101.
     ],
 )
 async def test_process_stop_event(
     process_cls: type[Process],
     connector_cls: type[Connector],
-    event_connectors: EventConnectorBuilder,
 ) -> None:
+    connector_builder = ConnectorBuilder(connector_cls=connector_cls)
+    event_connectors = EventConnectorBuilder(connector_builder=connector_builder)
+
     max_iters = 20
     iters_before_stop = 10
     sleep_time = 0.1
