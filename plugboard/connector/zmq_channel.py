@@ -178,6 +178,14 @@ class _ZMQPubsubConnector(_ZMQConnector):
         self._poll_task = asyncio.create_task(self._poll())
         _zmq_poller_tasks.add(self._poll_task)
 
+    def __getstate__(self) -> dict:
+        state = self.__dict__.copy()
+        # Remove non-serializable attributes
+        for attr in ("_poller", "_poll_task", "_xsub_socket", "_xpub_socket"):
+            if attr in state:
+                del state[attr]
+        return state
+
     async def _poll(self) -> None:
         poll_fn, xps, xss = self._poller.poll, self._xpub_socket, self._xsub_socket
         try:
