@@ -30,7 +30,7 @@ class WebsocketArgsDict(ComponentArgsDict):
 class WebsocketBase(Component, ABC):
     """Base [`Component`][plugboard.component.Component] for websocket connections.
 
-    See [websockets](https://websockets.readthedocs.io/en/stable/index.html) for nmore info on the
+    See [websockets](https://websockets.readthedocs.io/en/stable/index.html) for more info on the
     underlying websocket library.
     """
 
