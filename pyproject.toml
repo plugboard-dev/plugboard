@@ -107,7 +107,7 @@ skip-magic-trailing-comma = false
 line-ending = "auto"
 
 [tool.ruff.lint]
-select = ["D", "E", "F", "I", "W"]
+select = ["D", "E", "F", "I", "W", "S"]
 ignore = ["D105", "D107", "D401", "E203", "E226", "E24", "E731", "E741", "F541", "F821", "W605"]
 exclude = ["examples/*"]
 
