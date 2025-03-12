@@ -17,6 +17,7 @@ dependencies = [
     "pyarrow~=17.0",
     "pydantic~=2.8",
     "pydantic-settings>=2.7.1",
+    "pyzmq~=26.2",
     "rich~=13.9",
     "sqlalchemy[asyncio]~=2.0",
     "structlog>=25.1.0",
@@ -28,13 +29,9 @@ dependencies = [
 aws = ["s3fs>=2024.9.0"]
 azure = ["adlfs>=2024.7.0"]
 gcp = ["gcsfs>=2024.9.0.post1"]
-ray = ["pyzmq~=26.2", "ray>=2.42.1"]
-llm = [
-    "llama-index>=0.12.11",
-]
-websockets = [
-    "websockets>=14.2",
-]
+ray = ["ray>=2.42.1"]
+llm = ["llama-index>=0.12.11"]
+websockets = ["websockets>=14.2"]
 
 [dependency-groups]
 dev = [
