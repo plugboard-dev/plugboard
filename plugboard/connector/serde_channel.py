@@ -17,7 +17,7 @@ def _serialise(item: _t.Any) -> bytes:
 
 def _deserialise(msg: bytes) -> _t.Any:
     """Deserialises item from base64-encoded pickle msg."""
-    return pickle.loads(b64decode(msg))
+    return pickle.loads(b64decode(msg))  # noqa: S301
 
 
 class SerdeChannel(Channel, ABC):
