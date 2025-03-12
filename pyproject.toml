@@ -40,8 +40,10 @@ dev = [
     "mypy~=1.11",
     "nbstripout~=0.8",
     "pre-commit~=3.8",
+    "radon>=6.0.1",
     "ruff~=0.5",
     "types-aiofiles~=24.1",
+    "xenon>=0.9.3",
 ]
 test = [
     "aiofile~=3.9",
@@ -122,3 +124,7 @@ combine-as-imports = true
 split-on-trailing-comma = true
 relative-imports-order = "furthest-to-closest"
 lines-after-imports = 2
+
+[tool.radon]
+cc_min = "C"
+mi_min = "B"
