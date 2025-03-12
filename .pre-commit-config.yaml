@@ -16,4 +16,4 @@ repos:
   rev: v0.9.3
   hooks:
   - id: xenon
-    args: ['--max-absolute=B', '--max-modules=A', '--max-average=A']
+    args: ['--max-absolute=B', '--max-modules=A', '--max-average=A', 'plugboard/']
