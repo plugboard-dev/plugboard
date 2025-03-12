@@ -1,7 +1,7 @@
 [project]
 name = "plugboard"
 version = "0.0.0"
-description = "Plugboard is an event driven modelling and orchestration framework for simulating complex processes with many interconnected components."
+description = "Plugboard is an event driven modelling and orchestration framework for simulating and driving complex processes with many interconnected stateful components."
 authors = [
     {name = "Chris Knight", email = "plugboard@csknight.uk"},
     {name = "Toby Coleman", email = "plugboard@tobycoleman.com"}
