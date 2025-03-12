@@ -59,7 +59,33 @@ jobs:
         run: uv run mkdocs build --site-dir /tmp/site
         if: always()
 
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python_version: [3.12]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{matrix.python_version}}
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+        with:
+          enable-cache: true
+          cache-dependency-glob: "uv.lock"
+
       - name: Build package
         run: uv build
-        if: always()
+      
+      - name: Install from wheel
+        working-directory: ./dist
+        run: pip install *.whl
 
+      - name: Smoke test package
+        working-directory: ./dist
+        run: python -c "from plugboard import library"
