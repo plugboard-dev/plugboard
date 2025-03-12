@@ -33,7 +33,7 @@ jobs:
 
       - name: Install project
         run: uv sync --group test --group docs
-      
+
       # Run all checks, even if some fail
       - name: Ruff linting
         run: uv run ruff check .
@@ -45,6 +45,10 @@ jobs:
 
       - name: Type checking
         run: uv run mypy .
+        if: always()
+
+      - name: Code complexity
+        run: uv run xenon --max-absolute B --max-modules A --max-average A plugboard/
         if: always()
 
       - name: Tests
@@ -62,4 +66,3 @@ jobs:
       - name: Build package
         run: uv build
         if: always()
-
