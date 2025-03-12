@@ -117,6 +117,7 @@ nav:
     - Simple model: examples/demos/fundamentals/001_simple_model/simple-model.ipynb
   - LLMs:
     - Data filtering: examples/demos/llm/001_data_filter/llm-filtering.ipynb
+    - Websocket streaming: examples/demos/llm/002_bluesky_websocket/bluesky-websocket.ipynb
   - Physics-based models:
     - Hot water tank: examples/demos/physics-models/001-hot-water-tank/hot-water-tank.ipynb
 - API Reference:
