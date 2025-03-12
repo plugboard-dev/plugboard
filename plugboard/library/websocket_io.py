@@ -1,5 +1,7 @@
 """Provides `WebsocketReader` and `WebsocketWriter` realtime data in Plugboard."""
 
+from __future__ import annotations
+
 from abc import ABC
 from contextlib import AsyncExitStack
 import typing as _t
@@ -13,11 +15,13 @@ from plugboard.utils import depends_on_optional
 
 try:
     from websockets.asyncio.client import connect, process_exception
-    from websockets.asyncio.connection import Connection
     from websockets.exceptions import ConnectionClosed
     from websockets.typing import Data
 except ImportError:
     pass
+
+if _t.TYPE_CHECKING:
+    from websockets.asyncio.connection import Connection
 
 
 class WebsocketArgsDict(ComponentArgsDict):
@@ -71,7 +75,7 @@ class WebsocketBase(Component, ABC):
         self._connection_success = True
         self._logger.info(f"Connected to {self._uri}")
 
-    async def _get_conn(self) -> "Connection":
+    async def _get_conn(self) -> Connection:
         conn = await self._ctx.enter_async_context(await anext(self._conn_iter))
         return conn
 
@@ -116,7 +120,7 @@ class WebsocketReader(WebsocketBase):
         self._skip_count = 0
         self._parse_json = parse_json
 
-    async def _get_conn(self) -> "Connection":
+    async def _get_conn(self) -> Connection:
         conn = await super()._get_conn()
         if self._initial_message is not None:
             self._logger.info(f"Sending initial message", message=self._initial_message)
