@@ -1,7 +1,7 @@
 [project]
 name = "plugboard"
 version = "0.0.0"
-description = "Plugboard is an event driven modelling and orchestration framework for simulating complex processes with many interconnected components."
+description = "Plugboard is an event driven modelling and orchestration framework for simulating and driving complex processes with many interconnected stateful components."
 authors = [
     {name = "Chris Knight", email = "plugboard@csknight.uk"},
     {name = "Toby Coleman", email = "plugboard@tobycoleman.com"}
@@ -17,6 +17,7 @@ dependencies = [
     "pyarrow~=17.0",
     "pydantic~=2.8",
     "pydantic-settings>=2.7.1",
+    "pyzmq~=26.2",
     "rich~=13.9",
     "sqlalchemy[asyncio]~=2.0",
     "structlog>=25.1.0",
@@ -28,13 +29,9 @@ dependencies = [
 aws = ["s3fs>=2024.9.0"]
 azure = ["adlfs>=2024.7.0"]
 gcp = ["gcsfs>=2024.9.0.post1"]
-ray = ["pyzmq~=26.2", "ray>=2.42.1"]
-llm = [
-    "llama-index>=0.12.11",
-]
-websockets = [
-    "websockets>=14.2",
-]
+ray = ["ray>=2.42.1"]
+llm = ["llama-index>=0.12.11"]
+websockets = ["websockets>=14.2"]
 
 [dependency-groups]
 dev = [
@@ -43,8 +40,10 @@ dev = [
     "mypy~=1.11",
     "nbstripout~=0.8",
     "pre-commit~=3.8",
+    "radon>=6.0.1",
     "ruff~=0.5",
     "types-aiofiles~=24.1",
+    "xenon>=0.9.3",
 ]
 test = [
     "aiofile~=3.9",
@@ -56,6 +55,7 @@ test = [
     "pytest~=8.3",
     "pytest-asyncio~=0.23",
     "pytest-cases~=3.8",
+    "pytest-cov>=6.0.0",
     "pytest-env~=1.1",
     "pytest-rerunfailures~=14.0",
     "ray>=2.40.0",
@@ -108,7 +108,7 @@ skip-magic-trailing-comma = false
 line-ending = "auto"
 
 [tool.ruff.lint]
-select = ["D", "E", "F", "I", "W"]
+select = ["D", "E", "F", "I", "W", "S"]
 ignore = ["D105", "D107", "D401", "E203", "E226", "E24", "E731", "E741", "F541", "F821", "W605"]
 exclude = ["examples/*"]
 
@@ -125,3 +125,7 @@ combine-as-imports = true
 split-on-trailing-comma = true
 relative-imports-order = "furthest-to-closest"
 lines-after-imports = 2
+
+[tool.radon]
+cc_min = "C"
+mi_min = "B"
