@@ -7,7 +7,7 @@ import pytest
 from websockets.asyncio.client import ClientConnection, connect
 from websockets.asyncio.server import ServerConnection, serve
 
-from plugboard.library.websocket_io import WebsocketReader, WebsocketWriter
+from plugboard.library.websocket_io import WebsocketBase, WebsocketReader, WebsocketWriter
 
 
 HOST = "localhost"
@@ -36,16 +36,26 @@ async def connected_client() -> _t.AsyncIterable[ClientConnection]:
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
-    "parse_json,initial_message",
-    [(True, None), (False, None), (True, {"msg": "hello!"}), (False, "G'day!")],
+    "parse_json,initial_message,n_skip_messages",
+    [
+        (True, None, 0),
+        (False, None, 1),
+        (True, {"msg": "hello!"}, 0),
+        (True, {"msg": "hello!"}, 3),
+        (False, "G'day!", 0),
+    ],
 )
 async def test_websocket_reader(
-    connected_client: ClientConnection, parse_json: bool, initial_message: _t.Any
+    connected_client: ClientConnection,
+    parse_json: bool,
+    initial_message: _t.Any,
+    n_skip_messages: int,
 ) -> None:
     """Tests the `WebsocketReader`."""
     reader = WebsocketReader(
         name="test-websocket",
         uri=f"ws://{HOST}:{PORT}",
+        skip_messages=n_skip_messages,
         parse_json=parse_json,
         initial_message=initial_message,
     )
@@ -55,14 +65,16 @@ async def test_websocket_reader(
     for message in messages:
         await connected_client.send(json.dumps(message))
 
-    # If initial message set, it should be received first
-    if initial_message is not None:
-        await reader.step()
-        assert initial_message == reader.message
+    # Prepare the expected messages: intitial message + messages
+    expected_messages = [json.dumps(message) if not parse_json else message for message in messages]
+    expected_messages = (
+        [initial_message] + expected_messages if initial_message is not None else expected_messages
+    )
+    expected_messages = expected_messages[n_skip_messages:]
     # Check that the reader receives the messages, correctly parsed
-    for message in messages:
+    for received_message in expected_messages:
         await reader.step()
-        assert message == reader.message if parse_json else json.loads(reader.message)
+        assert received_message == reader.message
 
     await reader.destroy()
 
@@ -79,10 +91,21 @@ async def test_websocket_writer(connected_client: ClientConnection, parse_json: 
     await writer.init()
     messages = [{"test-msg": x} for x in range(5)]
     for message in messages:
-        writer.message = message if parse_json else json.dumps(message)
+        writer.message = message if parse_json else json.dumps(message)  # type: ignore [attr-defined]
         await writer.step()
         # Now retrieve the message from the broadcast
         response = await connected_client.recv()
         assert message == json.loads(response) if parse_json else response
 
     await writer.destroy()
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("component", [WebsocketReader, WebsocketWriter])
+async def test_websocket_error(component: _t.Type[WebsocketBase]) -> None:
+    """Tests the error handling of the websocket components."""
+    c = component(
+        name="test-websocket", uri=f"ws://{HOST}:{PORT}", connect_args={"open_timeout": 0.01}
+    )
+    with pytest.raises(OSError):
+        await c.init()

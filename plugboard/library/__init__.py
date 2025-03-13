@@ -5,7 +5,7 @@ from .data_writer import DataWriter
 from .file_io import FileReader, FileWriter
 from .llm import LLMChat
 from .sql_io import SQLReader, SQLWriter
-from .websocket_io import WebsocketReader, WebsocketWriter
+from .websocket_io import WebsocketBase, WebsocketReader, WebsocketWriter
 
 
 __all__ = [
@@ -16,6 +16,7 @@ __all__ = [
     "FileWriter",
     "SQLReader",
     "SQLWriter",
+    "WebsocketBase",
     "WebsocketReader",
     "WebsocketWriter",
 ]
