@@ -19,6 +19,7 @@ repos:
         - types-PyYAML
         - types-requests
         - pydantic
+        - msgspec[yaml]
 - repo: https://github.com/rubik/xenon
   rev: v0.9.3
   hooks:
