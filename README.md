@@ -12,6 +12,10 @@
 
 ![Lint and test](https://github.com/plugboard-dev/plugboard/actions/workflows/lint-test.yaml/badge.svg)
 ![Documentation](https://github.com/plugboard-dev/plugboard/actions/workflows/docs.yaml/badge.svg)
+![Version](https://img.shields.io/pypi/v/plugboard)
+![Python](https://img.shields.io/pypi/pyversions/plugboard)
+[![Typing](https://img.shields.io/pypi/types/plugboard)](https://github.com/plugboard-dev/plugboard)
+![License](https://img.shields.io/github/license/plugboard-dev/plugboard)
 
 </div>
 
