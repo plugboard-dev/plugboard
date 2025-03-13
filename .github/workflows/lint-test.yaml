@@ -33,7 +33,7 @@ jobs:
 
       - name: Install project
         run: uv sync --group test --group docs
-      
+
       # Run all checks, even if some fail
       - name: Ruff linting
         run: uv run ruff check .
@@ -47,9 +47,19 @@ jobs:
         run: uv run mypy .
         if: always()
 
-      - name: Tests
-        run: uv run pytest .
+      - name: Code complexity
+        run: uv run xenon --max-absolute B --max-modules A --max-average A plugboard/
         if: always()
+
+      - name: Tests
+        run: uv run pytest --cov=plugboard --cov-report json .
+        if: always()
+
+      - name: Update Coverage Badge
+        # GitHub actions: default branch variable
+        # https://stackoverflow.com/questions/64781462/github-actions-default-branch-variable
+        if: github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
+        uses: we-cli/coverage-badge-action@main
 
       - name: Notebook output cleared
         run: find . -name '*.ipynb' -not -path "./.venv/*" -exec uv run nbstripout --verify {} +
@@ -81,7 +91,8 @@ jobs:
 
       - name: Build package
         run: uv build
-      
+        if: always()
+
       - name: Install from wheel
         working-directory: ./dist
         run: pip install *.whl
