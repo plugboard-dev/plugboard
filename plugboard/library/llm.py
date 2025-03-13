@@ -60,16 +60,18 @@ class LLMChat(Component):
         super().__init__(**kwargs)
         self._llm: LLM = self._initialize_llm(llm, llm_kwargs)
         response_model = self._resolve_response_model(response_model)
-        self._structured = response_model is not None
-        self._expand_response = expand_response and self._structured
-        if self._structured and response_model is not None:
+        self._structured = False
+        self._expand_response = False
+        if response_model is not None:
+            self._structured = True
             self._llm = self._llm.as_structured_llm(output_cls=response_model)
-        if self._expand_response and response_model is not None:
-            self.io = IO(
-                inputs=["prompt"],
-                outputs=list(response_model.model_fields.keys()),
-                namespace=self.name,
-            )
+            if expand_response:
+                self._expand_response = True
+                self.io = IO(
+                    inputs=["prompt"],
+                    outputs=list(response_model.model_fields.keys()),
+                    namespace=self.name,
+                )
         self._memory: deque[ChatMessage] = deque(maxlen=context_window * 2)
         self._system_prompt = (
             [ChatMessage.from_str(role="system", content=system_prompt)] if system_prompt else []
