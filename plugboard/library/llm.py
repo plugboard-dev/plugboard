@@ -17,6 +17,9 @@ try:
 except ImportError:
     pass
 
+if _t.TYPE_CHECKING:
+    from llama_index.core.llms import LLM
+
 
 class LLMChat(Component):
     """`LLMChat` is a component for interacting with large language models (LLMs).
