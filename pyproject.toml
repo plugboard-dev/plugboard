@@ -55,6 +55,7 @@ test = [
     "pytest~=8.3",
     "pytest-asyncio~=0.23",
     "pytest-cases~=3.8",
+    "pytest-cov>=6.0.0",
     "pytest-env~=1.1",
     "pytest-rerunfailures~=14.0",
     "ray>=2.40.0",
