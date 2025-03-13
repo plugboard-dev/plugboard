@@ -58,31 +58,41 @@ class LLMChat(Component):
             **kwargs: Additional keyword arguments for [`Component`][plugboard.component.Component].
         """
         super().__init__(**kwargs)
-        _llm_cls = locate(llm)
-        if _llm_cls is None or not isinstance(_llm_cls, type) or not issubclass(_llm_cls, LLM):
-            raise ValueError(f"LLM class {llm} not found in llama-index.")
-        llm_kwargs = llm_kwargs or {}
-        self._llm: LLM = _llm_cls(**llm_kwargs)
-        if response_model is not None and isinstance(response_model, str):
-            model = locate(response_model)
-            if model is None or not isinstance(model, type) or not issubclass(model, BaseModel):
-                raise ValueError(f"Response model {response_model} not found.")
-            response_model = model
+        self._llm: LLM = self._initialize_llm(llm, llm_kwargs)
+        response_model = self._resolve_response_model(response_model)
         self._structured = response_model is not None
         self._expand_response = expand_response and self._structured
+        if self._structured and response_model is not None:
+            self._llm = self._llm.as_structured_llm(output_cls=response_model)
         if self._expand_response and response_model is not None:
             self.io = IO(
                 inputs=["prompt"],
                 outputs=list(response_model.model_fields.keys()),
                 namespace=self.name,
             )
-        if self._structured and response_model is not None:
-            self._llm = self._llm.as_structured_llm(output_cls=response_model)
-        # Memory 2x context window size for both prompt and response
         self._memory: deque[ChatMessage] = deque(maxlen=context_window * 2)
         self._system_prompt = (
             [ChatMessage.from_str(role="system", content=system_prompt)] if system_prompt else []
         )
+
+    def _initialize_llm(self, llm_str: str, llm_kwargs: _t.Optional[dict[str, _t.Any]]) -> LLM:
+        """Initializes the LLM from the given class name and keyword arguments."""
+        _llm_cls = locate(llm_str)
+        if _llm_cls is None or not isinstance(_llm_cls, type) or not issubclass(_llm_cls, LLM):
+            raise ValueError(f"LLM class {llm_str} not found in llama-index.")
+        llm_kwargs = llm_kwargs or {}
+        return _llm_cls(**llm_kwargs)
+
+    def _resolve_response_model(
+        self, response_model: _t.Optional[_t.Type[BaseModel] | str]
+    ) -> _t.Optional[_t.Type[BaseModel]]:
+        """Resolves the response model from a class or string."""
+        if response_model is not None and isinstance(response_model, str):
+            model = locate(response_model)
+            if model is None or not isinstance(model, type) or not issubclass(model, BaseModel):
+                raise ValueError(f"Response model {response_model} not found.")
+            response_model = model
+        return response_model
 
     async def step(self) -> None:  # noqa: D102
         if not self.prompt:
