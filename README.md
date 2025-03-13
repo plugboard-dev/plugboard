@@ -12,11 +12,11 @@
 
 ![Lint and test](https://github.com/plugboard-dev/plugboard/actions/workflows/lint-test.yaml/badge.svg)
 ![Documentation](https://github.com/plugboard-dev/plugboard/actions/workflows/docs.yaml/badge.svg)
-![Version](https://img.shields.io/pypi/v/plugboard)
-![Python](https://img.shields.io/pypi/pyversions/plugboard)
+![Version](https://img.shields.io/pypi/v/plugboard?labelColor=075D7A&color=CC9C4A)
+![Python](https://img.shields.io/pypi/pyversions/plugboard?labelColor=075D7A&color=CC9C4A)
 [![Coverage](https://plugboard-dev.github.io/plugboard/badges/coverage.svg)](https://github.com/plugboard-dev/plugboard/actions)
-[![Typing](https://img.shields.io/pypi/types/plugboard)](https://github.com/plugboard-dev/plugboard)
-![License](https://img.shields.io/github/license/plugboard-dev/plugboard)
+[![Typing](https://img.shields.io/pypi/types/plugboard)](https://github.com/plugboard-dev/plugboard?labelColor=075D7A&color=CC9C4A)
+![License](https://img.shields.io/github/license/plugboard-dev/plugboard?labelColor=075D7A&color=CC9C4A)
 
 </div>
 
