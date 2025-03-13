@@ -1,5 +1,7 @@
 """Provides Components for interacting with LLMs."""
 
+from __future__ import annotations
+
 from collections import deque
 from pydoc import locate
 import typing as _t
