@@ -67,11 +67,7 @@ class LLMChat(Component):
             self._llm = self._llm.as_structured_llm(output_cls=response_model)
             if expand_response:
                 self._expand_response = True
-                self.io = IO(
-                    inputs=["prompt"],
-                    outputs=list(response_model.model_fields.keys()),
-                    namespace=self.name,
-                )
+                self.io.outputs = list(response_model.model_fields.keys())
         self._memory: deque[ChatMessage] = deque(maxlen=context_window * 2)
         self._system_prompt = (
             [ChatMessage.from_str(role="system", content=system_prompt)] if system_prompt else []
