@@ -1,5 +1,7 @@
 """Provides Components for interacting with LLMs."""
 
+from __future__ import annotations
+
 from collections import deque
 from pydoc import locate
 import typing as _t
@@ -16,6 +18,9 @@ try:
     from llama_index.core.llms import LLM, ChatMessage, ChatResponse
 except ImportError:
     pass
+
+if _t.TYPE_CHECKING:
+    from llama_index.core.llms import LLM
 
 
 class LLMChat(Component):
