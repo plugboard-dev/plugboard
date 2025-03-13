@@ -26,4 +26,4 @@ def gen_rand_str(chars: int = RANDOM_CHAR_COUNT) -> str:
     Returns:
         str: Random fixed length string.
     """
-    return "".join(random.choices(RANDOM_CHAR_SET, k=chars))  # noqa: S311 (not used for cryptographic purposes)
+    return "".join(random.choices(RANDOM_CHAR_SET, k=chars))  # noqa: S311 (not intended for cryptographic purposes)
