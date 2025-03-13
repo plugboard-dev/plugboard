@@ -75,7 +75,7 @@ async def send_messages_unordered(
     messages exactly once.
     """
     # Setup random number generator with random seed
-    rng = random.Random(seed or time.time())
+    rng = random.Random(seed or time.time())  # noqa: S311
     _sum = 0
     channel_cycle = cycle(channels)
     for _ in range(num_messages):
