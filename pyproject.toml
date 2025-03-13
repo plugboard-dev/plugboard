@@ -130,5 +130,6 @@ relative-imports-order = "furthest-to-closest"
 lines-after-imports = 2
 
 [tool.radon]
+exclude = "tests/*"
 cc_min = "C"
 mi_min = "B"
