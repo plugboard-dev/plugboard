@@ -20,7 +20,10 @@ def gen_rand_str(chars: int = RANDOM_CHAR_COUNT) -> str:
     30T ids for >= 1% chance of at least one collision. See here for details:
     https://zelark.github.io/nano-id-cc/
 
+    Note: This function is not suitable for cryptographic purposes; it is intended to
+    generate random strings for unique identifiers only.
+
     Returns:
         str: Random fixed length string.
     """
-    return "".join(random.choices(RANDOM_CHAR_SET, k=chars))  # noqa: S311
+    return "".join(random.choices(RANDOM_CHAR_SET, k=chars))  # noqa: S311 (not used for cryptographic purposes)

@@ -16,8 +16,12 @@ def _serialise(item: _t.Any) -> bytes:
 
 
 def _deserialise(msg: bytes) -> _t.Any:
-    """Deserialises item from base64-encoded pickle msg."""
-    return pickle.loads(b64decode(msg))  # noqa: S301
+    """Deserialises item from base64-encoded pickle msg.
+
+    Note: There are security implications to consider when unpickling data. It
+    is assumed that data received through a channel is trusted.
+    """
+    return pickle.loads(b64decode(msg))  # noqa: S301 (assumed trusted data)
 
 
 class SerdeChannel(Channel, ABC):
@@ -34,7 +38,12 @@ class SerdeChannel(Channel, ABC):
 
     @abstractmethod
     async def recv(self) -> bytes:
-        """Receives a serialised message from the `Channel` and returns it."""
+        """Receives a serialised message from the `Channel` and returns it.
+
+        Note: Receiving data involves an unpickling deserialisation step. There are security
+        implications to consider when unpickling data. It is assumed that data received through a
+        channel is trusted.
+        """
         pass
 
     def _handle_send_wrapper(self) -> _t.Callable:
