@@ -52,7 +52,7 @@ jobs:
         if: always()
 
       - name: Tests
-        run: uv run pytest .
+        run: uv run pytest --cov=plugboard .
         if: always()
 
       - name: Notebook output cleared
