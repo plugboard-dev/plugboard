@@ -19,8 +19,10 @@ repos:
         - types-PyYAML
         - types-requests
         - pydantic
+        - msgspec[yaml]
 - repo: https://github.com/rubik/xenon
   rev: v0.9.3
   hooks:
   - id: xenon
     args: ['--max-absolute=B', '--max-modules=B', '--max-average=A', 'plugboard/']
+    exclude: '^tests/'

@@ -31,7 +31,7 @@ def mock_s3_server() -> _t.Generator[None, None, None]:
     server = ThreadedMotoServer(ip_address=S3_IP_ADDRESS, port=S3_PORT)
     server.start()
     if "AWS_SECRET_ACCESS_KEY" not in os.environ:
-        os.environ["AWS_SECRET_ACCESS_KEY"] = "test-access-key"
+        os.environ["AWS_SECRET_ACCESS_KEY"] = "test-access-key"  # noqa: S105
     if "AWS_ACCESS_KEY_ID" not in os.environ:
         os.environ["AWS_ACCESS_KEY_ID"] = "test-key-id"
     if "AWS_ENDPOINT_URL" not in os.environ:
