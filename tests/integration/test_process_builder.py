@@ -64,7 +64,7 @@ def process_spec() -> ProcessSpec:
                 ),
                 ComponentSpec(
                     type="tests.integration.test_process_with_components_run.C",
-                    args={"name": "C", "path": "/tmp/test.txt"},
+                    args={"name": "C", "path": "/tmp/test.txt"},  # noqa: S108
                 ),
                 ComponentSpec(
                     type="tests.integration.test_process_builder.D",
@@ -107,7 +107,9 @@ async def test_process_builder_build(process_spec: ProcessSpec) -> None:
     # Must build a process with the correct component names
     assert process.components.keys() == {"A", "B", "C", "D"}
     # Must build connectors with the correct channel types
-    assert all(con.__class__.__name__ == "AsyncioConnector" for con in process.connectors.values())
+    assert all(
+        conn.__class__.__name__ == "AsyncioConnector" for conn in process.connectors.values()
+    )
     # Must build a process with the correct state backend
     async with process:
         input_job_id = process_spec.args.state.args.model_dump().get("job_id")
