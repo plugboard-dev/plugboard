@@ -72,9 +72,8 @@ jobs:
           name: python-package-distributions
           path: dist/
 
-      # Uncomment when PyPI setup
-      # - name: Publish distribution 📦 to PyPI
-      #   uses: pypa/gh-action-pypi-publish@release/v1
+      - name: Publish distribution 📦 to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
 
   github-release:
     name: >-
