@@ -13,11 +13,10 @@ from plugboard.connector.connector import Connector
 from plugboard.connector.serde_channel import SerdeChannel
 from plugboard.exceptions import ChannelSetupError
 from plugboard.schemas.connector import ConnectorMode
-from plugboard.utils import DI, Settings, depends_on_optional, gen_rand_str
+from plugboard.utils import DI, Settings, gen_rand_str
 
 
 try:
-    from ray.util.queue import Queue
     import zmq
     import zmq.asyncio
 except ImportError:
@@ -28,6 +27,7 @@ ZMQ_CONFIRM_MSG: str = "__PLUGBOARD_CHAN_CONFIRM_MSG__"
 # Collection of poll tasks for ZMQ channels required to create strong refs to polling tasks
 # to avoid destroying tasks before they are done on garbage collection. Is there a better way?
 _zmq_poller_tasks: set[asyncio.Task] = set()
+_zmq_exchange_addr_tasks: set[asyncio.Task] = set()
 
 
 class ZMQChannel(SerdeChannel):
@@ -126,14 +126,35 @@ class _ZMQPipelineConnector(_ZMQConnector):
     #       : This code only works for the special case of exactly one sender and one receiver
     #       : per ZMQConnector.
 
-    @depends_on_optional("ray")
     def __init__(self, *args: _t.Any, **kwargs: _t.Any) -> None:
         super().__init__(*args, **kwargs)
-        # Use a Ray queue to ensure sync ZMQ port number
-        self._ray_queue = Queue(maxsize=1)
         self._send_channel: _t.Optional[ZMQChannel] = None
         self._recv_channel: _t.Optional[ZMQChannel] = None
         self._confirm_msg = f"{ZMQ_CONFIRM_MSG}:{gen_rand_str()}".encode()
+
+        # Socket to receive sender address from sender
+        self._pull_socket = create_socket(zmq.PULL, [(zmq.RCVHWM, 1)])
+        self._pull_socket_port = self._pull_socket.bind_to_random_port("tcp://*")
+        self._pull_socket_addr = f"{self._zmq_address}:{self._pull_socket_port}"
+
+        # Socket to send sender address to receiver
+        self._push_socket = create_socket(zmq.PUSH, [(zmq.RCVHWM, 1)])
+        self._push_socket_port = self._push_socket.bind_to_random_port("tcp://*")
+        self._push_socket_addr = f"{self._zmq_address}:{self._push_socket_port}"
+
+        self._exchange_addr_task = asyncio.create_task(self._exchange_address())
+        _zmq_exchange_addr_tasks.add(self._exchange_addr_task)
+
+    def __getstate__(self) -> dict:
+        state = self.__dict__.copy()
+        for attr in ("_pull_socket", "_push_socket", "_exchange_addr_task"):
+            if attr in state:
+                del state[attr]
+        return state
+
+    async def _exchange_address(self) -> None:
+        sender_address = await self._pull_socket.recv()
+        await self._push_socket.send(sender_address)
 
     async def connect_send(self) -> ZMQChannel:
         """Returns a `ZMQChannel` for sending messages."""
@@ -141,7 +162,11 @@ class _ZMQPipelineConnector(_ZMQConnector):
             return self._send_channel
         send_socket = create_socket(zmq.PUSH, [(zmq.SNDHWM, self._maxsize)])
         port = send_socket.bind_to_random_port("tcp://*")
-        await self._ray_queue.put_async(port)
+
+        push_socket = create_socket(zmq.PUSH, [(zmq.RCVHWM, 1)])
+        push_socket.connect(self._pull_socket_addr)
+        await push_socket.send(str(port).encode())
+
         await send_socket.send(self._confirm_msg)
         self._send_channel = ZMQChannel(send_socket=send_socket, maxsize=self._maxsize)
         return self._send_channel
@@ -151,9 +176,12 @@ class _ZMQPipelineConnector(_ZMQConnector):
         if self._recv_channel is not None:
             return self._recv_channel
         recv_socket = create_socket(zmq.PULL, [(zmq.RCVHWM, self._maxsize)])
+
         # Wait for port from the send socket, use random poll interval to avoid spikes
-        port = await self._ray_queue.get_async()
-        self._ray_queue.shutdown()
+        pull_socket = create_socket(zmq.PULL, [(zmq.RCVHWM, 1)])
+        pull_socket.connect(self._push_socket_addr)
+        port = int(await pull_socket.recv())
+
         recv_socket.connect(f"{self._zmq_address}:{port}")
         msg = await recv_socket.recv()
         if msg != self._confirm_msg:
