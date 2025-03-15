@@ -22,7 +22,7 @@ a.autorefs-external::after {
 }
 
 /* Remove the topic from the header but leave version dropdown. */
-.md-ellipsis {
+.md-header__topic .md-ellipsis {
     visibility: hidden;
     max-width: 0;
 }
