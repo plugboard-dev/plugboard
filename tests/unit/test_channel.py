@@ -88,8 +88,13 @@ async def test_multiprocessing_channel(connector_cls: type[Connector]) -> None:
     def _recv_proc(connector: Connector) -> None:
         asyncio.run(_recv_proc_async(connector))
 
-    with Pool(2) as pool:
-        r1 = pool.apply_async(_send_proc, (connector,))
-        r2 = pool.apply_async(_recv_proc, (connector,))
-        r1.get()
-        r2.get()
+    # Use a wrapper function to ensure the connector stays in scope
+    def run_pool_with_connector(connector: Connector) -> None:
+        with Pool(2) as pool:
+            r1 = pool.apply_async(_send_proc, (connector,))
+            r2 = pool.apply_async(_recv_proc, (connector,))
+            r1.get()
+            r2.get()
+
+    # Run the pool function while keeping the connector in scope
+    await asyncio.to_thread(run_pool_with_connector, connector)
