@@ -73,8 +73,9 @@ class Component(ABC, ExportMixin):
         if is_on_ray_worker():
             # Required until https://github.com/ray-project/ray/issues/42823 is resolved
             return
-        cls._configure_io()
         ComponentRegistry.add(cls)
+        # Configure IO last in case it fails in case of components with dynamic io args
+        cls._configure_io()
 
     @classmethod
     def _configure_io(cls) -> None:
