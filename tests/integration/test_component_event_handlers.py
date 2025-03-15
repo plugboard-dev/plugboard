@@ -147,8 +147,9 @@ async def test_component_event_handlers(
     await a.io.close()
 
 
+@pytest.mark.anyio
 @pytest.fixture
-def field_connectors(connector_cls: _t.Type[Connector]) -> list[Connector]:
+async def field_connectors(connector_cls: _t.Type[Connector]) -> list[Connector]:
     """Fixture for a list of field connectors."""
     return [
         connector_cls(spec=ConnectorSpec(source="null.in_1", target="a.in_1")),
