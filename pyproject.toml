@@ -78,6 +78,9 @@ docs = [
     "mkdocs-material~=9.5",
     "mkdocstrings[python]~=0.25",
 ]
+ray = [
+    "ray[default]>=2.42.1",
+]
 
 [build-system]
 requires = ["hatchling"]
