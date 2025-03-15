@@ -1,9 +1,10 @@
 name: Publish Python package
 
 on:
-  push:
-    tags:
-      - 'v*'
+  workflow_run:
+    workflows: [Release]
+    types:
+      - completed
 
 env:
   PYTHON_VERSION: '3.12'
@@ -20,6 +21,9 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          # Required: https://github.com/actions/checkout/issues/1471
+          fetch-depth: 0
 
       - name: Install python
         uses: actions/setup-python@v5
@@ -33,10 +37,12 @@ jobs:
           cache-dependency-glob: "uv.lock"
 
       - name: Build wheel
+        id: wheel
         run: |
           VERSION=$(uvx dunamai from git --style semver)
           uvx --from=toml-cli toml set --toml-path=pyproject.toml project.version $VERSION
           uv build
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
 
       - name: Store the distribution packages
         uses: actions/upload-artifact@v4
@@ -48,16 +54,17 @@ jobs:
         uses: kaisugi/action-regex-match@v1.0.1
         id: regex-match
         with:
-          text: ${{ github.ref }}
+          text: ${{ steps.wheel.outputs.version }}
           # Semver regex: https://semver.org/#is-there-a-suggested-regular-expression-regex-to-check-a-semver-string
-          regex: '^refs/tags/v(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$'
+          regex: '^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$'
           flags: g
 
   publish-to-pypi:
     name: >-
       Publish Python 🐍 distribution 📦 to PyPI
     needs: build
-    if: ${{ needs.build.outputs.semver != '' }}  # only publish to PyPI on semver tag pushes
+    # only publish to PyPI on semver tag pushes and successful release pipeline
+    if: ${{ (needs.build.outputs.semver != '') && (github.event.workflow_run.conclusion == 'success') }}
     runs-on: ubuntu-latest
     environment:
       name: pypi

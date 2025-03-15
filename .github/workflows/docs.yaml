@@ -4,8 +4,10 @@ on:
   push:
     branches:
       - 'main'
-    tags:
-      - 'v*'
+  workflow_run:
+    workflows: [Release]
+    types:
+      - completed
 
 env:
   PYTHON_VERSION: '3.12'
@@ -21,6 +23,9 @@ jobs:
 
       - name: checkout current branch
         uses: actions/checkout@v4
+        with:
+          # Required: https://github.com/actions/checkout/issues/1471
+          fetch-depth: 0
 
       - name: Install python
         uses: actions/setup-python@v5
@@ -56,4 +61,4 @@ jobs:
       - run: |
           echo "Deploying latest version ${{ steps.install.outputs.version }}"
           uv run mike deploy -b gh-pages ${{ steps.install.outputs.version }} latest --update-aliases --push
-        if: startsWith(github.ref, 'refs/tags/')
+        if: ${{ (github.event_name == 'workflow_run') && (github.event.workflow_run.conclusion == 'success') }}
