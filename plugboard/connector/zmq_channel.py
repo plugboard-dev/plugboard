@@ -13,7 +13,7 @@ from plugboard.connector.connector import Connector
 from plugboard.connector.serde_channel import SerdeChannel
 from plugboard.exceptions import ChannelSetupError
 from plugboard.schemas.connector import ConnectorMode
-from plugboard.utils import DI, Settings, gen_rand_str
+from plugboard.utils import DI, Settings
 
 
 try:
@@ -130,7 +130,6 @@ class _ZMQPipelineConnector(_ZMQConnector):
         super().__init__(*args, **kwargs)
         self._send_channel: _t.Optional[ZMQChannel] = None
         self._recv_channel: _t.Optional[ZMQChannel] = None
-        self._confirm_msg = f"{ZMQ_CONFIRM_MSG}:{gen_rand_str()}".encode()
 
         # Socket to receive sender address from sender
         self._pull_socket = create_socket(zmq.PULL, [(zmq.RCVHWM, 1)])
@@ -138,7 +137,7 @@ class _ZMQPipelineConnector(_ZMQConnector):
         self._pull_socket_addr = f"{self._zmq_address}:{self._pull_socket_port}"
 
         # Socket to send sender address to receiver
-        self._push_socket = create_socket(zmq.PUSH, [(zmq.RCVHWM, 1)])
+        self._push_socket = create_socket(zmq.PUSH, [(zmq.SNDHWM, 1)])
         self._push_socket_port = self._push_socket.bind_to_random_port("tcp://*")
         self._push_socket_addr = f"{self._zmq_address}:{self._push_socket_port}"
 
@@ -163,11 +162,11 @@ class _ZMQPipelineConnector(_ZMQConnector):
         send_socket = create_socket(zmq.PUSH, [(zmq.SNDHWM, self._maxsize)])
         port = send_socket.bind_to_random_port("tcp://*")
 
-        push_socket = create_socket(zmq.PUSH, [(zmq.RCVHWM, 1)])
+        push_socket = create_socket(zmq.PUSH, [(zmq.SNDHWM, 1)])
         push_socket.connect(self._pull_socket_addr)
         await push_socket.send(str(port).encode())
 
-        await send_socket.send(self._confirm_msg)
+        await asyncio.sleep(0.1)  # Ensure connections established before first send. Better way?
         self._send_channel = ZMQChannel(send_socket=send_socket, maxsize=self._maxsize)
         return self._send_channel
 
@@ -183,9 +182,7 @@ class _ZMQPipelineConnector(_ZMQConnector):
         port = int(await pull_socket.recv())
 
         recv_socket.connect(f"{self._zmq_address}:{port}")
-        msg = await recv_socket.recv()
-        if msg != self._confirm_msg:
-            raise ChannelSetupError("Channel confirmation message mismatch")
+        await asyncio.sleep(0.1)  # Ensure connections established before first send. Better way?
         self._recv_channel = ZMQChannel(recv_socket=recv_socket, maxsize=self._maxsize)
         return self._recv_channel
 
@@ -341,7 +338,7 @@ class ZMQConnector(_ZMQConnector):
         super().__init__(*args, **kwargs)
         match self.spec.mode:
             case ConnectorMode.PIPELINE:
-                zmq_conn_cls: _t.Type[_ZMQConnector] = _ZMQPipelineConnectorV2
+                zmq_conn_cls: _t.Type[_ZMQConnector] = _ZMQPipelineConnector
             case ConnectorMode.PUBSUB:
                 print(f"{settings=}")
                 if settings.flags.zmq_pubsub_proxy:
