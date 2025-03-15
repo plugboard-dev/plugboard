@@ -52,10 +52,14 @@ jobs:
         if: always()
 
       - name: Tests
-        run: uv run pytest --cov=plugboard --cov-report json .
+        run: uv run pytest --cov=plugboard --cov-report=xml .
         if: always()
 
-      # TODO: Reinstate coverage badge creation
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          slug: plugboard-dev/plugboard
 
       - name: Notebook output cleared
         run: find . -name '*.ipynb' -not -path "./.venv/*" -exec uv run nbstripout --verify {} +

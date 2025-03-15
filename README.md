@@ -6,20 +6,24 @@
   </picture>
 </div>
 
-<hr>
-
 <div align="center" class="badge-section">
-
-![Version](https://img.shields.io/pypi/v/plugboard?labelColor=075D7A&color=CC9C4A)
-![Python](https://img.shields.io/pypi/pyversions/plugboard?labelColor=075D7A&color=CC9C4A)
-
-![Lint and test](https://github.com/plugboard-dev/plugboard/actions/workflows/lint-test.yaml/badge.svg)
-![Documentation](https://github.com/plugboard-dev/plugboard/actions/workflows/docs.yaml/badge.svg)
-[![Typing](https://img.shields.io/pypi/types/plugboard)](https://github.com/plugboard-dev/plugboard?labelColor=075D7A&color=CC9C4A)
-![License](https://img.shields.io/github/license/plugboard-dev/plugboard?labelColor=075D7A&color=CC9C4A)
-
+  <br>
+  <a href="https://pypi.org/project/plugboard/", alt="PyPI version">
+    <img alt="PyPI" src="https://img.shields.io/pypi/v/plugboard?labelColor=075D7A&color=CC9C4A"></a>
+  <a href="https://www.python.org/", alt="Python versions">
+    <img alt="Python" src="https://img.shields.io/pypi/pyversions/plugboard?labelColor=075D7A&color=CC9C4A"></a>
+  <a href="https://github.com/plugboard-dev/plugboard?tab=Apache-2.0-1-ov-file#readme", alt="License">
+    <img alt="License" src="https://img.shields.io/github/license/plugboard-dev/plugboard?labelColor=075D7A&color=CC9C4A"></a>
+  <br>
+  <a href="https://github.com/plugboard-dev/plugboard/actions/workflows/lint-test.yaml", alt="Lint and test">
+    <img alt="Lint and Test" src="https://github.com/plugboard-dev/plugboard/actions/workflows/lint-test.yaml/badge.svg"></a>
+  <a href="https://github.com/plugboard-dev/plugboard/actions/workflows/docs.yaml", alt="Documentation">
+    <img alt="Docs" src="https://github.com/plugboard-dev/plugboard/actions/workflows/docs.yaml/badge.svg"></a>
+  <a href="https://codecov.io/gh/plugboard-dev/plugboard" >
+    <img src="https://codecov.io/gh/plugboard-dev/plugboard/graph/badge.svg?token=4LU4K6TOLQ"/></a>
 </div>
 
+<hr>
 
 Plugboard is an **event-driven modelling and orchestration framework** in Python for simulating and driving complex processes with many interconnected stateful components.
 
