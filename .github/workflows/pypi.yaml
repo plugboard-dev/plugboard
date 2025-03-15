@@ -111,4 +111,5 @@ jobs:
       - name: Release
         uses: softprops/action-gh-release@v2
         with:
+          tag_name: ${{ format('v{0}', needs.build.outputs.semver) }}
           files: dist/**

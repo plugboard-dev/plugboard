@@ -2,11 +2,20 @@
 name = "plugboard"
 version = "0.0.0"
 description = "Plugboard is an event driven modelling and orchestration framework for simulating and driving complex processes with many interconnected stateful components."
+readme = "README.md"
+license = "Apache-2.0"
 authors = [
     {name = "Chris Knight", email = "plugboard@csknight.uk"},
     {name = "Toby Coleman", email = "plugboard@tobycoleman.com"}
 ]
 requires-python = ">=3.12,<4.0"
+classifiers = [
+  "Intended Audience :: Developers",
+  "Intended Audience :: Science/Research",
+  "Topic :: Scientific/Engineering",
+  "Programming Language :: Python :: 3.12",
+  "Typing :: Typed",
+]
 dependencies = [
     "aiosqlite~=0.20",
     "annotated-types~=0.7",
