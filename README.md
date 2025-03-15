@@ -14,6 +14,8 @@
     <img alt="Python" src="https://img.shields.io/pypi/pyversions/plugboard?labelColor=075D7A&color=CC9C4A"></a>
   <a href="https://github.com/plugboard-dev/plugboard?tab=Apache-2.0-1-ov-file#readme", alt="License">
     <img alt="License" src="https://img.shields.io/github/license/plugboard-dev/plugboard?labelColor=075D7A&color=CC9C4A"></a>
+  <a href="https://github.com/plugboard-dev/plugboard", alt="Typed">
+    <img alt="Typed" src="https://img.shields.io/pypi/types/plugboard?labelColor=075D7A&color=CC9C4A"></a>
   <br>
   <a href="https://github.com/plugboard-dev/plugboard/actions/workflows/lint-test.yaml", alt="Lint and test">
     <img alt="Lint and Test" src="https://github.com/plugboard-dev/plugboard/actions/workflows/lint-test.yaml/badge.svg"></a>
