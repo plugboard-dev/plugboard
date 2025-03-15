@@ -10,6 +10,7 @@ from plugboard.events.event_connector_builder import EventConnectorBuilder
 from plugboard.process.process import Process
 from plugboard.schemas import ProcessSpec
 from plugboard.state import StateBackend
+from plugboard.utils import DI
 
 
 class ProcessBuilder:
@@ -65,7 +66,15 @@ class ProcessBuilder:
             connector_cls=connector_class, **dict(spec.connector_builder.args)
         )
         event_connector_builder = EventConnectorBuilder(connector_builder=connector_builder)
-        event_connectors = list(event_connector_builder.build(components).values())
+        # TODO: Remove this when https://github.com/plugboard-dev/plugboard/issues/101 is resolved
+        if spec.type.endswith("RayProcess"):
+            DI.logger.sync_resolve().warning(
+                "RayProcess does not yet support event-based models. "
+                "Event connectors will not be built."
+            )
+            event_connectors = []
+        else:
+            event_connectors = list(event_connector_builder.build(components).values())
         spec_connectors = [connector_builder.build(cs) for cs in spec.args.connectors]
         return sorted(
             {conn.id: conn for conn in event_connectors + spec_connectors}.values(),
