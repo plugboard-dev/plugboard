@@ -26,7 +26,7 @@ ZMQ_CONFIRM_MSG: str = "__PLUGBOARD_CHAN_CONFIRM_MSG__"
 
 # Collection of poll tasks for ZMQ channels required to create strong refs to polling tasks
 # to avoid destroying tasks before they are done on garbage collection. Is there a better way?
-_zmq_poller_tasks: set[asyncio.Task] = set()
+_zmq_proxy_tasks: set[asyncio.Task] = set()
 _zmq_exchange_addr_tasks: set[asyncio.Task] = set()
 
 
@@ -190,6 +190,71 @@ class _ZMQPipelineConnector(_ZMQConnector):
         return self._recv_channel
 
 
+class _ZMQPipelineConnectorV2(_ZMQConnector):
+    """`_ZMQPipelineConnectorV2` connects components in pipeline mode using `ZMQChannel`."""
+
+    def __init__(self, *args: _t.Any, **kwargs: _t.Any) -> None:
+        super().__init__(*args, **kwargs)
+        self._topic = str(self.spec.id)
+        self._xsub_port: _t.Optional[int] = None
+        self._xpub_port: _t.Optional[int] = None
+
+        self._push_socket: zmq.asyncio.Socket = create_socket(
+            zmq.PUSH, [(zmq.SNDHWM, self._maxsize)]
+        )
+        self._push_port: int = self._push_socket.bind_to_random_port("tcp://*")
+
+        self._proxy_task: asyncio.Task = asyncio.create_task(self._start_proxy())
+        _zmq_proxy_tasks.add(self._proxy_task)
+
+    def __getstate__(self) -> dict:
+        state = self.__dict__.copy()
+        for attr in ("_push_socket", "_proxy_task"):
+            if attr in state:
+                del state[attr]
+        return state
+
+    async def _start_proxy(self) -> None:
+        _, xpub_port = await self._get_proxy_ports()
+
+        sub_socket = create_socket(
+            zmq.SUB, [(zmq.RCVHWM, self._maxsize), (zmq.SUBSCRIBE, self._topic.encode("utf8"))]
+        )
+        sub_socket.connect(f"{self._zmq_address}:{xpub_port}")
+        try:
+            while True:
+                msg = await sub_socket.recv_multipart()
+                await self._push_socket.send_multipart(msg)
+        finally:
+            sub_socket.close(linger=0)
+            self._push_socket.close(linger=0)
+
+    @inject
+    async def _get_proxy_ports(
+        self, zmq_proxy: ZMQProxy = Provide[DI.zmq_proxy]
+    ) -> tuple[int, int]:
+        if self._xsub_port is not None and self._xpub_port is not None:
+            return self._xsub_port, self._xpub_port
+        await zmq_proxy.start_proxy(zmq_address=self._zmq_address, maxsize=self._maxsize)
+        self._xsub_port, self._xpub_port = await zmq_proxy.get_proxy_ports()
+        return self._xsub_port, self._xpub_port
+
+    async def connect_send(self) -> ZMQChannel:
+        """Returns a `ZMQChannel` for sending messages."""
+        await self._get_proxy_ports()
+        send_socket = create_socket(zmq.PUB, [(zmq.SNDHWM, self._maxsize)])
+        send_socket.connect(f"{self._zmq_address}:{self._xsub_port}")
+        await asyncio.sleep(0.1)  # Ensure connections established before first send. Better way?
+        return ZMQChannel(send_socket=send_socket, topic=self._topic, maxsize=self._maxsize)
+
+    async def connect_recv(self) -> ZMQChannel:
+        """Returns a `ZMQChannel` for receiving messages."""
+        recv_socket = create_socket(zmq.PULL, [(zmq.RCVHWM, self._maxsize)])
+        recv_socket.connect(f"{self._zmq_address}:{self._push_port}")
+        await asyncio.sleep(0.1)  # Ensure connections established before first send. Better way?
+        return ZMQChannel(recv_socket=recv_socket, topic=self._topic, maxsize=self._maxsize)
+
+
 class _ZMQPubsubConnector(_ZMQConnector):
     """`_ZMQPubsubConnector` connects components in pubsub mode using `ZMQChannel`."""
 
@@ -204,7 +269,7 @@ class _ZMQPubsubConnector(_ZMQConnector):
         self._poller.register(self._xsub_socket, zmq.POLLIN)
         self._poller.register(self._xpub_socket, zmq.POLLIN)
         self._poll_task = asyncio.create_task(self._poll())
-        _zmq_poller_tasks.add(self._poll_task)
+        _zmq_proxy_tasks.add(self._poll_task)
 
     def __getstate__(self) -> dict:
         state = self.__dict__.copy()
@@ -296,7 +361,7 @@ class ZMQConnector(_ZMQConnector):
         super().__init__(*args, **kwargs)
         match self.spec.mode:
             case ConnectorMode.PIPELINE:
-                zmq_conn_cls: _t.Type[_ZMQConnector] = _ZMQPipelineConnector
+                zmq_conn_cls: _t.Type[_ZMQConnector] = _ZMQPipelineConnectorV2
             case ConnectorMode.PUBSUB:
                 print(f"{settings=}")
                 if settings.flags.zmq_pubsub_proxy:
