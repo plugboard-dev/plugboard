@@ -6,8 +6,6 @@
   </picture>
 </div>
 
-<hr>
-
 <div align="center" class="badge-section">
   <a href="https://pypi.org/project/plugboard/", alt="PyPI version">
     <img alt="PyPI" src="https://img.shields.io/pypi/v/plugboard?labelColor=075D7A&color=CC9C4A"></a>
@@ -24,6 +22,7 @@
     <img src="https://codecov.io/gh/plugboard-dev/plugboard/graph/badge.svg?token=4LU4K6TOLQ"/></a>
 </div>
 
+<hr>
 
 Plugboard is an **event-driven modelling and orchestration framework** in Python for simulating and driving complex processes with many interconnected stateful components.
 
