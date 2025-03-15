@@ -22,7 +22,8 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          fetch-tags: true
+          # Required: https://github.com/actions/checkout/issues/1471
+          fetch-depth: 0
 
       - name: Install python
         uses: actions/setup-python@v5
