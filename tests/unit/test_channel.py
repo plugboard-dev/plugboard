@@ -61,8 +61,9 @@ async def test_channel(connector_cls: type[Connector]) -> None:
     assert send_channel.is_closed
 
 
+@pytest.mark.anyio
 @pytest.mark.parametrize("connector_cls", [ZMQConnector])
-def test_multiprocessing_channel(connector_cls: type[Connector]) -> None:
+async def test_multiprocessing_channel(connector_cls: type[Connector]) -> None:
     """Tests the various Channel implementations in a multiprocess environment."""
     spec = ConnectorSpec(mode=ConnectorMode.PIPELINE, source="test.send", target="test.recv")
     connector = ConnectorBuilder(connector_cls=connector_cls).build(spec)
