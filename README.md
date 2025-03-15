@@ -7,6 +7,7 @@
 </div>
 
 <div align="center" class="badge-section">
+  <br>
   <a href="https://pypi.org/project/plugboard/", alt="PyPI version">
     <img alt="PyPI" src="https://img.shields.io/pypi/v/plugboard?labelColor=075D7A&color=CC9C4A"></a>
   <a href="https://www.python.org/", alt="Python versions">
