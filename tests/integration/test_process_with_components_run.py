@@ -10,7 +10,7 @@ import pytest
 
 from plugboard import exceptions
 from plugboard.component import IOController as IO
-from plugboard.connector import AsyncioConnector, Connector, RayConnector
+from plugboard.connector import AsyncioConnector, Connector, RayConnector, ZMQConnector
 from plugboard.process import LocalProcess, Process, RayProcess
 from plugboard.schemas import ConnectorSpec
 from tests.conftest import ComponentTestHelper
@@ -73,7 +73,9 @@ def tempfile_path() -> _t.Generator[Path, None, None]:
     "process_cls, connector_cls",
     [
         (LocalProcess, AsyncioConnector),
+        (LocalProcess, ZMQConnector),
         (RayProcess, RayConnector),
+        (RayProcess, ZMQConnector),
     ],
 )
 @pytest.mark.parametrize(
