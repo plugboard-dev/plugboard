@@ -1,8 +1,0 @@
-text,time_stamp,category,market_relevance,sentiment
-"""Tesla stock plummeted, dealerships were attacked, X went down—even one of SpaceX's rockets blew up.  On the Elon, Inc. podcast, we discuss the week that everything went wrong for Elon Musk""",2025-03-11T20:57:55.480Z,companies,80.0,negative
-"""The Trump administration has terminated $800 million in grants to Johns Hopkins University, spurring the nation’s top spender on research and development to plan layoffs and cancel health projects""",2025-03-11T21:03:05.389Z,economics,70.0,negative
-"""US President Donald Trump's trade adviser Peter Navarro said that an increased tariff of 50% on Canadian steel and aluminum will not take effect on Wednesday, after Trump had earlier ordered the 25% tariff be doubled reut.rs/3R5lFXm""",2025-03-11T21:13:49.735Z,economics,80.0,neutral
-"""Here’s where things stand on President Trump’s tariffs""",2025-03-11T21:50:09.214Z,economics,75.0,neutral
-"""Breaking: The House approved a GOP proposal to fund the government into the fall. The bill moves to the Senate, where it will need support from Democrats.""",2025-03-11T21:55:40.763Z,economics,70.0,neutral
-"""The Trump administration’s moves to strip away a lot of EV-friendly policies have led some Tesla investors, analysts, and EV researchers to insist this will all be disastrous for the company. More bullish analysts say otherwise.""",2025-03-11T21:56:24.690Z,companies,80.0,negative
-"""US House passes vote to extend federal funding until end of September  https://www.ft.com/content/13fbed35-5e77-4132-91e9-cffdb9105e85""",2025-03-11T22:10:46.952Z,economics,70.0,neutral
