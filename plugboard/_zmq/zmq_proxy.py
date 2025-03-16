@@ -57,7 +57,7 @@ class ZMQProxy(multiprocessing.Process):
         self._pull_socket_address: str = f"{self._zmq_address}:{self._pull_socket_port}"
 
         # Socket for requesting push socket creation in the subprocess
-        self._socket_req_socket = create_socket(zmq.REQ, [(zmq.RCVHWM, 1)])
+        self._socket_req_socket = create_socket(zmq.PUSH, [(zmq.SNDHWM, 100)])
         self._socket_req_port: int = self._socket_req_socket.bind_to_random_port("tcp://*")
         self._socket_req_address: str = f"{self._zmq_address}:{self._socket_req_port}"
 
@@ -132,7 +132,7 @@ class ZMQProxy(multiprocessing.Process):
 
         async with asyncio.TaskGroup() as tg:
             tg.create_task(asyncio.to_thread(self._run_pubsub_proxy))
-            tg.create_task(self._handle_create_push_socket_requests())
+            tg.create_task(asyncio.to_thread(self._handle_create_push_socket_requests))
             tg.create_task(self._poll_push_sockets())
 
     def _run_pubsub_proxy(self) -> None:
@@ -158,26 +158,27 @@ class ZMQProxy(multiprocessing.Process):
         self._xpub_socket = create_socket(zmq.XPUB, [(zmq.SNDHWM, self._maxsize)], ctx=ctx)
         xpub_port = self._xpub_socket.bind_to_random_port("tcp://*")
 
-        self._push_socket = create_socket(zmq.PUSH, [(zmq.RCVHWM, 1)], ctx=ctx)
+        self._push_socket = create_socket(zmq.PUSH, [(zmq.SNDHWM, 1)], ctx=ctx)
         self._push_socket.connect(self._pull_socket_address)
 
         return xsub_port, xpub_port
 
-    async def _handle_create_push_socket_requests(self) -> None:
+    def _handle_create_push_socket_requests(self) -> None:
         """Handles requests to create sockets in the subprocess."""
         # Create a socket to receive socket creation requests
-        self._socket_rep_socket = create_socket(zmq.REP, [])
+        ctx = zmq.Context.instance()
+        self._socket_rep_socket = create_socket(zmq.PULL, [(zmq.RCVHWM, 100)], ctx=ctx)
         self._socket_rep_socket.connect(self._socket_req_address)
 
         while True:
-            request = await self._socket_rep_socket.recv_json()
+            request = self._socket_rep_socket.recv_json()
             try:
-                push_address = await self._create_push_socket(request["topic"], request["maxsize"])
-                await self._socket_rep_socket.send_json({"push_address": push_address})
+                push_address = self._create_push_socket(request["topic"], request["maxsize"])
+                self._socket_rep_socket.send_json({"push_address": push_address})
             except Exception as e:
-                await self._socket_rep_socket.send_json({"error": str(e)})
+                self._socket_rep_socket.send_json({"error": str(e)})
 
-    async def _create_push_socket(self, topic: str, maxsize: int) -> str:
+    def _create_push_socket(self, topic: str, maxsize: int) -> str:
         """Creates a push socket in the subprocess and returns its address."""
         # Create the SUB socket to receive messages from the XPUB socket
         sub_socket = create_socket(
