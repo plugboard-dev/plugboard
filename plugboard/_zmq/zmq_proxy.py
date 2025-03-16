@@ -195,6 +195,9 @@ class ZMQProxy(multiprocessing.Process):
 
         while True:
             request = self._socket_rep_socket.recv_json()
+            if not (isinstance(request, dict) and "topic" in request and "maxsize" in request):
+                self._socket_rep_socket.send_json({"error": "Invalid request format."})
+                continue
             try:
                 push_address = self._create_push_socket(request["topic"], request["maxsize"])
                 self._socket_rep_socket.send_json({"push_address": push_address})
