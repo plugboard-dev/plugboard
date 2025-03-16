@@ -20,7 +20,7 @@ ZMQ_ADDR: str = r"tcp://127.0.0.1"
 def create_socket(
     socket_type: int,
     socket_opts: zmq_sockopts_t,
-    ctx: _t.Optional[zmq.Context | zmq.asyncio.Context] = None,
+    ctx: _t.Optional[zmq.asyncio.Context] = None,
 ) -> zmq.asyncio.Socket:
     """Creates a ZeroMQ socket with the given type and options.
 
@@ -33,6 +33,28 @@ def create_socket(
         The created ZMQ socket.
     """
     _ctx = ctx or zmq.asyncio.Context.instance()
+    socket = _ctx.socket(socket_type)
+    for opt, value in socket_opts:
+        socket.setsockopt(opt, value)
+    return socket
+
+
+def _create_sync_socket(
+    socket_type: int,
+    socket_opts: zmq_sockopts_t,
+    ctx: _t.Optional[zmq.Context] = None,
+) -> zmq.Socket:
+    """Creates a ZeroMQ socket with the given type and options.
+
+    Args:
+        socket_type: The type of socket to create.
+        socket_opts: The options to set on the socket.
+        ctx: The ZMQ context to use. Uses an sync context by default.
+
+    Returns:
+        The created ZMQ socket.
+    """
+    _ctx = ctx or zmq.Context.instance()
     socket = _ctx.socket(socket_type)
     for opt, value in socket_opts:
         socket.setsockopt(opt, value)
@@ -154,14 +176,13 @@ class ZMQProxy(multiprocessing.Process):
         Returns:
             Tuple of (xsub_port, xpub_port)
         """
-        ctx = zmq.Context.instance()
-        self._xsub_socket = create_socket(zmq.XSUB, [(zmq.RCVHWM, self._maxsize)], ctx=ctx)
+        self._xsub_socket = _create_sync_socket(zmq.XSUB, [(zmq.RCVHWM, self._maxsize)])
         xsub_port = self._xsub_socket.bind_to_random_port("tcp://*")
 
-        self._xpub_socket = create_socket(zmq.XPUB, [(zmq.SNDHWM, self._maxsize)], ctx=ctx)
+        self._xpub_socket = _create_sync_socket(zmq.XPUB, [(zmq.SNDHWM, self._maxsize)])
         xpub_port = self._xpub_socket.bind_to_random_port("tcp://*")
 
-        self._push_socket = create_socket(zmq.PUSH, [(zmq.SNDHWM, 1)], ctx=ctx)
+        self._push_socket = _create_sync_socket(zmq.PUSH, [(zmq.SNDHWM, 1)])
         self._push_socket.connect(self._pull_socket_address)
 
         return xsub_port, xpub_port
@@ -169,8 +190,7 @@ class ZMQProxy(multiprocessing.Process):
     def _handle_create_push_socket_requests(self) -> None:
         """Handles requests to create sockets in the subprocess."""
         # Create a socket to receive socket creation requests
-        ctx = zmq.Context.instance()
-        self._socket_rep_socket = create_socket(zmq.REP, [], ctx=ctx)
+        self._socket_rep_socket = _create_sync_socket(zmq.REP, [])
         self._socket_rep_socket.connect(self._socket_req_address)
 
         while True:
