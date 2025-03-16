@@ -47,12 +47,12 @@ class ZMQProxy(multiprocessing.Process):
 
     def __init__(self, zmq_address: str = ZMQ_ADDR, maxsize: int = 2000) -> None:
         super().__init__()
-        self._zmq_address = zmq_address
-        self._zmq_proxy_lock = asyncio.Lock()
-        self._maxsize = maxsize
+        self._zmq_address: str = zmq_address
+        self._zmq_proxy_lock: asyncio.Lock = asyncio.Lock()
+        self._maxsize: int = maxsize
         self._pull_socket = create_socket(zmq.PULL, [(zmq.RCVHWM, 1)])
-        self._pull_socket_port = self._pull_socket.bind_to_random_port("tcp://*")
-        self._pull_socket_addr = f"{self._zmq_address}:{self._pull_socket_port}"
+        self._pull_socket_port: int = self._pull_socket.bind_to_random_port("tcp://*")
+        self._pull_socket_address: str = f"{self._zmq_address}:{self._pull_socket_port}"
         self._xsub_port: _t.Optional[int] = None
         self._xpub_port: _t.Optional[int] = None
         self._proxy_started: bool = False
@@ -74,7 +74,7 @@ class ZMQProxy(multiprocessing.Process):
                 return
             self._zmq_address = zmq_address
             self._maxsize = maxsize
-            self._pull_socket_addr = f"{self._zmq_address}:{self._pull_socket_port}"
+            self._pull_socket_address = f"{self._zmq_address}:{self._pull_socket_port}"
             self.start()
             self._proxy_started = True
 
@@ -117,7 +117,7 @@ class ZMQProxy(multiprocessing.Process):
         xpub_port = self._xpub_socket.bind_to_random_port("tcp://*")
 
         self._push_socket = create_socket(zmq.PUSH, [(zmq.RCVHWM, 1)], ctx=ctx)
-        self._push_socket.connect(self._pull_socket_addr)
+        self._push_socket.connect(self._pull_socket_address)
 
         return xsub_port, xpub_port
 
