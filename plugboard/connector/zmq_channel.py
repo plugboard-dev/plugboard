@@ -338,7 +338,7 @@ class ZMQConnector(_ZMQConnector):
         super().__init__(*args, **kwargs)
         match self.spec.mode:
             case ConnectorMode.PIPELINE:
-                zmq_conn_cls: _t.Type[_ZMQConnector] = _ZMQPipelineConnector
+                zmq_conn_cls: _t.Type[_ZMQConnector] = _ZMQPipelineConnectorV2
             case ConnectorMode.PUBSUB:
                 print(f"{settings=}")
                 if settings.flags.zmq_pubsub_proxy:
