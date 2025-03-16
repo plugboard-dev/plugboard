@@ -67,6 +67,8 @@ class ZMQProxy(multiprocessing.Process):
 
     async def get_proxy_ports(self) -> tuple[int, int]:
         """Returns tuple of form (xsub port, xpub port) for the ZMQ proxy."""
+        if not self._proxy_started:
+            raise RuntimeError("ZMQ proxy not started.")
         async with self._zmq_proxy_lock:
             if self._xsub_port is None or self._xpub_port is None:
                 ports_msg = await self._pull_socket.recv_multipart()
