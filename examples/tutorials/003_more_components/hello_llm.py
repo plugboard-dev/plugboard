@@ -1,4 +1,4 @@
-"""Simple hello world example."""
+"""Simple LLM example."""
 
 # fmt: off
 import asyncio
