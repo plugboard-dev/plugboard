@@ -1,5 +1,6 @@
 """Event-based model example."""
 
+# fmt: off
 import asyncio
 import random
 import typing as _t
@@ -14,6 +15,7 @@ from plugboard.process import LocalProcess
 from plugboard.schemas import ConnectorSpec, ComponentArgsDict
 
 
+# --8<-- [start:events]
 class ExtremeValue(BaseModel):
     """Data for event_A."""
 
@@ -33,8 +35,10 @@ class LowEvent(Event):
 
     type: _t.ClassVar[str] = "low_event"
     data: ExtremeValue
+# --8<-- [end:events]
 
 
+# --8<-- [start:source-component]
 class Random(Component):
     """Generates random numbers."""
 
@@ -49,9 +53,11 @@ class Random(Component):
         self.completed_iters += 1
         self.value = random.random()
         if self.completed_iters >= self.max_iters:
-            self.io.queue_event(StopEvent(source=self.name, data={}))
+            self.io.queue_event(StopEvent(source=self.name, data={}))  # (1)!
+# --8<-- [end:source-component]
 
 
+# --8<-- [start:event-publisher]
 class FindHighLowValues(Component):
     """Raises an event on high or low values."""
 
@@ -69,7 +75,7 @@ class FindHighLowValues(Component):
 
     async def step(self) -> None:
         if self.value >= self.high_limit:
-            self.io.queue_event(
+            self.io.queue_event(  # (1)!
                 HighEvent(
                     source=self.name, data=ExtremeValue(value=self.value, extreme_type="high")
                 )
@@ -78,8 +84,10 @@ class FindHighLowValues(Component):
             self.io.queue_event(
                 LowEvent(source=self.name, data=ExtremeValue(value=self.value, extreme_type="low"))
             )
+# --8<-- [end:event-publisher]
 
 
+# --8<-- [start:event-consumers]
 class CollectHigh(Component):
     """Collects values from high events."""
 
@@ -92,7 +100,7 @@ class CollectHigh(Component):
     async def step(self) -> None:
         self.value = self.latest_event.value if self.latest_event else None
 
-    @HighEvent.handler
+    @HighEvent.handler  # (1)!
     async def handle_event(self, event: HighEvent) -> None:
         self.latest_event = event.data
 
@@ -112,9 +120,11 @@ class CollectLow(Component):
     @LowEvent.handler
     async def handle_event(self, event: LowEvent) -> None:
         self.latest_event = event.data
+# --8<-- [end:event-consumers]
 
 
 async def main() -> None:
+    # --8<-- [start:main]
     components = [
         Random(name="random-generator"),
         FindHighLowValues(name="find-high-low", low_limit=0.2, high_limit=0.8),
@@ -124,12 +134,12 @@ async def main() -> None:
         FileWriter(name="save-low", path="low.csv", field_names=["value"]),
     ]
     connect = lambda in_, out_: AsyncioConnector(spec=ConnectorSpec(source=in_, target=out_))
-    connectors = [
+    connectors = [  # (1)!
         connect("random-generator.value", "find-high-low.value"),
         connect("collect-high.value", "save-high.value"),
         connect("collect-low.value", "save-low.value"),
     ]
-    connector_builder = ConnectorBuilder(connector_cls=AsyncioConnector)
+    connector_builder = ConnectorBuilder(connector_cls=AsyncioConnector)  # (2)!
     event_connector_builder = EventConnectorBuilder(connector_builder=connector_builder)
     event_connectors = list(event_connector_builder.build(components).values())
 
@@ -140,6 +150,7 @@ async def main() -> None:
 
     async with process:
         await process.run()
+    # --8<-- [end:main]
 
 
 if __name__ == "__main__":
