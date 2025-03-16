@@ -17,10 +17,14 @@ zmq_sockopts_t: _t.TypeAlias = list[tuple[int, int | bytes | str]]
 ZMQ_ADDR: str = r"tcp://127.0.0.1"
 
 
-def create_socket(socket_type: int, socket_opts: zmq_sockopts_t) -> zmq.asyncio.Socket:
+def create_socket(
+    socket_type: int,
+    socket_opts: zmq_sockopts_t,
+    ctx: _t.Optional[zmq.Context | zmq.asyncio.Context] = None,
+) -> zmq.asyncio.Socket:
     """Creates a ZeroMQ socket with the given type and options."""
-    ctx = zmq.asyncio.Context.instance()
-    socket = ctx.socket(socket_type)
+    _ctx = ctx or zmq.asyncio.Context.instance()
+    socket = _ctx.socket(socket_type)
     for opt, value in socket_opts:
         socket.setsockopt(opt, value)
     return socket
@@ -96,24 +100,17 @@ class ZMQProxy(multiprocessing.Process):
 
     def _create_sockets(self) -> _t.Tuple[int, int]:
         """Creates XSUB, XPUB, and PUSH sockets for proxy and returns XSUB and XPUB ports."""
-        self._xsub_socket = self._create_socket(zmq.XSUB, [(zmq.RCVHWM, self._maxsize)])
+        ctx = zmq.Context.instance()
+        self._xsub_socket = create_socket(zmq.XSUB, [(zmq.RCVHWM, self._maxsize)], ctx=ctx)
         xsub_port = self._xsub_socket.bind_to_random_port("tcp://*")
 
-        self._xpub_socket = self._create_socket(zmq.XPUB, [(zmq.SNDHWM, self._maxsize)])
+        self._xpub_socket = create_socket(zmq.XPUB, [(zmq.SNDHWM, self._maxsize)], ctx=ctx)
         xpub_port = self._xpub_socket.bind_to_random_port("tcp://*")
 
-        self._push_socket = self._create_socket(zmq.PUSH, [(zmq.RCVHWM, 1)])
+        self._push_socket = create_socket(zmq.PUSH, [(zmq.RCVHWM, 1)], ctx=ctx)
         self._push_socket.connect(self._pull_socket_addr)
 
         return xsub_port, xpub_port
-
-    @staticmethod
-    def _create_socket(socket_type: int, socket_opts: zmq_sockopts_t) -> zmq.Socket:
-        ctx = zmq.Context.instance()
-        socket = ctx.socket(socket_type)
-        for opt, value in socket_opts:
-            socket.setsockopt(opt, value)
-        return socket
 
     def _close(self) -> None:
         self._xsub_socket.close(linger=0)
