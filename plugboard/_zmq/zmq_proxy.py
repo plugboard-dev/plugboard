@@ -22,7 +22,16 @@ def create_socket(
     socket_opts: zmq_sockopts_t,
     ctx: _t.Optional[zmq.Context | zmq.asyncio.Context] = None,
 ) -> zmq.asyncio.Socket:
-    """Creates a ZeroMQ socket with the given type and options."""
+    """Creates a ZeroMQ socket with the given type and options.
+
+    Args:
+        socket_type: The type of socket to create.
+        socket_opts: The options to set on the socket.
+        ctx: The ZMQ context to use. Uses an async context by default.
+
+    Returns:
+        The created ZMQ socket.
+    """
     _ctx = ctx or zmq.asyncio.Context.instance()
     socket = _ctx.socket(socket_type)
     for opt, value in socket_opts:
