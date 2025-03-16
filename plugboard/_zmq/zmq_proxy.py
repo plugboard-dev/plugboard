@@ -77,13 +77,22 @@ class ZMQProxy(multiprocessing.Process):
 
     def run(self) -> None:
         """Multiprocessing entrypoint to run ZMQ proxy."""
-        xsub_port, xpub_port = self._create_sockets()
         try:
-            ports_msg = [str(xsub_port).encode(), str(xpub_port).encode()]
-            self._push_socket.send_multipart(ports_msg)
-            zmq.proxy(self._xsub_socket, self._xpub_socket)
+            asyncio.run(self._run())
         finally:
             self._close()
+
+    async def _run(self) -> None:
+        """Async multiprocessing entrypoint to run ZMQ proxy."""
+        async with asyncio.TaskGroup() as tg:
+            tg.create_task(asyncio.to_thread(self._run_pubsub_proxy))
+
+    def _run_pubsub_proxy(self) -> None:
+        """Runs the ZMQ proxy for pubsub connections."""
+        xsub_port, xpub_port = self._create_sockets()
+        ports_msg = [str(xsub_port).encode(), str(xpub_port).encode()]
+        self._push_socket.send_multipart(ports_msg)
+        zmq.proxy(self._xsub_socket, self._xpub_socket)
 
     def _create_sockets(self) -> _t.Tuple[int, int]:
         """Creates XSUB, XPUB, and PUSH sockets for proxy and returns XSUB and XPUB ports."""
