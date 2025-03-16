@@ -107,7 +107,7 @@ class CollectLow(Component):
         self.latest_event: _t.Optional[ExtremeValue] = None
 
     async def step(self) -> None:
-        self.value = self.latest_event.value if self.latest_event else float("nan")
+        self.value = self.latest_event.value if self.latest_event else None
 
     @LowEvent.handler
     async def handle_event(self, event: LowEvent) -> None:
