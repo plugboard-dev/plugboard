@@ -137,10 +137,10 @@ class ZMQProxy(multiprocessing.Process):
 
     def _run_pubsub_proxy(self) -> None:
         """Runs the ZMQ proxy for pubsub connections."""
-        xsub_port, xpub_port = self._create_pubsub_sockets()
+        self._xsub_port, self._xpub_port = self._create_pubsub_sockets()
         ports_msg = [
-            str(xsub_port).encode(),
-            str(xpub_port).encode(),
+            str(self._xsub_port).encode(),
+            str(self._xpub_port).encode(),
         ]
         self._push_socket.send_multipart(ports_msg)
         zmq.proxy(self._xsub_socket, self._xpub_socket)
@@ -183,6 +183,8 @@ class ZMQProxy(multiprocessing.Process):
         sub_socket = create_socket(
             zmq.SUB, [(zmq.RCVHWM, self._maxsize), (zmq.SUBSCRIBE, topic.encode("utf8"))]
         )
+        # TODO : There is a race condition here as `self._xsub_port` is set in another thread in
+        #      : _run_pubsub_proxy.
         sub_socket.connect(f"{self._zmq_address}:{self._xpub_port}")
         self._push_poller.register(sub_socket, zmq.POLLIN)
 
