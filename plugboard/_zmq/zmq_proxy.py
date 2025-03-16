@@ -73,14 +73,6 @@ class ZMQProxy(multiprocessing.Process):
                 self._xsub_port, self._xpub_port = map(int, ports_msg)
             return self._xsub_port, self._xpub_port
 
-    @staticmethod
-    def _create_socket(socket_type: int, socket_opts: zmq_sockopts_t) -> zmq.Socket:
-        ctx = zmq.Context.instance()
-        socket = ctx.socket(socket_type)
-        for opt, value in socket_opts:
-            socket.setsockopt(opt, value)
-        return socket
-
     def run(self) -> None:
         """Multiprocessing entrypoint to run ZMQ proxy."""
         xsub_port, xpub_port = self._create_sockets()
@@ -103,6 +95,14 @@ class ZMQProxy(multiprocessing.Process):
         self._push_socket.connect(self._pull_socket_addr)
 
         return xsub_port, xpub_port
+
+    @staticmethod
+    def _create_socket(socket_type: int, socket_opts: zmq_sockopts_t) -> zmq.Socket:
+        ctx = zmq.Context.instance()
+        socket = ctx.socket(socket_type)
+        for opt, value in socket_opts:
+            socket.setsockopt(opt, value)
+        return socket
 
     def _close(self) -> None:
         self._xsub_socket.close(linger=0)
