@@ -351,11 +351,19 @@ class _ZMQPipelineConnectorV3(_ZMQPubsubConnectorProxy):
         self._push_address = await zmq_proxy.add_push_socket(self._topic, maxsize=self._maxsize)
         return self._push_address
 
+    async def _wait_for_push_address(self) -> str:
+        retries = 0
+        while self._push_address is None and retries < 5:
+            await asyncio.sleep(0.01)
+            retries += 1
+        if self._push_address is None:
+            raise RuntimeError("Push address not set")
+        return self._push_address
+
     async def connect_recv(self) -> ZMQChannel:
         """Returns a `ZMQChannel` for receiving messages."""
         await self._get_proxy_ports()
-        if self._push_address is None:
-            raise RuntimeError("Push address not set")
+        self._push_address = await self._wait_for_push_address()
         recv_socket = create_socket(zmq.PULL, [(zmq.RCVHWM, self._maxsize)])
         recv_socket.connect(self._push_address)
         await asyncio.sleep(0.1)  # Ensure connections established before first send. Better way?
