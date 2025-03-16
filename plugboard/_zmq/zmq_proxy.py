@@ -200,7 +200,8 @@ class ZMQProxy(multiprocessing.Process):
     async def _poll_push_sockets(self) -> None:
         """Polls push sockets for messages and sends them to the proxy."""
         while True:
-            events = dict(await self._push_poller.poll())
+            # Set a timeout of 1 second to allow for new push sockets to be added
+            events = dict(await self._push_poller.poll(timeout=1000))
             async with asyncio.TaskGroup() as tg:
                 for socket in events:
                     tg.create_task(self._handle_push_socket(socket))
