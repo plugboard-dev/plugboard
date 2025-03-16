@@ -59,9 +59,20 @@ class ZMQProxy(multiprocessing.Process):
         self._push_poller: zmq.asyncio.Poller = zmq.asyncio.Poller()
         self._push_sockets: dict[str, zmq.asyncio.Socket] = {}
 
+        # Socket for requesting push socket creation in the subprocess
+        self._socket_req_socket = create_socket(zmq.REQ, [(zmq.RCVHWM, 1)])
+        self._socket_req_port: int = 0  # Will be set when the proxy subprocess starts
+
     def __getstate__(self) -> dict:
         state = self.__dict__.copy()
-        for key in ("_pull_socket", "_zmq_proxy_lock", "_push_poller", "_push_sockets"):
+        keys_to_delete = (
+            "_pull_socket",
+            "_zmq_proxy_lock",
+            "_push_poller",
+            "_push_sockets",
+            "_socket_req_socket",
+        )
+        for key in keys_to_delete:
             if key in state:
                 del state[key]
         return state
@@ -86,27 +97,34 @@ class ZMQProxy(multiprocessing.Process):
         async with self._zmq_proxy_lock:
             if self._xsub_port is None or self._xpub_port is None:
                 ports_msg = await self._pull_socket.recv_multipart()
-                self._xsub_port, self._xpub_port = map(int, ports_msg)
+                # The first two values are xsub_port and xpub_port
+                self._xsub_port, self._xpub_port = map(int, ports_msg[:2])
+                # If there's a third value, it's the socket_req_port
+                if len(ports_msg) > 2:
+                    self._socket_req_port = int(ports_msg[2])
+                    self._socket_req_socket.connect(f"{self._zmq_address}:{self._socket_req_port}")
             return self._xsub_port, self._xpub_port
 
     async def add_push_socket(self, topic: str, maxsize: int = 2000) -> str:
         """Adds a push socket for the given pubsub topic and returns the address."""
-        # TODO : Creation of sub and push sockets must happen in the subprocess
         if not self._proxy_started or self._xpub_port is None:
             raise RuntimeError("ZMQ proxy xpub port is not set.")
+        if self._socket_req_port == 0:
+            raise RuntimeError("Socket request port is not set.")
 
-        sub_socket = create_socket(
-            zmq.SUB, [(zmq.RCVHWM, self._maxsize), (zmq.SUBSCRIBE, topic.encode("utf8"))]
-        )
-        sub_socket.connect(f"{self._zmq_address}:{self._xpub_port}")
-        self._push_poller.register(sub_socket, zmq.POLLIN)
+        # Send request to create a push socket in the subprocess
+        request = {"action": "create_push_socket", "topic": topic, "maxsize": maxsize}
 
-        push_socket = create_socket(zmq.PUSH, [(zmq.SNDHWM, maxsize)])
-        push_port = push_socket.bind_to_random_port("tcp://*")
-        push_address = f"{self._zmq_address}:{push_port}"
-        self._push_sockets[topic] = push_socket
+        # Send the request to the subprocess
+        await self._socket_req_socket.send_json(request)
 
-        return push_address
+        # Receive the response with the push socket address
+        response = await self._socket_req_socket.recv_json()
+
+        if "error" in response:
+            raise RuntimeError(f"Failed to create push socket: {response['error']}")
+
+        return response["push_address"]
 
     def run(self) -> None:
         """Multiprocessing entrypoint to run ZMQ proxy."""
@@ -119,7 +137,47 @@ class ZMQProxy(multiprocessing.Process):
         """Async multiprocessing entrypoint to run ZMQ proxy."""
         async with asyncio.TaskGroup() as tg:
             tg.create_task(asyncio.to_thread(self._run_pubsub_proxy))
+            tg.create_task(self._handle_socket_requests())
             tg.create_task(self._poll_push_sockets())
+
+    async def _handle_socket_requests(self) -> None:
+        """Handles requests to create sockets in the subprocess."""
+        # Create a socket to receive socket creation requests
+        ctx = zmq.Context.instance()
+        self._socket_rep_socket = create_socket(zmq.REP, [], ctx=ctx)
+        # This port is passed to the main process via _create_sockets()
+        self._socket_rep_socket.bind_to_random_port("tcp://*")
+
+        try:
+            while True:
+                request = await self._socket_rep_socket.recv_json()
+                if request["action"] == "create_push_socket":
+                    try:
+                        push_address = await self._create_push_socket_in_subprocess(
+                            request["topic"], request["maxsize"]
+                        )
+                        await self._socket_rep_socket.send_json({"push_address": push_address})
+                    except Exception as e:
+                        await self._socket_rep_socket.send_json({"error": str(e)})
+        finally:
+            self._socket_rep_socket.close(linger=0)
+
+    async def _create_push_socket_in_subprocess(self, topic: str, maxsize: int) -> str:
+        """Creates a push socket in the subprocess and returns its address."""
+        # Create the SUB socket to receive messages from the XPUB socket
+        sub_socket = create_socket(
+            zmq.SUB, [(zmq.RCVHWM, self._maxsize), (zmq.SUBSCRIBE, topic.encode("utf8"))]
+        )
+        sub_socket.connect(f"{self._zmq_address}:{self._xpub_port}")
+        self._push_poller.register(sub_socket, zmq.POLLIN)
+
+        # Create the PUSH socket that clients will connect to
+        push_socket = create_socket(zmq.PUSH, [(zmq.SNDHWM, maxsize)])
+        push_port = push_socket.bind_to_random_port("tcp://*")
+        push_address = f"{self._zmq_address}:{push_port}"
+        self._push_sockets[topic] = push_socket
+
+        return push_address
 
     async def _poll_push_sockets(self) -> None:
         """Polls push sockets for messages and sends them to the proxy."""
@@ -137,13 +195,21 @@ class ZMQProxy(multiprocessing.Process):
 
     def _run_pubsub_proxy(self) -> None:
         """Runs the ZMQ proxy for pubsub connections."""
-        xsub_port, xpub_port = self._create_sockets()
-        ports_msg = [str(xsub_port).encode(), str(xpub_port).encode()]
+        xsub_port, xpub_port, socket_req_port = self._create_sockets()
+        ports_msg = [
+            str(xsub_port).encode(),
+            str(xpub_port).encode(),
+            str(socket_req_port).encode(),
+        ]
         self._push_socket.send_multipart(ports_msg)
         zmq.proxy(self._xsub_socket, self._xpub_socket)
 
-    def _create_sockets(self) -> _t.Tuple[int, int]:
-        """Creates XSUB, XPUB, and PUSH sockets for proxy and returns XSUB and XPUB ports."""
+    def _create_sockets(self) -> _t.Tuple[int, int, int]:
+        """Creates XSUB, XPUB, REP and PUSH sockets for proxy.
+
+        Returns:
+            Tuple of (xsub_port, xpub_port, socket_req_port)
+        """
         ctx = zmq.Context.instance()
         self._xsub_socket = create_socket(zmq.XSUB, [(zmq.RCVHWM, self._maxsize)], ctx=ctx)
         xsub_port = self._xsub_socket.bind_to_random_port("tcp://*")
@@ -151,12 +217,17 @@ class ZMQProxy(multiprocessing.Process):
         self._xpub_socket = create_socket(zmq.XPUB, [(zmq.SNDHWM, self._maxsize)], ctx=ctx)
         xpub_port = self._xpub_socket.bind_to_random_port("tcp://*")
 
+        self._socket_rep_socket = create_socket(zmq.REP, [], ctx=ctx)
+        socket_req_port = self._socket_rep_socket.bind_to_random_port("tcp://*")
+
         self._push_socket = create_socket(zmq.PUSH, [(zmq.RCVHWM, 1)], ctx=ctx)
         self._push_socket.connect(self._pull_socket_address)
 
-        return xsub_port, xpub_port
+        return xsub_port, xpub_port, socket_req_port
 
     def _close(self) -> None:
         self._xsub_socket.close(linger=0)
         self._xpub_socket.close(linger=0)
         self._push_socket.close(linger=0)
+        if hasattr(self, "_socket_rep_socket"):
+            self._socket_rep_socket.close(linger=0)
