@@ -328,6 +328,30 @@ class _ZMQPipelineConnectorV2(_ZMQPubsubConnectorProxy):
         return ZMQChannel(recv_socket=recv_socket, topic=self._topic, maxsize=self._maxsize)
 
 
+class _ZMQPipelineConnectorV3(_ZMQPubsubConnectorProxy):
+    """`_ZMQPipelineConnectorV3` connects components in pipeline mode using `ZMQChannel`."""
+
+    def __init__(self, *args: _t.Any, **kwargs: _t.Any) -> None:
+        super().__init__(*args, **kwargs)
+        self._topic = str(self.spec.id)
+        self._push_address: _t.Optional[str] = None
+
+    @inject
+    async def _get_push_port(self, zmq_proxy: ZMQProxy = Provide[DI.zmq_proxy]) -> str:
+        self._push_address = await zmq_proxy.add_push_socket(self._topic, maxsize=self._maxsize)
+        return self._push_address
+
+    async def connect_recv(self) -> ZMQChannel:
+        """Returns a `ZMQChannel` for receiving messages."""
+        await self._get_proxy_ports()
+        if self._push_address is None:
+            self._push_address = await self._get_push_port()
+        recv_socket = create_socket(zmq.PULL, [(zmq.RCVHWM, self._maxsize)])
+        recv_socket.connect(self._push_address)
+        await asyncio.sleep(0.1)  # Ensure connections established before first send. Better way?
+        return ZMQChannel(recv_socket=recv_socket, topic=self._topic, maxsize=self._maxsize)
+
+
 class ZMQConnector(_ZMQConnector):
     """`ZMQConnector` connects components using `ZMQChannel`."""
 
