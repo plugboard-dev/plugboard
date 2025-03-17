@@ -33,6 +33,9 @@ def test_io_inheritance(io_args: dict[str, _t.Any], exc: _t.Optional[type[Except
         class _A(Component):
             io: IO = IO(**io_args)
 
+            async def step(self) -> None:
+                pass
+
         for k in io_args:
             assert set(getattr(_A.io, k)) > set(getattr(Component.io, k))
         for k in {"inputs", "outputs", "input_events", "output_events"} - set(io_args.keys()):
@@ -48,6 +51,9 @@ def test_io_inheritance(io_args: dict[str, _t.Any], exc: _t.Optional[type[Except
             input_events=[EventType1],
             output_events=[EventType2],
         )
+
+        async def step(self) -> None:
+            pass
 
     for k in {"inputs", "outputs", "input_events", "output_events"}:
         assert set(getattr(_B.io, k)) > set(getattr(_A.io, k))
@@ -76,6 +82,9 @@ def test_io_inheritance_abc(io_args: dict[str, _t.Any], exc: _t.Optional[type[Ex
             input_events=[EventType1],
             output_events=[EventType2],
         )
+
+        async def step(self) -> None:
+            pass
 
     for k in {"inputs", "outputs", "input_events", "output_events"}:
         assert set(getattr(_B.io, k)) > set(getattr(_A.io, k))
