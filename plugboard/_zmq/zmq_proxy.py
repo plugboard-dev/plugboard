@@ -74,12 +74,12 @@ class ZMQProxy(multiprocessing.Process):
         self._maxsize: int = maxsize
 
         # Socket for receiving xsub and xpub ports from the subprocess
-        self._pull_socket = create_socket(zmq.PULL, [(zmq.RCVHWM, 1)])
+        self._pull_socket: zmq.asyncio.Socket = create_socket(zmq.PULL, [(zmq.RCVHWM, 1)])
         self._pull_socket_port: int = self._pull_socket.bind_to_random_port("tcp://*")
         self._pull_socket_address: str = f"{self._zmq_address}:{self._pull_socket_port}"
 
         # Socket for requesting push socket creation in the subprocess
-        self._socket_req_socket = create_socket(zmq.REQ, [])
+        self._socket_req_socket: zmq.asyncio.Socket = create_socket(zmq.REQ, [])
         self._socket_req_port: int = self._socket_req_socket.bind_to_random_port("tcp://*")
         self._socket_req_address: str = f"{self._zmq_address}:{self._socket_req_port}"
         self._socket_req_lock: asyncio.Lock = asyncio.Lock()
