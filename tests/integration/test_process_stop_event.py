@@ -14,7 +14,7 @@ from plugboard.connector import (
     ZMQConnector,
 )
 from plugboard.events import EventConnectorBuilder, StopEvent
-from plugboard.process import LocalProcess, Process
+from plugboard.process import LocalProcess, Process, RayProcess
 from plugboard.schemas import ConnectorSpec
 from tests.conftest import ComponentTestHelper
 
@@ -56,7 +56,7 @@ class B(ComponentTestHelper):
         (LocalProcess, AsyncioConnector),
         (LocalProcess, ZMQConnector),
         # (RayProcess, RayConnector),  # TODO : Pubsub/StopEvent unsupported. See https://github.com/plugboard-dev/plugboard/issues/101.
-        # (RayProcess, ZMQConnector),  # FIXME : Test assertion fails. See https://github.com/plugboard-dev/plugboard/issues/101.
+        (RayProcess, ZMQConnector),
     ],
 )
 async def test_process_stop_event(
@@ -116,4 +116,4 @@ async def test_process_stop_event(
         # Because the B components receive the StopEvent on iter n+1, they will only receive n
         # outputs from A before shutting down the IOController, hence n.
         for c in [comp_b1, comp_b2, comp_b3, comp_b4, comp_b5]:
-            assert c.out_1 == iters_before_stop
+            assert c.in_1 == iters_before_stop
