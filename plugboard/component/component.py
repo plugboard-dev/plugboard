@@ -1,5 +1,7 @@
 """Provides Component class."""
 
+from __future__ import annotations
+
 from abc import ABC, abstractmethod
 import asyncio
 from collections import defaultdict
@@ -80,7 +82,7 @@ class Component(ABC, ExportMixin):
     @classmethod
     def _configure_io(cls) -> None:
         # Get all parent classes that are Component subclasses
-        parent_comps = [c for c in cls.__bases__ if issubclass(c, Component)]
+        parent_comps = cls._get_component_bases()
         # Create combined set of all io arguments from this class and all parents
         io_args: dict[str, set] = defaultdict(set)
         for c in parent_comps + [cls]:
@@ -109,6 +111,15 @@ class Component(ABC, ExportMixin):
             raise IOSetupError(
                 f"{cls.__name__} must extend Component abstract base class io arguments"
             )
+
+    @classmethod
+    def _get_component_bases(cls) -> list[_t.Type[Component]]:
+        bases = []
+        for base in cls.__bases__:
+            if issubclass(base, Component):
+                bases.append(base)
+                bases.extend(base._get_component_bases())
+        return bases
 
     # Prevents type-checker errors on public component IO attributes
     def __getattr__(self, key: str) -> _t.Any:
