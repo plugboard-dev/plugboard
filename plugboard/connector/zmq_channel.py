@@ -284,7 +284,11 @@ class _ZMQPubsubConnectorProxy(_ZMQConnector):
 
 
 class _ZMQPipelineConnectorV2(_ZMQPubsubConnectorProxy):
-    """`_ZMQPipelineConnectorV2` connects components in pipeline mode using `ZMQChannel`."""
+    """`_ZMQPipelineConnectorV2` connects components in pipeline mode using `ZMQChannel`.
+
+    Relies on a ZMQ proxy to handle message routing between components. Messages from publishers are
+    proxied to the subscribers through a ZMQ Push socket in a coroutine running on the driver.
+    """
 
     def __init__(self, *args: _t.Any, **kwargs: _t.Any) -> None:
         super().__init__(*args, **kwargs)
@@ -329,7 +333,11 @@ class _ZMQPipelineConnectorV2(_ZMQPubsubConnectorProxy):
 
 
 class _ZMQPipelineConnectorV3(_ZMQPubsubConnectorProxy):
-    """`_ZMQPipelineConnectorV3` connects components in pipeline mode using `ZMQChannel`."""
+    """`_ZMQPipelineConnectorV3` connects components in pipeline mode using `ZMQChannel`.
+
+    Relies on a ZMQ proxy to handle message routing between components. Messages from publishers are
+    proxied to the subscribers through a ZMQ Push socket in a coroutine running on the proxy.
+    """
 
     def __init__(self, *args: _t.Any, **kwargs: _t.Any) -> None:
         super().__init__(*args, **kwargs)
@@ -380,7 +388,10 @@ class ZMQConnector(_ZMQConnector):
         super().__init__(*args, **kwargs)
         match self.spec.mode:
             case ConnectorMode.PIPELINE:
-                zmq_conn_cls: _t.Type[_ZMQConnector] = _ZMQPipelineConnectorV3
+                if settings.flags.zmq_pubsub_proxy:
+                    zmq_conn_cls: _t.Type[_ZMQConnector] = _ZMQPipelineConnectorV3
+                else:
+                    zmq_conn_cls = _ZMQPipelineConnector
             case ConnectorMode.PUBSUB:
                 print(f"{settings=}")
                 if settings.flags.zmq_pubsub_proxy:
