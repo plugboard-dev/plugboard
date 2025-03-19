@@ -278,57 +278,8 @@ class _ZMQPubsubConnectorProxy(_ZMQConnector):
         return ZMQChannel(recv_socket=recv_socket, topic=self._topic, maxsize=self._maxsize)
 
 
-class _ZMQPipelineConnectorV2(_ZMQPubsubConnectorProxy):
-    """`_ZMQPipelineConnectorV2` connects components in pipeline mode using `ZMQChannel`.
-
-    Relies on a ZMQ proxy to handle message routing between components. Messages from publishers are
-    proxied to the subscribers through a ZMQ Push socket in a coroutine running on the driver.
-    """
-
-    def __init__(self, *args: _t.Any, **kwargs: _t.Any) -> None:
-        super().__init__(*args, **kwargs)
-        self._topic = str(self.spec.id)
-
-        self._push_socket: zmq.asyncio.Socket = create_socket(
-            zmq.PUSH, [(zmq.SNDHWM, self._maxsize)]
-        )
-        self._push_port: int = self._push_socket.bind_to_random_port("tcp://*")
-
-        self._push_proxy_task: asyncio.Task = asyncio.create_task(self._start_push_proxy())
-        _zmq_proxy_tasks.add(self._push_proxy_task)
-
-    def __getstate__(self) -> dict:
-        state = self.__dict__.copy()
-        for attr in ("_push_socket", "_push_proxy_task"):
-            if attr in state:
-                del state[attr]
-        return state
-
-    async def _start_push_proxy(self) -> None:
-        _, xpub_port = await self._get_proxy_ports()
-
-        sub_socket = create_socket(
-            zmq.SUB, [(zmq.RCVHWM, self._maxsize), (zmq.SUBSCRIBE, self._topic.encode("utf8"))]
-        )
-        sub_socket.connect(f"{self._zmq_address}:{xpub_port}")
-        try:
-            while True:
-                msg = await sub_socket.recv_multipart()
-                await self._push_socket.send_multipart(msg)
-        finally:
-            sub_socket.close(linger=0)
-            self._push_socket.close(linger=0)
-
-    async def connect_recv(self) -> ZMQChannel:
-        """Returns a `ZMQChannel` for receiving messages."""
-        recv_socket = create_socket(zmq.PULL, [(zmq.RCVHWM, self._maxsize)])
-        recv_socket.connect(f"{self._zmq_address}:{self._push_port}")
-        await asyncio.sleep(0.1)  # Ensure connections established before first send. Better way?
-        return ZMQChannel(recv_socket=recv_socket, topic=self._topic, maxsize=self._maxsize)
-
-
-class _ZMQPipelineConnectorV3(_ZMQPubsubConnectorProxy):
-    """`_ZMQPipelineConnectorV3` connects components in pipeline mode using `ZMQChannel`.
+class _ZMQPipelineConnectorProxy(_ZMQPubsubConnectorProxy):
+    """`_ZMQPipelineConnectorProxy` connects components in pipeline mode using `ZMQChannel`.
 
     Relies on a ZMQ proxy to handle message routing between components. Messages from publishers are
     proxied to the subscribers through a ZMQ Push socket in a coroutine running on the proxy.
@@ -384,7 +335,7 @@ class ZMQConnector(_ZMQConnector):
         match self.spec.mode:
             case ConnectorMode.PIPELINE:
                 if settings.flags.zmq_pubsub_proxy:
-                    zmq_conn_cls: _t.Type[_ZMQConnector] = _ZMQPipelineConnectorV3
+                    zmq_conn_cls: _t.Type[_ZMQConnector] = _ZMQPipelineConnectorProxy
                 else:
                     zmq_conn_cls = _ZMQPipelineConnector
             case ConnectorMode.PUBSUB:
