@@ -172,7 +172,6 @@ class _ZMQPipelineConnector(_ZMQConnector):
             return self._recv_channel
         recv_socket = create_socket(zmq.PULL, [(zmq.RCVHWM, self._maxsize)])
 
-        # Wait for port from the send socket, use random poll interval to avoid spikes
         pull_socket = create_socket(zmq.PULL, [(zmq.RCVHWM, 1)])
         pull_socket.connect(self._push_socket_addr)
         port = int(await pull_socket.recv())
