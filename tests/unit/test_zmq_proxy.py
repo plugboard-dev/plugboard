@@ -4,15 +4,10 @@ import asyncio
 import typing as _t
 
 import pytest
+import zmq
+import zmq.asyncio
 
 from plugboard._zmq.zmq_proxy import ZMQ_ADDR, ZMQProxy, create_socket
-
-
-try:
-    import zmq
-    import zmq.asyncio
-except ImportError:
-    pytestmark = pytest.mark.skip("ZMQ not installed")
 
 
 @pytest.fixture
