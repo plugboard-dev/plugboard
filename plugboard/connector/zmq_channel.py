@@ -193,7 +193,7 @@ class _ZMQPipelineConnector(_ZMQConnector):
 
         sender_req_socket = create_socket(zmq.REQ, [])
         sender_req_socket.connect(self._sender_rep_socket_addr)
-        await sender_req_socket.send_json({"sender_port": str(port).encode()})
+        await sender_req_socket.send_json({"sender_port": port})
         resp = await sender_req_socket.recv_json()
         if resp.get("success", False) is not True:
             raise RuntimeError("Failed to setup send socket")
