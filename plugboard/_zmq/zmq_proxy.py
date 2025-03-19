@@ -6,12 +6,9 @@ import asyncio
 import multiprocessing
 import typing as _t
 
+import zmq
+import zmq.asyncio
 
-try:
-    import zmq
-    import zmq.asyncio
-except ImportError:
-    pass
 
 zmq_sockopts_t: _t.TypeAlias = list[tuple[int, int | bytes | str]]
 ZMQ_ADDR: str = r"tcp://127.0.0.1"

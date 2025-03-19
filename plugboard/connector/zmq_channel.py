@@ -7,6 +7,8 @@ import asyncio
 import typing as _t
 
 from that_depends import Provide, inject
+import zmq
+import zmq.asyncio
 
 from plugboard._zmq.zmq_proxy import ZMQ_ADDR, ZMQProxy, create_socket, zmq_sockopts_t
 from plugboard.connector.connector import Connector
@@ -15,12 +17,6 @@ from plugboard.exceptions import ChannelSetupError
 from plugboard.schemas.connector import ConnectorMode
 from plugboard.utils import DI, Settings
 
-
-try:
-    import zmq
-    import zmq.asyncio
-except ImportError:
-    pass
 
 ZMQ_CONFIRM_MSG: str = "__PLUGBOARD_CHAN_CONFIRM_MSG__"
 
