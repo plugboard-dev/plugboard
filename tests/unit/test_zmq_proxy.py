@@ -45,7 +45,7 @@ async def test_start_proxy() -> None:
 
 @pytest.mark.anyio
 async def test_get_proxy_ports(zmq_proxy: ZMQProxy) -> None:
-    """Tests retrieving proxy ports."""
+    """Tests retrieving proxy ports and verifies PUB/SUB connectivity."""
     # Test that ports are returned as integers
     xsub_port, xpub_port = await zmq_proxy.get_proxy_ports()
     assert isinstance(xsub_port, int)
@@ -57,6 +57,38 @@ async def test_get_proxy_ports(zmq_proxy: ZMQProxy) -> None:
     xsub_port2, xpub_port2 = await zmq_proxy.get_proxy_ports()
     assert xsub_port == xsub_port2
     assert xpub_port == xpub_port2
+
+    # Allow time for connections to be established
+    await asyncio.sleep(0.1)
+
+    # Test that PUB and SUB sockets can connect and exchange messages
+    # Create a PUB socket to connect to xsub port
+    pub_socket = create_socket(zmq.PUB, [(zmq.SNDHWM, 100)])
+    pub_socket.connect(f"{ZMQ_ADDR}:{xsub_port}")
+
+    # Create a SUB socket to connect to xpub port
+    topic = b"test_topic"
+    sub_socket = create_socket(zmq.SUB, [(zmq.RCVHWM, 100), (zmq.SUBSCRIBE, topic)])
+    sub_socket.connect(f"{ZMQ_ADDR}:{xpub_port}")
+
+    # Allow time for connections to be established
+    await asyncio.sleep(0.1)
+
+    # Send a test message
+    test_message = b"Hello ZMQ"
+    await pub_socket.send_multipart([topic, test_message])
+
+    # Receive the message with timeout
+    received = await asyncio.wait_for(sub_socket.recv_multipart(), timeout=1.0)
+
+    # Verify the message was received correctly
+    assert len(received) == 2
+    assert received[0] == topic
+    assert received[1] == test_message
+
+    # Clean up
+    pub_socket.close()
+    sub_socket.close()
 
 
 @pytest.mark.anyio
@@ -88,8 +120,12 @@ async def test_add_push_socket(zmq_proxy: ZMQProxy) -> None:
     pub_socket.connect(f"{ZMQ_ADDR}:{xsub_port}")
 
     # Create a pull socket to receive the message
-    pull_socket: zmq.asyncio.Socket = create_socket(zmq.PULL, [(zmq.RCVHWM, 100)])
-    pull_socket.connect(push_addr)
+    pull_socket_1: zmq.asyncio.Socket = create_socket(zmq.PULL, [(zmq.RCVHWM, 100)])
+    pull_socket_1.connect(push_addr)
+
+    # Create a second pull socket to check message can only be received once
+    pull_socket_2: zmq.asyncio.Socket = create_socket(zmq.PULL, [(zmq.RCVHWM, 100)])
+    pull_socket_2.connect(push_addr)
 
     # Allow the connections to be established
     await asyncio.sleep(0.1)
@@ -103,12 +139,17 @@ async def test_add_push_socket(zmq_proxy: ZMQProxy) -> None:
     await asyncio.sleep(0.1)
 
     # Check that the message was received
-    received: list[bytes] = await asyncio.wait_for(pull_socket.recv_multipart(), timeout=1.0)
+    received: list[bytes] = await asyncio.wait_for(pull_socket_1.recv_multipart(), timeout=1.0)
     assert received == [topic_bytes, message]
+
+    # Check that attempting to receive the same message with second socket fails
+    with pytest.raises(asyncio.TimeoutError):
+        await asyncio.wait_for(pull_socket_2.recv_multipart(), timeout=1.0)
 
     # Clean up
     pub_socket.close()
-    pull_socket.close()
+    pull_socket_1.close()
+    pull_socket_2.close()
 
 
 @pytest.mark.anyio
