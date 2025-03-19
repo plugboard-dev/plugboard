@@ -7,7 +7,7 @@ import pytest
 import zmq
 import zmq.asyncio
 
-from plugboard._zmq.zmq_proxy import ZMQ_ADDR, ZMQProxy, create_socket
+from plugboard._zmq.zmq_proxy import ZMQ_ADDR, ZMQProxy, create_socket, zmq_sockopts_t
 
 
 @pytest.fixture
@@ -21,6 +21,100 @@ async def zmq_proxy() -> _t.AsyncGenerator[ZMQProxy, None]:
     finally:
         proxy.terminate()
         await asyncio.sleep(0.1)  # Give the process time to terminate
+
+
+@pytest.mark.anyio
+@pytest.mark.parametrize(
+    "socket_pair,socket_opts,topic",
+    [
+        # PUSH-PULL pair
+        (
+            (zmq.PUSH, zmq.PULL),
+            ([(zmq.SNDHWM, 100)], [(zmq.RCVHWM, 100)]),
+            None,
+        ),
+        # PUB-SUB pair with topic
+        (
+            (zmq.PUB, zmq.SUB),
+            ([(zmq.SNDHWM, 100)], [(zmq.RCVHWM, 100), (zmq.SUBSCRIBE, b"test")]),
+            b"test",
+        ),
+        # DEALER-ROUTER pair
+        (
+            (zmq.DEALER, zmq.ROUTER),
+            ([(zmq.SNDHWM, 100)], [(zmq.RCVHWM, 100)]),
+            None,
+        ),
+        # REQ-REP pair
+        (
+            (zmq.REQ, zmq.REP),
+            ([(zmq.SNDHWM, 100)], [(zmq.RCVHWM, 100)]),
+            None,
+        ),
+    ],
+)
+async def test_create_socket(
+    socket_pair: tuple[int, int],
+    socket_opts: tuple[zmq_sockopts_t, zmq_sockopts_t],
+    topic: _t.Optional[bytes],
+) -> None:
+    """Tests that the create_socket function creates properly connected sockets."""
+    sender_type, receiver_type = socket_pair
+    sender_opts, receiver_opts = socket_opts
+
+    # Create the sockets
+    sender = create_socket(sender_type, sender_opts)
+    port = sender.bind_to_random_port("tcp://*")
+
+    receiver = create_socket(receiver_type, receiver_opts)
+    receiver.connect(f"tcp://127.0.0.1:{port}")
+
+    # Allow time for connections to be established
+    await asyncio.sleep(0.1)
+
+    # Prepare test message
+    test_message = b"Test message"
+
+    if sender_type == zmq.PUB and receiver_type == zmq.SUB:
+        # For PUB-SUB, prepend topic
+        assert topic is not None
+        to_send = [topic, test_message]
+    elif sender_type == zmq.REQ and receiver_type == zmq.REP:
+        # For REQ-REP, we need to send then receive then send back
+        to_send = [test_message]
+        await sender.send_multipart(to_send)
+        received = await asyncio.wait_for(receiver.recv_multipart(), timeout=1.0)
+        assert received == to_send
+        await receiver.send_multipart([b"Reply"])
+        reply = await asyncio.wait_for(sender.recv_multipart(), timeout=1.0)
+        assert reply == [b"Reply"]
+        sender.close()
+        receiver.close()
+        return
+    else:
+        to_send = [test_message]
+
+    # Send the message
+    await sender.send_multipart(to_send)
+
+    # Receive and verify
+    received = await asyncio.wait_for(receiver.recv_multipart(), timeout=1.0)
+
+    if sender_type == zmq.DEALER and receiver_type == zmq.ROUTER:
+        # ROUTER prepends sender identity to the message
+        assert len(received) > len(to_send)
+        assert received[-1] == test_message
+    else:
+        assert len(received) == len(to_send)
+        if sender_type == zmq.PUB:
+            assert received[0] == topic
+            assert received[1] == test_message
+        else:
+            assert received[0] == test_message
+
+    # Clean up
+    sender.close()
+    receiver.close()
 
 
 @pytest.mark.anyio
