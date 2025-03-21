@@ -180,8 +180,8 @@ class _ZMQPipelineConnector(_ZMQConnector):
                     await self._receiver_rep_socket.send(self._sender_addr.encode())
 
         async with asyncio.TaskGroup() as tg:
-            await tg.create_task(_handle_sender_requests())
-            await tg.create_task(_handle_receiver_requests())
+            tg.create_task(_handle_sender_requests())
+            tg.create_task(_handle_receiver_requests())
 
     async def connect_send(self) -> ZMQChannel:
         """Returns a `ZMQChannel` for sending messages."""
