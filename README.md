@@ -48,7 +48,8 @@ Some examples of what you can build with Plugboard include:
 - A **command line interface** for executing models;
 - Built to handle the **data intensive simulation** requirements of industrial process applications;
 - Modern implementation with **Python 3.12 and above** based around **asyncio** with complete type annotation coverage;
-- Built-in integrations for **loading/saving data** from cloud storage and SQL databases.
+- Built-in integrations for **loading/saving data** from cloud storage and SQL databases;
+- **Detailed logging** of component inputs, outputs and state for monitoring and process mining or surrogate modelling use-cases.
 
 ## 🔌 Installation
 
@@ -167,7 +168,6 @@ For more information including a detailed API reference and step-by-step usage e
 
 Plugboard is under active development, with new features in the works:
 
-- Detailed logging of component inputs, outputs and state for monitoring and process mining or surrogate modelling use-cases.
 - Support for strongly typed data messages and validation based on pydantic.
 - Support for different parallelisation patterns such as: single-threaded with coroutines, single-host multi process, or distributed with Ray in Kubernetes.
 - Data exchange between components with popular messaging technologies like RabbitMQ and Google Pub/Sub.
