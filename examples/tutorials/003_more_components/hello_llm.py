@@ -36,8 +36,12 @@ class WeatherAPI(Component):
         )
         try:
             response.raise_for_status()
-        except httpx.HTTPStatusError as e:
-            print(f"Error querying weather API: {e}")
+        except httpx.HTTPStatusError:
+            self._logger.error(
+                "Error querying weather API",
+                code=response.status_code,
+                message=response.text,
+            )
             return
         data = response.json()
         self.temperature = data["current"]["temperature_2m"]
