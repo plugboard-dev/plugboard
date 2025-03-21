@@ -34,6 +34,8 @@ plugins:
 - mike:
     alias_type: symlink
     canonical_version: latest
+- meta
+- tags
 
 markdown_extensions:
 - admonition

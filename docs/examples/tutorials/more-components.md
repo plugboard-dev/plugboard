@@ -1,6 +1,5 @@
 ---
 tags:
-  - tutorial
   - logging
   - llm
   - io

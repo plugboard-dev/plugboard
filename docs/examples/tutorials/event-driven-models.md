@@ -1,6 +1,5 @@
 ---
 tags:
-  - tutorial
   - events
 ---
 So far everything we have built in Plugboard has been a **discrete-time model**. This means that the whole model advances step-wise, i.e. `step` gets called on each [`Component`][plugboard.component.Component], calculating all of their outputs before advancing the simulation on.
