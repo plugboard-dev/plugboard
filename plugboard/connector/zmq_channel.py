@@ -283,6 +283,9 @@ class _ZMQPubsubConnectorProxy(_ZMQConnector):
         self._xsub_port: _t.Optional[int] = None
         self._xpub_port: _t.Optional[int] = None
 
+        self._send_channel: _t.Optional[ZMQChannel] = None
+        self._recv_channel: _t.Optional[ZMQChannel] = None
+
     @inject
     async def _get_proxy_ports(
         self, zmq_proxy: ZMQProxy = Provide[DI.zmq_proxy]
@@ -295,14 +298,21 @@ class _ZMQPubsubConnectorProxy(_ZMQConnector):
 
     async def connect_send(self) -> ZMQChannel:
         """Returns a `ZMQChannel` for sending pubsub messages."""
+        if self._send_channel is not None:
+            return self._send_channel
         await self._get_proxy_ports()
         send_socket = create_socket(zmq.PUB, [(zmq.SNDHWM, self._maxsize)])
         send_socket.connect(f"{self._zmq_address}:{self._xsub_port}")
         await asyncio.sleep(0.1)  # Ensure connections established before first send. Better way?
-        return ZMQChannel(send_socket=send_socket, topic=self._topic, maxsize=self._maxsize)
+        self._send_channel = ZMQChannel(
+            send_socket=send_socket, topic=self._topic, maxsize=self._maxsize
+        )
+        return self._send_channel
 
     async def connect_recv(self) -> ZMQChannel:
         """Returns a `ZMQChannel` for receiving pubsub messages."""
+        if self._recv_channel is not None:
+            return self._recv_channel
         await self._get_proxy_ports()
         socket_opts: zmq_sockopts_t = [
             (zmq.RCVHWM, self._maxsize),
@@ -311,7 +321,10 @@ class _ZMQPubsubConnectorProxy(_ZMQConnector):
         recv_socket = create_socket(zmq.SUB, socket_opts)
         recv_socket.connect(f"{self._zmq_address}:{self._xpub_port}")
         await asyncio.sleep(0.1)  # Ensure connections established before first send. Better way?
-        return ZMQChannel(recv_socket=recv_socket, topic=self._topic, maxsize=self._maxsize)
+        self._recv_channel = ZMQChannel(
+            recv_socket=recv_socket, topic=self._topic, maxsize=self._maxsize
+        )
+        return self._recv_channel
 
 
 class _ZMQPipelineConnectorProxy(_ZMQPubsubConnectorProxy):
@@ -352,6 +365,8 @@ class _ZMQPipelineConnectorProxy(_ZMQPubsubConnectorProxy):
 
     async def connect_recv(self) -> ZMQChannel:
         """Returns a `ZMQChannel` for receiving messages."""
+        if self._recv_channel is not None:
+            return self._recv_channel
         await self._get_proxy_ports()
         # FIXME : The _push_address will only get set on the driver process which instantiates
         #       : the Connector. This will not be visible in worker processes.
@@ -359,7 +374,10 @@ class _ZMQPipelineConnectorProxy(_ZMQPubsubConnectorProxy):
         recv_socket = create_socket(zmq.PULL, [(zmq.RCVHWM, self._maxsize)])
         recv_socket.connect(self._push_address)
         await asyncio.sleep(0.1)  # Ensure connections established before first send. Better way?
-        return ZMQChannel(recv_socket=recv_socket, topic=self._topic, maxsize=self._maxsize)
+        self._recv_channel = ZMQChannel(
+            recv_socket=recv_socket, topic=self._topic, maxsize=self._maxsize
+        )
+        return self._recv_channel
 
 
 class ZMQConnector(_ZMQConnector):
