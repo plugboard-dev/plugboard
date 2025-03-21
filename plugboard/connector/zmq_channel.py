@@ -353,6 +353,8 @@ class _ZMQPipelineConnectorProxy(_ZMQPubsubConnectorProxy):
     async def connect_recv(self) -> ZMQChannel:
         """Returns a `ZMQChannel` for receiving messages."""
         await self._get_proxy_ports()
+        # FIXME : The _push_address will only get set on the driver process which instantiates
+        #       : the Connector. This will not be visible in worker processes.
         self._push_address = await self._wait_for_push_address()
         recv_socket = create_socket(zmq.PULL, [(zmq.RCVHWM, self._maxsize)])
         recv_socket.connect(self._push_address)
