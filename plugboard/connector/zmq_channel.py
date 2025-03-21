@@ -161,8 +161,7 @@ class _ZMQPipelineConnector(_ZMQConnector):
         async def _handle_sender_requests() -> None:
             async with self._sender_req_lock:
                 sender_request = await self._sender_rep_socket.recv_json()
-                sender_port = sender_request.get("sender_port")
-                if sender_port is None:
+                if (sender_port := sender_request.get("sender_port")) is None:
                     await self._sender_rep_socket.send_json({"success": False})
                 else:
                     self._sender_port = int(sender_port)
