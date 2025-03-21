@@ -290,6 +290,8 @@ class _ZMQPubsubConnectorProxy(_ZMQConnector):
     async def _get_proxy_ports(
         self, zmq_proxy: ZMQProxy = Provide[DI.zmq_proxy]
     ) -> tuple[int, int]:
+        # TODO : Will this work as expected in the multiprocess case, or will each process
+        #      : create a new `ZMQProxy` from the DI container? Ensure test coverage for this.
         if self._xsub_port is not None and self._xpub_port is not None:
             return self._xsub_port, self._xpub_port
         await zmq_proxy.start_proxy(zmq_address=self._zmq_address, maxsize=self._maxsize)
