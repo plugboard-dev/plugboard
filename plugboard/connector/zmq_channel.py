@@ -132,7 +132,7 @@ class _ZMQPipelineConnector(_ZMQConnector):
         self._sender_rep_socket_port = self._sender_rep_socket.bind_to_random_port("tcp://*")
         self._sender_rep_socket_addr = f"{self._zmq_address}:{self._sender_rep_socket_port}"
         self._sender_req_lock = asyncio.Lock()
-        self._sender_port: _t.Optional[int] = None
+        self._sender_addr: _t.Optional[str] = None
 
         # Socket to send sender address to receiver
         self._receiver_rep_socket = create_socket(zmq.REP, [])
@@ -161,10 +161,10 @@ class _ZMQPipelineConnector(_ZMQConnector):
         async def _handle_sender_requests() -> None:
             async with self._sender_req_lock:
                 sender_request = await self._sender_rep_socket.recv_json()
-                if (sender_port := sender_request.get("sender_port")) is None:
+                if (sender_addr := sender_request.get("sender_address")) is None:
                     await self._sender_rep_socket.send_json({"success": False})
                 else:
-                    self._sender_port = int(sender_port)
+                    self._sender_addr = sender_addr
                 await self._sender_rep_socket.send_json({"success": True})
 
                 while True:
@@ -172,12 +172,12 @@ class _ZMQPipelineConnector(_ZMQConnector):
                     await self._sender_rep_socket.send_json({"success": False})
 
         async def _handle_receiver_requests() -> None:
-            while self._sender_port is None:
+            while self._sender_addr is None:
                 await asyncio.sleep(0.5)
             while True:
                 async with self._receiver_req_lock:
                     await self._receiver_rep_socket.recv()
-                    await self._receiver_rep_socket.send(str(self._sender_port).encode())
+                    await self._receiver_rep_socket.send(self._sender_addr.encode())
 
         async with asyncio.TaskGroup() as tg:
             await tg.create_task(_handle_sender_requests())
@@ -188,12 +188,14 @@ class _ZMQPipelineConnector(_ZMQConnector):
         if self._send_channel is not None:
             return self._send_channel
         send_socket = create_socket(zmq.PUSH, [(zmq.SNDHWM, self._maxsize)])
-        port = send_socket.bind_to_random_port("tcp://*")
+        send_port = send_socket.bind_to_random_port("tcp://*")
+        send_addr = f"{self._zmq_address}:{send_port}"
 
         sender_req_socket = create_socket(zmq.REQ, [])
         sender_req_socket.connect(self._sender_rep_socket_addr)
-        await sender_req_socket.send_json({"sender_port": port})
+        await sender_req_socket.send_json({"sender_address": send_addr})
         resp = await sender_req_socket.recv_json()
+        sender_req_socket.close()
         if resp.get("success", False) is not True:
             raise RuntimeError("Failed to setup send socket")
 
@@ -210,9 +212,10 @@ class _ZMQPipelineConnector(_ZMQConnector):
         receiver_req_socket = create_socket(zmq.REQ, [])
         receiver_req_socket.connect(self._receiver_rep_socket_addr)
         await receiver_req_socket.send(b"")
-        port = int(await receiver_req_socket.recv())
+        send_addr = await receiver_req_socket.recv()
+        receiver_req_socket.close()
 
-        recv_socket.connect(f"{self._zmq_address}:{port}")
+        recv_socket.connect(send_addr.decode())
         await asyncio.sleep(0.1)  # Ensure connections established before first send. Better way?
         self._recv_channel = ZMQChannel(recv_socket=recv_socket, maxsize=self._maxsize)
         return self._recv_channel
