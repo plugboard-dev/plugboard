@@ -161,7 +161,7 @@ plugboard process run my-model.yaml
 
 ## 📖 Documentation
 
-For more information including a detailed API reference and step-by-step usage examples, refer to the [documentation site](https://docs.plugboard.dev). We recommend diving into the [tutorials](https://docs.plugboard.dev/examples/tutorials/hello-world/) for a step-by-step to getting started.
+For more information including a detailed API reference and step-by-step usage examples, refer to the [documentation site](https://docs.plugboard.dev). We recommend diving into the [tutorials](https://docs.plugboard.dev/latest/examples/tutorials/hello-world/) for a step-by-step to getting started.
 
 ## 🐾 Roadmap
 
@@ -175,7 +175,7 @@ Plugboard is under active development, with new features in the works:
 
 ## 👋 Contributions
 
-Contributions are welcomed and warmly received! For bug fixes and smaller feature requests feel free to open an issue on this repo. For any larger changes please get in touch with us to discuss first. More information for developers can be found in [the contributing section](https://docs.plugboard.dev/contributing/) of the docs.
+Contributions are welcomed and warmly received! For bug fixes and smaller feature requests feel free to open an issue on this repo. For any larger changes please get in touch with us to discuss first. More information for developers can be found in [the contributing section](https://docs.plugboard.dev/latest/contributing/) of the docs.
 
 ## ⚖️ Licence
 
