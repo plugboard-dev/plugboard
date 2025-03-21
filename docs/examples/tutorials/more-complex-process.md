@@ -1,3 +1,7 @@
+---
+tags:
+  - tutorial
+---
 In the last example our [`Process`][plugboard.process.Process] consisted of just two components. Usually we use many more components, allowing you to break down your model into separate parts that you can build/test individually. Plugboard allows for **branching** and **looping** connections between your components.
 
 In this tutorial we'll also demonstrate how to make components reusable between different processes.

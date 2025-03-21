@@ -1,3 +1,10 @@
+---
+tags:
+  - tutorial
+  - logging
+  - llm
+  - io
+---
 Plugboard's [`Component`][plugboard.component.Component] objects can run anything you can code in Python. This includes:
 
 * Using your own or third-party Python packages;

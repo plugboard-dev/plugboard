@@ -1,3 +1,7 @@
+---
+tags:
+  - tutorial
+---
 Plugboard is built to help you with two things: **defining process models**, and **executing those models**. There are two main ways to interact with Plugboard: via the Python API; or, via the CLI using model definitions saved in yaml format. In this introductory tutorial we'll do both, before building up to more complex models in later tutorials.
 
 ## Building models with the Python API
