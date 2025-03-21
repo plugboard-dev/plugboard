@@ -1,0 +1,38 @@
+plugboard:
+  process:
+    args:
+      components:
+      - type: hello_events.Random
+        args:
+          name: "random-generator"
+          iters: 50
+      - type: hello_events.FindHighLowValues
+        args:
+          name: "find-high-low"
+          low_limit: 0.2
+          high_limit: 0.8
+      - type: hello_events.CollectLow
+        args:
+          name: "collect-low"
+      - type: hello_events.CollectHigh
+        args:
+          name: "collect-high"
+      - type: plugboard.library.file_io.FileWriter
+        args:
+          name: "save-low"
+          path: "low.csv"
+          field_names:
+            - value
+      - type: plugboard.library.file_io.FileWriter
+        args:
+          name: "save-high"
+          path: "high.csv"
+          field_names:
+            - value
+      connectors:
+      - source: "random-generator.value"
+        target: "find-high-low.value"
+      - source: "collect-low.value"
+        target: "save-low.value"
+      - source: "collect-high.value"
+        target: "save-high.value"

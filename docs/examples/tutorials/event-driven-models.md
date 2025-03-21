@@ -73,4 +73,4 @@ Now we can create a [`Process`][plugboard.process.Process] from all these compon
 1.  These connectors are for the normal, non-event driven parts of the model and connect [`Component`][plugboard.component.Component]` inputs and outputs.
 2.  These lines will set up connectors for the events in the model.
 
-Take a look at the `high.csv` and `low.csv` files: the first few rows will usually be empty, and then as soon as high or low values are identified they will start to appear in the CSVs.
+Take a look at the `high.csv` and `low.csv` files: the first few rows will usually be empty, and then as soon as high or low values are identified they will start to appear in the CSVs. As usual, you can run this model from the CLI using `plugboard process run model.yaml`.
