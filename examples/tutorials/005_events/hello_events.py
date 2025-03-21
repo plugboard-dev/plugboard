@@ -59,9 +59,9 @@ class Random(Component):
 
 # --8<-- [start:event-publisher]
 class FindHighLowValues(Component):
-    """Raises an event on high or low values."""
+    """Publishes an event on high or low values."""
 
-    io = IOController(inputs=["value"], output_events=[LowEvent, HighEvent])
+    io = IOController(inputs=["value"], output_events=[LowEvent, HighEvent])  # (1)!
 
     def __init__(
         self,
@@ -75,7 +75,7 @@ class FindHighLowValues(Component):
 
     async def step(self) -> None:
         if self.value >= self.high_limit:
-            self.io.queue_event(  # (1)!
+            self.io.queue_event(  # (2)!
                 HighEvent(
                     source=self.name, data=ExtremeValue(value=self.value, extreme_type="high")
                 )
@@ -91,7 +91,7 @@ class FindHighLowValues(Component):
 class CollectHigh(Component):
     """Collects values from high events."""
 
-    io = IOController(input_events=[HighEvent], outputs=["value"])
+    io = IOController(input_events=[HighEvent], outputs=["value"])  # (1)!
 
     def __init__(self, **kwargs: _t.Unpack[ComponentArgsDict]) -> None:
         super().__init__(**kwargs)
@@ -100,7 +100,7 @@ class CollectHigh(Component):
     async def step(self) -> None:
         self.value = self.latest_event.value if self.latest_event else None
 
-    @HighEvent.handler  # (1)!
+    @HighEvent.handler  # (2)!
     async def handle_event(self, event: HighEvent) -> None:
         self.latest_event = event.data
 
@@ -117,7 +117,7 @@ class CollectLow(Component):
     async def step(self) -> None:
         self.value = self.latest_event.value if self.latest_event else None
 
-    @LowEvent.handler
+    @LowEvent.handler  # (3)!
     async def handle_event(self, event: LowEvent) -> None:
         self.latest_event = event.data
 # --8<-- [end:event-consumers]
