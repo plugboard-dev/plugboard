@@ -86,18 +86,18 @@ class ZMQProxy(multiprocessing.Process):
         self._connect_socket_req_socket()
 
     @property
-    def xsub_port(self) -> int:
-        """Returns the XSUB port for the proxy."""
+    def xsub_addr(self) -> str:
+        """Returns the XSUB address for the proxy."""
         if not self._proxy_started or self._xsub_port is None:
             raise RuntimeError("ZMQ XSUB port is not set.")
-        return self._xsub_port
+        return f"{self._zmq_address}:{self._xsub_port}"
 
     @property
-    def xpub_port(self) -> int:
-        """Returns the XPUB port for the proxy."""
+    def xpub_addr(self) -> str:
+        """Returns the XPUB address for the proxy."""
         if not self._proxy_started or self._xpub_port is None:
             raise RuntimeError("ZMQ XPUB port is not set.")
-        return self._xpub_port
+        return f"{self._zmq_address}:{self._xpub_port}"
 
     def __getstate__(self) -> dict:
         state = self.__dict__.copy()
