@@ -278,8 +278,8 @@ class _ZMQPubsubConnectorProxy(_ZMQConnector):
     ) -> None:
         super().__init__(*args, **kwargs)
         self._topic = str(self.spec.source)
-        self._xsub_port: _t.Optional[int] = zmq_proxy._xsub_port
-        self._xpub_port: _t.Optional[int] = zmq_proxy._xpub_port
+        self._xsub_port: int = zmq_proxy.xsub_port
+        self._xpub_port: int = zmq_proxy.xpub_port
 
         self._send_channel: _t.Optional[ZMQChannel] = None
         self._recv_channel: _t.Optional[ZMQChannel] = None
