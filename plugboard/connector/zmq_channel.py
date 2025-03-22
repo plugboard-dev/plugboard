@@ -278,8 +278,8 @@ class _ZMQPubsubConnectorProxy(_ZMQConnector):
     ) -> None:
         super().__init__(*args, **kwargs)
         self._topic = str(self.spec.source)
-        self._xsub_port: int = zmq_proxy.xsub_port
-        self._xpub_port: int = zmq_proxy.xpub_port
+        self._xsub_addr: str = zmq_proxy.xsub_addr
+        self._xpub_addr: str = zmq_proxy.xpub_addr
 
         self._send_channel: _t.Optional[ZMQChannel] = None
         self._recv_channel: _t.Optional[ZMQChannel] = None
@@ -289,7 +289,7 @@ class _ZMQPubsubConnectorProxy(_ZMQConnector):
         if self._send_channel is not None:
             return self._send_channel
         send_socket = create_socket(zmq.PUB, [(zmq.SNDHWM, self._maxsize)])
-        send_socket.connect(f"{self._zmq_address}:{self._xsub_port}")
+        send_socket.connect(self._xsub_addr)
         await asyncio.sleep(0.1)  # Ensure connections established before first send. Better way?
         self._send_channel = ZMQChannel(
             send_socket=send_socket, topic=self._topic, maxsize=self._maxsize
@@ -305,7 +305,7 @@ class _ZMQPubsubConnectorProxy(_ZMQConnector):
             (zmq.SUBSCRIBE, self._topic.encode("utf8")),
         ]
         recv_socket = create_socket(zmq.SUB, socket_opts)
-        recv_socket.connect(f"{self._zmq_address}:{self._xpub_port}")
+        recv_socket.connect(self._xpub_addr)
         await asyncio.sleep(0.1)  # Ensure connections established before first send. Better way?
         self._recv_channel = ZMQChannel(
             recv_socket=recv_socket, topic=self._topic, maxsize=self._maxsize
