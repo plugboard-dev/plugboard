@@ -64,7 +64,7 @@ Support for parallelisation can be installed using `plugboard[ray]`.
 
 ## 🚀 Usage
 
-Plugboard is built to help you with two things: defining process models, and executing those models. There are two main ways to interact with plugboard: via the Python API; or, via the CLI using model definitions saved in yaml or json format.
+Plugboard is built to help you with two things: defining process models, and executing those models. There are two main ways to interact with plugboard: via the Python API; or, via the CLI using model definitions saved in yaml format.
 
 ### Building models with the Python API
 
@@ -135,7 +135,7 @@ graph LR;
 
 ### Executing pre-defined models on the CLI
 
-In many cases, we want to define components once, with suitable parameters, and then use them repeatedly in different simulations. Plugboard enables this workflow with model specification files in yaml or json format. Once the components have been defined, the simple model above can be represented with a yaml file like so.
+In many cases, we want to define components once, with suitable parameters, and then use them repeatedly in different simulations. Plugboard enables this workflow with model specification files in yaml format. Once the components have been defined, the simple model above can be represented as follows.
 ```yaml
 # my-model.yaml
 plugboard:
