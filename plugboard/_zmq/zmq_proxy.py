@@ -58,17 +58,17 @@ def _create_sync_socket(
     return socket
 
 
-class ZMQProxy(multiprocessing.Process):
+class ZMQProxy:
     """`ZMQProxy` proxies ZMQ socket connections with libzmq in a separate process.
 
     This class should be created as a singleton and used to proxy all ZMQ pubsub connections.
     """
 
     def __init__(self, zmq_address: str = ZMQ_ADDR, maxsize: int = 2000) -> None:
-        super().__init__()
         self._zmq_address: str = zmq_address
         self._zmq_proxy_lock: asyncio.Lock = asyncio.Lock()
         self._maxsize: int = maxsize
+        self._process: _t.Optional[multiprocessing.Process] = None
 
         # Socket for receiving xsub and xpub ports from the subprocess
         self._pull_socket: zmq.Socket = _create_sync_socket(zmq.PULL, [(zmq.RCVHWM, 1)])
@@ -102,18 +102,7 @@ class ZMQProxy(multiprocessing.Process):
     def __getstate__(self) -> dict:
         state = self.__dict__.copy()
         # Process-specific attributes
-        process_attrs = (
-            "_authkey",
-            "_parent_pid",
-            "_popen",
-            "_sentinel",
-            "_target",
-            "_args",
-            "_kwargs",
-            "_name",
-            "_daemonic",
-            "_config",
-        )
+        process_attrs = ("_process",)
         # Socket and async objects
         non_serializable = (
             "_pull_socket",
@@ -136,6 +125,7 @@ class ZMQProxy(multiprocessing.Process):
     def __setstate__(self, state: dict) -> None:
         """Restore object state after unpickling in child process."""
         self.__dict__.update(state)
+        self._process = None
         self._connect_socket_req_socket()
 
     def _start_proxy(
@@ -149,8 +139,20 @@ class ZMQProxy(multiprocessing.Process):
         self._zmq_address = zmq_address or self._zmq_address
         self._maxsize = maxsize or self._maxsize
         self._pull_socket_address = f"{self._zmq_address}:{self._pull_socket_port}"
-        self.start()
+
+        # Start a new process to run the proxy
+        self._process = multiprocessing.Process(target=self._run_process)
+        self._process.daemon = True
+        self._process.start()
+
         self._proxy_started = True
+
+    def _run_process(self) -> None:
+        """Entry point for the child process."""
+        try:
+            asyncio.run(self._run())
+        finally:
+            self._close()
 
     def _get_proxy_ports(self) -> tuple[int, int, int]:
         """Returns tuple of form (xsub port, xpub port, socket rep port) for the ZMQ proxy."""
@@ -183,13 +185,6 @@ class ZMQProxy(multiprocessing.Process):
             raise RuntimeError(f"Failed to create push socket: {response['error']}")
 
         return response["push_address"]
-
-    def run(self) -> None:
-        """Multiprocessing entrypoint to run ZMQ proxy."""
-        try:
-            asyncio.run(self._run())
-        finally:
-            self._close()
 
     async def _run(self) -> None:
         """Async multiprocessing entrypoint to run ZMQ proxy."""
@@ -288,3 +283,15 @@ class ZMQProxy(multiprocessing.Process):
         self._xpub_socket.close(linger=0)
         self._push_socket.close(linger=0)
         self._socket_rep_socket.close(linger=0)
+
+    def terminate(self) -> None:
+        """Terminate the child process."""
+        if self._process is not None and self._process.is_alive():
+            self._process.terminate()
+
+    def join(self, timeout: _t.Optional[float] = None) -> None:
+        """Join the child process."""
+        if self._process is not None:
+            self._process.join(timeout=timeout)
+            if not self._process.is_alive():
+                self._process = None
