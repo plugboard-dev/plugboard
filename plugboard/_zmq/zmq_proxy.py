@@ -101,14 +101,33 @@ class ZMQProxy(multiprocessing.Process):
 
     def __getstate__(self) -> dict:
         state = self.__dict__.copy()
-        rm_keys = (
+        # Process-specific attributes
+        process_attrs = (
+            "_authkey",
+            "_parent_pid",
+            "_popen",
+            "_sentinel",
+            "_target",
+            "_args",
+            "_kwargs",
+            "_name",
+            "_daemonic",
+            "_config",
+        )
+        # Socket and async objects
+        non_serializable = (
             "_pull_socket",
             "_zmq_proxy_lock",
             "_push_poller",
             "_push_sockets",
             "_socket_req_socket",
             "_socket_req_lock",
+            "_xsub_socket",
+            "_xpub_socket",
+            "_socket_rep_socket",
         )
+        # Remove all non-serializable attributes
+        rm_keys = process_attrs + non_serializable
         for key in rm_keys:
             if key in state:
                 del state[key]
