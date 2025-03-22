@@ -71,20 +71,19 @@ class ZMQProxy(multiprocessing.Process):
         self._maxsize: int = maxsize
 
         # Socket for receiving xsub and xpub ports from the subprocess
-        self._pull_socket: zmq.asyncio.Socket = create_socket(zmq.PULL, [(zmq.RCVHWM, 1)])
+        self._pull_socket: zmq.Socket = _create_sync_socket(zmq.PULL, [(zmq.RCVHWM, 1)])
         self._pull_socket_port: int = self._pull_socket.bind_to_random_port("tcp://*")
         self._pull_socket_address: str = f"{self._zmq_address}:{self._pull_socket_port}"
 
-        # Socket for requesting push socket creation in the subprocess
-        self._socket_req_socket: zmq.asyncio.Socket = create_socket(zmq.REQ, [])
-        self._socket_req_port: int = self._socket_req_socket.bind_to_random_port("tcp://*")
-        self._socket_req_address: str = f"{self._zmq_address}:{self._socket_req_port}"
-        self._socket_req_lock: asyncio.Lock = asyncio.Lock()
-
         self._xsub_port: _t.Optional[int] = None
         self._xpub_port: _t.Optional[int] = None
+        self._socket_rep_port: _t.Optional[int] = None
 
         self._proxy_started: bool = False
+
+        self._start_proxy()
+        self._get_proxy_ports()
+        self._connect_socket_req_socket()
 
     def __getstate__(self) -> dict:
         state = self.__dict__.copy()
@@ -101,32 +100,42 @@ class ZMQProxy(multiprocessing.Process):
                 del state[key]
         return state
 
-    async def start_proxy(
+    def __setstate__(self, state: dict) -> None:
+        """Restore object state after unpickling in child process."""
+        self.__dict__.update(state)
+        self._connect_socket_req_socket()
+
+    def _connect_socket_req_socket(self) -> None:
+        """Connects the REQ socket to the REP socket in the subprocess."""
+        if self._socket_rep_port is None:
+            raise RuntimeError("ZMQ proxy socket REP port not set.")
+        self._socket_req_socket: zmq.asyncio.Socket = create_socket(zmq.REQ, [])
+        socket_rep_socket_address: str = f"{self._zmq_address}:{self._socket_rep_port}"
+        self._socket_req_socket.connect(socket_rep_socket_address)
+        self._socket_req_lock: asyncio.Lock = asyncio.Lock()
+
+    def _start_proxy(
         self, zmq_address: _t.Optional[str] = None, maxsize: _t.Optional[int] = None
     ) -> None:
         """Starts the ZMQ proxy with the given address and maxsize."""
-        async with self._zmq_proxy_lock:
-            if self._proxy_started:
-                if zmq_address is not None and zmq_address != self._zmq_address:
-                    raise RuntimeError("ZMQ proxy already started with different address.")
-                return
-            self._zmq_address = zmq_address or self._zmq_address
-            self._maxsize = maxsize or self._maxsize
-            self._pull_socket_address = f"{self._zmq_address}:{self._pull_socket_port}"
-            self.start()
-            self._proxy_started = True
-            # Small delay to allow the proxy to start and connect to the sockets
-            await asyncio.sleep(0.1)
+        if self._proxy_started:
+            if zmq_address is not None and zmq_address != self._zmq_address:
+                raise RuntimeError("ZMQ proxy already started with different address.")
+            return
+        self._zmq_address = zmq_address or self._zmq_address
+        self._maxsize = maxsize or self._maxsize
+        self._pull_socket_address = f"{self._zmq_address}:{self._pull_socket_port}"
+        self.start()
+        self._proxy_started = True
 
-    async def get_proxy_ports(self) -> tuple[int, int]:
-        """Returns tuple of form (xsub port, xpub port) for the ZMQ proxy."""
+    def _get_proxy_ports(self) -> tuple[int, int, int]:
+        """Returns tuple of form (xsub port, xpub port, socket rep port) for the ZMQ proxy."""
         if not self._proxy_started:
             raise RuntimeError("ZMQ proxy not started.")
-        async with self._zmq_proxy_lock:
-            if self._xsub_port is None or self._xpub_port is None:
-                ports_msg = await self._pull_socket.recv_multipart()
-                self._xsub_port, self._xpub_port = map(int, ports_msg)
-            return self._xsub_port, self._xpub_port
+        if self._xsub_port is None or self._xpub_port is None or self._socket_rep_port is None:
+            ports_msg = self._pull_socket.recv_multipart()
+            self._xsub_port, self._xpub_port, self._socket_rep_port = map(int, ports_msg)
+        return self._xsub_port, self._xpub_port, self._socket_rep_port
 
     async def add_push_socket(self, topic: str, maxsize: int = 2000) -> str:
         """Adds a push socket for the given pubsub topic and returns the address."""
@@ -156,6 +165,13 @@ class ZMQProxy(multiprocessing.Process):
 
         self._create_proxy_sockets()
 
+        ports_msg = [
+            str(self._xsub_port).encode(),
+            str(self._xpub_port).encode(),
+            str(self._socket_rep_port).encode(),
+        ]
+        self._push_socket.send_multipart(ports_msg)
+
         async with asyncio.TaskGroup() as tg:
             tg.create_task(asyncio.to_thread(self._run_pubsub_proxy))
             tg.create_task(asyncio.to_thread(self._handle_create_push_socket_requests))
@@ -163,11 +179,6 @@ class ZMQProxy(multiprocessing.Process):
 
     def _run_pubsub_proxy(self) -> None:
         """Runs the ZMQ proxy for pubsub connections."""
-        ports_msg = [
-            str(self._xsub_port).encode(),
-            str(self._xpub_port).encode(),
-        ]
-        self._push_socket.send_multipart(ports_msg)
         zmq.proxy(self._xsub_socket, self._xpub_socket)
 
     def _create_proxy_sockets(self) -> None:
@@ -185,7 +196,7 @@ class ZMQProxy(multiprocessing.Process):
 
         # Create a REP socket to receive PUSH socket creation requests
         self._socket_rep_socket = _create_sync_socket(zmq.REP, [])
-        self._socket_rep_socket.connect(self._socket_req_address)
+        self._socket_rep_port = self._xpub_socket.bind_to_random_port("tcp://*")
 
     def _handle_create_push_socket_requests(self) -> None:
         """Handles requests to create sockets in the subprocess."""
