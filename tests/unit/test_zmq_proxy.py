@@ -14,7 +14,7 @@ from plugboard._zmq.zmq_proxy import ZMQ_ADDR, ZMQProxy, create_socket, zmq_sock
 async def zmq_proxy() -> _t.AsyncGenerator[ZMQProxy, None]:
     """Fixture for ZMQProxy instance."""
     proxy = ZMQProxy()
-    await proxy.start_proxy()
+    # No need to explicitly start_proxy as it's done in __init__
 
     try:
         yield proxy
@@ -120,18 +120,18 @@ async def test_create_socket(
 @pytest.mark.anyio
 async def test_start_proxy() -> None:
     """Tests that the ZMQProxy can be started."""
+    # Creating ZMQProxy automatically starts it
     proxy = ZMQProxy()
     try:
-        # Start the proxy
-        await proxy.start_proxy()
+        # Verify the proxy is started by checking a property that requires a started proxy
         assert proxy._proxy_started is True
 
-        # Test that starting it again doesn't raise an error
-        await proxy.start_proxy()
+        # Test that calling _start_proxy again doesn't raise an error
+        proxy._start_proxy()
 
-        # Test that starting with a different address raises an error
+        # Test that calling _start_proxy with a different address raises an error
         with pytest.raises(RuntimeError, match="ZMQ proxy already started with different address"):
-            await proxy.start_proxy(zmq_address="tcp://localhost")
+            proxy._start_proxy(zmq_address="tcp://localhost")
     finally:
         proxy.terminate()
         await asyncio.sleep(0.1)
@@ -141,16 +141,22 @@ async def test_start_proxy() -> None:
 async def test_get_proxy_ports(zmq_proxy: ZMQProxy) -> None:
     """Tests retrieving proxy ports and verifies PUB/SUB connectivity."""
     # Test that ports are returned as integers
-    xsub_port, xpub_port = await zmq_proxy.get_proxy_ports()
+    # Using xsub_addr and xpub_addr properties instead of get_proxy_ports method
+    xsub_addr = zmq_proxy.xsub_addr
+    xpub_addr = zmq_proxy.xpub_addr
+
+    # Extract ports from addresses
+    xsub_port = int(xsub_addr.split(":")[-1])
+    xpub_port = int(xpub_addr.split(":")[-1])
+
     assert isinstance(xsub_port, int)
     assert isinstance(xpub_port, int)
     assert xsub_port > 0
     assert xpub_port > 0
 
-    # Test that the ports are cached
-    xsub_port2, xpub_port2 = await zmq_proxy.get_proxy_ports()
-    assert xsub_port == xsub_port2
-    assert xpub_port == xpub_port2
+    # Test that the address properties return consistent values
+    assert zmq_proxy.xsub_addr == xsub_addr
+    assert zmq_proxy.xpub_addr == xpub_addr
 
     # Allow time for connections to be established
     await asyncio.sleep(0.1)
@@ -158,12 +164,12 @@ async def test_get_proxy_ports(zmq_proxy: ZMQProxy) -> None:
     # Test that PUB and SUB sockets can connect and exchange messages
     # Create a PUB socket to connect to xsub port
     pub_socket = create_socket(zmq.PUB, [(zmq.SNDHWM, 100)])
-    pub_socket.connect(f"{ZMQ_ADDR}:{xsub_port}")
+    pub_socket.connect(xsub_addr)
 
     # Create a SUB socket to connect to xpub port
     topic = b"test_topic"
     sub_socket = create_socket(zmq.SUB, [(zmq.RCVHWM, 100), (zmq.SUBSCRIBE, topic)])
-    sub_socket.connect(f"{ZMQ_ADDR}:{xpub_port}")
+    sub_socket.connect(xpub_addr)
 
     # Allow time for connections to be established
     await asyncio.sleep(0.1)
@@ -188,9 +194,19 @@ async def test_get_proxy_ports(zmq_proxy: ZMQProxy) -> None:
 @pytest.mark.anyio
 async def test_get_proxy_ports_not_started() -> None:
     """Tests retrieving proxy ports when proxy is not started."""
+    # Create a proxy but interfere with its initialization
     proxy = ZMQProxy()
-    with pytest.raises(RuntimeError, match="ZMQ proxy not started"):
-        await proxy.get_proxy_ports()
+    proxy._proxy_started = False  # Force the proxy to appear not started
+
+    with pytest.raises(RuntimeError, match="ZMQ .* not set"):
+        # Try to access properties that require a started proxy
+        _ = proxy.xsub_addr
+
+    with pytest.raises(RuntimeError, match="ZMQ .* not set"):
+        _ = proxy.xpub_addr
+
+    # Clean up
+    proxy.terminate()
 
 
 @pytest.mark.anyio
@@ -198,20 +214,14 @@ async def test_add_push_socket(zmq_proxy: ZMQProxy) -> None:
     """Tests adding a push socket for a topic."""
     topic: str = "test_topic"
 
-    # Get the ports first to ensure the proxy is initialized
-    await zmq_proxy.get_proxy_ports()
-
     # Test creating a push socket
     push_addr: str = await zmq_proxy.add_push_socket(topic)
     assert isinstance(push_addr, str)
     assert push_addr.startswith(ZMQ_ADDR)
 
     # Create a subscriber to send a message through the proxy
-    xsub_port, _ = await zmq_proxy.get_proxy_ports()
-
-    # Create a publisher socket
     pub_socket: zmq.asyncio.Socket = create_socket(zmq.PUB, [(zmq.SNDHWM, 100)])
-    pub_socket.connect(f"{ZMQ_ADDR}:{xsub_port}")
+    pub_socket.connect(zmq_proxy.xsub_addr)
 
     # Create a pull socket to receive the message
     pull_socket_1: zmq.asyncio.Socket = create_socket(zmq.PULL, [(zmq.RCVHWM, 100)])
@@ -250,16 +260,18 @@ async def test_add_push_socket(zmq_proxy: ZMQProxy) -> None:
 async def test_add_push_socket_not_started() -> None:
     """Tests adding a push socket when proxy is not started."""
     proxy = ZMQProxy()
+    proxy._proxy_started = False  # Force the proxy to appear not started
+
     with pytest.raises(RuntimeError, match="ZMQ proxy .* not set"):
         await proxy.add_push_socket("test_topic")
+
+    # Clean up
+    proxy.terminate()
 
 
 @pytest.mark.anyio
 async def test_add_multiple_push_sockets(zmq_proxy: ZMQProxy) -> None:
     """Tests adding multiple push sockets for different topics."""
-    # Get the ports first to ensure the proxy is initialized
-    await zmq_proxy.get_proxy_ports()
-
     # Create multiple push sockets for different topics
     topic1: str = "test_topic_1"
     topic2: str = "test_topic_2"
@@ -271,11 +283,9 @@ async def test_add_multiple_push_sockets(zmq_proxy: ZMQProxy) -> None:
     assert push_addr1 != push_addr2
 
     # Test that both sockets work correctly
-    xsub_port, _ = await zmq_proxy.get_proxy_ports()
-
     # Create a publisher socket
     pub_socket: zmq.asyncio.Socket = create_socket(zmq.PUB, [(zmq.SNDHWM, 100)])
-    pub_socket.connect(f"{ZMQ_ADDR}:{xsub_port}")
+    pub_socket.connect(zmq_proxy.xsub_addr)
 
     # Create pull sockets
     pull_socket1: zmq.asyncio.Socket = create_socket(zmq.PULL, [(zmq.RCVHWM, 100)])
