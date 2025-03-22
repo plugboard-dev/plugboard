@@ -272,32 +272,22 @@ class _ZMQPubsubConnector(_ZMQConnector):
 class _ZMQPubsubConnectorProxy(_ZMQConnector):
     """`_ZMQPubsubConnectorProxy` acts is a python asyncio based proxy for `ZMQChannel` messages."""
 
-    def __init__(self, *args: _t.Any, **kwargs: _t.Any) -> None:
+    @inject
+    def __init__(
+        self, *args: _t.Any, zmq_proxy: ZMQProxy = Provide[DI.zmq_proxy], **kwargs: _t.Any
+    ) -> None:
         super().__init__(*args, **kwargs)
         self._topic = str(self.spec.source)
-        self._xsub_port: _t.Optional[int] = None
-        self._xpub_port: _t.Optional[int] = None
+        self._xsub_port: _t.Optional[int] = zmq_proxy._xsub_port
+        self._xpub_port: _t.Optional[int] = zmq_proxy._xpub_port
 
         self._send_channel: _t.Optional[ZMQChannel] = None
         self._recv_channel: _t.Optional[ZMQChannel] = None
-
-    @inject
-    async def _get_proxy_ports(
-        self, zmq_proxy: ZMQProxy = Provide[DI.zmq_proxy]
-    ) -> tuple[int, int]:
-        # TODO : Will this work as expected in the multiprocess case, or will each process
-        #      : create a new `ZMQProxy` from the DI container? Ensure test coverage for this.
-        if self._xsub_port is not None and self._xpub_port is not None:
-            return self._xsub_port, self._xpub_port
-        await zmq_proxy.start_proxy(zmq_address=self._zmq_address, maxsize=self._maxsize)
-        self._xsub_port, self._xpub_port = await zmq_proxy.get_proxy_ports()
-        return self._xsub_port, self._xpub_port
 
     async def connect_send(self) -> ZMQChannel:
         """Returns a `ZMQChannel` for sending pubsub messages."""
         if self._send_channel is not None:
             return self._send_channel
-        await self._get_proxy_ports()
         send_socket = create_socket(zmq.PUB, [(zmq.SNDHWM, self._maxsize)])
         send_socket.connect(f"{self._zmq_address}:{self._xsub_port}")
         await asyncio.sleep(0.1)  # Ensure connections established before first send. Better way?
@@ -310,7 +300,6 @@ class _ZMQPubsubConnectorProxy(_ZMQConnector):
         """Returns a `ZMQChannel` for receiving pubsub messages."""
         if self._recv_channel is not None:
             return self._recv_channel
-        await self._get_proxy_ports()
         socket_opts: zmq_sockopts_t = [
             (zmq.RCVHWM, self._maxsize),
             (zmq.SUBSCRIBE, self._topic.encode("utf8")),
@@ -334,40 +323,13 @@ class _ZMQPipelineConnectorProxy(_ZMQPubsubConnectorProxy):
     def __init__(self, *args: _t.Any, **kwargs: _t.Any) -> None:
         super().__init__(*args, **kwargs)
         self._topic = str(self.spec.id)
-        self._push_address: _t.Optional[str] = None
-        self._push_address_task = asyncio.create_task(self._get_push_address())
-        _zmq_proxy_tasks.add(self._push_address_task)
-
-    def __getstate__(self) -> dict:
-        state = self.__dict__.copy()
-        for attr in ("_push_address_task",):
-            if attr in state:
-                del state[attr]
-        return state
 
     @inject
-    async def _get_push_address(self, zmq_proxy: ZMQProxy = Provide[DI.zmq_proxy]) -> str:
-        await self._get_proxy_ports()
-        self._push_address = await zmq_proxy.add_push_socket(self._topic, maxsize=self._maxsize)
-        return self._push_address
-
-    async def _wait_for_push_address(self) -> str:
-        retries = 0
-        while self._push_address is None and retries < 5:
-            await asyncio.sleep(0.01)
-            retries += 1
-        if self._push_address is None:
-            raise RuntimeError("Push address not set")
-        return self._push_address
-
-    async def connect_recv(self) -> ZMQChannel:
+    async def connect_recv(self, zmq_proxy: ZMQProxy = Provide[DI.zmq_proxy]) -> ZMQChannel:
         """Returns a `ZMQChannel` for receiving messages."""
         if self._recv_channel is not None:
             return self._recv_channel
-        await self._get_proxy_ports()
-        # FIXME : The _push_address will only get set on the driver process which instantiates
-        #       : the Connector. This will not be visible in worker processes.
-        self._push_address = await self._wait_for_push_address()
+        self._push_address = await zmq_proxy.add_push_socket(self._topic, maxsize=self._maxsize)
         recv_socket = create_socket(zmq.PULL, [(zmq.RCVHWM, self._maxsize)])
         recv_socket.connect(self._push_address)
         await asyncio.sleep(0.1)  # Ensure connections established before first send. Better way?
