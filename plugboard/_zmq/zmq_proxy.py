@@ -152,6 +152,8 @@ class ZMQProxy(multiprocessing.Process):
         self._push_poller: zmq.asyncio.Poller = zmq.asyncio.Poller()
         self._push_sockets: dict[str, zmq.asyncio.Socket] = {}
 
+        self._create_proxy_sockets()
+
         async with asyncio.TaskGroup() as tg:
             tg.create_task(asyncio.to_thread(self._run_pubsub_proxy))
             tg.create_task(asyncio.to_thread(self._handle_create_push_socket_requests))
@@ -159,7 +161,6 @@ class ZMQProxy(multiprocessing.Process):
 
     def _run_pubsub_proxy(self) -> None:
         """Runs the ZMQ proxy for pubsub connections."""
-        self._xsub_port, self._xpub_port = self._create_pubsub_sockets()
         ports_msg = [
             str(self._xsub_port).encode(),
             str(self._xpub_port).encode(),
@@ -167,29 +168,25 @@ class ZMQProxy(multiprocessing.Process):
         self._push_socket.send_multipart(ports_msg)
         zmq.proxy(self._xsub_socket, self._xpub_socket)
 
-    def _create_pubsub_sockets(self) -> _t.Tuple[int, int]:
-        """Creates XSUB, XPUB and PUSH sockets for proxy.
-
-        Returns:
-            Tuple of (xsub_port, xpub_port)
-        """
-        self._xsub_socket = _create_sync_socket(zmq.XSUB, [(zmq.RCVHWM, self._maxsize)])
-        xsub_port = self._xsub_socket.bind_to_random_port("tcp://*")
-
-        self._xpub_socket = _create_sync_socket(zmq.XPUB, [(zmq.SNDHWM, self._maxsize)])
-        xpub_port = self._xpub_socket.bind_to_random_port("tcp://*")
-
+    def _create_proxy_sockets(self) -> None:
+        """Creates PUSH, XSUB, XPUB, and REP sockets for proxy."""
+        # Create a PUSH socket to send messages to the main process
         self._push_socket = _create_sync_socket(zmq.PUSH, [(zmq.SNDHWM, 1)])
         self._push_socket.connect(self._pull_socket_address)
 
-        return xsub_port, xpub_port
+        # Create XSUB and XPUB sockets for the pubsub proxy
+        self._xsub_socket = _create_sync_socket(zmq.XSUB, [(zmq.RCVHWM, self._maxsize)])
+        self._xsub_port = self._xsub_socket.bind_to_random_port("tcp://*")
 
-    def _handle_create_push_socket_requests(self) -> None:
-        """Handles requests to create sockets in the subprocess."""
-        # Create a socket to receive socket creation requests
+        self._xpub_socket = _create_sync_socket(zmq.XPUB, [(zmq.SNDHWM, self._maxsize)])
+        self._xpub_port = self._xpub_socket.bind_to_random_port("tcp://*")
+
+        # Create a REP socket to receive PUSH socket creation requests
         self._socket_rep_socket = _create_sync_socket(zmq.REP, [])
         self._socket_rep_socket.connect(self._socket_req_address)
 
+    def _handle_create_push_socket_requests(self) -> None:
+        """Handles requests to create sockets in the subprocess."""
         while True:
             request = self._socket_rep_socket.recv_json()
             if not (isinstance(request, dict) and "topic" in request and "maxsize" in request):
@@ -207,8 +204,6 @@ class ZMQProxy(multiprocessing.Process):
         sub_socket = create_socket(
             zmq.SUB, [(zmq.RCVHWM, self._maxsize), (zmq.SUBSCRIBE, topic.encode("utf8"))]
         )
-        # TODO : There is a race condition here as `self._xsub_port` is set in another thread in
-        #      : _run_pubsub_proxy.
         sub_socket.connect(f"{self._zmq_address}:{self._xpub_port}")
         self._push_poller.register(sub_socket, zmq.POLLIN)
 
