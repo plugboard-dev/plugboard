@@ -210,7 +210,7 @@ class ZMQProxy(multiprocessing.Process):
 
         # Create a REP socket to receive PUSH socket creation requests
         self._socket_rep_socket = _create_sync_socket(zmq.REP, [])
-        self._socket_rep_port = self._xpub_socket.bind_to_random_port("tcp://*")
+        self._socket_rep_port = self._socket_rep_socket.bind_to_random_port("tcp://*")
 
     def _handle_create_push_socket_requests(self) -> None:
         """Handles requests to create sockets in the subprocess."""
