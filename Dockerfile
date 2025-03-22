@@ -35,6 +35,7 @@ RUN --mount=from=ghcr.io/astral-sh/uv,source=/uv,target=/bin/uv \
   --mount=type=bind,target=/app,rw --mount=type=tmpfs,target=/tmp/build \
   --mount=type=cache,target=/root/.cache/uv \
   uv tool run --from=toml-cli toml set --toml-path=pyproject.toml project.version $UV_VERSION_BYPASS && \
+  uv tool run --from=toml-cli toml unset --toml-path=pyproject.toml project.readme && \
   uv sync --no-editable --compile-bytecode --all-extras
 
 # Get security updates. Relies on cache bust from previous steps.
