@@ -101,15 +101,17 @@ class ZMQProxy(multiprocessing.Process):
                 del state[key]
         return state
 
-    async def start_proxy(self, zmq_address: str = ZMQ_ADDR, maxsize: int = 2000) -> None:
+    async def start_proxy(
+        self, zmq_address: _t.Optional[str] = None, maxsize: _t.Optional[int] = None
+    ) -> None:
         """Starts the ZMQ proxy with the given address and maxsize."""
         async with self._zmq_proxy_lock:
             if self._proxy_started:
-                if zmq_address != self._zmq_address:
+                if zmq_address is not None and zmq_address != self._zmq_address:
                     raise RuntimeError("ZMQ proxy already started with different address.")
                 return
-            self._zmq_address = zmq_address
-            self._maxsize = maxsize
+            self._zmq_address = zmq_address or self._zmq_address
+            self._maxsize = maxsize or self._maxsize
             self._pull_socket_address = f"{self._zmq_address}:{self._pull_socket_port}"
             self.start()
             self._proxy_started = True
