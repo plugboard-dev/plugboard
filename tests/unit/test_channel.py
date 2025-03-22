@@ -70,6 +70,7 @@ async def test_multiprocessing_channel(connector_cls: type[Connector]) -> None:
 
     async def _send_proc_async(connector: Connector) -> None:
         channel = await connector.connect_send()
+        await asyncio.sleep(0.1)  # Ensure the receiver is ready before sending messages
         for item in TEST_ITEMS:
             await channel.send(item)
         await channel.close()
