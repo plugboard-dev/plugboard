@@ -119,15 +119,6 @@ class ZMQProxy(multiprocessing.Process):
         self.__dict__.update(state)
         self._connect_socket_req_socket()
 
-    def _connect_socket_req_socket(self) -> None:
-        """Connects the REQ socket to the REP socket in the subprocess."""
-        if self._socket_rep_port is None:
-            raise RuntimeError("ZMQ proxy socket REP port not set.")
-        self._socket_req_socket: zmq.asyncio.Socket = create_socket(zmq.REQ, [])
-        socket_rep_socket_address: str = f"{self._zmq_address}:{self._socket_rep_port}"
-        self._socket_req_socket.connect(socket_rep_socket_address)
-        self._socket_req_lock: asyncio.Lock = asyncio.Lock()
-
     def _start_proxy(
         self, zmq_address: _t.Optional[str] = None, maxsize: _t.Optional[int] = None
     ) -> None:
@@ -150,6 +141,15 @@ class ZMQProxy(multiprocessing.Process):
             ports_msg = self._pull_socket.recv_multipart()
             self._xsub_port, self._xpub_port, self._socket_rep_port = map(int, ports_msg)
         return self._xsub_port, self._xpub_port, self._socket_rep_port
+
+    def _connect_socket_req_socket(self) -> None:
+        """Connects the REQ socket to the REP socket in the subprocess."""
+        if self._socket_rep_port is None:
+            raise RuntimeError("ZMQ proxy socket REP port not set.")
+        self._socket_req_socket: zmq.asyncio.Socket = create_socket(zmq.REQ, [])
+        socket_rep_socket_address: str = f"{self._zmq_address}:{self._socket_rep_port}"
+        self._socket_req_socket.connect(socket_rep_socket_address)
+        self._socket_req_lock: asyncio.Lock = asyncio.Lock()
 
     async def add_push_socket(self, topic: str, maxsize: int = 2000) -> str:
         """Adds a push socket for the given pubsub topic and returns the address."""
