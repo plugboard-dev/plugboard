@@ -150,7 +150,7 @@ class ZMQProxy(multiprocessing.Process):
     async def _run(self) -> None:
         """Async multiprocessing entrypoint to run ZMQ proxy."""
         self._push_poller: zmq.asyncio.Poller = zmq.asyncio.Poller()
-        self._push_sockets: dict[str, zmq.asyncio.Socket] = {}
+        self._push_sockets: dict[str, tuple[str, zmq.asyncio.Socket]] = {}
 
         self._create_proxy_sockets()
 
@@ -193,14 +193,21 @@ class ZMQProxy(multiprocessing.Process):
                 self._socket_rep_socket.send_json({"error": "Invalid request format."})
                 continue
             try:
-                push_address = self._create_push_socket(request["topic"], request["maxsize"])
+                push_address = self._create_push_socket(
+                    request["topic"], request["maxsize"], reuse=request.get("reuse", True)
+                )
                 self._socket_rep_socket.send_json({"push_address": push_address})
             except Exception as e:
                 self._socket_rep_socket.send_json({"error": str(e)})
 
-    def _create_push_socket(self, topic: str, maxsize: int) -> str:
+    def _create_push_socket(self, topic: str, maxsize: int, reuse: bool = True) -> str:
         """Creates a push socket in the subprocess and returns its address."""
         # Create the SUB socket to receive messages from the XPUB socket
+        if reuse is False:
+            raise NotImplementedError("PUSH socket reuse is not implemented yet.")
+        if topic in self._push_sockets and reuse is True:
+            push_address, _ = self._push_sockets[topic]
+            return push_address
         sub_socket = create_socket(
             zmq.SUB, [(zmq.RCVHWM, self._maxsize), (zmq.SUBSCRIBE, topic.encode("utf8"))]
         )
@@ -211,7 +218,7 @@ class ZMQProxy(multiprocessing.Process):
         push_socket = create_socket(zmq.PUSH, [(zmq.SNDHWM, maxsize)])
         push_port = push_socket.bind_to_random_port("tcp://*")
         push_address = f"{self._zmq_address}:{push_port}"
-        self._push_sockets[topic] = push_socket
+        self._push_sockets[topic] = (push_address, push_socket)
 
         return push_address
 
@@ -227,7 +234,7 @@ class ZMQProxy(multiprocessing.Process):
     async def _handle_push_socket(self, socket: zmq.asyncio.Socket) -> None:
         msg = await socket.recv_multipart()
         topic = msg[0].decode("utf8")
-        push_socket = self._push_sockets[topic]
+        _, push_socket = self._push_sockets[topic]
         await push_socket.send_multipart(msg)
 
     def _close(self) -> None:
