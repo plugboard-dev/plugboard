@@ -42,7 +42,7 @@ async def DI_teardown() -> _t.AsyncIterable[None]:
 def zmq_connector_cls(zmq_pubsub_proxy: bool) -> _t.Iterator[_t.Type[ZMQConnector]]:
     """Returns the ZMQConnector class with the specified proxy setting.
 
-    Mocks the environment variable `PLUGBOARD_FLAGS_ZMQ_PUBSUB_PROXY` to control the proxy setting.
+    Patches the env var `PLUGBOARD_FLAGS_ZMQ_PUBSUB_PROXY` to control the proxy setting.
     """
     with patch.dict(
         os.environ,
