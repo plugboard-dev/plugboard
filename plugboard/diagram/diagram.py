@@ -21,7 +21,7 @@ class Diagram(ABC):
         """Create the diagram.
 
         Args:
-            process: The [`Process`][plyboard.process.Process] object to create the diagram from.
+            process: The [`Process`][plugboard.process.Process] object to create the diagram from.
             **kwargs: Additional keyword arguments for the diagram backend.
         """
         pass
