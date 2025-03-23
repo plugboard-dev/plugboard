@@ -34,6 +34,8 @@ plugins:
 - mike:
     alias_type: symlink
     canonical_version: latest
+- meta
+- tags
 
 markdown_extensions:
 - admonition
@@ -112,9 +114,11 @@ nav:
     - Running in parallel: examples/tutorials/running-in-parallel.md
     - Event-driven models: examples/tutorials/event-driven-models.md
   - Configuration: usage/configuration.md
+  - Topics: usage/topics.md
 - Demos:
   - Fundamentals:
     - Simple model: examples/demos/fundamentals/001_simple_model/simple-model.ipynb
+    - Car wash: examples/demos/fundamentals/002_car_wash_queue/car-wash.ipynb
   - LLMs:
     - Data filtering: examples/demos/llm/001_data_filter/llm-filtering.ipynb
     - Websocket streaming: examples/demos/llm/002_bluesky_websocket/bluesky-websocket.ipynb

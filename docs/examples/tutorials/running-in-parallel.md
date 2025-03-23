@@ -1,3 +1,7 @@
+---
+tags:
+  - ray
+---
 Up until now we have running all our models in a single computational process. This is perfectly sufficient for simple models, or when your components can make use of [Python's asyncio](https://docs.python.org/3/library/asyncio.html) to avoid blocking.
 
 As your models get larger and more computationally intensive you may benefit from running parts of the model in parallel. Plugboard integrates with the [Ray](https://docs.ray.io/) framework, allowing you to split your computation across multiple CPU cores, or even across nodes in a [Ray cluster](https://docs.ray.io/en/latest/cluster/getting-started.html).

@@ -18,7 +18,7 @@ def _is_ipython() -> bool:
 
 
 def _serialiser(obj: _t.Any, default: _t.Callable | None) -> bytes:
-    return json.encode(obj)
+    return json.encode(obj, enc_hook=default)
 
 
 def configure_logging(settings: Settings) -> None:

@@ -19,7 +19,7 @@ When implementing your own components, you will need to:
 * Specify its inputs and ouputs using an [`IOController`][plugboard.component.IOController];
 * Define a `step()` method the executes the main logic of your component for a single step; and
 * Optionally define an `init()` method to do any required preparatory steps before the model in run.
-* In the case of event based models, define custom `Event` subclasses and corresponding event handler methods decorated with `Event.handler`.
+* In the case of event based models, define custom [`Event`][plugboard.events.Event] subclasses and corresponding event handler methods decorated with `Event.handler`.
 
 ### Connectors
 
@@ -42,7 +42,7 @@ graph LR;
     A(Load data)-->D(Record output);
 ```
 
-For models with explicitly declared input and output fields, connectors for each input-output pair must be defined explicitly using one of the `Connector` implementations. Connectors required for any events used in the model will be created for you automatically. 
+For models with explicitly declared input and output fields, connectors for each input-output pair must be defined explicitly using one of the [`Connector`][plugboard.connector.Connector] implementations. Connectors required for any events used in the model will be created for you automatically. 
 
 ### Processes
 
