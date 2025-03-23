@@ -63,8 +63,7 @@ jobs:
         run: |
           git_hash_short=$(git rev-parse --short "$GITHUB_SHA")
           echo "GIT_HASH_SHORT=${git_hash_short}" >> $GITHUB_ENV
-          # TODO: Review this
-          git_branch=$(git branch -r --contains ${{ github.ref }} --format "%(refname:lstrip=3)")
+          git_branch=$(git branch -r --contains ${{ github.ref }} --format "%(refname:lstrip=3)" | grep -v HEAD)
           echo "GIT_BRANCH=${git_branch}" >> $GITHUB_ENV
           git_branch_docker_safe=$(echo ${git_branch} | tr / -)
           echo "GIT_BRANCH_DOCKER_SAFE=${git_branch_docker_safe}" >> $GITHUB_ENV
