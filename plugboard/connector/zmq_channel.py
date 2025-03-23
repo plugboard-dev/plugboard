@@ -323,7 +323,6 @@ class _ZMQPipelineConnectorProxy(_ZMQPubsubConnectorProxy):
         super().__init__(*args, **kwargs)
         self._topic = str(self.spec.id)
 
-    @inject
     async def connect_recv(self) -> ZMQChannel:
         """Returns a `ZMQChannel` for receiving messages."""
         if self._recv_channel is not None:
