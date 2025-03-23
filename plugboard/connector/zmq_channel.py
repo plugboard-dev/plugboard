@@ -283,6 +283,18 @@ class _ZMQPubsubConnectorProxy(_ZMQConnector):
         self._send_channel: _t.Optional[ZMQChannel] = None
         self._recv_channel: _t.Optional[ZMQChannel] = None
 
+    def __getstate__(self) -> dict:
+        state = self.__dict__.copy()
+        for attr in ("_send_channel", "_recv_channel"):
+            if attr in state:
+                del state[attr]
+        return state
+
+    def __setstate__(self, state: dict) -> None:
+        self.__dict__.update(state)
+        self._send_channel = None
+        self._recv_channel = None
+
     async def connect_send(self) -> ZMQChannel:
         """Returns a `ZMQChannel` for sending pubsub messages."""
         if self._send_channel is not None:
