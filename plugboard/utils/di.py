@@ -27,8 +27,7 @@ def _zmq_proxy(mp_ctx: Resource[None]) -> _t.Iterator[ZMQProxy]:
     try:
         yield zmq_proxy
     finally:
-        zmq_proxy.terminate()
-        zmq_proxy.join(timeout=2.0)  # Wait for the process to terminate with a timeout
+        zmq_proxy.terminate(timeout=2.0)
 
 
 def _logger(settings: Settings) -> structlog.BoundLogger:

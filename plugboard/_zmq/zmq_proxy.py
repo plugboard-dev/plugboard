@@ -284,14 +284,11 @@ class ZMQProxy:
         self._push_socket.close(linger=0)
         self._socket_rep_socket.close(linger=0)
 
-    def terminate(self) -> None:
-        """Terminate the child process."""
-        if self._process is not None and self._process.is_alive():
-            self._process.terminate()
-
-    def join(self, timeout: _t.Optional[float] = None) -> None:
-        """Join the child process."""
+    def terminate(self, timeout: _t.Optional[float] = None) -> None:
+        """Terminate the child process and wait for it to exit."""
         if self._process is not None:
+            if self._process.is_alive():
+                self._process.terminate()
             self._process.join(timeout=timeout)
             if not self._process.is_alive():
                 self._process = None
