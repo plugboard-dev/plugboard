@@ -3,6 +3,7 @@
 import asyncio
 
 import pytest
+import pytest_cases
 from ray.util.multiprocessing import Pool
 
 from plugboard.connector import (
@@ -10,10 +11,10 @@ from plugboard.connector import (
     Connector,
     ConnectorBuilder,
     RayConnector,
-    ZMQConnector,
 )
 from plugboard.exceptions import ChannelClosedError
 from plugboard.schemas.connector import ConnectorMode, ConnectorSpec
+from tests.conftest import zmq_connector_cls
 
 
 TEST_ITEMS = [
@@ -28,7 +29,7 @@ TEST_ITEMS = [
 
 
 @pytest.mark.anyio
-@pytest.mark.parametrize("connector_cls", [AsyncioConnector, RayConnector, ZMQConnector])
+@pytest_cases.parametrize("connector_cls", [AsyncioConnector, RayConnector, zmq_connector_cls])
 async def test_channel(connector_cls: type[Connector]) -> None:
     """Tests the various Channel implementations."""
     spec = ConnectorSpec(mode=ConnectorMode.PIPELINE, source="test.send", target="test.recv")
@@ -62,7 +63,7 @@ async def test_channel(connector_cls: type[Connector]) -> None:
 
 
 @pytest.mark.anyio
-@pytest.mark.parametrize("connector_cls", [ZMQConnector])
+@pytest_cases.parametrize("connector_cls", [zmq_connector_cls])
 async def test_multiprocessing_channel(connector_cls: type[Connector]) -> None:
     """Tests the various Channel implementations in a multiprocess environment."""
     spec = ConnectorSpec(mode=ConnectorMode.PIPELINE, source="test.send", target="test.recv")

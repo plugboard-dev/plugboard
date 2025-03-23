@@ -1,14 +1,19 @@
 """Configuration for the test suite."""
 
 from abc import ABC, abstractmethod
+import os
 import typing as _t
+from unittest.mock import patch
 
 import pytest
+import pytest_cases
 import ray
 
 from plugboard.component import Component, IOController as IO
 from plugboard.component.io_controller import IOStreamClosedError
+from plugboard.connector import ZMQConnector
 from plugboard.utils.di import DI
+from plugboard.utils.settings import Settings
 
 
 @pytest.fixture(scope="session")
@@ -30,6 +35,23 @@ async def DI_teardown() -> _t.AsyncIterable[None]:
     """Cleans up any resources created in DI container after each test."""
     yield
     await DI.tear_down()
+
+
+@pytest_cases.fixture
+@pytest_cases.parametrize(zmq_pubsub_proxy=[False, True])
+def zmq_connector_cls(zmq_pubsub_proxy: bool) -> _t.Iterator[_t.Type[ZMQConnector]]:
+    """Returns the ZMQConnector class with the specified proxy setting.
+
+    Mocks the environment variable `PLUGBOARD_FLAGS_ZMQ_PUBSUB_PROXY` to control the proxy setting.
+    """
+    with patch.dict(
+        os.environ,
+        {"PLUGBOARD_FLAGS_ZMQ_PUBSUB_PROXY": str(zmq_pubsub_proxy)},
+    ):
+        testing_settings = Settings()
+        DI.settings.override(testing_settings)
+        yield ZMQConnector
+        DI.settings.reset_override()
 
 
 class ComponentTestHelper(Component, ABC):

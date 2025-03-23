@@ -5,11 +5,13 @@ import typing as _t
 
 from pydantic import BaseModel
 import pytest
+import pytest_cases
 
 from plugboard.component import Component, IOController
-from plugboard.connector import AsyncioConnector, Connector, ConnectorBuilder, ZMQConnector
+from plugboard.connector import AsyncioConnector, Connector, ConnectorBuilder
 from plugboard.events import Event, EventConnectorBuilder
 from plugboard.schemas import ConnectorSpec
+from tests.conftest import zmq_connector_cls
 
 
 class EventTypeAData(BaseModel):
@@ -73,10 +75,11 @@ class A(Component):
         self._event_B_count += evt.data.y
 
 
-@pytest.fixture(scope="module", params=[AsyncioConnector, ZMQConnector])
-def connector_cls(request: pytest.FixtureRequest) -> _t.Type[Connector]:
+@pytest_cases.fixture(scope="function")
+@pytest_cases.parametrize("_connector_cls", [AsyncioConnector, zmq_connector_cls])
+def connector_cls(_connector_cls: _t.Type[Connector]) -> _t.Type[Connector]:
     """Returns a `Connector` class."""
-    return request.param
+    return _connector_cls
 
 
 @pytest.fixture
@@ -147,7 +150,6 @@ async def test_component_event_handlers(
     await a.io.close()
 
 
-@pytest.mark.anyio
 @pytest.fixture
 async def field_connectors(connector_cls: _t.Type[Connector]) -> list[Connector]:
     """Fixture for a list of field connectors."""
