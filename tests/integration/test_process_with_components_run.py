@@ -7,13 +7,14 @@ import typing as _t
 
 from aiofile import async_open
 import pytest
+import pytest_cases
 
 from plugboard import exceptions
 from plugboard.component import IOController as IO
-from plugboard.connector import AsyncioConnector, Connector, RayConnector, ZMQConnector
+from plugboard.connector import AsyncioConnector, Connector, RayConnector
 from plugboard.process import LocalProcess, Process, RayProcess
 from plugboard.schemas import ConnectorSpec
-from tests.conftest import ComponentTestHelper
+from tests.conftest import ComponentTestHelper, zmq_connector_cls
 
 
 class A(ComponentTestHelper):
@@ -69,13 +70,13 @@ def tempfile_path() -> _t.Generator[Path, None, None]:
 
 
 @pytest.mark.anyio
-@pytest.mark.parametrize(
+@pytest_cases.parametrize(
     "process_cls, connector_cls",
     [
         (LocalProcess, AsyncioConnector),
-        (LocalProcess, ZMQConnector),
+        (LocalProcess, zmq_connector_cls),
         (RayProcess, RayConnector),
-        (RayProcess, ZMQConnector),
+        (RayProcess, zmq_connector_cls),
     ],
 )
 @pytest.mark.parametrize(

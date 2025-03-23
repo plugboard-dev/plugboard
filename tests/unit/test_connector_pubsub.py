@@ -9,15 +9,16 @@ import time
 import typing as _t
 
 import pytest
+import pytest_cases
 
 from plugboard.connector import (
     AsyncioConnector,
     Channel,
     Connector,
-    ZMQConnector,
 )
 from plugboard.exceptions import ChannelClosedError
 from plugboard.schemas.connector import ConnectorMode, ConnectorSpec
+from tests.conftest import zmq_connector_cls
 
 
 TEST_ITEMS = string.ascii_lowercase
@@ -111,13 +112,13 @@ async def recv_messages_unordered(channels: list[Channel]) -> list[int]:
 
 
 @pytest.mark.anyio
-@pytest.mark.parametrize(
+@pytest_cases.parametrize(
     "connector_cls, num_subscribers, num_messages",
     [
         (AsyncioConnector, 1, 1000),
         (AsyncioConnector, 10, 1000),
-        (ZMQConnector, 1, 1000),
-        (ZMQConnector, 100, 1000),
+        (zmq_connector_cls, 1, 1000),
+        (zmq_connector_cls, 100, 1000),
     ],
 )
 async def test_pubsub_channel_single_publisher(
@@ -162,13 +163,13 @@ async def test_pubsub_channel_single_publisher(
 
 
 @pytest.mark.anyio
-@pytest.mark.parametrize(
+@pytest_cases.parametrize(
     "connector_cls, num_publishers, num_subscribers, num_messages",
     [
         (AsyncioConnector, 10, 1, 1000),
         (AsyncioConnector, 10, 10, 1000),
-        (ZMQConnector, 10, 1, 1000),
-        (ZMQConnector, 10, 100, 1000),
+        (zmq_connector_cls, 10, 1, 1000),
+        (zmq_connector_cls, 10, 100, 1000),
     ],
 )
 async def test_pubsub_channel_multiple_publshers(
@@ -212,13 +213,13 @@ async def test_pubsub_channel_multiple_publshers(
 
 
 @pytest.mark.anyio
-@pytest.mark.parametrize(
+@pytest_cases.parametrize(
     "connector_cls, num_topics, num_publishers, num_subscribers, num_messages",
     [
         (AsyncioConnector, 3, 10, 1, 1000),
         (AsyncioConnector, 3, 10, 10, 1000),
-        (ZMQConnector, 3, 10, 1, 1000),
-        (ZMQConnector, 3, 10, 100, 1000),
+        (zmq_connector_cls, 3, 10, 1, 1000),
+        (zmq_connector_cls, 3, 10, 100, 1000),
     ],
 )
 async def test_pubsub_channel_multiple_topics_and_publishers(
