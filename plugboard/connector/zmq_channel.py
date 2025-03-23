@@ -144,10 +144,17 @@ class _ZMQPipelineConnector(_ZMQConnector):
             "_receiver_req_lock",
             "_push_socket",
             "_exchange_addr_task",
+            "_send_channel",
+            "_recv_channel",
         ):
             if attr in state:
                 del state[attr]
         return state
+
+    def __setstate__(self, state: dict) -> None:
+        self.__dict__.update(state)
+        self._send_channel = None
+        self._recv_channel = None
 
     async def _exchange_address(self) -> None:
         async def _handle_sender_requests() -> None:
