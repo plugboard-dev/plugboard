@@ -95,8 +95,8 @@ jobs:
 
       - name: Install from wheel
         working-directory: ./dist
-        run: uv pip install *.whl
+        run: uv pip install --system *.whl
 
       - name: Smoke test package
         working-directory: ./dist
-        run: uv run python -c "from plugboard import library"
+        run: python -c "from plugboard import library"
