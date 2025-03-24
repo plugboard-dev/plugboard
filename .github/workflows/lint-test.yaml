@@ -53,8 +53,9 @@ jobs:
 
       - name: Tests
         run: |
-          uv run pytest --cov=plugboard --cov-report=xml .
+          uv run coverage run -m pytest .
           uv run coverage combine
+          uv run coverage xml
         if: always()
 
       - name: Upload coverage reports to Codecov
