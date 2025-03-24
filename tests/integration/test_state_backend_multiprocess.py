@@ -58,7 +58,7 @@ class ConnectorTestHelper(ZMQConnector):
 
 
 @pytest.fixture
-def connectors() -> list[Connector]:
+async def connectors() -> list[Connector]:
     """Returns a list of connectors."""
     return [
         ConnectorTestHelper(spec=ConnectorSpec(source="A1.out_1", target="B1.in_1")),

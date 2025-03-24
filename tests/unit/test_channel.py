@@ -3,6 +3,7 @@
 import asyncio
 
 import pytest
+import pytest_cases
 from ray.util.multiprocessing import Pool
 
 from plugboard.connector import (
@@ -10,10 +11,10 @@ from plugboard.connector import (
     Connector,
     ConnectorBuilder,
     RayConnector,
-    ZMQConnector,
 )
 from plugboard.exceptions import ChannelClosedError
 from plugboard.schemas.connector import ConnectorMode, ConnectorSpec
+from tests.conftest import zmq_connector_cls
 
 
 TEST_ITEMS = [
@@ -28,7 +29,7 @@ TEST_ITEMS = [
 
 
 @pytest.mark.anyio
-@pytest.mark.parametrize("connector_cls", [AsyncioConnector, RayConnector, ZMQConnector])
+@pytest_cases.parametrize("connector_cls", [AsyncioConnector, RayConnector, zmq_connector_cls])
 async def test_channel(connector_cls: type[Connector]) -> None:
     """Tests the various Channel implementations."""
     spec = ConnectorSpec(mode=ConnectorMode.PIPELINE, source="test.send", target="test.recv")
@@ -61,14 +62,16 @@ async def test_channel(connector_cls: type[Connector]) -> None:
     assert send_channel.is_closed
 
 
-@pytest.mark.parametrize("connector_cls", [ZMQConnector])
-def test_multiprocessing_channel(connector_cls: type[Connector]) -> None:
+@pytest.mark.anyio
+@pytest_cases.parametrize("connector_cls", [zmq_connector_cls])
+async def test_multiprocessing_channel(connector_cls: type[Connector]) -> None:
     """Tests the various Channel implementations in a multiprocess environment."""
     spec = ConnectorSpec(mode=ConnectorMode.PIPELINE, source="test.send", target="test.recv")
     connector = ConnectorBuilder(connector_cls=connector_cls).build(spec)
 
     async def _send_proc_async(connector: Connector) -> None:
         channel = await connector.connect_send()
+        await asyncio.sleep(0.1)  # Ensure the receiver is ready before sending messages
         for item in TEST_ITEMS:
             await channel.send(item)
         await channel.close()
@@ -87,8 +90,13 @@ def test_multiprocessing_channel(connector_cls: type[Connector]) -> None:
     def _recv_proc(connector: Connector) -> None:
         asyncio.run(_recv_proc_async(connector))
 
-    with Pool(2) as pool:
-        r1 = pool.apply_async(_send_proc, (connector,))
-        r2 = pool.apply_async(_recv_proc, (connector,))
-        r1.get()
-        r2.get()
+    # Use a wrapper function to ensure the connector stays in scope
+    def run_pool_with_connector(connector: Connector) -> None:
+        with Pool(2) as pool:
+            r1 = pool.apply_async(_send_proc, (connector,))
+            r2 = pool.apply_async(_recv_proc, (connector,))
+            r1.get()
+            r2.get()
+
+    # Run the pool function while keeping the connector in scope
+    await asyncio.to_thread(run_pool_with_connector, connector)
