@@ -103,7 +103,7 @@ asyncio_default_fixture_loop_scope = "function"
 source = ["plugboard"]
 branch = true
 parallel = true
-concurrency = ["multiprocessing"]
+concurrency = ["multiprocessing", "thread"]
 
 [tool.mypy]  # Static type checking
 exclude = [".git", "__pycache__", ".venv", "venv", "docs", "examples"]
