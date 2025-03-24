@@ -57,7 +57,6 @@ class ConnectorTestHelper(ZMQConnector):
         return output
 
 
-@pytest.mark.asyncio
 @pytest.fixture
 async def connectors() -> list[Connector]:
     """Returns a list of connectors."""
