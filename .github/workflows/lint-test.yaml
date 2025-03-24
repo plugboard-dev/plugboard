@@ -52,7 +52,9 @@ jobs:
         if: always()
 
       - name: Tests
-        run: uv run pytest --cov=plugboard --cov-report=xml .
+        run: |
+          uv run pytest --cov=plugboard --cov-report=xml .
+          uv run coverage combine
         if: always()
 
       - name: Upload coverage reports to Codecov
