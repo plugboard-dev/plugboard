@@ -92,6 +92,8 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }},${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.GIT_BRANCH_DOCKER_SAFE }}
           labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:buildcache
+          cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:buildcache,mode=max
           build-args: |
             semver=${{ env.PACKAGE_VERSION }}
             git_hash_short=${{ env.GIT_HASH_SHORT }}
