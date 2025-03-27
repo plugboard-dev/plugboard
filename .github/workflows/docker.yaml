@@ -79,7 +79,7 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
-            type=semver,pattern={{version}}
+            type=semver,pattern={{version}},value=${{ env.PACKAGE_VERSION }},enable=${{ (github.event_name == 'workflow_run') && (github.event.workflow_run.conclusion == 'success') }}
             type=sha,format=short
             type=raw,value=latest,enable=${{ env.GIT_BRANCH == 'main' }}
 
