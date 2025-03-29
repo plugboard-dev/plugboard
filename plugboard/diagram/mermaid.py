@@ -10,7 +10,7 @@ from msgspec import json
 
 from plugboard.component import Component
 from plugboard.diagram import Diagram
-from plugboard.events import Event, SystemEvent
+from plugboard.events import Event
 from plugboard.process import Process
 
 
@@ -77,34 +77,22 @@ class MermaidDiagram(Diagram):
             **kwargs: Additional keyword arguments for the diagram backend.
         """
         lines = []
-        for connector in process.connectors.values():
-            connector_spec = connector.spec
-            try:
-                source = process.components[connector_spec.source.entity]
-                target = process.components[connector_spec.target.entity]
-            except KeyError:
-                # Skip event connectors here
-                continue
+        for source, target in cls._source_target_connections(process):
             lines.append(
                 f"{cls._node_from_component(source)} "
                 f"{cls._component_connector} "
                 f"{cls._node_from_component(target)}"
             )
-        for component in process.components.values():
-            for event in component.io.input_events:
-                if issubclass(event, SystemEvent):
-                    continue
-                lines.append(
-                    f"{cls._node_from_event(event)} "
-                    f"{cls._event_connector} "
-                    f"{cls._node_from_component(component)}"
-                )
-            for event in component.io.output_events:
-                if issubclass(event, SystemEvent):
-                    continue
-                lines.append(
-                    f"{cls._node_from_component(component)} "
-                    f"{cls._event_connector} "
-                    f"{cls._node_from_event(event)}"
-                )
+        for event, component in cls._event_inputs(process):
+            lines.append(
+                f"{cls._node_from_event(event)} "
+                f"{cls._event_connector} "
+                f"{cls._node_from_component(component)}"
+            )
+        for event, component in cls._event_outputs(process):
+            lines.append(
+                f"{cls._node_from_component(component)} "
+                f"{cls._event_connector} "
+                f"{cls._node_from_event(event)}"
+            )
         return cls(spec=f"{cls._header}\n" + "\n".join(f"  {x}" for x in lines), **kwargs)
