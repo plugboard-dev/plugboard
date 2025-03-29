@@ -95,7 +95,7 @@ jobs:
 
       - name: Install from wheel
         working-directory: ./dist
-        run: pip install *.whl
+        run: uv pip install --system *.whl
 
       - name: Smoke test package
         working-directory: ./dist
