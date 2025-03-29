@@ -20,8 +20,11 @@ def _pako_deflate(data: bytes) -> bytes:
     See https://github.com/nodeca/pako
     """
     compress = zlib.compressobj(9, zlib.DEFLATED, 15, 8, zlib.Z_DEFAULT_STRATEGY)
-    compressed_data = compress.compress(data)
-    compressed_data += compress.flush()
+    try:
+        compressed_data = compress.compress(data)
+        compressed_data += compress.flush()
+    except zlib.error as e:
+        raise ValueError(f"Zlib compression failed: {e}") from e
     return compressed_data
 
 
