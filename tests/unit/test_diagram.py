@@ -81,3 +81,5 @@ def test_mermaid_diagram(process: LocalProcess) -> None:
     # Rows must match the expected format
     for row in rows[1:]:
         assert re.match(MERMAID_REGEX, row.strip())
+    # URL must be valid
+    assert diagram.url.startswith("https://mermaid.live/edit#pako:")

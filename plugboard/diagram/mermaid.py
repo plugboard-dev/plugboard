@@ -2,12 +2,27 @@
 
 from __future__ import annotations
 
+import base64
 import typing as _t
+import zlib
+
+from msgspec import json
 
 from plugboard.component import Component
 from plugboard.diagram import Diagram
 from plugboard.events import Event
 from plugboard.process import Process
+
+
+def _pako_deflate(data: bytes) -> bytes:
+    """Creates data string for the Mermaid service.
+
+    See https://github.com/nodeca/pako
+    """
+    compress = zlib.compressobj(9, zlib.DEFLATED, 15, 8, zlib.Z_DEFAULT_STRATEGY)
+    compressed_data = compress.compress(data)
+    compressed_data += compress.flush()
+    return compressed_data
 
 
 class MermaidDiagram(Diagram):
@@ -19,8 +34,13 @@ class MermaidDiagram(Diagram):
     _component_connector: str = "-->"
     _event_connector: str = "-.->"
 
-    def __init__(self, markdown: str) -> None:
-        self._markdown = markdown
+    def __init__(self, spec: str) -> None:
+        """Instantiates `MermaidDiagram`.
+
+        Args:
+            spec: The string representation of the diagram.
+        """
+        self._spec = spec
 
     @classmethod
     def _node_from_component(cls, component: Component) -> str:
@@ -36,7 +56,14 @@ class MermaidDiagram(Diagram):
     @property
     def diagram(self) -> str:
         """Returns a string representation of the diagram."""
-        return self._markdown
+        return self._spec
+
+    @property
+    def url(self) -> str:
+        """Returns a URL to the diagram on [Mermaid Live Editor](https://mermaid.live/)."""
+        json_bytes = json.encode({"code": self._spec, "mermaid": {"theme": "default"}})
+        b64_pako = base64.b64encode(_pako_deflate(json_bytes))
+        return f"https://mermaid.live/edit#pako:{b64_pako.decode('utf-8')}"
 
     @classmethod
     def from_process(cls, process: Process, **kwargs: _t.Any) -> MermaidDiagram:
@@ -77,4 +104,4 @@ class MermaidDiagram(Diagram):
                     f"{cls._event_connector} "
                     f"{cls._node_from_event(event)}"
                 )
-        return cls(markdown=f"{cls._header}\n" + "\n".join(f"  {x}" for x in lines), **kwargs)
+        return cls(spec=f"{cls._header}\n" + "\n".join(f"  {x}" for x in lines), **kwargs)
