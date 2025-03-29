@@ -10,7 +10,7 @@ from msgspec import json
 
 from plugboard.component import Component
 from plugboard.diagram import Diagram
-from plugboard.events import Event
+from plugboard.events import Event, SystemEvent
 from plugboard.process import Process
 
 
@@ -89,7 +89,7 @@ class MermaidDiagram(Diagram):
             )
         for component in process.components.values():
             for event in component.io.input_events:
-                if event.__name__ == "StopEvent":
+                if issubclass(event, SystemEvent):
                     continue
                 lines.append(
                     f"{cls._node_from_event(event)} "
@@ -97,7 +97,7 @@ class MermaidDiagram(Diagram):
                     f"{cls._node_from_component(component)}"
                 )
             for event in component.io.output_events:
-                if event.__name__ == "StopEvent":
+                if issubclass(event, SystemEvent):
                     continue
                 lines.append(
                     f"{cls._node_from_component(component)} "
