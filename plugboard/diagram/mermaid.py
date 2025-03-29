@@ -32,7 +32,7 @@ class MermaidDiagram(Diagram):
     """`MermaidDiagram` class for creating diagrams of Plugboard processes using Mermaid."""
 
     _header: str = "flowchart LR"
-    _component_shape: str = "rect"
+    _component_shape: str = "rounded"
     _event_shape: str = "hex"
     _component_connector: str = "-->"
     _event_connector: str = "-.->"

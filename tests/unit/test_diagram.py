@@ -15,8 +15,8 @@ from plugboard.schemas import ConnectorSpec
 
 
 MERMAID_REGEX = (
-    r"^([\w-]+)@\{ shape: (rect|hex), label: (.*?) \} (-->|-\.->) "
-    r"([\w-]+)@\{ shape: (rect|hex), label: (.*?) \}$"
+    r"^([\w-]+)@\{ shape: (rounded|hex), label: (.*?) \} (-->|-\.->) "
+    r"([\w-]+)@\{ shape: (rounded|hex), label: (.*?) \}$"
 )
 
 
