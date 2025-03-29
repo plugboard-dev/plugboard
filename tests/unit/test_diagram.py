@@ -83,3 +83,5 @@ def test_mermaid_diagram(process: LocalProcess) -> None:
         assert re.match(MERMAID_REGEX, row.strip())
     # URL must be valid
     assert diagram.url.startswith("https://mermaid.live/edit#pako:")
+    # String representation must match the diagram
+    assert str(diagram) == diagram_string
