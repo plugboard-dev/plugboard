@@ -115,10 +115,10 @@ from plugboard.process import LocalProcess
 from plugboard.schemas import ConnectorSpec
 
 process = LocalProcess(
-    components=[A(name="a", iters=5), B(name="b", path="b.txt")],
+    components=[A(name="component-a", iters=5), B(name="component-b", path="b.txt")],
     connectors=[
         AsyncioConnector(
-            spec=ConnectorSpec(source="a.out_1", target="b.in_1"),
+            spec=ConnectorSpec(source="component-a.out_1", target="component-b.in_1"),
         )
     ],
 )
@@ -128,8 +128,8 @@ async with process:
 
 Visually, we've created the model below, with Plugboard automatically handling the flow of data between the two components.
 ```mermaid
-graph LR;
-    A(Component A)-->|data|B(Component B);
+flowchart LR
+  component-a@{ shape: rounded, label: A<br>**component-a** } --> component-b@{ shape: rounded, label: B<br>**component-b** }
 ```
 
 ### Executing pre-defined models on the CLI
