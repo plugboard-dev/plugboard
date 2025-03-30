@@ -65,8 +65,8 @@ class MermaidDiagram(Diagram):
     def url(self) -> str:
         """Returns a URL to the diagram on [Mermaid Live Editor](https://mermaid.live/)."""
         json_bytes = json.encode({"code": self._spec, "mermaid": {"theme": "default"}})
-        b64_pako = base64.b64encode(_pako_deflate(json_bytes))
-        return f"https://mermaid.live/edit#pako:{b64_pako.decode('utf-8')}"
+        b64_pako = base64.urlsafe_b64encode(_pako_deflate(json_bytes))
+        return f"https://mermaid.live/edit#pako:{b64_pako.decode('ascii')}"
 
     @classmethod
     def from_process(cls, process: Process, **kwargs: _t.Any) -> MermaidDiagram:
