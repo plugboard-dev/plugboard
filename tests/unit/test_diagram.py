@@ -3,6 +3,7 @@
 
 import re
 import typing as _t
+from urllib.parse import quote_plus
 
 import pytest
 
@@ -83,5 +84,8 @@ def test_mermaid_diagram(process: LocalProcess) -> None:
         assert re.match(MERMAID_REGEX, row.strip())
     # URL must be valid
     assert diagram.url.startswith("https://mermaid.live/edit#pako:")
+    # Pako must be URL-encoded to compatibility with https://mermaid.ink
+    pako_str = diagram.url.split("pako:")[-1]
+    assert quote_plus(pako_str) == pako_str
     # String representation must match the diagram
     assert str(diagram) == diagram_string
