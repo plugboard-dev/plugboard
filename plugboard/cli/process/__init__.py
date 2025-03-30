@@ -4,11 +4,14 @@ import asyncio
 from pathlib import Path
 
 import msgspec
+from rich import print
 from rich.console import Console
+from rich.markdown import Markdown
 from rich.progress import Progress, SpinnerColumn, TextColumn
 import typer
 from typing_extensions import Annotated
 
+from plugboard.diagram import MermaidDiagram
 from plugboard.process import Process, ProcessBuilder
 from plugboard.schemas import ConfigSpec
 from plugboard.utils import add_sys_path
@@ -68,3 +71,27 @@ def run(
         progress.update(task, description=f"Running process...")
         asyncio.run(_run_process(process))
         progress.update(task, description=f"[green]Process complete[/green]")
+
+
+@app.command()
+def diagram(
+    config: Annotated[
+        Path,
+        typer.Argument(
+            exists=True,
+            file_okay=True,
+            dir_okay=False,
+            writable=False,
+            readable=True,
+            resolve_path=True,
+            help="Path to the YAML configuration file.",
+        ),
+    ],
+) -> None:
+    """Create a diagram of a Plugboard process."""
+    config_spec = _read_yaml(config)
+    with add_sys_path(config.parent):
+        process = _build_process(config_spec)
+    diagram = MermaidDiagram.from_process(process)
+    md = Markdown(f"```\n{diagram.diagram}\n```\n[Editable diagram]({diagram.url}) (external link)")
+    print(md)
