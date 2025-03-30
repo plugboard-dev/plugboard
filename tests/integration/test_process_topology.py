@@ -5,9 +5,9 @@ import pytest
 
 from plugboard.component import IOController as IO
 from plugboard.connector import AsyncioConnector
+from plugboard.diagram import markdown_diagram
 from plugboard.process import LocalProcess
 from plugboard.schemas import ConnectorSpec
-from plugboard.utils.diagram import markdown_diagram
 from tests.conftest import ComponentTestHelper
 from tests.integration.test_process_with_components_run import A, B
 
