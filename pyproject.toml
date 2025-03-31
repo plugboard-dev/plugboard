@@ -104,6 +104,7 @@ source = ["plugboard"]
 branch = true
 parallel = true
 concurrency = ["multiprocessing", "thread"]
+sigterm = true
 
 [tool.mypy]  # Static type checking
 exclude = [".git", "__pycache__", ".venv", "venv", "docs", "examples"]

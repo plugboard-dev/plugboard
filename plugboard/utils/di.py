@@ -22,12 +22,17 @@ def _mp_set_start_method(use_fork: bool = False) -> _t.Iterator[None]:
     yield
 
 
-def _zmq_proxy(mp_ctx: Resource[None]) -> _t.Iterator[ZMQProxy]:
+def _zmq_proxy(
+    mp_ctx: Resource[None], logger: Singleton[structlog.BoundLogger]
+) -> _t.Iterator[ZMQProxy]:
     zmq_proxy = ZMQProxy()
     try:
         yield zmq_proxy
     finally:
-        zmq_proxy.terminate(timeout=5.0)
+        try:
+            zmq_proxy.terminate(timeout=5.0)
+        except RuntimeError as e:
+            logger.warning(f"Error during ZMQProxy termination: {e}", file=sys.stderr)
 
 
 def _logger(settings: Settings) -> structlog.BoundLogger:
@@ -39,6 +44,6 @@ class DI(BaseContainer):
     """`DI` is a dependency injection container for plugboard."""
 
     settings: Singleton[Settings] = Singleton(Settings)
-    mp_ctx: Resource[None] = Resource(_mp_set_start_method, settings.flags.multiprocessing_fork)
-    zmq_proxy: Resource[ZMQProxy] = Resource(_zmq_proxy, mp_ctx)
     logger: Singleton[structlog.BoundLogger] = Singleton(_logger, settings.cast)
+    mp_ctx: Resource[None] = Resource(_mp_set_start_method, settings.flags.multiprocessing_fork)
+    zmq_proxy: Resource[ZMQProxy] = Resource(_zmq_proxy, mp_ctx, logger)

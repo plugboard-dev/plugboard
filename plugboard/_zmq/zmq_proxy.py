@@ -288,7 +288,13 @@ class ZMQProxy:
         """Terminate the child process and wait for it to exit."""
         if self._process is not None:
             if self._process.is_alive():
+                # Try SIGTERM first
                 self._process.terminate()
-            self._process.join(timeout=timeout)
-            if not self._process.is_alive():
-                self._process = None
+                self._process.join(timeout=timeout)
+
+                # If still alive, force SIGKILL
+                if self._process.is_alive():
+                    self._process.kill()
+                    self._process.join(timeout=1.0)  # Short timeout after SIGKILL
+
+                self._process = None  # Abandon reference rather than raising an exception
