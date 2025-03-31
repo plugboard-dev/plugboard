@@ -19,7 +19,7 @@ def _mp_set_start_method(
         method = "fork" if use_fork else "spawn"
         multiprocessing.get_context(method=method)
         logger.debug(f"Set multiprocessing start method to {method}")
-    except ValueError:
+    except ValueError:  # pragma: no cover
         logger.warning("Failed to set multiprocessing start method")
     yield
 
@@ -33,7 +33,7 @@ def _zmq_proxy(
     finally:
         try:
             zmq_proxy.terminate(timeout=5.0)
-        except RuntimeError as e:
+        except RuntimeError as e:  # pragma: no cover
             logger.warning(f"Error during ZMQProxy termination: {e}")
 
 

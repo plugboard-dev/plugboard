@@ -154,7 +154,7 @@ class ZMQProxy:
         """Entry point for the child process."""
         try:
             asyncio.run(self._run())
-        finally:
+        finally:  # pragma: no cover
             self._close()
 
     def _get_proxy_ports(self) -> tuple[int, int, int]:
@@ -281,7 +281,7 @@ class ZMQProxy:
         _, push_socket = self._push_sockets[topic]
         await push_socket.send_multipart(msg)
 
-    def _close(self) -> None:
+    def _close(self) -> None:  # pragma: no cover
         self._xsub_socket.close(linger=0)
         self._xpub_socket.close(linger=0)
         self._push_socket.close(linger=0)
@@ -295,7 +295,7 @@ class ZMQProxy:
             self._process.join(timeout=timeout)
 
             # If still alive, force SIGKILL
-            if self._process.is_alive():
+            if self._process.is_alive():  # pragma: no cover
                 self._process.kill()
                 self._process.join(timeout=1.0)  # Short timeout after SIGKILL
 
