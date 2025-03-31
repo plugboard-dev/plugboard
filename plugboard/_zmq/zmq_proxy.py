@@ -126,7 +126,10 @@ class ZMQProxy:
         """Restore object state after unpickling in child process."""
         self.__dict__.update(state)
         self._process = None
-        self._connect_socket_req_socket()
+        if self._socket_rep_port is not None:
+            # Recreate push socket request socket in serialised copies of the ZMQProxy object but
+            # not in the proxy subprocess started from the driver process when using spawn.
+            self._connect_socket_req_socket()
 
     def _start_proxy(
         self, zmq_address: _t.Optional[str] = None, maxsize: _t.Optional[int] = None
