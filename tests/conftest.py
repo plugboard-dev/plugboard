@@ -1,6 +1,7 @@
 """Configuration for the test suite."""
 
 from abc import ABC, abstractmethod
+import multiprocessing
 import os
 import typing as _t
 from unittest.mock import patch
@@ -20,6 +21,16 @@ from plugboard.utils.settings import Settings
 def anyio_backend() -> str:
     """Returns the name of the AnyIO backend to use."""
     return "asyncio"
+
+
+@pytest.fixture(scope="session", autouse=True)
+def mp_set_start_method() -> None:
+    """Set the start method for multiprocessing to 'spawn'."""
+    try:
+        multiprocessing.set_start_method("spawn", force=True)
+    except RuntimeError:
+        # Start method can only be set once per process
+        pass
 
 
 @pytest.fixture(scope="session")
