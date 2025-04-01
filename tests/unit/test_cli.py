@@ -25,3 +25,12 @@ def test_cli_process_run() -> None:
         mock_process.init.assert_called_once()
         # Process must be run
         mock_process.run.assert_called_once()
+
+
+def test_cli_process_diagram() -> None:
+    """Tests the process diagram command."""
+    result = runner.invoke(app, ["process", "diagram", "tests/data/minimal-process.yaml"])
+    # CLI must run without error
+    assert result.exit_code == 0
+    # Must output a Mermaid flowchart
+    assert "flowchart" in result.stdout
