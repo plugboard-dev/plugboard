@@ -59,7 +59,7 @@ To make models like this work in Plugboard you will need to specify `initial_val
 Consider this model in which the `Sum` component will accumulate a scaled part of its value at every iteration:
 
 ```mermaid
-flowchart LR                                                                                                                                                                                             
+flowchart LR
     random@{ shape: rounded, label: Random<br>**random** } --> sum@{ shape: rounded, label: Sum<br>**sum** }
     scale@{ shape: rounded, label: Scale<br>**scale** } --> sum@{ shape: rounded, label: Sum<br>**sum** }
     sum@{ shape: rounded, label: Sum<br>**sum** } --> save-output@{ shape: rounded, label: Save<br>**save-output** }

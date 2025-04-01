@@ -14,7 +14,7 @@ Before running this tutorial be sure to install Ray with pip, or install plugboa
 For demonstration purposes we're going to use a model with two branches that containing `Sleep` components to simulate computationally intensive activity. In real scenarios these might instead be calls to simulation software or machine-learning model inference.
 
 ```mermaid
-flowchart LR                                                                                                                                                                                             
+flowchart LR
     input@{ shape: rounded, label: Iterator<br>**input** } --> slow-sleep@{ shape: rounded, label: Sleep<br>**slow-sleep** }
     input@{ shape: rounded, label: Iterator<br>**input** } --> very-slow-sleep@{ shape: rounded, label: Sleep<br>**very-slow-sleep** }
     slow-sleep@{ shape: rounded, label: Sleep<br>**slow-sleep** } --> timestamper@{ shape: rounded, label: Timestamper<br>**timestamper** }
