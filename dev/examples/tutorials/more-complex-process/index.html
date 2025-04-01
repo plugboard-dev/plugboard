@@ -1091,6 +1091,8 @@ What's new: 🚀 we've open-sourced Plugboard - please <a href="https://github.c
       
         
       
+        
+      
     
     
       
@@ -1159,6 +1161,28 @@ What's new: 🚀 we've open-sourced Plugboard - please <a href="https://github.c
   
   <span class="md-ellipsis">
     connector
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../api/diagram/diagram/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    diagram
     
   </span>
   
@@ -1328,7 +1352,7 @@ What's new: 🚀 we've open-sourced Plugboard - please <a href="https://github.c
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4_9" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4_10" >
         
           
           
@@ -1345,14 +1369,14 @@ What's new: 🚀 we've open-sourced Plugboard - please <a href="https://github.c
             </a>
             
               
-              <label class="md-nav__link " for="__nav_4_9" id="__nav_4_9_label" tabindex="0">
+              <label class="md-nav__link " for="__nav_4_10" id="__nav_4_10_label" tabindex="0">
                 <span class="md-nav__icon md-icon"></span>
               </label>
             
           </div>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_9_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_4_9">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_10_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_10">
             <span class="md-nav__icon md-icon"></span>
             utils
           </label>
@@ -1592,13 +1616,13 @@ What's new: 🚀 we've open-sourced Plugboard - please <a href="https://github.c
 </ol>
 <h2 id="create-branching-connections-in-a-process">Create branching connections in a <code>Process</code></h2>
 <p>Next, we'll connect the components together to form this model:</p>
-<pre class="mermaid"><code>graph LR;
-    Random(random)----&gt;SaveIn(save-input);
-    Random(random)--&gt;Offset(offset);
-    Random(random)--&gt;Scale(scale);
-    Offset(offset)--&gt;Sum(sum);
-    Scale(scale)--&gt;Sum(sum);
-    Sum(sum)--&gt;SaveOut(save-output);</code></pre>
+<pre class="mermaid"><code>flowchart LR
+    offset@{ shape: rounded, label: Offset&lt;br&gt;**offset** } --&gt; sum@{ shape: rounded, label: Sum&lt;br&gt;**sum** }
+    random@{ shape: rounded, label: Random&lt;br&gt;**random** } --&gt; offset@{ shape: rounded, label: Offset&lt;br&gt;**offset** }
+    random@{ shape: rounded, label: Random&lt;br&gt;**random** } ----&gt; save-input@{ shape: rounded, label: Save&lt;br&gt;**save-input** }
+    random@{ shape: rounded, label: Random&lt;br&gt;**random** } --&gt; scale@{ shape: rounded, label: Scale&lt;br&gt;**scale** }
+    scale@{ shape: rounded, label: Scale&lt;br&gt;**scale** } --&gt; sum@{ shape: rounded, label: Sum&lt;br&gt;**sum** }
+    sum@{ shape: rounded, label: Sum&lt;br&gt;**sum** } --&gt; save-output@{ shape: rounded, label: Save&lt;br&gt;**save-output** }</code></pre>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>See how we branch the output of the <code>Random</code> component into three different places: a <code>Save</code> component (so that we can record our model input), <code>Offset</code> and <code>Scale</code>.</p>
@@ -1649,11 +1673,16 @@ What's new: 🚀 we've open-sourced Plugboard - please <a href="https://github.c
 <p>In some cases you might want to create a loop in your model. This is commonly the case where you need to include feedback: for example you might have a component modelling the temperature of a heated hot-water tank and another one representing an automatic controller that turns the heating element on and off.</p>
 <p>To make models like this work in Plugboard you will need to specify <code>initial_values</code> somewhere in the loop: this ensures that each of the <a class="autorefs autorefs-internal" href="../../../api/component/component/#plugboard.component.Component"><code>Component</code></a> objects can get all their inputs at the first call to <code>process.step()</code>, allowing the model to start running.</p>
 <p>Consider this model in which the <code>Sum</code> component will accumulate a scaled part of its value at every iteration:</p>
-<pre class="mermaid"><code>graph LR;
-    Random(random)--&gt;Sum(sum);
-    Sum(sum)--&gt;|"&lt;i&gt;a&lt;sub&gt;t=0&lt;/sub&gt;=0&lt;/i&gt;"|Scale(scale);
-    Scale(scale)--&gt;Sum(sum);
-    Sum(sum)----&gt;SaveOut(save-output);</code></pre>
+<pre class="mermaid"><code>flowchart LR
+    random@{ shape: rounded, label: Random&lt;br&gt;**random** } --&gt; sum@{ shape: rounded, label: Sum&lt;br&gt;**sum** }
+    scale@{ shape: rounded, label: Scale&lt;br&gt;**scale** } --&gt; sum@{ shape: rounded, label: Sum&lt;br&gt;**sum** }
+    sum@{ shape: rounded, label: Sum&lt;br&gt;**sum** } --&gt; save-output@{ shape: rounded, label: Save&lt;br&gt;**save-output** }
+    sum@{ shape: rounded, label: Sum&lt;br&gt;**sum** } --&gt;|"&lt;i&gt;a&lt;sub&gt;t=0&lt;/sub&gt;=0&lt;/i&gt;"| scale@{ shape: rounded, label: Scale&lt;br&gt;**scale** }</code></pre>
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<p>The diagrams in these tutorials are created in <a href="https://mermaid.js.org/">Mermaid</a> syntax. You can make them directly in Plugboard using the <a class="autorefs autorefs-internal" href="../../../api/diagram/diagram/#plugboard.diagram.markdown_diagram"><code>markdown_diagram</code></a> function. Alternatively if you have a YAML config file you can run <code>plugboard process diagram your-yaml-file.yaml</code> on the command line.</p>
+<p>Creating diagrams can be a useful way to keep track of the different parts of your model as you build it out, and also helps to you to document how the model works.</p>
+</div>
 <p>We'll provide an initial input value of <code>a = 0</code> to the <code>Scale</code> component, allowing the model to run. Implementing this in <code>loop.py</code> we have:
 <div class="language-python highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">asyncio</span>
 </span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>

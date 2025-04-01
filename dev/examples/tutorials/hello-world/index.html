@@ -1097,6 +1097,8 @@ What's new: 🚀 we've open-sourced Plugboard - please <a href="https://github.c
       
         
       
+        
+      
     
     
       
@@ -1165,6 +1167,28 @@ What's new: 🚀 we've open-sourced Plugboard - please <a href="https://github.c
   
   <span class="md-ellipsis">
     connector
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../api/diagram/diagram/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    diagram
     
   </span>
   
@@ -1334,7 +1358,7 @@ What's new: 🚀 we've open-sourced Plugboard - please <a href="https://github.c
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4_9" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4_10" >
         
           
           
@@ -1351,14 +1375,14 @@ What's new: 🚀 we've open-sourced Plugboard - please <a href="https://github.c
             </a>
             
               
-              <label class="md-nav__link " for="__nav_4_9" id="__nav_4_9_label" tabindex="0">
+              <label class="md-nav__link " for="__nav_4_10" id="__nav_4_10_label" tabindex="0">
                 <span class="md-nav__icon md-icon"></span>
               </label>
             
           </div>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_9_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_4_9">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_10_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_10">
             <span class="md-nav__icon md-icon"></span>
             utils
           </label>
@@ -1578,8 +1602,8 @@ What's new: 🚀 we've open-sourced Plugboard - please <a href="https://github.c
 </div>
 <h3 id="setting-up-a-process">Setting up a <code>Process</code></h3>
 <p>Now we take these components, connect them up as a <a class="autorefs autorefs-internal" href="../../../api/process/process/#plugboard.process.Process"><code>Process</code></a>, and fire off the model. When instantiating each component we must provide a <code>name</code>, which we can use to help define the connections between them. Using a <a class="autorefs autorefs-internal" href="../../../api/schemas/schemas/#plugboard.schemas.ConnectorSpec"><code>ConnectorSpec</code></a> object, we tell Plugboard to connect the <code>out_1</code> output of the <code>a</code> component to the <code>in_1</code> input of <code>b</code>. Visually, the model will look like this:</p>
-<pre class="mermaid"><code>graph LR;
-    A(a)--&gt;B(b);</code></pre>
+<pre class="mermaid"><code>flowchart LR
+    a@{ shape: rounded, label: A&lt;br&gt;**a** } --&gt; b@{ shape: rounded, label: B&lt;br&gt;**b** }</code></pre>
 <p>The rest of the code is boilerplate: calling <code>run()</code> on the <a class="autorefs autorefs-internal" href="../../../api/process/process/#plugboard.process.Process"><code>Process</code></a> object triggers all the components to start iterating through all their inputs until a termination condition is reached. We're using <a class="autorefs autorefs-internal" href="../../../api/process/process/#plugboard.process.LocalProcess"><code>LocalProcess</code></a> here, because we are running this model locally with no parallel computation (will explore this in a later tutorial).</p>
 <p>Simulations proceed in an event-driven manner: when inputs arrive, the components are triggered to step forward in time. The framework handles the details of the inter-component communication, you just need to specify the logic of your components, and the connections between them.
 <div class="language-python highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="n">process</span> <span class="o">=</span> <span class="n">LocalProcess</span><span class="p">(</span>

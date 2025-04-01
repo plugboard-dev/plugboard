@@ -1106,6 +1106,8 @@ What's new: 🚀 we've open-sourced Plugboard - please <a href="https://github.c
       
         
       
+        
+      
     
     
       
@@ -1174,6 +1176,28 @@ What's new: 🚀 we've open-sourced Plugboard - please <a href="https://github.c
   
   <span class="md-ellipsis">
     connector
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../api/diagram/diagram/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    diagram
     
   </span>
   
@@ -1343,7 +1367,7 @@ What's new: 🚀 we've open-sourced Plugboard - please <a href="https://github.c
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4_9" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4_10" >
         
           
           
@@ -1360,14 +1384,14 @@ What's new: 🚀 we've open-sourced Plugboard - please <a href="https://github.c
             </a>
             
               
-              <label class="md-nav__link " for="__nav_4_9" id="__nav_4_9_label" tabindex="0">
+              <label class="md-nav__link " for="__nav_4_10" id="__nav_4_10_label" tabindex="0">
                 <span class="md-nav__icon md-icon"></span>
               </label>
             
           </div>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_9_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_4_9">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_10_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_10">
             <span class="md-nav__icon md-icon"></span>
             utils
           </label>
@@ -1539,12 +1563,12 @@ What's new: 🚀 we've open-sourced Plugboard - please <a href="https://github.c
 <p>Before running this tutorial be sure to install Ray with pip, or install plugboard with its optional <code>ray</code> extra.</p>
 <h2 id="parallelising-a-model">Parallelising a model</h2>
 <p>For demonstration purposes we're going to use a model with two branches that containing <code>Sleep</code> components to simulate computationally intensive activity. In real scenarios these might instead be calls to simulation software or machine-learning model inference.</p>
-<pre class="mermaid"><code>graph LR;
-    Iterator(input)--&gt;Slow(slow-sleep);
-    Iterator(input)--&gt;VerySlow(very-slow-sleep);
-    Slow(slow-sleep)--&gt;Timestamper(timestamper);
-    VerySlow(very-slow-sleep)--&gt;Timestamper(timestamper);
-    Timestamper(timestamper)--&gt;FileWriter(save-results);</code></pre>
+<pre class="mermaid"><code>flowchart LR
+    input@{ shape: rounded, label: Iterator&lt;br&gt;**input** } --&gt; slow-sleep@{ shape: rounded, label: Sleep&lt;br&gt;**slow-sleep** }
+    input@{ shape: rounded, label: Iterator&lt;br&gt;**input** } --&gt; very-slow-sleep@{ shape: rounded, label: Sleep&lt;br&gt;**very-slow-sleep** }
+    slow-sleep@{ shape: rounded, label: Sleep&lt;br&gt;**slow-sleep** } --&gt; timestamper@{ shape: rounded, label: Timestamper&lt;br&gt;**timestamper** }
+    timestamper@{ shape: rounded, label: Timestamper&lt;br&gt;**timestamper** } --&gt; save-results@{ shape: rounded, label: FileWriter&lt;br&gt;**save-results** }
+    very-slow-sleep@{ shape: rounded, label: Sleep&lt;br&gt;**very-slow-sleep** } --&gt; timestamper@{ shape: rounded, label: Timestamper&lt;br&gt;**timestamper** }</code></pre>
 <h3 id="defining-the-components">Defining the components</h3>
 <p>Let's define the various components that we need. The <code>Timestamper</code> component simply emits the current time in ISO format so that our output file will contain a record of how long each step of the model took. We can again use <a class="autorefs autorefs-internal" href="../../../api/library/library/#plugboard.library.FileWriter"><code>FileWriter</code></a> to save the output to CSV.
 <div class="language-python highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="k">class</span><span class="w"> </span><span class="nc">Iterator</span><span class="p">(</span><span class="n">Component</span><span class="p">):</span>
