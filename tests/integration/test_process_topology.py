@@ -5,6 +5,7 @@ import pytest
 
 from plugboard.component import IOController as IO
 from plugboard.connector import AsyncioConnector
+from plugboard.diagram import markdown_diagram
 from plugboard.process import LocalProcess
 from plugboard.schemas import ConnectorSpec
 from tests.conftest import ComponentTestHelper
@@ -47,6 +48,9 @@ async def test_circular_process_topology() -> None:
 
     assert all(comp.is_finished for comp in components)
 
+    # Create a markdown diagram of the process without error
+    _ = markdown_diagram(process)
+
 
 @pytest.mark.anyio
 async def test_branching_process_topology() -> None:
@@ -74,3 +78,6 @@ async def test_branching_process_topology() -> None:
     assert comp_c.out_2 == 9 * 2
 
     assert all(comp.is_finished for comp in components)
+
+    # Create a markdown diagram of the process without error
+    _ = markdown_diagram(process)

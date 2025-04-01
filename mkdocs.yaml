@@ -123,6 +123,7 @@ nav:
 - API Reference:
   - component: api/component/component.md
   - connector: api/connector/connector.md
+  - diagram: api/diagram/diagram.md
   - events: api/events/events.md
   - exceptions: api/exceptions/exceptions.md
   - library: api/library/library.md
