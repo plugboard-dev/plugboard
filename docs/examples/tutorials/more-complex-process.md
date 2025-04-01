@@ -29,7 +29,7 @@ Next, we'll connect the components together to form this model:
 flowchart LR
     offset@{ shape: rounded, label: Offset<br>**offset** } --> sum@{ shape: rounded, label: Sum<br>**sum** }
     random@{ shape: rounded, label: Random<br>**random** } --> offset@{ shape: rounded, label: Offset<br>**offset** }
-    random@{ shape: rounded, label: Random<br>**random** } --> save-input@{ shape: rounded, label: Save<br>**save-input** }
+    random@{ shape: rounded, label: Random<br>**random** } ----> save-input@{ shape: rounded, label: Save<br>**save-input** }
     random@{ shape: rounded, label: Random<br>**random** } --> scale@{ shape: rounded, label: Scale<br>**scale** }
     scale@{ shape: rounded, label: Scale<br>**scale** } --> sum@{ shape: rounded, label: Sum<br>**sum** }
     sum@{ shape: rounded, label: Sum<br>**sum** } --> save-output@{ shape: rounded, label: Save<br>**save-output** }
