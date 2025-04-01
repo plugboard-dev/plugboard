@@ -66,6 +66,11 @@ flowchart LR
     sum@{ shape: rounded, label: Sum<br>**sum** } -->|"<i>a<sub>t=0</sub>=0</i>"| scale@{ shape: rounded, label: Scale<br>**scale** }
 ```
 
+!!! tip
+    The diagrams in these tutorials are created in [Mermaid](https://mermaid.js.org/) syntax. You can make them directly in Plugboard using the [`markdown_diagram`][plugboard.diagram.markdown_diagram] function. Alternatively if you have a YAML config file you can run `plugboard process diagram your-yaml-file.yaml` on the command line.
+
+    Creating diagrams can be a useful way to keep track of the different parts of your model as you build it out, and also helps to you to document how the model works.
+
 We'll provide an initial input value of `a = 0` to the `Scale` component, allowing the model to run. Implementing this in `loop.py` we have:
 ```python
 --8<-- "examples/tutorials/002_complex_processes/loop.py:main"
