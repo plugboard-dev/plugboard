@@ -98,4 +98,4 @@ class MermaidDiagram(Diagram):
                 f"{cls._event_connector} "
                 f"{cls._node_from_event(event)}"
             )
-        return cls(spec=f"{cls._header}\n" + "\n".join(f"  {x}" for x in lines), **kwargs)
+        return cls(spec="\n  ".join((cls._header, *lines)), **kwargs)
