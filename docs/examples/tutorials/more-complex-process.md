@@ -26,13 +26,13 @@ We can put the code for each of these in `components.py`.
 Next, we'll connect the components together to form this model:
 
 ```mermaid
-graph LR;
-    Random(random)---->SaveIn(save-input);
-    Random(random)-->Offset(offset);
-    Random(random)-->Scale(scale);
-    Offset(offset)-->Sum(sum);
-    Scale(scale)-->Sum(sum);
-    Sum(sum)-->SaveOut(save-output);
+flowchart LR
+    offset@{ shape: rounded, label: Offset<br>**offset** } --> sum@{ shape: rounded, label: Sum<br>**sum** }
+    random@{ shape: rounded, label: Random<br>**random** } --> offset@{ shape: rounded, label: Offset<br>**offset** }
+    random@{ shape: rounded, label: Random<br>**random** } --> save-input@{ shape: rounded, label: Save<br>**save-input** }
+    random@{ shape: rounded, label: Random<br>**random** } --> scale@{ shape: rounded, label: Scale<br>**scale** }
+    scale@{ shape: rounded, label: Scale<br>**scale** } --> sum@{ shape: rounded, label: Sum<br>**sum** }
+    sum@{ shape: rounded, label: Sum<br>**sum** } --> save-output@{ shape: rounded, label: Save<br>**save-output** }
 ```
 
 !!! note
@@ -59,11 +59,11 @@ To make models like this work in Plugboard you will need to specify `initial_val
 Consider this model in which the `Sum` component will accumulate a scaled part of its value at every iteration:
 
 ```mermaid
-graph LR;
-    Random(random)-->Sum(sum);
-    Sum(sum)-->|"<i>a<sub>t=0</sub>=0</i>"|Scale(scale);
-    Scale(scale)-->Sum(sum);
-    Sum(sum)---->SaveOut(save-output);
+flowchart LR                                                                                                                                                                                             
+    random@{ shape: rounded, label: Random<br>**random** } --> sum@{ shape: rounded, label: Sum<br>**sum** }
+    scale@{ shape: rounded, label: Scale<br>**scale** } --> sum@{ shape: rounded, label: Sum<br>**sum** }
+    sum@{ shape: rounded, label: Sum<br>**sum** } --> save-output@{ shape: rounded, label: Save<br>**save-output** }
+    sum@{ shape: rounded, label: Sum<br>**sum** } -->|"<i>a<sub>t=0</sub>=0</i>"| scale@{ shape: rounded, label: Scale<br>**scale** }
 ```
 
 We'll provide an initial input value of `a = 0` to the `Scale` component, allowing the model to run. Implementing this in `loop.py` we have:
