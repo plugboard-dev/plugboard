@@ -143,15 +143,15 @@ plugboard:
       components:
       - type: hello_world.A
         args:
-          name: "a"
+          name: "component-a"
           iters: 10
       - type: hello_world.B
         args:
-          name: "b"
+          name: "component-b"
           path: "./b.txt"
       connectors:
-      - source: "a.out_1"
-        target: "b.in_1"
+      - source: "component-a.out_1"
+        target: "component-b.in_1"
 ```
 
 We can now run this model using the plugboard CLI with the command:
