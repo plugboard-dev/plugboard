@@ -11,14 +11,14 @@ In this tutorial we're going to introduce an **event-driven model**, where data 
 Here's the model that we're going to build. Given a stream of random numbers, we'll trigger `HighEvent` whenever the value is above `0.8` and `LowEvent` whenever the value is below `0.2`. This allows us to funnel data into different parts of the model: in this case we'll just save the latest high/low values to a file at each step. In the diagram the _dotted lines_ represent the flow of event data: `FindHighLowValues` will publish events, while `CollectHigh` and `CollectLow` will subscribe to receive high and low events respectively.
 
 ```mermaid
-graph LR;
-    Random(random-generator)-->FindHighLowValues(find-high-low);
-    FindHighLowValues(find-high-low)-.->HighEvent{{high-event}};
-    FindHighLowValues(find-high-low)-.->LowEvent{{low-event}};
-    HighEvent{{high-event}}-.->CollectHigh(collect-high);
-    LowEvent{{low-event}}-.->CollectLow(collect-low);
-    CollectHigh(collect-high)-->SaveHigh(save-high);
-    CollectLow(collect-low)-->SaveLow(save-low);
+flowchart LR
+    collect-high@{ shape: rounded, label: CollectHigh<br>**collect-high** } --> save-high@{ shape: rounded, label: FileWriter<br>**save-high** }
+    collect-low@{ shape: rounded, label: CollectLow<br>**collect-low** } --> save-low@{ shape: rounded, label: FileWriter<br>**save-low** }
+    random-generator@{ shape: rounded, label: Random<br>**random-generator** } --> find-high-low@{ shape: rounded, label: FindHighLowValues<br>**find-high-low** }
+    low_event@{ shape: hex, label: LowEvent } -.-> collect-low@{ shape: rounded, label: CollectLow<br>**collect-low** }
+    high_event@{ shape: hex, label: HighEvent } -.-> collect-high@{ shape: rounded, label: CollectHigh<br>**collect-high** }
+    find-high-low@{ shape: rounded, label: FindHighLowValues<br>**find-high-low** } -.-> high_event@{ shape: hex, label: HighEvent }
+    find-high-low@{ shape: rounded, label: FindHighLowValues<br>**find-high-low** } -.-> low_event@{ shape: hex, label: LowEvent }
 ```
 
 ## Defining events
