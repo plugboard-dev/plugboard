@@ -19,9 +19,7 @@ We're going to build a model that loads rows of data from a CSV and then uses an
  flowchart LR
     llm@{ shape: rounded, label: LLMChat<br>**llm** } --> weather@{ shape: rounded, label: WeatherAPI<br>**weather** }
     llm@{ shape: rounded, label: LLMChat<br>**llm** } --> save-results@{ shape: rounded, label: FileWriter<br>**save-results** }
-    llm@{ shape: rounded, label: LLMChat<br>**llm** } --> weather@{ shape: rounded, label: WeatherAPI<br>**weather** }
     load-text@{ shape: rounded, label: FileReader<br>**load-text** } --> llm@{ shape: rounded, label: LLMChat<br>**llm** }
-    weather@{ shape: rounded, label: WeatherAPI<br>**weather** } --> save-results@{ shape: rounded, label: FileWriter<br>**save-results** }
     weather@{ shape: rounded, label: WeatherAPI<br>**weather** } --> save-results@{ shape: rounded, label: FileWriter<br>**save-results** }
 ```
 
