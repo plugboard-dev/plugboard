@@ -178,6 +178,12 @@ class Component(ABC, ExportMixin):
         """Executes component logic for a single step."""
         pass
 
+    @property
+    def _can_step(self) -> bool:
+        """Checks if the component can step."""
+        input_is_not_required = len(self.io.inputs) == 0
+        return input_is_not_required or self._io_inputs_received
+
     def _handle_step_wrapper(self) -> _t.Callable:
         self._step = self.step
 
@@ -186,7 +192,7 @@ class Component(ABC, ExportMixin):
             await self.io.read()
             self._bind_inputs()
             await self._handle_events()
-            if self._io_inputs_received:
+            if self._can_step:
                 await self._step()
             self._bind_outputs()
             await self.io.write()
@@ -214,7 +220,7 @@ class Component(ABC, ExportMixin):
         for field in self.io.outputs:
             field_default = getattr(self, field, None)
             self._io_data[_io_key_out][field] = field_default
-        if self._io_inputs_received:
+        if self._can_step:
             self.io.buf_fields[_io_key_out] = self._io_data[_io_key_out]
 
     async def _handle_events(self) -> None:
