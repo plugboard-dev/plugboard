@@ -20,6 +20,10 @@ from plugboard.state import StateBackend
 from plugboard.utils import DI, ClassRegistry, ExportMixin, is_on_ray_worker
 
 
+_io_key_in: str = str(IODirection.INPUT)
+_io_key_out: str = str(IODirection.OUTPUT)
+
+
 class Component(ABC, ExportMixin):
     """`Component` base class for all components in a process model.
 
@@ -190,22 +194,22 @@ class Component(ABC, ExportMixin):
         """Binds input fields to component fields."""
         for field in self.io.inputs:
             field_default = getattr(self, field, None)
-            value = self.io.data[str(IODirection.INPUT)].get(field, field_default)
+            value = self.io.data[_io_key_in].get(field, field_default)
             setattr(self, field, value)
 
     def _bind_outputs(self) -> None:
         """Binds component fields to output fields."""
         for field in self.io.outputs:
             field_default = getattr(self, field, None)
-            self.io.data[str(IODirection.OUTPUT)][field] = field_default
+            self.io.data[_io_key_out][field] = field_default
 
     async def _handle_events(self) -> None:
         """Handles incoming events."""
         async with asyncio.TaskGroup() as tg:
             # FIXME : If a StopEvent is received, processing of other events may hit
             #       : IOStreamClosedError due to concurrent execution.
-            while self.io.events[str(IODirection.INPUT)]:
-                event = self.io.events[str(IODirection.INPUT)].popleft()
+            while self.io.events[_io_key_in]:
+                event = self.io.events[_io_key_in].popleft()
                 tg.create_task(self._handle_event(event))
 
     async def _handle_event(self, event: Event) -> None:
