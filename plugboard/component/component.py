@@ -202,6 +202,8 @@ class Component(ABC, ExportMixin):
     async def _handle_events(self) -> None:
         """Handles incoming events."""
         async with asyncio.TaskGroup() as tg:
+            # FIXME : If a StopEvent is received, processing of other events may hit
+            #       : IOStreamClosedError due to concurrent execution.
             while self.io.events[str(IODirection.INPUT)]:
                 event = self.io.events[str(IODirection.INPUT)].popleft()
                 tg.create_task(self._handle_event(event))

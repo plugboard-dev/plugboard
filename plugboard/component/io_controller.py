@@ -142,6 +142,7 @@ class IOController:
         if self._has_received_events.is_set():
             async with self._has_received_events_lock:
                 self._has_received_events.clear()
+                # FIXME : Sort events by time stamp so events are processed in time order.
                 self.events[_io_key_in].extend(self._received_events)
                 self._received_events.clear()
 
