@@ -58,13 +58,13 @@ test = [
     "aiofile~=3.9",
     "aiosqlite~=0.20",
     "anyio>=4.3.0,<4.4.0", # FIXME: Pinned due to hanging tests when running with anyio==4.4.0 on 2024-07-01
+    "coverage>=7.7.1",
     "llama-index>=0.12.11",
     "moto[server]~=5.0",
     "openai-responses>=0.11.4",
     "pytest~=8.3",
     "pytest-asyncio~=0.23",
     "pytest-cases~=3.8",
-    "pytest-cov>=6.0.0",
     "pytest-env~=1.1",
     "pytest-rerunfailures~=14.0",
     "ray>=2.40.0",
@@ -77,6 +77,9 @@ docs = [
     "mkdocs-jupyter>=0.25.1",
     "mkdocs-material~=9.5",
     "mkdocstrings[python]~=0.25",
+]
+ray = [
+    "ray[default]>=2.42.1",
 ]
 
 [build-system]
@@ -95,6 +98,13 @@ plugboard = "plugboard.cli:app"
 # env = []
 asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "function"
+
+[tool.coverage.run]
+source = ["plugboard"]
+branch = true
+parallel = true
+concurrency = ["multiprocessing", "thread"]
+sigterm = true
 
 [tool.mypy]  # Static type checking
 exclude = [".git", "__pycache__", ".venv", "venv", "docs", "examples"]
