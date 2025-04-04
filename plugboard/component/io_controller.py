@@ -209,7 +209,7 @@ class IOController:
             raise self._build_io_stream_error(IODirection.OUTPUT, eg) from eg
 
     async def _write_fields(self) -> None:
-        if _io_key_out not in self.buf_fields:
+        if not self.buf_fields[_io_key_out]:
             return
         async with asyncio.TaskGroup() as tg:
             for (field, _), chan in self._output_channels.items():

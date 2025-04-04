@@ -70,7 +70,7 @@ class Component(ABC, ExportMixin):
             output_events=self.__class__.io.output_events,
             namespace=self.name,
         )
-        self._io_data: dict[str, dict[str, _t.Any]] = {}
+        self._io_data: dict[str, dict[str, _t.Any]] = {_io_key_in: {}, _io_key_out: {}}
         self._io_inputs_received: bool = False
 
         self._logger = DI.logger.sync_resolve().bind(cls=self.__class__.__name__, name=self.name)
@@ -206,7 +206,9 @@ class Component(ABC, ExportMixin):
 
     def _bind_inputs(self) -> None:
         """Binds input fields to component fields."""
+        # Consume buffer data and reset to empty value
         field_inputs = self.io.buf_fields.pop(_io_key_in, {})
+        self.io.buf_fields[_io_key_in] = {}
         if field_inputs:
             self._io_inputs_received = True
         for field in self.io.inputs:
