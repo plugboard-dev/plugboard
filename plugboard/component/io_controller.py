@@ -41,8 +41,8 @@ class IOController:
         self.output_events = output_events or []
         if set(self.initial_values.keys()) - set(self.inputs):
             raise ValueError("Initial values must be for input fields only.")
-        self.data: dict[str, dict[str, _t.Any]] = {_io_key_in: {}, _io_key_out: {}}
-        self.events: dict[str, deque[Event]] = {_io_key_in: deque(), _io_key_out: deque()}
+        self.buf_fields: dict[str, dict[str, _t.Any]] = {_io_key_in: {}, _io_key_out: {}}
+        self.buf_events: dict[str, deque[Event]] = {_io_key_in: deque(), _io_key_out: deque()}
         self._input_channels: dict[tuple[str, str], Channel] = {}
         self._output_channels: dict[tuple[str, str], Channel] = {}
         self._input_event_channels: dict[str, Channel] = {}
@@ -143,12 +143,13 @@ class IOController:
             async with self._has_received_events_lock:
                 self._has_received_events.clear()
                 # FIXME : Sort events by time stamp so events are processed in time order.
-                self.events[_io_key_in].extend(self._received_events)
+                self.buf_events[_io_key_in].extend(self._received_events)
                 self._received_events.clear()
 
     async def _read_fields(
         self,
     ) -> None:
+        self.buf_fields[_io_key_in] = {}
         read_tasks = []
         for (key, _), chan in self._input_channels.items():
             # FIXME : Looks like multiple channels for same field will trample each other
@@ -165,7 +166,7 @@ class IOController:
             self._read_tasks.pop(key)
             if (e := task.exception()) is not None:
                 raise e
-            self.data[_io_key_in][key] = task.result()
+            self.buf_fields[_io_key_in][key] = task.result()
 
     async def _read_events(self) -> None:
         fan_in = AsyncioChannel()
@@ -208,19 +209,21 @@ class IOController:
             raise self._build_io_stream_error(IODirection.OUTPUT, eg) from eg
 
     async def _write_fields(self) -> None:
+        if _io_key_out not in self.buf_fields:
+            return
         async with asyncio.TaskGroup() as tg:
             for (field, _), chan in self._output_channels.items():
                 tg.create_task(self._write_field(field, chan))
 
     async def _write_field(self, field: str, channel: Channel) -> None:
-        item = self.data[_io_key_out][field]
+        item = self.buf_fields[_io_key_out][field]
         try:
             await channel.send(item)
         except ChannelClosedError as e:
             raise ChannelClosedError(f"Channel closed for field: {field}.") from e
 
     async def _write_events(self) -> None:
-        queue = self.events[_io_key_out]
+        queue = self.buf_events[_io_key_out]
         async with asyncio.TaskGroup() as tg:
             for _ in range(len(queue)):
                 event = queue.popleft()
@@ -249,7 +252,7 @@ class IOController:
             raise IOStreamClosedError("Attempted queue_event on a closed io controller.")
         if event.safe_type() not in self._output_event_channels:
             raise ValueError(f"Unrecognised output event {event.type}.")
-        self.events[_io_key_out].append(event)
+        self.buf_events[_io_key_out].append(event)
 
     async def close(self) -> None:
         """Closes all input/output channels."""
