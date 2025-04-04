@@ -30,8 +30,8 @@ Let's define two components, `A` and `B`. `A` puts data into the model by genera
 Now we take these components, connect them up as a [`Process`][plugboard.process.Process], and fire off the model. When instantiating each component we must provide a `name`, which we can use to help define the connections between them. Using a [`ConnectorSpec`][plugboard.schemas.ConnectorSpec] object, we tell Plugboard to connect the `out_1` output of the `a` component to the `in_1` input of `b`. Visually, the model will look like this:
 
 ```mermaid
-graph LR;
-    A(a)-->B(b);
+flowchart LR
+    a@{ shape: rounded, label: A<br>**a** } --> b@{ shape: rounded, label: B<br>**b** }
 ```
 
 The rest of the code is boilerplate: calling `run()` on the [`Process`][plugboard.process.Process] object triggers all the components to start iterating through all their inputs until a termination condition is reached. We're using [`LocalProcess`][plugboard.process.LocalProcess] here, because we are running this model locally with no parallel computation (will explore this in a later tutorial).

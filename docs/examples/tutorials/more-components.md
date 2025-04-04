@@ -16,11 +16,11 @@ In this tutorial we'll build a model to process data through an LLM and showcase
 We're going to build a model that loads rows of data from a CSV and then uses an LLM to extract information about the geographical place referred to in each row. We'll then query an API to get the latest weather for each location.
 
 ```mermaid
-graph LR;
-    FileReader(load-text)-->LLMChat(llm);
-    LLMChat(llm)-->WeatherAPI(weather-api);
-    WeatherAPI(weather-api)---->FileWriter(save-results);
-    LLMChat(llm)---->FileWriter(save-results);
+ flowchart LR
+    llm@{ shape: rounded, label: LLMChat<br>**llm** } --> weather@{ shape: rounded, label: WeatherAPI<br>**weather** }
+    llm@{ shape: rounded, label: LLMChat<br>**llm** } --> save-results@{ shape: rounded, label: FileWriter<br>**save-results** }
+    load-text@{ shape: rounded, label: FileReader<br>**load-text** } --> llm@{ shape: rounded, label: LLMChat<br>**llm** }
+    weather@{ shape: rounded, label: WeatherAPI<br>**weather** } --> save-results@{ shape: rounded, label: FileWriter<br>**save-results** }
 ```
 
 ### Loading and saving data
