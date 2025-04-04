@@ -70,7 +70,7 @@ class Component(ABC, ExportMixin):
             output_events=self.__class__.io.output_events,
             namespace=self.name,
         )
-        self._io_data: dict[str, dict[str, _t.Any]] = {_io_key_in: {}, _io_key_out: {}}
+        self._io_data: dict[str, dict[str, _t.Any]] = {}
         self._io_inputs_received: bool = False
 
         self._logger = DI.logger.sync_resolve().bind(cls=self.__class__.__name__, name=self.name)
@@ -180,7 +180,11 @@ class Component(ABC, ExportMixin):
 
     @property
     def _can_step(self) -> bool:
-        """Checks if the component can step."""
+        """Checks if the component can step.
+
+        - if a component requires inputs, it can only step if the inputs have been received;
+        - otherwise, a component which does not require inputs can always step.
+        """
         input_is_not_required = len(self.io.inputs) == 0
         return input_is_not_required or self._io_inputs_received
 
