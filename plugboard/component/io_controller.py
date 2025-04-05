@@ -41,17 +41,20 @@ class IOController:
         self.output_events = output_events or []
         if set(self.initial_values.keys()) - set(self.inputs):
             raise ValueError("Initial values must be for input fields only.")
+
         self.buf_fields: dict[str, dict[str, _t.Any]] = {_io_key_in: {}, _io_key_out: {}}
         self.buf_events: dict[str, deque[Event]] = {_io_key_in: deque(), _io_key_out: deque()}
+
         self._input_channels: dict[tuple[str, str], Channel] = {}
         self._output_channels: dict[tuple[str, str], Channel] = {}
         self._input_event_channels: dict[str, Channel] = {}
         self._output_event_channels: dict[str, Channel] = {}
         self._input_event_types = {Event.safe_type(evt.type) for evt in self.input_events}
         self._output_event_types = {Event.safe_type(evt.type) for evt in self.output_events}
-        self._read_tasks: dict[str, asyncio.Task] = {}
         self._initial_values = {k: deque(v) for k, v in self.initial_values.items()}
+        self._read_tasks: dict[str, asyncio.Task] = {}
         self._is_closed = False
+
         self._logger = DI.logger.sync_resolve().bind(
             cls=self.__class__.__name__, namespace=self.namespace
         )
