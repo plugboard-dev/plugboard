@@ -100,15 +100,18 @@ async def test_process_stop_event(
             tg.create_task(process.run())
             tg.create_task(stop_after())
 
-        # StopEvent is sent half way through iter after iter n, where n=iters_before_stop.
-        # The event will be processed by component A in the iter following this one, hence n+2.
+        # StopEvent is sent half way through iter n+1, where n=iters_before_stop. The event will be
+        # processed by component A in the iter following this one. A does not need to wait for
+        # inputs before executing step, hence the step count reaches n+2 before stopping.
         assert comp_a.step_count == iters_before_stop + 2
+
         # Because A sleeps for sleep_time seconds before sending outputs, the B components, which
-        # block will waiting for field or event inputs, will receive the StopEvent before A sends
-        # the final output and then shutdown, hence n+1.
+        # block waiting for field or event inputs, will receive the StopEvent before A sends
+        # the final output and then shutdown. B components cannot call step until they receive
+        # inputs, and the StopEvent interrupts them before calling step, hence the count reaches n,
         for c in [comp_b1, comp_b2, comp_b3, comp_b4, comp_b5]:
             assert c.is_finished
-            assert c.step_count == iters_before_stop + 1
+            assert c.step_count == iters_before_stop
 
         # A performs n+1 full steps and is interrupted on step n+2 before a final update of out_1,
         # hence n+2.

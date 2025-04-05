@@ -20,6 +20,10 @@ from plugboard.state import StateBackend
 from plugboard.utils import DI, ClassRegistry, ExportMixin, is_on_ray_worker
 
 
+_io_key_in: str = str(IODirection.INPUT)
+_io_key_out: str = str(IODirection.OUTPUT)
+
+
 class Component(ABC, ExportMixin):
     """`Component` base class for all components in a process model.
 
@@ -66,6 +70,8 @@ class Component(ABC, ExportMixin):
             output_events=self.__class__.io.output_events,
             namespace=self.name,
         )
+        self._io_data: dict[str, dict[str, _t.Any]] = {_io_key_in: {}, _io_key_out: {}}
+        self._io_inputs_received: bool = False
 
         self._logger = DI.logger.sync_resolve().bind(cls=self.__class__.__name__, name=self.name)
         self._logger.info("Component created")
@@ -172,6 +178,16 @@ class Component(ABC, ExportMixin):
         """Executes component logic for a single step."""
         pass
 
+    @property
+    def _can_step(self) -> bool:
+        """Checks if the component can step.
+
+        - if a component requires inputs, it can only step if the inputs have been received;
+        - otherwise, a component which does not require inputs can always step.
+        """
+        input_is_not_required = len(self.io.inputs) == 0
+        return input_is_not_required or self._io_inputs_received
+
     def _handle_step_wrapper(self) -> _t.Callable:
         self._step = self.step
 
@@ -180,30 +196,46 @@ class Component(ABC, ExportMixin):
             await self.io.read()
             self._bind_inputs()
             await self._handle_events()
-            await self._step()
+            if self._can_step:
+                await self._step()
             self._bind_outputs()
             await self.io.write()
+            self._io_inputs_received = False
 
         return _wrapper
 
     def _bind_inputs(self) -> None:
         """Binds input fields to component fields."""
+        # Consume buffer data and reset to empty value
+        field_inputs = self.io.buf_fields.pop(_io_key_in, {})
+        self.io.buf_fields[_io_key_in] = {}
+        if field_inputs:
+            self._io_inputs_received = True
         for field in self.io.inputs:
             field_default = getattr(self, field, None)
-            value = self.io.data[str(IODirection.INPUT)].get(field, field_default)
+            value = field_default
+            if field in field_inputs:
+                value = field_inputs[field]
+            else:
+                field_inputs[field] = field_default
             setattr(self, field, value)
+        self._io_data[_io_key_in] = field_inputs
 
     def _bind_outputs(self) -> None:
         """Binds component fields to output fields."""
         for field in self.io.outputs:
             field_default = getattr(self, field, None)
-            self.io.data[str(IODirection.OUTPUT)][field] = field_default
+            self._io_data[_io_key_out][field] = field_default
+        if self._can_step:
+            self.io.buf_fields[_io_key_out] = self._io_data[_io_key_out]
 
     async def _handle_events(self) -> None:
         """Handles incoming events."""
         async with asyncio.TaskGroup() as tg:
-            while self.io.events[str(IODirection.INPUT)]:
-                event = self.io.events[str(IODirection.INPUT)].popleft()
+            # FIXME : If a StopEvent is received, processing of other events may hit
+            #       : IOStreamClosedError due to concurrent execution.
+            while self.io.buf_events[_io_key_in]:
+                event = self.io.buf_events[_io_key_in].popleft()
                 tg.create_task(self._handle_event(event))
 
     async def _handle_event(self, event: Event) -> None:
@@ -240,10 +272,11 @@ class Component(ABC, ExportMixin):
         self._logger.info("Component destroyed")
 
     def dict(self) -> dict[str, _t.Any]:  # noqa: D102
+        _io_data = getattr(self, "_io_data", {_io_key_in: {}, _io_key_out: {}})
         return {
             "id": self.id,
             "name": self.name,
-            **self.io.data,
+            **_io_data,
             "exports": {name: getattr(self, name, None) for name in self.exports or []},
         }
 
