@@ -272,10 +272,11 @@ class Component(ABC, ExportMixin):
         self._logger.info("Component destroyed")
 
     def dict(self) -> dict[str, _t.Any]:  # noqa: D102
+        _io_data = getattr(self, "_io_data", {_io_key_in: {}, _io_key_out: {}})
         return {
             "id": self.id,
             "name": self.name,
-            **self._io_data,
+            **_io_data,
             "exports": {name: getattr(self, name, None) for name in self.exports or []},
         }
 
