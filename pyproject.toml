@@ -38,7 +38,10 @@ dependencies = [
 aws = ["s3fs>=2024.9.0"]
 azure = ["adlfs>=2024.7.0"]
 gcp = ["gcsfs>=2024.9.0.post1"]
-ray = ["ray>=2.42.1"]
+ray = [
+    "optuna>=4.2.1",
+    "ray[default,tune]>=2.42.1",
+]
 llm = ["llama-index>=0.12.11"]
 websockets = ["websockets>=14.2"]
 
