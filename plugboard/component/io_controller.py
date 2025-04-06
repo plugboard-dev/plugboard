@@ -60,9 +60,11 @@ class IOController:
         )
         self._logger.info("IOController created")
 
+        self._received_fields: dict[str, _t.Any] = {}
+        self._received_fields_lock = asyncio.Lock()
         self._received_events: deque[Event] = deque()
+        self._received_events_lock = asyncio.Lock()
         self._has_received_events = asyncio.Event()
-        self._has_received_events_lock = asyncio.Lock()
 
     @property
     def is_closed(self) -> bool:
@@ -112,7 +114,8 @@ class IOController:
                         raise e
                     self._read_tasks.pop(task.get_name())
                     self._set_read_tasks()
-                    await self._flush_event_buffer()
+                    await self._flush_internal_field_buffer()
+                    await self._flush_internal_event_buffer()
             except* ChannelClosedError as eg:
                 await self.close()
                 raise self._build_io_stream_error(IODirection.INPUT, eg) from eg
@@ -141,9 +144,15 @@ class IOController:
             read_tasks.append(self._read_tasks[_events_wait_task])
         return read_tasks
 
-    async def _flush_event_buffer(self) -> None:
+    async def _flush_internal_field_buffer(self) -> None:
+        async with self._received_fields_lock:
+            # self.buf_fields.inputs.push(self._received_events)
+            self.buf_fields[_io_key_in] = self._received_fields
+            self._received_fields = {}
+
+    async def _flush_internal_event_buffer(self) -> None:
         if self._has_received_events.is_set():
-            async with self._has_received_events_lock:
+            async with self._received_events_lock:
                 self._has_received_events.clear()
                 # FIXME : Sort events by time stamp so events are processed in time order.
                 # self.buf_events.inputs.push(self._received_events)
@@ -153,8 +162,8 @@ class IOController:
     async def _read_fields(
         self,
     ) -> None:
-        # self.buf_fields.inputs.clear()
-        self.buf_fields[_io_key_in] = {}
+        if self.buf_fields[_io_key_in]:
+            return  # Don't read new data if buffered input data has not been consumed
         read_tasks = []
         for (key, _), chan in self._input_channels.items():
             # FIXME : Looks like multiple channels for same field will trample each other
@@ -166,13 +175,13 @@ class IOController:
         if len(read_tasks) == 0:
             return
         done, _ = await asyncio.wait(read_tasks, return_when=asyncio.ALL_COMPLETED)
-        for task in done:
-            key = task.get_name()
-            self._read_tasks.pop(key)
-            if (e := task.exception()) is not None:
-                raise e
-            # self.buf_fields.inputs.push({key: task.result()})
-            self.buf_fields[_io_key_in][key] = task.result()
+        async with self._received_fields_lock:
+            for task in done:
+                key = task.get_name()
+                self._read_tasks.pop(key)
+                if (e := task.exception()) is not None:
+                    raise e
+                self._received_fields[key] = task.result()
 
     async def _read_events(self) -> None:
         fan_in = AsyncioChannel()
@@ -188,7 +197,7 @@ class IOController:
 
             while True:
                 event = await fan_in.recv()
-                async with self._has_received_events_lock:
+                async with self._received_events_lock:
                     self._received_events.append(event)
                     self._has_received_events.set()
 
@@ -217,7 +226,7 @@ class IOController:
     async def _write_fields(self) -> None:
         # if not self.bug_fields.outputs:
         if not self.buf_fields[_io_key_out]:
-            return
+            return  # Don't attempt to write data if no data added to the output buffer
         async with asyncio.TaskGroup() as tg:
             for (field, _), chan in self._output_channels.items():
                 tg.create_task(self._write_field(field, chan))
