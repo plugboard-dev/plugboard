@@ -165,23 +165,23 @@ class IOController:
         if self.buf_fields[_io_key_in]:
             return  # Don't read new data if buffered input data has not been consumed
         read_tasks = []
-        for (key, _), chan in self._input_channels.items():
+        for (field, _), chan in self._input_channels.items():
             # FIXME : Looks like multiple channels for same field will trample each other
-            if key not in self._read_tasks:
-                task = asyncio.create_task(self._read_channel("field", key, chan))
-                task.set_name(key)
-                self._read_tasks[key] = task
-            read_tasks.append(self._read_tasks[key])
+            if field not in self._read_tasks:
+                task = asyncio.create_task(self._read_channel("field", field, chan))
+                task.set_name(field)
+                self._read_tasks[field] = task
+            read_tasks.append(self._read_tasks[field])
         if len(read_tasks) == 0:
             return
         done, _ = await asyncio.wait(read_tasks, return_when=asyncio.ALL_COMPLETED)
         async with self._received_fields_lock:
             for task in done:
-                key = task.get_name()
-                self._read_tasks.pop(key)
+                field = task.get_name()
+                self._read_tasks.pop(field)
                 if (e := task.exception()) is not None:
                     raise e
-                self._received_fields[key] = task.result()
+                self._received_fields[field] = task.result()
 
     async def _read_events(self) -> None:
         fan_in = AsyncioChannel()
