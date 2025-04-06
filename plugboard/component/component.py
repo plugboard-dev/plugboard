@@ -207,6 +207,7 @@ class Component(ABC, ExportMixin):
     def _bind_inputs(self) -> None:
         """Binds input fields to component fields."""
         # Consume buffer data and reset to empty value
+        # field_inputs = self.io.buf_fields.read()
         field_inputs = self.io.buf_fields.pop(_io_key_in, {})
         self.io.buf_fields[_io_key_in] = {}
         if field_inputs:
@@ -227,6 +228,7 @@ class Component(ABC, ExportMixin):
             field_default = getattr(self, field, None)
             self._io_data[_io_key_out][field] = field_default
         if self._can_step:
+            # self.io.buf_fields.write(self._io_data[_io_key_out])
             self.io.buf_fields[_io_key_out] = self._io_data[_io_key_out]
 
     async def _handle_events(self) -> None:
@@ -234,6 +236,10 @@ class Component(ABC, ExportMixin):
         async with asyncio.TaskGroup() as tg:
             # FIXME : If a StopEvent is received, processing of other events may hit
             #       : IOStreamClosedError due to concurrent execution.
+            # event_queue = self.io.buf_events.read()
+            # while event_queue:
+            #     event = event_queue.pop()
+            #     tg.create_task(self._handle_event(event))
             while self.io.buf_events[_io_key_in]:
                 event = self.io.buf_events[_io_key_in].popleft()
                 tg.create_task(self._handle_event(event))

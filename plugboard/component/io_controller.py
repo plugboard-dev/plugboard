@@ -146,12 +146,14 @@ class IOController:
             async with self._has_received_events_lock:
                 self._has_received_events.clear()
                 # FIXME : Sort events by time stamp so events are processed in time order.
+                # self.buf_events.inputs.push(self._received_events)
                 self.buf_events[_io_key_in].extend(self._received_events)
                 self._received_events.clear()
 
     async def _read_fields(
         self,
     ) -> None:
+        # self.buf_fields.inputs.clear()
         self.buf_fields[_io_key_in] = {}
         read_tasks = []
         for (key, _), chan in self._input_channels.items():
@@ -169,6 +171,7 @@ class IOController:
             self._read_tasks.pop(key)
             if (e := task.exception()) is not None:
                 raise e
+            # self.buf_fields.inputs.push({key: task.result()})
             self.buf_fields[_io_key_in][key] = task.result()
 
     async def _read_events(self) -> None:
@@ -212,6 +215,7 @@ class IOController:
             raise self._build_io_stream_error(IODirection.OUTPUT, eg) from eg
 
     async def _write_fields(self) -> None:
+        # if not self.bug_fields.outputs:
         if not self.buf_fields[_io_key_out]:
             return
         async with asyncio.TaskGroup() as tg:
@@ -219,6 +223,7 @@ class IOController:
                 tg.create_task(self._write_field(field, chan))
 
     async def _write_field(self, field: str, channel: Channel) -> None:
+        # item = self.buf_fields.outputs.pop(field)
         item = self.buf_fields[_io_key_out][field]
         try:
             await channel.send(item)
@@ -226,6 +231,7 @@ class IOController:
             raise ChannelClosedError(f"Channel closed for field: {field}.") from e
 
     async def _write_events(self) -> None:
+        # queue = self.buf_events.read()
         queue = self.buf_events[_io_key_out]
         async with asyncio.TaskGroup() as tg:
             for _ in range(len(queue)):
@@ -255,6 +261,7 @@ class IOController:
             raise IOStreamClosedError("Attempted queue_event on a closed io controller.")
         if event.safe_type() not in self._output_event_channels:
             raise ValueError(f"Unrecognised output event {event.type}.")
+        # self.buf_events.outputs.push([event])
         self.buf_events[_io_key_out].append(event)
 
     async def close(self) -> None:
