@@ -114,6 +114,7 @@ class TuneArgsSpec(PlugboardBaseModel):
             containing a direction for each objective.
         num_samples: The number of samples to draw during the optimisation.
         max_concurrent: The maximum number of concurrent trials.
+        parameters: The parameters to optimise over.
     """
 
     algorithm: _t.Union[OptunaSpec] = Field(OptunaSpec(), discriminator="type")
