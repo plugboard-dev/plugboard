@@ -1,7 +1,7 @@
 """Provides the `IOController` class for handling input/output operations."""
 
 import asyncio
-from collections import deque
+from collections import defaultdict, deque
 from functools import cached_property
 import typing as _t
 
@@ -164,24 +164,44 @@ class IOController:
     ) -> None:
         if self.buf_fields[_io_key_in]:
             return  # Don't read new data if buffered input data has not been consumed
-        read_tasks = []
-        for (field, _), chan in self._input_channels.items():
-            # FIXME : Looks like multiple channels for same field will trample each other
-            if field not in self._read_tasks:
-                task = asyncio.create_task(self._read_channel("field", field, chan))
-                task.set_name(field)
-                self._read_tasks[field] = task
-            read_tasks.append(self._read_tasks[field])
-        if len(read_tasks) == 0:
+
+        async def _read_channel(key: str, chan: Channel) -> tuple[str, _t.Any]:
+            """Reads a single channel and returns the key and result."""
+            data = await self._read_channel("field", key, chan)
+            return key, data
+
+        async def _read_channel_group(tasks: list[asyncio.Task]) -> tuple[str, _t.Any]:
+            """Reads a group of channels and returns the first available key and result."""
+            done, _ = await asyncio.wait(tasks, return_when=asyncio.FIRST_COMPLETED)
+            return done.pop().result()
+
+        read_tasks: dict[str, asyncio.Task] = {}
+        field_groups: dict[str, list[str]] = defaultdict(list)
+
+        for (field, conn_id), chan in self._input_channels.items():
+            key = f"{field}:{conn_id}"
+            if key not in self._read_tasks:
+                task = asyncio.create_task(_read_channel(key, chan))
+                self._read_tasks[key] = task
+                field_groups[field].append(key)
+            read_tasks[key] = self._read_tasks[key]
+        for field, keys in field_groups.items():
+            if len(keys) > 1:
+                field_tasks = [read_tasks.pop(k) for k in keys]
+                read_tasks[field] = asyncio.create_task(_read_channel_group(field_tasks))
+        if len(read_tasks.keys()) == 0:
             return
-        done, _ = await asyncio.wait(read_tasks, return_when=asyncio.ALL_COMPLETED)
+
+        done, _ = await asyncio.wait(read_tasks.values(), return_when=asyncio.ALL_COMPLETED)
+
         async with self._received_fields_lock:
             for task in done:
-                field = task.get_name()
-                self._read_tasks.pop(field)
+                key, data = task.result()
+                self._read_tasks.pop(key)
                 if (e := task.exception()) is not None:
                     raise e
-                self._received_fields[field] = task.result()
+                field = key.split(":")[0]
+                self._received_fields[field] = data
 
     async def _read_events(self) -> None:
         fan_in = AsyncioChannel()
