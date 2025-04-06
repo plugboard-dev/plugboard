@@ -282,23 +282,13 @@ class IOController:
         self._is_closed = True
         self._logger.info("IOController closed")
 
-    def _add_channel_for_field(
-        self, field: str, connector_id: str, direction: IODirection, channel: Channel
-    ) -> None:
-        io_fields = getattr(self, f"{direction}s")
-        if field not in io_fields:
-            raise ValueError(f"Unrecognised {direction} field {field}.")
-        io_channels = getattr(self, f"_{direction}_channels")
-        io_channels[(field, connector_id)] = channel
-
-    def _add_channel_for_event(
-        self, event_type: str, direction: IODirection, channel: Channel
-    ) -> None:
-        io_event_types = getattr(self, f"_{direction}_event_types")
-        if event_type not in io_event_types:
-            raise ValueError(f"Unrecognised {direction} event {event_type}.")
-        io_channels = getattr(self, f"_{direction}_event_channels")
-        io_channels[event_type] = channel
+    async def connect(self, connectors: list[Connector]) -> None:
+        """Connects the input/output fields to input/output channels."""
+        async with asyncio.TaskGroup() as tg:
+            for conn in connectors:
+                tg.create_task(self._add_channel(conn))
+        self._validate_connections()
+        self._logger.info("IOController connected")
 
     async def _add_channel(self, connector: Connector) -> None:
         if connector.spec.source.connects_to([self.namespace]):
@@ -318,13 +308,23 @@ class IOController:
             channel = await connector.connect_recv()
             self._add_channel_for_event(connector.spec.target.entity, IODirection.INPUT, channel)
 
-    async def connect(self, connectors: list[Connector]) -> None:
-        """Connects the input/output fields to input/output channels."""
-        async with asyncio.TaskGroup() as tg:
-            for conn in connectors:
-                tg.create_task(self._add_channel(conn))
-        self._validate_connections()
-        self._logger.info("IOController connected")
+    def _add_channel_for_field(
+        self, field: str, connector_id: str, direction: IODirection, channel: Channel
+    ) -> None:
+        io_fields = getattr(self, f"{direction}s")
+        if field not in io_fields:
+            raise ValueError(f"Unrecognised {direction} field {field}.")
+        io_channels = getattr(self, f"_{direction}_channels")
+        io_channels[(field, connector_id)] = channel
+
+    def _add_channel_for_event(
+        self, event_type: str, direction: IODirection, channel: Channel
+    ) -> None:
+        io_event_types = getattr(self, f"_{direction}_event_types")
+        if event_type not in io_event_types:
+            raise ValueError(f"Unrecognised {direction} event {event_type}.")
+        io_channels = getattr(self, f"_{direction}_event_channels")
+        io_channels[event_type] = channel
 
     def _validate_connections(self) -> None:
         connected_inputs = set(k for k, _ in self._input_channels.keys())
