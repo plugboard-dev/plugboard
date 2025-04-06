@@ -70,8 +70,8 @@ class Component(ABC, ExportMixin):
             output_events=self.__class__.io.output_events,
             namespace=self.name,
         )
-        self._io_data: dict[str, dict[str, _t.Any]] = {_io_key_in: {}, _io_key_out: {}}
-        self._io_inputs_received: bool = False
+        self._field_inputs: dict[str, _t.Any] = {}
+        self._field_inputs_ready: bool = False
 
         self._logger = DI.logger.sync_resolve().bind(cls=self.__class__.__name__, name=self.name)
         self._logger.info("Component created")
@@ -133,6 +133,17 @@ class Component(ABC, ExportMixin):
             return None
         raise AttributeError(f"'{self.__class__.__name__}' object has no attribute '{key}'")
 
+    def __setattr__(self, key: str, value: _t.Any) -> None:
+        """Sets attributes on the component.
+
+        If the attribute is an input field, it is set in the field input buffer for the current
+        step. This data is consumed by the `step` method when it is called and must be reset for
+        subsequent steps.
+        """
+        if key in self.io.inputs:
+            self._field_inputs[key] = value
+        super().__setattr__(key, value)
+
     @property
     def id(self) -> str:
         """Unique ID for `Component`."""
@@ -186,7 +197,7 @@ class Component(ABC, ExportMixin):
         - otherwise, a component which does not require inputs can always step.
         """
         input_is_not_required = len(self.io.inputs) == 0
-        return input_is_not_required or self._io_inputs_received
+        return input_is_not_required or self._field_inputs_ready
 
     def _handle_step_wrapper(self) -> _t.Callable:
         self._step = self.step
@@ -200,36 +211,42 @@ class Component(ABC, ExportMixin):
                 await self._step()
             self._bind_outputs()
             await self.io.write()
-            self._io_inputs_received = False
+            self._field_inputs_ready = False
 
         return _wrapper
 
     def _bind_inputs(self) -> None:
-        """Binds input fields to component fields."""
-        # Consume buffer data and reset to empty value
-        # field_inputs = self.io.buf_fields.read()
-        field_inputs = self.io.buf_fields.pop(_io_key_in, {})
+        """Binds input fields to component fields.
+
+        Input binding follows these rules:
+        - first, input field values are set to values assigned directly to the component;
+        - then, input field values are updated with any values present in the input buffer;
+        - if all inputs fields have values set through these mechanisms the component can step;
+        - any input fields not set through these mechanisms are set with default values.
+        """
+        # TODO : Support for default input field values?
+        # Consume input data directly assigned and read from channels and reset to empty values
+        # received_inputs = self.io.buf_fields.read()
+        received_inputs = self.io.buf_fields.pop(_io_key_in, {})
         self.io.buf_fields[_io_key_in] = {}
-        if field_inputs:
-            self._io_inputs_received = True
+        self._field_inputs.update(received_inputs)
+        # Check if all input fields have been set
+        self._field_inputs_ready = all(k in self._field_inputs for k in self.io.inputs)
         for field in self.io.inputs:
             field_default = getattr(self, field, None)
-            value = field_default
-            if field in field_inputs:
-                value = field_inputs[field]
-            else:
-                field_inputs[field] = field_default
+            value = self._field_inputs.get(field, field_default)
             setattr(self, field, value)
-        self._io_data[_io_key_in] = field_inputs
+        self._field_inputs = {}
 
     def _bind_outputs(self) -> None:
         """Binds component fields to output fields."""
+        output_data = {}
         for field in self.io.outputs:
             field_default = getattr(self, field, None)
-            self._io_data[_io_key_out][field] = field_default
+            output_data[field] = field_default
         if self._can_step:
-            # self.io.buf_fields.write(self._io_data[_io_key_out])
-            self.io.buf_fields[_io_key_out] = self._io_data[_io_key_out]
+            # self.io.buf_fields.write(output_data)
+            self.io.buf_fields[_io_key_out] = output_data
 
     async def _handle_events(self) -> None:
         """Handles incoming events."""
@@ -278,11 +295,14 @@ class Component(ABC, ExportMixin):
         self._logger.info("Component destroyed")
 
     def dict(self) -> dict[str, _t.Any]:  # noqa: D102
-        _io_data = getattr(self, "_io_data", {_io_key_in: {}, _io_key_out: {}})
+        field_data = {
+            _io_key_in: {k: getattr(self, k, None) for k in self.io.inputs},
+            _io_key_out: {k: getattr(self, k, None) for k in self.io.outputs},
+        }
         return {
             "id": self.id,
             "name": self.name,
-            **_io_data,
+            **field_data,
             "exports": {name: getattr(self, name, None) for name in self.exports or []},
         }
 
