@@ -230,6 +230,7 @@ class IOController:
         async with asyncio.TaskGroup() as tg:
             for (field, _), chan in self._output_channels.items():
                 tg.create_task(self._write_field(field, chan))
+        self.buf_fields[_io_key_out] = {}  # Clear the output buffer after writing
 
     async def _write_field(self, field: str, channel: Channel) -> None:
         # item = self.buf_fields.outputs.pop(field)
