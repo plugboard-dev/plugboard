@@ -96,33 +96,33 @@ Direction = _t.Literal["min", "max"]
 class TuneArgsDict(_t.TypedDict):
     """`TypedDict` of the [`Tuner`][plugboard.tune.Tuner] constructor arguments."""
 
-    algorithm: OptunaSpec
     objective: str | list[str]
-    mode: _t.NotRequired[Direction | list[list[Direction]]]
-    num_samples: int
-    max_concurrent: _t.NotRequired[int | None]
     parameters: list[ParameterSpec]
+    num_samples: int
+    mode: _t.NotRequired[Direction | list[list[Direction]]]
+    max_concurrent: _t.NotRequired[int | None]
+    algorithm: OptunaSpec
 
 
 class TuneArgsSpec(PlugboardBaseModel):
     """Specification of the arguments for the `Tune` class.
 
     Attributes:
-        algorithm: The algorithm to use for the optimisation.
         objective: The location of the objective(s) to optimise for in the `Process`.
+        parameters: The parameters to optimise over.
+        num_samples: The number of samples to draw during the optimisation.
         mode: The mode of optimisation. For multi-objective optimisation, this should be a list
             containing a direction for each objective.
-        num_samples: The number of samples to draw during the optimisation.
         max_concurrent: The maximum number of concurrent trials.
-        parameters: The parameters to optimise over.
+        algorithm: The algorithm to use for the optimisation.
     """
 
-    algorithm: _t.Union[OptunaSpec] = Field(OptunaSpec(), discriminator="type")
     objective: str | list[str]
-    mode: Direction | list[list[Direction]] = "max"
-    num_samples: PositiveInt
-    max_concurrent: PositiveInt | None = None
     parameters: list[ParameterSpec] = Field(min_length=1)
+    num_samples: PositiveInt
+    mode: Direction | list[list[Direction]] = "max"
+    max_concurrent: PositiveInt | None = None
+    algorithm: _t.Union[OptunaSpec] = Field(OptunaSpec(), discriminator="type")
 
     @model_validator(mode="after")
     def _validate_model(self: _t.Self) -> _t.Self:
