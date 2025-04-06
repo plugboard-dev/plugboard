@@ -154,9 +154,9 @@ class IOController:
         if self._has_received_events.is_set():
             async with self._received_events_lock:
                 self._has_received_events.clear()
-                # FIXME : Sort events by time stamp so events are processed in time order.
                 # self.buf_events.inputs.push(self._received_events)
-                self.buf_events[_io_key_in].extend(self._received_events)
+                events = sorted(self._received_events, key=lambda e: e.timestamp)
+                self.buf_events[_io_key_in].extend(events)
                 self._received_events.clear()
 
     async def _read_fields(
