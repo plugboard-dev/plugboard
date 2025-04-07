@@ -181,7 +181,7 @@ class IOController:
                 field_tasks = [read_tasks.pop(k) for k in keys]
                 group_task = asyncio.create_task(self._wait_for_first(field_tasks))
                 task_name = f"group:{field}"
-                task.set_name(task_name)
+                group_task.set_name(task_name)
                 read_tasks[task_name] = group_task
         if len(read_tasks.keys()) == 0:
             return
@@ -190,12 +190,17 @@ class IOController:
 
         async with self._received_fields_lock:
             for task in done:
-                _task = task.result() if task.get_name().startswith("group:") else task
+                try:
+                    # Get the inner field read task if this task is a group read task
+                    result = task.result()
+                    _task = result if isinstance(result, asyncio.Task) else task
+                except Exception:
+                    _task = task
                 task_name = _task.get_name()
                 self._read_tasks.pop(task_name)
-                if (e := task.exception()) is not None:
+                if (e := _task.exception()) is not None:
                     raise e
-                key, data = task.result()
+                key, data = _task.result()
                 field, _ = key
                 self._received_fields[field] = data
 
