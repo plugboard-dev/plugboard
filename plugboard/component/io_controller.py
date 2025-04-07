@@ -14,6 +14,7 @@ from plugboard.utils import DI
 
 IO_NS_UNSET = "__UNSET__"
 
+_t_field_key = tuple[str, str]
 _io_key_in: str = str(IODirection.INPUT)
 _io_key_out: str = str(IODirection.OUTPUT)
 _fields_read_task: str = "__READ_FIELDS__"
@@ -52,7 +53,7 @@ class IOController:
         self._input_event_types = {Event.safe_type(evt.type) for evt in self.input_events}
         self._output_event_types = {Event.safe_type(evt.type) for evt in self.output_events}
         self._initial_values = {k: deque(v) for k, v in self.initial_values.items()}
-        self._read_tasks: dict[str, asyncio.Task] = {}
+        self._read_tasks: dict[str | _t_field_key, asyncio.Task] = {}
         self._is_closed = False
 
         self._logger = DI.logger.sync_resolve().bind(
@@ -159,36 +160,24 @@ class IOController:
                 self.buf_events[_io_key_in].extend(events)
                 self._received_events.clear()
 
-    async def _read_fields(
-        self,
-    ) -> None:
+    async def _read_fields(self) -> None:
         if self.buf_fields[_io_key_in]:
             return  # Don't read new data if buffered input data has not been consumed
 
-        async def _read_channel(key: str, chan: Channel) -> tuple[str, _t.Any]:
-            """Reads a single channel and returns the key and result."""
-            data = await self._read_channel("field", key, chan)
-            return key, data
+        read_tasks: dict[str | _t_field_key, asyncio.Task] = {}
+        field_groups: dict[str, list[_t_field_key]] = defaultdict(list)
 
-        async def _read_channel_group(tasks: list[asyncio.Task]) -> tuple[str, _t.Any]:
-            """Reads a group of channels and returns the first available key and result."""
-            done, _ = await asyncio.wait(tasks, return_when=asyncio.FIRST_COMPLETED)
-            return done.pop().result()
-
-        read_tasks: dict[str, asyncio.Task] = {}
-        field_groups: dict[str, list[str]] = defaultdict(list)
-
-        for (field, conn_id), chan in self._input_channels.items():
-            key = f"{field}:{conn_id}"
+        for key, chan in self._input_channels.items():
+            field, _ = key
             if key not in self._read_tasks:
-                task = asyncio.create_task(_read_channel(key, chan))
+                task = asyncio.create_task(self._read_field(key, chan))
                 self._read_tasks[key] = task
-                field_groups[field].append(key)
+            field_groups[field].append(key)
             read_tasks[key] = self._read_tasks[key]
         for field, keys in field_groups.items():
             if len(keys) > 1:
                 field_tasks = [read_tasks.pop(k) for k in keys]
-                read_tasks[field] = asyncio.create_task(_read_channel_group(field_tasks))
+                read_tasks[field] = asyncio.create_task(self._wait_for_first(field_tasks))
         if len(read_tasks.keys()) == 0:
             return
 
@@ -200,8 +189,29 @@ class IOController:
                 self._read_tasks.pop(key)
                 if (e := task.exception()) is not None:
                     raise e
-                field = key.split(":")[0]
+                field, _ = key
                 self._received_fields[field] = data
+
+    @staticmethod
+    async def _wait_for_first(tasks: _t.Iterable[asyncio.Task]) -> _t.Any:
+        """Waits for and returns the first available result from a set of tasks."""
+        done, _ = await asyncio.wait(tasks, return_when=asyncio.FIRST_COMPLETED)
+        return done.pop().result()
+
+    async def _read_field(
+        self, key: tuple[str, str], channel: Channel
+    ) -> tuple[_t_field_key, _t.Any]:
+        """Reads a single field and returns the key and result."""
+        field, _ = key
+        try:
+            # Use an initial value if available
+            return key, self._initial_values[field].popleft()
+        except (IndexError, KeyError):
+            pass
+        try:
+            return key, await channel.recv()
+        except ChannelClosedError as e:
+            raise ChannelClosedError(f"Channel closed for field: {key}.") from e
 
     async def _read_events(self) -> None:
         fan_in = AsyncioChannel()
@@ -220,17 +230,6 @@ class IOController:
                 async with self._received_events_lock:
                     self._received_events.append(event)
                     self._has_received_events.set()
-
-    async def _read_channel(self, channel_type: str, key: str, channel: Channel) -> _t.Any:
-        try:
-            # Use an initial value if available
-            return self._initial_values[key].popleft()
-        except (IndexError, KeyError):
-            pass
-        try:
-            return await channel.recv()
-        except ChannelClosedError as e:
-            raise ChannelClosedError(f"Channel closed for {channel_type}: {key}.") from e
 
     async def write(self) -> None:
         """Writes data to output channels."""
@@ -313,21 +312,21 @@ class IOController:
 
     async def _add_channel(self, connector: Connector) -> None:
         if connector.spec.source.connects_to([self.namespace]):
-            channel = await connector.connect_send()
+            chan = await connector.connect_send()
             self._add_channel_for_field(
-                connector.spec.source.descriptor, connector.spec.id, IODirection.OUTPUT, channel
+                connector.spec.source.descriptor, connector.spec.id, IODirection.OUTPUT, chan
             )
         if connector.spec.target.connects_to([self.namespace]):
-            channel = await connector.connect_recv()
+            chan = await connector.connect_recv()
             self._add_channel_for_field(
-                connector.spec.target.descriptor, connector.spec.id, IODirection.INPUT, channel
+                connector.spec.target.descriptor, connector.spec.id, IODirection.INPUT, chan
             )
         if connector.spec.source.connects_to(self._output_event_types):
-            channel = await connector.connect_send()
-            self._add_channel_for_event(connector.spec.source.entity, IODirection.OUTPUT, channel)
+            chan = await connector.connect_send()
+            self._add_channel_for_event(connector.spec.source.entity, IODirection.OUTPUT, chan)
         if connector.spec.target.connects_to(self._input_event_types):
-            channel = await connector.connect_recv()
-            self._add_channel_for_event(connector.spec.target.entity, IODirection.INPUT, channel)
+            chan = await connector.connect_recv()
+            self._add_channel_for_event(connector.spec.target.entity, IODirection.INPUT, chan)
 
     def _add_channel_for_field(
         self, field: str, connector_id: str, direction: IODirection, channel: Channel
