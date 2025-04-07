@@ -164,20 +164,25 @@ class IOController:
         if self.buf_fields[_io_key_in]:
             return  # Don't read new data if buffered input data has not been consumed
 
-        read_tasks: dict[str | _t_field_key, asyncio.Task] = {}
-        field_groups: dict[str, list[_t_field_key]] = defaultdict(list)
+        read_tasks: dict[str, asyncio.Task] = {}
+        field_groups: dict[str, list[str]] = defaultdict(list)
 
         for key, chan in self._input_channels.items():
             field, _ = key
+            task_name = f"field:{key}"
             if key not in self._read_tasks:
                 task = asyncio.create_task(self._read_field(key, chan))
-                self._read_tasks[key] = task
-            field_groups[field].append(key)
-            read_tasks[key] = self._read_tasks[key]
+                task.set_name(task_name)
+                self._read_tasks[task_name] = task
+            field_groups[field].append(task_name)
+            read_tasks[task_name] = self._read_tasks[task_name]
         for field, keys in field_groups.items():
             if len(keys) > 1:
                 field_tasks = [read_tasks.pop(k) for k in keys]
-                read_tasks[field] = asyncio.create_task(self._wait_for_first(field_tasks))
+                group_task = asyncio.create_task(self._wait_for_first(field_tasks))
+                task_name = f"group:{field}"
+                task.set_name(task_name)
+                read_tasks[task_name] = group_task
         if len(read_tasks.keys()) == 0:
             return
 
@@ -185,18 +190,20 @@ class IOController:
 
         async with self._received_fields_lock:
             for task in done:
-                key, data = task.result()
-                self._read_tasks.pop(key)
+                _task = task.result() if task.get_name().startswith("group:") else task
+                task_name = _task.get_name()
+                self._read_tasks.pop(task_name)
                 if (e := task.exception()) is not None:
                     raise e
+                key, data = task.result()
                 field, _ = key
                 self._received_fields[field] = data
 
     @staticmethod
-    async def _wait_for_first(tasks: _t.Iterable[asyncio.Task]) -> _t.Any:
+    async def _wait_for_first(tasks: _t.Iterable[asyncio.Task]) -> asyncio.Task:
         """Waits for and returns the first available result from a set of tasks."""
         done, _ = await asyncio.wait(tasks, return_when=asyncio.FIRST_COMPLETED)
-        return done.pop().result()
+        return done.pop()
 
     async def _read_field(
         self, key: tuple[str, str], channel: Channel
