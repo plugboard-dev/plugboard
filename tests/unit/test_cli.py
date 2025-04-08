@@ -22,9 +22,11 @@ def test_cli_process_run() -> None:
         # Process must be built
         mock_process_builder.build.assert_called_once()
         # Process must be initialised
-        mock_process.init.assert_called_once()
+        mock_process.__aenter__.assert_called_once()
         # Process must be run
         mock_process.run.assert_called_once()
+        # Process must be destroyed
+        mock_process.__aexit__.assert_called_once()
 
 
 def test_cli_process_diagram() -> None:
