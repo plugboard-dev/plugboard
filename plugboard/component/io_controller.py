@@ -165,24 +165,17 @@ class IOController:
             return  # Don't read new data if buffered input data has not been consumed
 
         read_tasks: dict[str, asyncio.Task] = {}
-        field_groups: dict[str, list[str]] = defaultdict(list)
 
-        for key, chan in self._input_channels.items():
+        for key in self._input_channels:
             field, _ = key
-            task_name = f"field:{key}"
+            _key = (field, _io_key_in) if f"group:{field}" in self._read_tasks else key
+            task_name = f"field:{_key}"
             if task_name not in self._read_tasks:
-                task = asyncio.create_task(self._read_field(key, chan))
+                chan = self._input_channels[_key]
+                task = asyncio.create_task(self._read_field(_key, chan))
                 task.set_name(task_name)
                 self._read_tasks[task_name] = task
-            field_groups[field].append(task_name)
             read_tasks[task_name] = self._read_tasks[task_name]
-        for field, keys in field_groups.items():
-            if len(keys) > 1:
-                field_tasks = [read_tasks.pop(k) for k in keys]
-                group_task = asyncio.create_task(self._wait_for_first(field_tasks))
-                task_name = f"group:{field}"
-                group_task.set_name(task_name)
-                read_tasks[task_name] = group_task
         if len(read_tasks.keys()) == 0:
             return
 
@@ -190,29 +183,34 @@ class IOController:
 
         async with self._received_fields_lock:
             for task in done:
-                try:
-                    # Get the inner field read task if this task is a group read task
-                    result = task.result()
-                    _task = result if isinstance(result, asyncio.Task) else task
-                except Exception:
-                    _task = task
-                task_name = _task.get_name()
+                task_name = task.get_name()
                 self._read_tasks.pop(task_name)
-                if (e := _task.exception()) is not None:
+                if (e := task.exception()) is not None:
                     raise e
-                key, data = _task.result()
+                key, data = task.result()
                 field, _ = key
                 self._received_fields[field] = data
 
-    @staticmethod
-    async def _wait_for_first(tasks: _t.Iterable[asyncio.Task]) -> asyncio.Task:
-        """Waits for and returns the first available result from a set of tasks."""
-        done, _ = await asyncio.wait(tasks, return_when=asyncio.FIRST_COMPLETED)
-        return done.pop()
+    async def _read_field_group(
+        self, field_channels: list[tuple[_t_field_key, Channel]], fan_in: AsyncioChannel
+    ) -> None:
+        """Reads a group of fields and sends the results to a fan-in channel."""
 
-    async def _read_field(
-        self, key: tuple[str, str], channel: Channel
-    ) -> tuple[_t_field_key, _t.Any]:
+        async def _iter_field_channel(key: _t_field_key, chan: Channel) -> None:
+            while True:
+                try:
+                    _, result = await self._read_field(key, chan)
+                except ChannelClosedError:
+                    break
+                await fan_in.send(result)
+
+        async with asyncio.TaskGroup() as tg:
+            for key, chan in field_channels:
+                tg.create_task(_iter_field_channel(key, chan))
+
+        await fan_in.close()
+
+    async def _read_field(self, key: _t_field_key, channel: Channel) -> tuple[_t_field_key, _t.Any]:
         """Reads a single field and returns the key and result."""
         field, _ = key
         try:
@@ -319,6 +317,7 @@ class IOController:
         async with asyncio.TaskGroup() as tg:
             for conn in connectors:
                 tg.create_task(self._add_channel(conn))
+        self._create_input_field_group_tasks()
         self._validate_connections()
         self._logger.info("IOController connected")
 
@@ -357,6 +356,24 @@ class IOController:
             raise ValueError(f"Unrecognised {direction} event {event_type}.")
         io_channels = getattr(self, f"_{direction}_event_channels")
         io_channels[event_type] = channel
+
+    def _create_input_field_group_tasks(self) -> None:
+        """Groups input field channels by field name and launches read tasks for group inputs."""
+        if not self._has_field_inputs:
+            return
+        field_channels: dict[str, list[tuple[_t_field_key, Channel]]] = defaultdict(list)
+        for key, chan in self._input_channels.items():
+            field, _ = key
+            field_channels[field].append((key, chan))
+        for field, channels in field_channels.items():
+            if len(channels) == 1:
+                continue
+            fan_in = AsyncioChannel(maxsize=100)
+            self._input_channels[(field, _io_key_in)] = fan_in
+            group_task = asyncio.create_task(self._read_field_group(channels, fan_in))
+            task_name = f"group:{field}"
+            group_task.set_name(task_name)
+            self._read_tasks[task_name] = group_task
 
     def _validate_connections(self) -> None:
         connected_inputs = set(k for k, _ in self._input_channels.keys())
