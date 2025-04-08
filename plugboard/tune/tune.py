@@ -24,7 +24,7 @@ class Tuner:
         self,
         *,
         objective: str | list[str],
-        parameters: _t.Optional[list[ParameterSpec]],
+        parameters: list[ParameterSpec],
         num_samples: int,
         mode: Direction | list[list[Direction]] = "max",
         max_concurrent: _t.Optional[int] = None,
@@ -41,7 +41,7 @@ class Tuner:
             algorithm: Configuration for the underlying Optuna algorithm used for optimisation.
         """
         self._objective = objective
-        # TODO: Build params
+        self._parameters = dict(self._build_parameter(p) for p in parameters)
         if algorithm:
             algo_cls: _t.Optional[_t.Any] = locate(algorithm.type)
             if not algo_cls or not issubclass(algo_cls, ray.tune.search.SearchAlgorithm):
@@ -57,7 +57,7 @@ class Tuner:
             search_alg=_algo,
         )
 
-    def _build_parameters(self, parameter: ParameterSpec) -> tuple[str, _t.Any]:
+    def _build_parameter(self, parameter: ParameterSpec) -> tuple[str, _t.Any]:
         parameter_cls: _t.Optional[_t.Any] = locate(parameter.type)
         if not parameter_cls or parameter_cls not in _t.get_args(ParameterSpec):
             raise ValueError(f"Could not locate parameter class {parameter.type}")
@@ -71,6 +71,7 @@ class Tuner:
         """
 
         def _objective(config: dict[str, _t.Any]) -> _t.Any:
+            # TODO: Patch parameters into spec
             # process = ProcessBuilder.build(spec)
             # TODO: Implement this
             return None
