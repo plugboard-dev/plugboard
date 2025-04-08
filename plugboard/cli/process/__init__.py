@@ -39,8 +39,8 @@ def _build_process(config: ConfigSpec) -> Process:
 
 
 async def _run_process(process: Process) -> None:
-    await process.init()
-    await process.run()
+    async with process:
+        await process.run()
 
 
 @app.command()
