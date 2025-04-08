@@ -129,18 +129,17 @@ class IOController:
         read_tasks: list[asyncio.Task] = []
         if self._has_field_inputs:
             if _fields_read_task not in self._read_tasks:
-                read_fields_task = asyncio.create_task(self._read_fields())
-                read_fields_task.set_name(_fields_read_task)
+                read_fields_task = asyncio.create_task(self._read_fields(), name=_fields_read_task)
                 self._read_tasks[_fields_read_task] = read_fields_task
             read_tasks.append(self._read_tasks[_fields_read_task])
         if self._has_event_inputs:
             if _events_read_task not in self._read_tasks:
-                read_events_task = asyncio.create_task(self._read_events())
-                read_events_task.set_name(_events_read_task)
+                read_events_task = asyncio.create_task(self._read_events(), name=_events_read_task)
                 self._read_tasks[_events_read_task] = read_events_task
             if _events_wait_task not in self._read_tasks:
-                wait_for_events_task = asyncio.create_task(self._has_received_events.wait())
-                wait_for_events_task.set_name(_events_wait_task)
+                wait_for_events_task = asyncio.create_task(
+                    self._has_received_events.wait(), name=_events_wait_task
+                )
                 self._read_tasks[_events_wait_task] = wait_for_events_task
             read_tasks.append(self._read_tasks[_events_wait_task])
         return read_tasks
@@ -171,9 +170,9 @@ class IOController:
             _key = (field, _io_key_in) if f"group:{field}" in self._read_tasks else key
             task_name = f"field:{_key}"
             if task_name not in self._read_tasks:
-                chan = self._input_channels[_key]
-                task = asyncio.create_task(self._read_field(_key, chan))
-                task.set_name(task_name)
+                task = asyncio.create_task(
+                    self._read_field(_key, self._input_channels[_key]), name=task_name
+                )
                 self._read_tasks[task_name] = task
             read_tasks[task_name] = self._read_tasks[task_name]
         if len(read_tasks.keys()) == 0:
@@ -370,9 +369,10 @@ class IOController:
                 continue
             fan_in = AsyncioChannel(maxsize=100)
             self._input_channels[(field, _io_key_in)] = fan_in
-            group_task = asyncio.create_task(self._read_field_group(channels, fan_in))
             task_name = f"group:{field}"
-            group_task.set_name(task_name)
+            group_task = asyncio.create_task(
+                self._read_field_group(channels, fan_in), name=task_name
+            )
             self._read_tasks[task_name] = group_task
 
     def _validate_connections(self) -> None:
