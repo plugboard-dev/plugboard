@@ -43,8 +43,14 @@ class IOController:
         if set(self.initial_values.keys()) - set(self.inputs):
             raise ValueError("Initial values must be for input fields only.")
 
-        self.buf_fields: dict[str, dict[str, _t.Any]] = {_io_key_in: {}, _io_key_out: {}}
-        self.buf_events: dict[str, deque[Event]] = {_io_key_in: deque(), _io_key_out: deque()}
+        self.buf_fields: dict[str, IOBuffer] = {
+            _io_key_in: IOFieldBuffer(),
+            _io_key_out: IOFieldBuffer(),
+        }
+        self.buf_events: dict[str, IOBuffer] = {
+            _io_key_in: IOEventBuffer(),
+            _io_key_out: IOEventBuffer(),
+        }
 
         self._input_channels: dict[tuple[str, str], Channel] = {}
         self._output_channels: dict[tuple[str, str], Channel] = {}
@@ -146,17 +152,15 @@ class IOController:
 
     async def _flush_internal_field_buffer(self) -> None:
         async with self._received_fields_lock:
-            # self.buf_fields.inputs.push(self._received_events)
-            self.buf_fields[_io_key_in] = self._received_fields
+            self.buf_fields[_io_key_in].put(self._received_fields.items())
             self._received_fields = {}
 
     async def _flush_internal_event_buffer(self) -> None:
         if self._has_received_events.is_set():
             async with self._received_events_lock:
                 self._has_received_events.clear()
-                # self.buf_events.inputs.push(self._received_events)
                 events = sorted(self._received_events, key=lambda e: e.timestamp)
-                self.buf_events[_io_key_in].extend(events)
+                self.buf_events[_io_key_in].put(events)
                 self._received_events.clear()
 
     async def _read_fields(self) -> None:
@@ -252,25 +256,21 @@ class IOController:
             raise self._build_io_stream_error(IODirection.OUTPUT, eg) from eg
 
     async def _write_fields(self) -> None:
-        # if not self.bug_fields.outputs:
         if not self.buf_fields[_io_key_out]:
             return  # Don't attempt to write data if no data added to the output buffer
+        buffer = dict(self.buf_fields[_io_key_out].flush())
         async with asyncio.TaskGroup() as tg:
             for (field, _), chan in self._output_channels.items():
-                tg.create_task(self._write_field(field, chan))
-        self.buf_fields[_io_key_out] = {}  # Clear the output buffer after writing
+                tg.create_task(self._write_field(field, chan, buffer[field]))
 
-    async def _write_field(self, field: str, channel: Channel) -> None:
-        # item = self.buf_fields.outputs.pop(field)
-        item = self.buf_fields[_io_key_out][field]
+    async def _write_field(self, field: str, channel: Channel, item: _t.Any) -> None:
         try:
             await channel.send(item)
         except ChannelClosedError as e:
             raise ChannelClosedError(f"Channel closed for field: {field}.") from e
 
     async def _write_events(self) -> None:
-        # queue = self.buf_events.read()
-        queue = self.buf_events[_io_key_out]
+        queue = deque(self.buf_events[_io_key_out].flush())
         async with asyncio.TaskGroup() as tg:
             for _ in range(len(queue)):
                 event = queue.popleft()
@@ -299,8 +299,7 @@ class IOController:
             raise IOStreamClosedError("Attempted queue_event on a closed io controller.")
         if event.safe_type() not in self._output_event_channels:
             raise ValueError(f"Unrecognised output event {event.type}.")
-        # self.buf_events.outputs.push([event])
-        self.buf_events[_io_key_out].append(event)
+        self.buf_events[_io_key_out].put([event])
 
     async def close(self) -> None:
         """Closes all input/output channels."""
@@ -384,3 +383,55 @@ class IOController:
             )
         if unconnected_outputs := set(self.outputs) - connected_outputs:
             self._logger.warning("Output fields not connected", unconnected=unconnected_outputs)
+
+
+class IOBuffer(_t.Protocol):
+    """`IOBuffer` is a buffer for input/output data."""
+
+    def put(self, items: _t.Iterable) -> None:
+        """Adds items to the buffer."""
+        ...
+
+    def flush(self) -> _t.Iterable:
+        """Returns items in the buffer and resets the buffer."""
+        ...
+
+
+class IOFieldBuffer(IOBuffer):
+    """`IOFieldBuffer` is a buffer for input/output data."""
+
+    def __init__(self) -> None:
+        self._buf: dict[str, _t.Any] = dict()
+
+    def put(self, items: _t.Iterable) -> None:
+        """Adds items to the buffer."""
+        self._buf.update(dict(items))
+
+    def flush(self) -> _t.Iterable:
+        """Returns items in the buffer and resets the buffer."""
+        items = self._buf.items()
+        self._buf = dict()
+        return items
+
+    def __bool__(self) -> bool:
+        return bool(self._buf)
+
+
+class IOEventBuffer(IOBuffer):
+    """`IOEventBuffer` is a buffer for input/output events."""
+
+    def __init__(self) -> None:
+        self._buf: deque = deque()
+
+    def put(self, items: _t.Iterable) -> None:
+        """Adds items to the buffer."""
+        self._buf.extend(items)
+
+    def flush(self) -> _t.Iterable:
+        """Returns items in the buffer and resets the buffer."""
+        items = self._buf
+        self._buf = deque()
+        return items
+
+    def __bool__(self) -> bool:
+        return bool(self._buf)

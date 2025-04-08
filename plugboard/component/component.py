@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 import asyncio
-from collections import defaultdict
+from collections import defaultdict, deque
 from functools import wraps
 import typing as _t
 
@@ -226,9 +226,7 @@ class Component(ABC, ExportMixin):
         """
         # TODO : Support for default input field values?
         # Consume input data directly assigned and read from channels and reset to empty values
-        # received_inputs = self.io.buf_fields.read()
-        received_inputs = self.io.buf_fields.pop(_io_key_in, {})
-        self.io.buf_fields[_io_key_in] = {}
+        received_inputs = dict(self.io.buf_fields[_io_key_in].flush())
         self._field_inputs.update(received_inputs)
         # Check if all input fields have been set
         self._field_inputs_ready = all(k in self._field_inputs for k in self.io.inputs)
@@ -245,20 +243,16 @@ class Component(ABC, ExportMixin):
             field_default = getattr(self, field, None)
             output_data[field] = field_default
         if self._can_step:
-            # self.io.buf_fields.write(output_data)
-            self.io.buf_fields[_io_key_out] = output_data
+            self.io.buf_fields[_io_key_out].put(output_data.items())
 
     async def _handle_events(self) -> None:
         """Handles incoming events."""
         async with asyncio.TaskGroup() as tg:
             # FIXME : If a StopEvent is received, processing of other events may hit
             #       : IOStreamClosedError due to concurrent execution.
-            # event_queue = self.io.buf_events.read()
-            # while event_queue:
-            #     event = event_queue.pop()
-            #     tg.create_task(self._handle_event(event))
-            while self.io.buf_events[_io_key_in]:
-                event = self.io.buf_events[_io_key_in].popleft()
+            event_queue = deque(self.io.buf_events[_io_key_in].flush())
+            while event_queue:
+                event = event_queue.popleft()
                 tg.create_task(self._handle_event(event))
 
     async def _handle_event(self, event: Event) -> None:
