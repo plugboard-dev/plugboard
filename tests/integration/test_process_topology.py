@@ -118,7 +118,7 @@ async def test_multiple_inputs_to_one_field_process_topology() -> None:
     comp_c = C(name="comp_c")
     components = [comp_d1, comp_d2, comp_d3, comp_c]
 
-    # Connect both A.out_1 and B.out_1 to C.in_1
+    # Connect both D1.out_1 and D2.out_1 to C.in_1
     conn_d1c = AsyncioConnector(spec=ConnectorSpec(source="comp_d1.out_1", target="comp_c.in_1"))
     conn_d2c = AsyncioConnector(spec=ConnectorSpec(source="comp_d2.out_1", target="comp_c.in_1"))
     conn_d3c = AsyncioConnector(spec=ConnectorSpec(source="comp_d3.out_1", target="comp_c.in_2"))
@@ -130,7 +130,7 @@ async def test_multiple_inputs_to_one_field_process_topology() -> None:
     async with process:
         await process.run()
 
-    # We expect C.in_1 to have the last value received from either A or B
+    # We expect C.in_1 to have the last value received from either D1 or D2
     assert comp_c.in_1 in (3, 12)  # Either D1's final output (3) or D2's final output (3*4=12)
     assert comp_c.in_2 == 30  # Should be D3's final output (6*5=30)
 
