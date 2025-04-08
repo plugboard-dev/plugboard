@@ -20,6 +20,7 @@ from .entities import Entity
 from .io import IODirection
 from .process import ProcessArgsDict, ProcessArgsSpec, ProcessSpec
 from .state import StateBackendArgsDict, StateBackendArgsSpec, StateBackendSpec
+from .tune import Direction, OptunaSpec, ParameterSpec, TuneArgsDict, TuneArgsSpec, TuneSpec
 
 
 __all__ = [
@@ -33,8 +34,11 @@ __all__ = [
     "ConnectorMode",
     "ConnectorSocket",
     "ConnectorSpec",
+    "Direction",
     "Entity",
     "IODirection",
+    "OptunaSpec",
+    "ParameterSpec",
     "ProcessConfigSpec",
     "ProcessSpec",
     "ProcessArgsDict",
@@ -42,4 +46,7 @@ __all__ = [
     "StateBackendSpec",
     "StateBackendArgsDict",
     "StateBackendArgsSpec",
+    "TuneArgsDict",
+    "TuneArgsSpec",
+    "TuneSpec",
 ]

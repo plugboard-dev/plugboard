@@ -5,8 +5,7 @@ import typing as _t
 
 import ray.tune.search.optuna
 
-from plugboard.process import Process
-from plugboard.schemas.tune import Direction, OptunaSpec, ParameterSpec
+from plugboard.schemas import Direction, OptunaSpec, ParameterSpec, ProcessSpec
 from plugboard.utils.dependencies import depends_on_optional
 
 
@@ -42,7 +41,7 @@ class Tuner:
             algorithm: Configuration for the underlying Optuna algorithm used for optimisation.
         """
         self._objective = objective
-        self._parameters = parameters
+        # TODO: Build params
         if algorithm:
             algo_cls: _t.Optional[_t.Any] = locate(algorithm.type)
             if not algo_cls or not issubclass(algo_cls, ray.tune.search.SearchAlgorithm):
@@ -58,14 +57,26 @@ class Tuner:
             search_alg=_algo,
         )
 
-    def _objective_function(self) -> _t.Any:
-        pass
+    def _build_parameters(self, parameter: ParameterSpec) -> tuple[str, _t.Any]:
+        parameter_cls: _t.Optional[_t.Any] = locate(parameter.type)
+        if not parameter_cls or parameter_cls not in _t.get_args(ParameterSpec):
+            raise ValueError(f"Could not locate parameter class {parameter.type}")
+        return parameter.name, parameter_cls(**parameter.model_dump(exclude={"type", "name"}))
 
-    def run(self, process: Process) -> None:
+    def run(self, spec: ProcessSpec) -> None:
         """Run the optimisation job on Ray.
 
         Args:
-            process: The [`Process`][plugboard.process.Process] to optimise.
+            spec: The [`ProcessSpec`][plugboard.schemas.ProcessSpec] to optimise.
         """
-        # TODO: Implement the tuning logic here
-        self._tune = ray.tune.Tuner()
+
+        def _objective(config: dict[str, _t.Any]) -> _t.Any:
+            # process = ProcessBuilder.build(spec)
+            # TODO: Implement this
+            return None
+
+        self._tune = ray.tune.Tuner(
+            _objective,
+            param_space=[],
+            tune_config=self._config,
+        )
