@@ -170,7 +170,7 @@ class IOController:
         for key, chan in self._input_channels.items():
             field, _ = key
             task_name = f"field:{key}"
-            if key not in self._read_tasks:
+            if task_name not in self._read_tasks:
                 task = asyncio.create_task(self._read_field(key, chan))
                 task.set_name(task_name)
                 self._read_tasks[task_name] = task
