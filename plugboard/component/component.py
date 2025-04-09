@@ -209,8 +209,8 @@ class Component(ABC, ExportMixin):
         @wraps(self.step)
         async def _wrapper() -> None:
             await self.io.read()
-            self._bind_inputs()
             await self._handle_events()
+            self._bind_inputs()
             if self._can_step:
                 await self._step()
             self._bind_outputs()
