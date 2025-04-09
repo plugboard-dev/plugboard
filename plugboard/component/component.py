@@ -193,11 +193,15 @@ class Component(ABC, ExportMixin):
     def _can_step(self) -> bool:
         """Checks if the component can step.
 
-        - if a component requires inputs, it can only step if the inputs have been received;
-        - otherwise, a component which does not require inputs can always step.
+        - if a component has no input or output fields, it cannot step (purely event-driven case);
+        - if a component requires inputs, it can only step if all the inputs are available;
+        - otherwise, a component which has outputs but does not require inputs can always step.
         """
-        input_is_not_required = len(self.io.inputs) == 0
-        return input_is_not_required or self._field_inputs_ready
+        consumes_no_inputs = len(self.io.inputs) == 0
+        produces_no_outputs = len(self.io.outputs) == 0
+        if consumes_no_inputs and produces_no_outputs:
+            return False
+        return consumes_no_inputs or self._field_inputs_ready
 
     def _handle_step_wrapper(self) -> _t.Callable:
         self._step = self.step
