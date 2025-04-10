@@ -118,7 +118,6 @@ nav:
 - Demos:
   - Fundamentals:
     - Simple model: examples/demos/fundamentals/001_simple_model/simple-model.ipynb
-    - Car wash: examples/demos/fundamentals/002_car_wash_queue/car-wash.ipynb
   - LLMs:
     - Data filtering: examples/demos/llm/001_data_filter/llm-filtering.ipynb
     - Websocket streaming: examples/demos/llm/002_bluesky_websocket/bluesky-websocket.ipynb
