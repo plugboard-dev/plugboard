@@ -7,27 +7,23 @@ import asyncio
 import typing as _t
 
 from that_depends import Provide, inject
+import zmq
+import zmq.asyncio
 
 from plugboard._zmq.zmq_proxy import ZMQ_ADDR, ZMQProxy, create_socket, zmq_sockopts_t
 from plugboard.connector.connector import Connector
 from plugboard.connector.serde_channel import SerdeChannel
 from plugboard.exceptions import ChannelSetupError
 from plugboard.schemas.connector import ConnectorMode
-from plugboard.utils import DI, Settings, depends_on_optional, gen_rand_str
+from plugboard.utils import DI, Settings
 
-
-try:
-    from ray.util.queue import Queue
-    import zmq
-    import zmq.asyncio
-except ImportError:
-    pass
 
 ZMQ_CONFIRM_MSG: str = "__PLUGBOARD_CHAN_CONFIRM_MSG__"
 
 # Collection of poll tasks for ZMQ channels required to create strong refs to polling tasks
 # to avoid destroying tasks before they are done on garbage collection. Is there a better way?
-_zmq_poller_tasks: set[asyncio.Task] = set()
+_zmq_proxy_tasks: set[asyncio.Task] = set()
+_zmq_exchange_addr_tasks: set[asyncio.Task] = set()
 
 
 class ZMQChannel(SerdeChannel):
@@ -97,9 +93,6 @@ class ZMQChannel(SerdeChannel):
 class _ZMQConnector(Connector, ABC):
     """`_ZMQConnector` connects components using `ZMQChannel`."""
 
-    # TODO : Remove dependence on Ray from ZMQConnector. Introduce separate RayZMQConnector
-    #      : for Ray based ZMQChannel. Improve test coverage for Process and Connector combos.
-
     def __init__(
         self, *args: _t.Any, zmq_address: str = ZMQ_ADDR, maxsize: int = 2000, **kwargs: _t.Any
     ) -> None:
@@ -121,28 +114,91 @@ class _ZMQConnector(Connector, ABC):
 class _ZMQPipelineConnector(_ZMQConnector):
     """`_ZMQPipelineConnector` connects components in pipeline mode using `ZMQChannel`."""
 
-    # FIXME : If multiple workers call `connect_send` they will each see `_send_channel` null
-    #       : on first call and create a new channel. This will lead to multiple channels.
-    #       : This code only works for the special case of exactly one sender and one receiver
-    #       : per ZMQConnector.
-
-    @depends_on_optional("ray")
     def __init__(self, *args: _t.Any, **kwargs: _t.Any) -> None:
         super().__init__(*args, **kwargs)
-        # Use a Ray queue to ensure sync ZMQ port number
-        self._ray_queue = Queue(maxsize=1)
         self._send_channel: _t.Optional[ZMQChannel] = None
         self._recv_channel: _t.Optional[ZMQChannel] = None
-        self._confirm_msg = f"{ZMQ_CONFIRM_MSG}:{gen_rand_str()}".encode()
+
+        # Socket to receive sender address from sender
+        self._sender_rep_socket = create_socket(zmq.REP, [])
+        self._sender_rep_socket_port = self._sender_rep_socket.bind_to_random_port("tcp://*")
+        self._sender_rep_socket_addr = f"{self._zmq_address}:{self._sender_rep_socket_port}"
+        self._sender_req_lock = asyncio.Lock()
+        self._sender_addr: _t.Optional[str] = None
+
+        # Socket to send sender address to receiver
+        self._receiver_rep_socket = create_socket(zmq.REP, [])
+        self._receiver_rep_socket_port = self._receiver_rep_socket.bind_to_random_port("tcp://*")
+        self._receiver_rep_socket_addr = f"{self._zmq_address}:{self._receiver_rep_socket_port}"
+        self._receiver_req_lock = asyncio.Lock()
+
+        self._exchange_addr_task = asyncio.create_task(self._exchange_address())
+        _zmq_exchange_addr_tasks.add(self._exchange_addr_task)
+
+    def __getstate__(self) -> dict:
+        state = self.__dict__.copy()
+        for attr in (
+            "_sender_rep_socket",
+            "_sender_req_lock",
+            "_receiver_rep_socket",
+            "_receiver_req_lock",
+            "_push_socket",
+            "_exchange_addr_task",
+            "_send_channel",
+            "_recv_channel",
+        ):
+            if attr in state:
+                del state[attr]
+        return state
+
+    def __setstate__(self, state: dict) -> None:
+        self.__dict__.update(state)
+        self._send_channel = None
+        self._recv_channel = None
+
+    async def _exchange_address(self) -> None:
+        async def _handle_sender_requests() -> None:
+            async with self._sender_req_lock:
+                sender_request = await self._sender_rep_socket.recv_json()
+                if (sender_addr := sender_request.get("sender_address")) is None:
+                    await self._sender_rep_socket.send_json({"success": False})
+                else:
+                    self._sender_addr = sender_addr
+                await self._sender_rep_socket.send_json({"success": True})
+
+                while True:
+                    await self._sender_rep_socket.recv_json()
+                    await self._sender_rep_socket.send_json({"success": False})
+
+        async def _handle_receiver_requests() -> None:
+            while self._sender_addr is None:
+                await asyncio.sleep(0.5)
+            while True:
+                async with self._receiver_req_lock:
+                    await self._receiver_rep_socket.recv()
+                    await self._receiver_rep_socket.send(self._sender_addr.encode())
+
+        async with asyncio.TaskGroup() as tg:
+            tg.create_task(_handle_sender_requests())
+            tg.create_task(_handle_receiver_requests())
 
     async def connect_send(self) -> ZMQChannel:
         """Returns a `ZMQChannel` for sending messages."""
         if self._send_channel is not None:
             return self._send_channel
         send_socket = create_socket(zmq.PUSH, [(zmq.SNDHWM, self._maxsize)])
-        port = send_socket.bind_to_random_port("tcp://*")
-        await self._ray_queue.put_async(port)
-        await send_socket.send(self._confirm_msg)
+        send_port = send_socket.bind_to_random_port("tcp://*")
+        send_addr = f"{self._zmq_address}:{send_port}"
+
+        sender_req_socket = create_socket(zmq.REQ, [])
+        sender_req_socket.connect(self._sender_rep_socket_addr)
+        await sender_req_socket.send_json({"sender_address": send_addr})
+        resp = await sender_req_socket.recv_json()
+        sender_req_socket.close()
+        if resp.get("success", False) is not True:
+            raise RuntimeError("Failed to setup send socket")
+
+        await asyncio.sleep(0.1)  # Ensure connections established before first send. Better way?
         self._send_channel = ZMQChannel(send_socket=send_socket, maxsize=self._maxsize)
         return self._send_channel
 
@@ -151,13 +207,15 @@ class _ZMQPipelineConnector(_ZMQConnector):
         if self._recv_channel is not None:
             return self._recv_channel
         recv_socket = create_socket(zmq.PULL, [(zmq.RCVHWM, self._maxsize)])
-        # Wait for port from the send socket, use random poll interval to avoid spikes
-        port = await self._ray_queue.get_async()
-        self._ray_queue.shutdown()
-        recv_socket.connect(f"{self._zmq_address}:{port}")
-        msg = await recv_socket.recv()
-        if msg != self._confirm_msg:
-            raise ChannelSetupError("Channel confirmation message mismatch")
+
+        receiver_req_socket = create_socket(zmq.REQ, [])
+        receiver_req_socket.connect(self._receiver_rep_socket_addr)
+        await receiver_req_socket.send(b"")
+        send_addr = await receiver_req_socket.recv()
+        receiver_req_socket.close()
+
+        recv_socket.connect(send_addr.decode())
+        await asyncio.sleep(0.1)  # Ensure connections established before first send. Better way?
         self._recv_channel = ZMQChannel(recv_socket=recv_socket, maxsize=self._maxsize)
         return self._recv_channel
 
@@ -176,7 +234,7 @@ class _ZMQPubsubConnector(_ZMQConnector):
         self._poller.register(self._xsub_socket, zmq.POLLIN)
         self._poller.register(self._xpub_socket, zmq.POLLIN)
         self._poll_task = asyncio.create_task(self._poll())
-        _zmq_poller_tasks.add(self._poll_task)
+        _zmq_proxy_tasks.add(self._poll_task)
 
     def __getstate__(self) -> dict:
         state = self.__dict__.copy()
@@ -221,41 +279,83 @@ class _ZMQPubsubConnector(_ZMQConnector):
 class _ZMQPubsubConnectorProxy(_ZMQConnector):
     """`_ZMQPubsubConnectorProxy` acts is a python asyncio based proxy for `ZMQChannel` messages."""
 
-    def __init__(self, *args: _t.Any, **kwargs: _t.Any) -> None:
+    @inject
+    def __init__(
+        self, *args: _t.Any, zmq_proxy: ZMQProxy = Provide[DI.zmq_proxy], **kwargs: _t.Any
+    ) -> None:
         super().__init__(*args, **kwargs)
         self._topic = str(self.spec.source)
-        self._xsub_port: _t.Optional[int] = None
-        self._xpub_port: _t.Optional[int] = None
+        self._zmq_proxy = zmq_proxy
 
-    @inject
-    async def _get_proxy_ports(
-        self, zmq_proxy: ZMQProxy = Provide[DI.zmq_proxy]
-    ) -> tuple[int, int]:
-        if self._xsub_port is not None and self._xpub_port is not None:
-            return self._xsub_port, self._xpub_port
-        await zmq_proxy.start_proxy(zmq_address=self._zmq_address, maxsize=self._maxsize)
-        self._xsub_port, self._xpub_port = await zmq_proxy.get_proxy_ports()
-        return self._xsub_port, self._xpub_port
+        self._send_channel: _t.Optional[ZMQChannel] = None
+        self._recv_channel: _t.Optional[ZMQChannel] = None
+
+    def __getstate__(self) -> dict:
+        state = self.__dict__.copy()
+        for attr in ("_send_channel", "_recv_channel"):
+            if attr in state:
+                del state[attr]
+        return state
+
+    def __setstate__(self, state: dict) -> None:
+        self.__dict__.update(state)
+        self._send_channel = None
+        self._recv_channel = None
 
     async def connect_send(self) -> ZMQChannel:
         """Returns a `ZMQChannel` for sending pubsub messages."""
-        await self._get_proxy_ports()
+        if self._send_channel is not None:
+            return self._send_channel
         send_socket = create_socket(zmq.PUB, [(zmq.SNDHWM, self._maxsize)])
-        send_socket.connect(f"{self._zmq_address}:{self._xsub_port}")
+        send_socket.connect(self._zmq_proxy.xsub_addr)
         await asyncio.sleep(0.1)  # Ensure connections established before first send. Better way?
-        return ZMQChannel(send_socket=send_socket, topic=self._topic, maxsize=self._maxsize)
+        self._send_channel = ZMQChannel(
+            send_socket=send_socket, topic=self._topic, maxsize=self._maxsize
+        )
+        return self._send_channel
 
     async def connect_recv(self) -> ZMQChannel:
         """Returns a `ZMQChannel` for receiving pubsub messages."""
-        await self._get_proxy_ports()
+        if self._recv_channel is not None:
+            return self._recv_channel
         socket_opts: zmq_sockopts_t = [
             (zmq.RCVHWM, self._maxsize),
             (zmq.SUBSCRIBE, self._topic.encode("utf8")),
         ]
         recv_socket = create_socket(zmq.SUB, socket_opts)
-        recv_socket.connect(f"{self._zmq_address}:{self._xpub_port}")
+        recv_socket.connect(self._zmq_proxy.xpub_addr)
         await asyncio.sleep(0.1)  # Ensure connections established before first send. Better way?
-        return ZMQChannel(recv_socket=recv_socket, topic=self._topic, maxsize=self._maxsize)
+        self._recv_channel = ZMQChannel(
+            recv_socket=recv_socket, topic=self._topic, maxsize=self._maxsize
+        )
+        return self._recv_channel
+
+
+class _ZMQPipelineConnectorProxy(_ZMQPubsubConnectorProxy):
+    """`_ZMQPipelineConnectorProxy` connects components in pipeline mode using `ZMQChannel`.
+
+    Relies on a ZMQ proxy to handle message routing between components. Messages from publishers are
+    proxied to the subscribers through a ZMQ Push socket in a coroutine running on the proxy.
+    """
+
+    def __init__(self, *args: _t.Any, **kwargs: _t.Any) -> None:
+        super().__init__(*args, **kwargs)
+        self._topic = str(self.spec.id)
+
+    async def connect_recv(self) -> ZMQChannel:
+        """Returns a `ZMQChannel` for receiving messages."""
+        if self._recv_channel is not None:
+            return self._recv_channel
+        self._push_address = await self._zmq_proxy.add_push_socket(
+            self._topic, maxsize=self._maxsize
+        )
+        recv_socket = create_socket(zmq.PULL, [(zmq.RCVHWM, self._maxsize)])
+        recv_socket.connect(self._push_address)
+        await asyncio.sleep(0.1)  # Ensure connections established before first send. Better way?
+        self._recv_channel = ZMQChannel(
+            recv_socket=recv_socket, topic=self._topic, maxsize=self._maxsize
+        )
+        return self._recv_channel
 
 
 class ZMQConnector(_ZMQConnector):
@@ -268,7 +368,10 @@ class ZMQConnector(_ZMQConnector):
         super().__init__(*args, **kwargs)
         match self.spec.mode:
             case ConnectorMode.PIPELINE:
-                zmq_conn_cls: _t.Type[_ZMQConnector] = _ZMQPipelineConnector
+                if settings.flags.zmq_pubsub_proxy:
+                    zmq_conn_cls: _t.Type[_ZMQConnector] = _ZMQPipelineConnectorProxy
+                else:
+                    zmq_conn_cls = _ZMQPipelineConnector
             case ConnectorMode.PUBSUB:
                 print(f"{settings=}")
                 if settings.flags.zmq_pubsub_proxy:

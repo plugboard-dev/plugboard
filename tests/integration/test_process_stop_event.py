@@ -5,18 +5,18 @@ import asyncio
 import typing as _t
 
 import pytest
+import pytest_cases
 
 from plugboard.component import Component, IOController as IO
 from plugboard.connector import (
     AsyncioConnector,
     Connector,
     ConnectorBuilder,
-    ZMQConnector,
 )
 from plugboard.events import EventConnectorBuilder, StopEvent
-from plugboard.process import LocalProcess, Process
+from plugboard.process import LocalProcess, Process, RayProcess
 from plugboard.schemas import ConnectorSpec
-from tests.conftest import ComponentTestHelper
+from tests.conftest import ComponentTestHelper, zmq_connector_cls
 
 
 class A(ComponentTestHelper):
@@ -50,13 +50,13 @@ class B(ComponentTestHelper):
 
 
 @pytest.mark.anyio
-@pytest.mark.parametrize(
+@pytest_cases.parametrize(
     "process_cls, connector_cls",
     [
         (LocalProcess, AsyncioConnector),
-        (LocalProcess, ZMQConnector),
+        (LocalProcess, zmq_connector_cls),
         # (RayProcess, RayConnector),  # TODO : Pubsub/StopEvent unsupported. See https://github.com/plugboard-dev/plugboard/issues/101.
-        # (RayProcess, ZMQConnector),  # FIXME : Test assertion fails. See https://github.com/plugboard-dev/plugboard/issues/101.
+        (RayProcess, zmq_connector_cls),
     ],
 )
 async def test_process_stop_event(
@@ -100,15 +100,18 @@ async def test_process_stop_event(
             tg.create_task(process.run())
             tg.create_task(stop_after())
 
-        # StopEvent is sent half way through iter after iter n, where n=iters_before_stop.
-        # The event will be processed by component A in the iter following this one, hence n+2.
+        # StopEvent is sent half way through iter n+1, where n=iters_before_stop. The event will be
+        # processed by component A in the iter following this one. A does not need to wait for
+        # inputs before executing step, hence the step count reaches n+2 before stopping.
         assert comp_a.step_count == iters_before_stop + 2
+
         # Because A sleeps for sleep_time seconds before sending outputs, the B components, which
-        # block will waiting for field or event inputs, will receive the StopEvent before A sends
-        # the final output and then shutdown, hence n+1.
+        # block waiting for field or event inputs, will receive the StopEvent before A sends
+        # the final output and then shutdown. B components cannot call step until they receive
+        # inputs, and the StopEvent interrupts them before calling step, hence the count reaches n,
         for c in [comp_b1, comp_b2, comp_b3, comp_b4, comp_b5]:
             assert c.is_finished
-            assert c.step_count == iters_before_stop + 1
+            assert c.step_count == iters_before_stop
 
         # A performs n+1 full steps and is interrupted on step n+2 before a final update of out_1,
         # hence n+2.
@@ -116,4 +119,4 @@ async def test_process_stop_event(
         # Because the B components receive the StopEvent on iter n+1, they will only receive n
         # outputs from A before shutting down the IOController, hence n.
         for c in [comp_b1, comp_b2, comp_b3, comp_b4, comp_b5]:
-            assert c.out_1 == iters_before_stop
+            assert c.in_1 == iters_before_stop
