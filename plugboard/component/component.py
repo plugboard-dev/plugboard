@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 import asyncio
-from collections import defaultdict
+from collections import defaultdict, deque
 from functools import wraps
 import typing as _t
 
@@ -18,6 +18,10 @@ from plugboard.exceptions import (
 )
 from plugboard.state import StateBackend
 from plugboard.utils import DI, ClassRegistry, ExportMixin, is_on_ray_worker
+
+
+_io_key_in: str = str(IODirection.INPUT)
+_io_key_out: str = str(IODirection.OUTPUT)
 
 
 class Component(ABC, ExportMixin):
@@ -66,6 +70,8 @@ class Component(ABC, ExportMixin):
             output_events=self.__class__.io.output_events,
             namespace=self.name,
         )
+        self._field_inputs: dict[str, _t.Any] = {}
+        self._field_inputs_ready: bool = False
 
         self._logger = DI.logger.sync_resolve().bind(cls=self.__class__.__name__, name=self.name)
         self._logger.info("Component created")
@@ -127,6 +133,17 @@ class Component(ABC, ExportMixin):
             return None
         raise AttributeError(f"'{self.__class__.__name__}' object has no attribute '{key}'")
 
+    def __setattr__(self, key: str, value: _t.Any) -> None:
+        """Sets attributes on the component.
+
+        If the attribute is an input field, it is set in the field input buffer for the current
+        step. This data is consumed by the `step` method when it is called and must be reset for
+        subsequent steps.
+        """
+        if key in self.io.inputs:
+            self._field_inputs[key] = value
+        super().__setattr__(key, value)
+
     @property
     def id(self) -> str:
         """Unique ID for `Component`."""
@@ -172,38 +189,74 @@ class Component(ABC, ExportMixin):
         """Executes component logic for a single step."""
         pass
 
+    @property
+    def _can_step(self) -> bool:
+        """Checks if the component can step.
+
+        - if a component has no input or output fields, it cannot step (purely event-driven case);
+        - if a component requires inputs, it can only step if all the inputs are available;
+        - otherwise, a component which has outputs but does not require inputs can always step.
+        """
+        consumes_no_inputs = len(self.io.inputs) == 0
+        produces_no_outputs = len(self.io.outputs) == 0
+        if consumes_no_inputs and produces_no_outputs:
+            return False
+        return consumes_no_inputs or self._field_inputs_ready
+
     def _handle_step_wrapper(self) -> _t.Callable:
         self._step = self.step
 
         @wraps(self.step)
         async def _wrapper() -> None:
             await self.io.read()
-            self._bind_inputs()
             await self._handle_events()
-            await self._step()
+            self._bind_inputs()
+            if self._can_step:
+                await self._step()
             self._bind_outputs()
             await self.io.write()
+            self._field_inputs_ready = False
 
         return _wrapper
 
     def _bind_inputs(self) -> None:
-        """Binds input fields to component fields."""
+        """Binds input fields to component fields.
+
+        Input binding follows these rules:
+        - first, input field values are set to values assigned directly to the component;
+        - then, input field values are updated with any values present in the input buffer;
+        - if all inputs fields have values set through these mechanisms the component can step;
+        - any input fields not set through these mechanisms are set with default values.
+        """
+        # TODO : Support for default input field values?
+        # Consume input data directly assigned and read from channels and reset to empty values
+        received_inputs = dict(self.io.buf_fields[_io_key_in].flush())
+        self._field_inputs.update(received_inputs)
+        # Check if all input fields have been set
+        self._field_inputs_ready = all(k in self._field_inputs for k in self.io.inputs)
         for field in self.io.inputs:
             field_default = getattr(self, field, None)
-            value = self.io.data[str(IODirection.INPUT)].get(field, field_default)
+            value = self._field_inputs.get(field, field_default)
             setattr(self, field, value)
+        self._field_inputs = {}
 
     def _bind_outputs(self) -> None:
         """Binds component fields to output fields."""
+        output_data = {}
         for field in self.io.outputs:
             field_default = getattr(self, field, None)
-            self.io.data[str(IODirection.OUTPUT)][field] = field_default
+            output_data[field] = field_default
+        if self._can_step:
+            self.io.buf_fields[_io_key_out].put(output_data.items())
 
     async def _handle_events(self) -> None:
         """Handles incoming events."""
         async with asyncio.TaskGroup() as tg:
-            while self.io.events[str(IODirection.INPUT)]:
-                event = self.io.events[str(IODirection.INPUT)].popleft()
+            # FIXME : If a StopEvent is received, processing of other events may hit
+            #       : IOStreamClosedError due to concurrent execution.
+            event_queue = deque(self.io.buf_events[_io_key_in].flush())
+            while event_queue:
+                event = event_queue.popleft()
                 tg.create_task(self._handle_event(event))
 
     async def _handle_event(self, event: Event) -> None:
@@ -240,10 +293,14 @@ class Component(ABC, ExportMixin):
         self._logger.info("Component destroyed")
 
     def dict(self) -> dict[str, _t.Any]:  # noqa: D102
+        field_data = {
+            _io_key_in: {k: getattr(self, k, None) for k in self.io.inputs},
+            _io_key_out: {k: getattr(self, k, None) for k in self.io.outputs},
+        }
         return {
             "id": self.id,
             "name": self.name,
-            **self.io.data,
+            **field_data,
             "exports": {name: getattr(self, name, None) for name in self.exports or []},
         }
 
