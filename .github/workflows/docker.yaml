@@ -108,8 +108,7 @@ jobs:
           push-to-registry: true
 
       - name: Delete untagged images
-        uses: actions/delete-package-versions@v5
+        uses: dataaxiom/ghcr-cleanup-action@v1
         with:
-          package-name: 'plugboard'
-          package-type: 'container'
-          delete-only-untagged-versions: 'true'
+          delete-untagged: true
+          older-than: 30 days
