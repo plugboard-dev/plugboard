@@ -429,6 +429,8 @@ What's new: 🚀 we've open-sourced Plugboard - please <a href="https://github.c
       
         
       
+        
+      
     
     
       
@@ -757,6 +759,28 @@ What's new: 🚀 we've open-sourced Plugboard - please <a href="https://github.c
   
   <span class="md-ellipsis">
     Configuration
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../topics/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Topics
     
   </span>
   
@@ -1570,7 +1594,7 @@ What's new: 🚀 we've open-sourced Plugboard - please <a href="https://github.c
 <li>Specify its inputs and ouputs using an <a class="autorefs autorefs-internal" href="../../api/component/component/#plugboard.component.IOController"><code>IOController</code></a>;</li>
 <li>Define a <code>step()</code> method the executes the main logic of your component for a single step; and</li>
 <li>Optionally define an <code>init()</code> method to do any required preparatory steps before the model in run.</li>
-<li>In the case of event based models, define custom <code>Event</code> subclasses and corresponding event handler methods decorated with <code>Event.handler</code>.</li>
+<li>In the case of event based models, define custom <a class="autorefs autorefs-internal" href="../../api/events/events/#plugboard.events.Event"><code>Event</code></a> subclasses and corresponding event handler methods decorated with <code>Event.handler</code>.</li>
 </ul>
 <h3 id="connectors">Connectors</h3>
 <p>Data flows between components via <strong>Connectors</strong>. You will need to use these to tell Plugboard how data should flow between your components. Your overall model might be very simple, for example:</p>
@@ -1584,7 +1608,7 @@ What's new: 🚀 we've open-sourced Plugboard - please <a href="https://github.c
     B(Simulate process)--&gt;D(Record output);
     C(Process controller)--&gt;D(Record output);
     A(Load data)--&gt;D(Record output);</code></pre>
-<p>For models with explicitly declared input and output fields, connectors for each input-output pair must be defined explicitly using one of the <code>Connector</code> implementations. Connectors required for any events used in the model will be created for you automatically. </p>
+<p>For models with explicitly declared input and output fields, connectors for each input-output pair must be defined explicitly using one of the <a class="autorefs autorefs-internal" href="../../api/connector/connector/#plugboard.connector.Connector"><code>Connector</code></a> implementations. Connectors required for any events used in the model will be created for you automatically. </p>
 <h3 id="processes">Processes</h3>
 <p>Components and connectors are collected together under a <strong>Process</strong>. This top-level class takes care of starting the model and running it until completion. Model execution is broken down into discrete <em>steps</em>. Running a model means executing all steps for each component until all of the available data has flowed through the model. The <code>step()</code> method advances the model forward by a single step. The <code>run()</code> method will repeatedly call <code>step()</code> until completion.</p>
 <p>Plugboard supports both bounded and unbounded data streams. That is to say, you can either run a model with a fixed size input data set until completion, or run a model indefinitely which will continuously process new inputs as they arrive until a shutdown signal is received.</p>

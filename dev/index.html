@@ -551,6 +551,8 @@ What's new: 🚀 we've open-sourced Plugboard - please <a href="https://github.c
       
         
       
+        
+      
     
     
       
@@ -790,6 +792,28 @@ What's new: 🚀 we've open-sourced Plugboard - please <a href="https://github.c
   
   <span class="md-ellipsis">
     Configuration
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="usage/topics/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Topics
     
   </span>
   
@@ -1685,7 +1709,8 @@ What's new: 🚀 we've open-sourced Plugboard - please <a href="https://github.c
 <li>A <strong>command line interface</strong> for executing models;</li>
 <li>Built to handle the <strong>data intensive simulation</strong> requirements of industrial process applications;</li>
 <li>Modern implementation with <strong>Python 3.12 and above</strong> based around <strong>asyncio</strong> with complete type annotation coverage;</li>
-<li>Built-in integrations for <strong>loading/saving data</strong> from cloud storage and SQL databases.</li>
+<li>Built-in integrations for <strong>loading/saving data</strong> from cloud storage and SQL databases;</li>
+<li><strong>Detailed logging</strong> of component inputs, outputs and state for monitoring and process mining or surrogate modelling use-cases.</li>
 </ul>
 <h2 id="installation">🔌 Installation</h2>
 <p>Plugboard requires Python &gt;= 3.12. Install the package with pip inside a virtual env as below.
@@ -1694,7 +1719,7 @@ What's new: 🚀 we've open-sourced Plugboard - please <a href="https://github.c
 <p>Optional integrations for different cloud providers can be installed using <code>plugboard[aws]</code>, <code>plugboard[azure]</code> or <code>plugboard[gcp]</code>.</p>
 <p>Support for parallelisation can be installed using <code>plugboard[ray]</code>.</p>
 <h2 id="usage">🚀 Usage</h2>
-<p>Plugboard is built to help you with two things: defining process models, and executing those models. There are two main ways to interact with plugboard: via the Python API; or, via the CLI using model definitions saved in yaml or json format.</p>
+<p>Plugboard is built to help you with two things: defining process models, and executing those models. There are two main ways to interact with plugboard: via the Python API; or, via the CLI using model definitions saved in yaml format.</p>
 <h3 id="building-models-with-the-python-api">Building models with the Python API</h3>
 <p>A model is made up of one or more components, though Plugboard really shines when you have many! First we start by defining the <code>Component</code>s within our model. Components can have only inputs, only outputs, or both. To keep it simple we just have two components here, showing the most basic functionality. Each component has several methods which are called at different stages during model execution: <code>init</code> for optional initialisation actions; <code>step</code> to take a single step forward through time; <code>run</code> to execute all steps; and <code>destroy</code> for optional teardown actions.
 <div class="language-python highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">_t</span>
@@ -1755,7 +1780,7 @@ What's new: 🚀 we've open-sourced Plugboard - please <a href="https://github.c
 <pre class="mermaid"><code>flowchart LR
   component-a@{ shape: rounded, label: A&lt;br&gt;**component-a** } --&gt; component-b@{ shape: rounded, label: B&lt;br&gt;**component-b** }</code></pre></p>
 <h3 id="executing-pre-defined-models-on-the-cli">Executing pre-defined models on the CLI</h3>
-<p>In many cases, we want to define components once, with suitable parameters, and then use them repeatedly in different simulations. Plugboard enables this workflow with model specification files in yaml or json format. Once the components have been defined, the simple model above can be represented with a yaml file like so.
+<p>In many cases, we want to define components once, with suitable parameters, and then use them repeatedly in different simulations. Plugboard enables this workflow with model specification files in yaml format. Once the components have been defined, the simple model above can be represented as follows.
 <div class="language-yaml highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="c1"># my-model.yaml</span>
 </span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="nt">plugboard</span><span class="p">:</span>
 </span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="w">  </span><span class="nt">process</span><span class="p">:</span>
@@ -1777,18 +1802,17 @@ What's new: 🚀 we've open-sourced Plugboard - please <a href="https://github.c
 <div class="language-shell highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>plugboard<span class="w"> </span>process<span class="w"> </span>run<span class="w"> </span>my-model.yaml
 </span></code></pre></div></p>
 <h2 id="documentation">📖 Documentation</h2>
-<p>For more information including a detailed API reference and step-by-step usage examples, refer to the <a href="https://docs.plugboard.dev">documentation site</a>. We recommend diving into the <a href="https://docs.plugboard.dev/examples/tutorials/hello-world/">tutorials</a> for a step-by-step to getting started.</p>
+<p>For more information including a detailed API reference and step-by-step usage examples, refer to the <a href="https://docs.plugboard.dev">documentation site</a>. We recommend diving into the <a href="https://docs.plugboard.dev/latest/examples/tutorials/hello-world/">tutorials</a> for a step-by-step to getting started.</p>
 <h2 id="roadmap">🐾 Roadmap</h2>
 <p>Plugboard is under active development, with new features in the works:</p>
 <ul>
-<li>Detailed logging of component inputs, outputs and state for monitoring and process mining or surrogate modelling use-cases.</li>
 <li>Support for strongly typed data messages and validation based on pydantic.</li>
 <li>Support for different parallelisation patterns such as: single-threaded with coroutines, single-host multi process, or distributed with Ray in Kubernetes.</li>
 <li>Data exchange between components with popular messaging technologies like RabbitMQ and Google Pub/Sub.</li>
 <li>Support for different message exchange patterns such as: one-to-one, one-to-many, many-to-one etc via a broker; or peer-to-peer with http requests.</li>
 </ul>
 <h2 id="contributions">👋 Contributions</h2>
-<p>Contributions are welcomed and warmly received! For bug fixes and smaller feature requests feel free to open an issue on this repo. For any larger changes please get in touch with us to discuss first. More information for developers can be found in <a href="https://docs.plugboard.dev/contributing/">the contributing section</a> of the docs.</p>
+<p>Contributions are welcomed and warmly received! For bug fixes and smaller feature requests feel free to open an issue on this repo. For any larger changes please get in touch with us to discuss first. More information for developers can be found in <a href="https://docs.plugboard.dev/latest/contributing/">the contributing section</a> of the docs.</p>
 <h2 id="licence">⚖️ Licence</h2>
 <p>Plugboard is offered under the <a href="https://www.apache.org/licenses/LICENSE-2.0">Apache 2.0 Licence</a> so it's free for personal or commercial use within those terms.</p>
 
