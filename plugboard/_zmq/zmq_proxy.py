@@ -6,7 +6,7 @@ import asyncio
 import multiprocessing
 import typing as _t
 
-from pydantic import BaseModel, ValidationError
+from pydantic import BaseModel, Field, ValidationError
 import zmq
 import zmq.asyncio
 
@@ -62,8 +62,8 @@ def _create_sync_socket(
 class _PushSocketRequest(BaseModel):
     """Request to create a push socket."""
 
-    topic: str
-    maxsize: int
+    topic: str = Field(min_length=3)
+    maxsize: int = Field(ge=1)
     reuse: bool = True
 
 
