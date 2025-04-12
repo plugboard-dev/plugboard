@@ -61,7 +61,7 @@ dev = [
 test = [
     "aiofile~=3.9",
     "aiosqlite~=0.20",
-    "anyio>=4.3.0,<4.4.0", # FIXME: Pinned due to hanging tests when running with anyio==4.4.0 on 2024-07-01
+    "anyio>=4.3.0",
     "coverage>=7.7.1",
     "llama-index-core>=0.12.30",
     "llama-index-llms-openai>=0.3.33",
