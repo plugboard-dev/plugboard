@@ -80,13 +80,13 @@ jobs:
       - name: Run unit tests
         run: |
           COVERAGE_FILE=.coverage.py${{ matrix.python_version }}.unit uv run coverage run -m pytest ./tests/unit/
-          ls -1lta
+          uv run coverage combine
 
       - name: Upload unit test coverage
         uses: actions/upload-artifact@v4
         with:
           name: coverage-unit-py${{ matrix.python_version }}
-          path: .coverage.py${{ matrix.python_version }}.unit*
+          path: .coverage.py${{ matrix.python_version }}.unit
 
   test-integration:
     name: Tests - integration
@@ -113,13 +113,15 @@ jobs:
         run: uv sync --group test
 
       - name: Run integration tests
-        run: COVERAGE_FILE=.coverage.py${{ matrix.python_version }}.integration uv run coverage run -m pytest ./tests/integration/
+        run: |
+          COVERAGE_FILE=.coverage.py${{ matrix.python_version }}.integration uv run coverage run -m pytest ./tests/integration/
+          uv run coverage combine
 
       - name: Upload integration test coverage
         uses: actions/upload-artifact@v4
         with:
           name: coverage-integration-py${{ matrix.python_version }}
-          path: .coverage.py${{ matrix.python_version }}.integration*
+          path: .coverage.py${{ matrix.python_version }}.integration
 
   coverage-report:
     name: Report coverage
