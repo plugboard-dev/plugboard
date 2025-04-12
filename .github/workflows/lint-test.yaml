@@ -11,7 +11,8 @@ on:
       - reopened
 
 jobs:
-  lint-test:
+  lint:
+    name: Lint code
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -34,45 +35,144 @@ jobs:
       - name: Install project
         run: uv sync --group test --group docs
 
-      # Run all checks, even if some fail
       - name: Ruff linting
         run: uv run ruff check .
-        if: always()
 
       - name: Ruff formatting
         run: uv run ruff format --check .
-        if: always()
 
       - name: Type checking
         run: uv run mypy .
-        if: always()
 
       - name: Code complexity
         run: uv run xenon --max-absolute B --max-modules A --max-average A plugboard/
-        if: always()
 
-      - name: Tests
-        run: |
-          uv run coverage run -m pytest .
-          uv run coverage combine
-          uv run coverage xml
-        if: always()
+      - name: Notebook output cleared
+        run: find . -name '*.ipynb' -not -path "./.venv/*" -exec uv run nbstripout --verify {} +
+
+      - name: Build docs
+        run: uv run mkdocs build --site-dir /tmp/site
+
+  test-unit:
+    name: Tests - unit
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python_version: [3.12]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{matrix.python_version}}
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+        with:
+          enable-cache: true
+          cache-dependency-glob: "uv.lock"
+
+      - name: Install project
+        run: uv sync --group test
+
+      - name: Run unit tests
+        run: COVERAGE_FILE=.coverage.py${{ matrix.python_version }}.unit uv run coverage run -m pytest ./tests/unit/
+
+      - name: Upload unit test coverage
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-unit-py${{ matrix.python_version }}
+          path: .coverage.py${{ matrix.python_version }}.unit*
+
+  test-integration:
+    name: Tests - integration
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python_version: [3.12]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{matrix.python_version}}
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+        with:
+          enable-cache: true
+          cache-dependency-glob: "uv.lock"
+
+      - name: Install project
+        run: uv sync --group test
+
+      - name: Run integration tests
+        run: COVERAGE_FILE=.coverage.py${{ matrix.python_version }}.integration uv run coverage run -m pytest ./tests/integration/
+
+      - name: Upload integration test coverage
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-integration-py${{ matrix.python_version }}
+          path: .coverage.py${{ matrix.python_version }}.integration*
+
+  coverage-report:
+    name: Report coverage
+    needs: [test-unit, test-integration]
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python_version: [3.12] # Keep consistent for uv run coverage
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{matrix.python_version}}
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+        with:
+          enable-cache: true
+          cache-dependency-glob: "uv.lock"
+
+      - name: Install project
+        run: uv sync --group test
+
+      - name: Download unit test coverage
+        uses: actions/download-artifact@v4
+        with:
+          name: coverage-unit-py${{ matrix.python_version }}
+          path: .
+
+      - name: Download integration test coverage
+        uses: actions/download-artifact@v4
+        with:
+          name: coverage-integration-py${{ matrix.python_version }}
+          path: .
+
+      - name: Combine coverage reports
+        run: uv run coverage combine
+
+      - name: Generate coverage XML
+        run: uv run coverage xml
 
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           slug: plugboard-dev/plugboard
-
-      - name: Notebook output cleared
-        run: find . -name '*.ipynb' -not -path "./.venv/*" -exec uv run nbstripout --verify {} +
-        if: always()
-
-      - name: Build docs
-        run: uv run mkdocs build --site-dir /tmp/site
-        if: always()
+          files: coverage.xml # Specify the combined file
+          flags: py${{ matrix.python_version }}
 
   build:
+    name: Build package
+    needs: [lint, test-unit, test-integration] # Depends on lint and tests passing
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -94,7 +194,6 @@ jobs:
 
       - name: Build package
         run: uv build
-        if: always()
 
       - name: Install from wheel
         working-directory: ./dist
