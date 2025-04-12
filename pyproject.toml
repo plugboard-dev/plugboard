@@ -61,7 +61,6 @@ dev = [
 test = [
     "aiofile~=3.9",
     "aiosqlite~=0.20",
-    "anyio>=4.3.0",
     "coverage>=7.7.1",
     "llama-index-core>=0.12.30",
     "llama-index-llms-openai>=0.3.33",

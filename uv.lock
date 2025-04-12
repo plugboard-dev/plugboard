@@ -2771,7 +2771,6 @@ docs = [
 test = [
     { name = "aiofile" },
     { name = "aiosqlite" },
-    { name = "anyio" },
     { name = "coverage" },
     { name = "llama-index-core" },
     { name = "llama-index-llms-openai" },
@@ -2837,7 +2836,6 @@ docs = [
 test = [
     { name = "aiofile", specifier = "~=3.9" },
     { name = "aiosqlite", specifier = "~=0.20" },
-    { name = "anyio", specifier = ">=4.3.0" },
     { name = "coverage", specifier = ">=7.7.1" },
     { name = "llama-index-core", specifier = ">=0.12.30" },
     { name = "llama-index-llms-openai", specifier = ">=0.3.33" },

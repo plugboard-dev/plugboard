@@ -45,7 +45,7 @@ class MyConnector(Connector):
         return MyChannel(a=self._a, **kwargs)
 
 
-@pytest.mark.anyio
+@pytest.mark.asyncio
 async def test_connector_builder() -> None:
     """Tests the `ConnectorBuilder`."""
     cs = ConnectorSpec(mode=ConnectorMode.PIPELINE, source="test1.a", target="test2.b")

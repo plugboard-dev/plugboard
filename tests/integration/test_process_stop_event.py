@@ -49,7 +49,7 @@ class B(ComponentTestHelper):
         await super().step()
 
 
-@pytest.mark.anyio
+@pytest.mark.asyncio
 @pytest_cases.parametrize(
     "process_cls, connector_cls",
     [

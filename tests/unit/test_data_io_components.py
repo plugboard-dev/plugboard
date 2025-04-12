@@ -61,7 +61,7 @@ class MockDataWriter(DataWriter):
         return pd.DataFrame(data)
 
 
-@pytest.mark.anyio
+@pytest.mark.asyncio
 @pytest.mark.parametrize("chunk_size", [None, 2, 10])
 @pytest.mark.parametrize("field_names", [["x", "z"], ["x", "y", "z"]])
 async def test_data_reader(
@@ -88,7 +88,7 @@ async def test_data_reader(
     assert reader.total_fetches == -(len(df) // -(chunk_size or len(df))) + 1
 
 
-@pytest.mark.anyio
+@pytest.mark.asyncio
 @pytest.mark.parametrize("chunk_size", [None, 2, 10])
 async def test_data_writer(
     df: pd.DataFrame,

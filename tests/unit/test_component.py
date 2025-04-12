@@ -17,7 +17,7 @@ class A(Component):
         self.c = {"a": self.a, "b": self.b}
 
 
-@pytest.mark.anyio
+@pytest.mark.asyncio
 @pytest.mark.parametrize(
     "initial_values", [{"a": [-1], "b": [-2]}, {"a": [-2]}, {"a": [-2, -1]}, {}]
 )
