@@ -111,7 +111,7 @@ async def recv_messages_unordered(channels: list[Channel]) -> list[int]:
     return sums
 
 
-@pytest.mark.anyio
+@pytest.mark.asyncio
 @pytest_cases.parametrize(
     "connector_cls, num_subscribers, num_messages",
     [
@@ -162,7 +162,7 @@ async def test_pubsub_channel_single_publisher(
     assert sent_msgs_hash == received_msgs_hashes[0]
 
 
-@pytest.mark.anyio
+@pytest.mark.asyncio
 @pytest_cases.parametrize(
     "connector_cls, num_publishers, num_subscribers, num_messages",
     [
@@ -212,7 +212,7 @@ async def test_pubsub_channel_multiple_publshers(
     assert sent_msgs_sum == received_msgs_sums[0]
 
 
-@pytest.mark.anyio
+@pytest.mark.asyncio
 @pytest_cases.parametrize(
     "connector_cls, num_topics, num_publishers, num_subscribers, num_messages",
     [

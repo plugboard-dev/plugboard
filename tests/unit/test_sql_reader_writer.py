@@ -58,7 +58,7 @@ def connection_string(
     yield f"{request.param}:///{database_file}"
 
 
-@pytest.mark.anyio
+@pytest.mark.asyncio
 @pytest.mark.parametrize("chunk_size", [None, 2, 4, 10])
 async def test_sql_reader(
     df: pd.DataFrame, connection_string: str, chunk_size: _t.Optional[int]
@@ -93,7 +93,7 @@ async def test_sql_reader(
     assert reader.chunk_sizes == expected_chunk_sizes
 
 
-@pytest.mark.anyio
+@pytest.mark.asyncio
 @pytest.mark.parametrize("chunk_size", [None, 2, 4, 10])
 async def test_sql_writer(
     df: pd.DataFrame, connection_string: str, chunk_size: _t.Optional[int], database_file: str
@@ -131,7 +131,7 @@ async def test_sql_writer(
     pd.testing.assert_frame_equal(df_saved, df)
 
 
-@pytest.mark.anyio
+@pytest.mark.asyncio
 async def test_sql_writer_extra_columns(
     df: pd.DataFrame, connection_string: str, database_file: str
 ) -> None:

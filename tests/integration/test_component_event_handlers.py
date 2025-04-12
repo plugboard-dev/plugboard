@@ -89,7 +89,7 @@ def event_connectors(connector_cls: _t.Type[Connector]) -> EventConnectorBuilder
     return EventConnectorBuilder(connector_builder=connector_builder)
 
 
-@pytest.mark.anyio
+@pytest.mark.asyncio
 @pytest.mark.parametrize(
     "io_controller_kwargs",
     [
@@ -160,7 +160,7 @@ async def field_connectors(connector_cls: _t.Type[Connector]) -> list[Connector]
     ]
 
 
-@pytest.mark.anyio
+@pytest.mark.asyncio
 async def test_component_event_handlers_with_field_inputs(
     event_connectors: EventConnectorBuilder,
     field_connectors: list[Connector],

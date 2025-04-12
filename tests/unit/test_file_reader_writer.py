@@ -87,7 +87,7 @@ def write_path(temp_location: str, request: pytest.FixtureRequest) -> _t.Generat
     yield path
 
 
-@pytest.mark.anyio
+@pytest.mark.asyncio
 @pytest.mark.parametrize("chunk_size", [None, 2, 4, 10])
 async def test_file_reader(df: pd.DataFrame, read_path: str, chunk_size: _t.Optional[int]) -> None:
     """Test the `FileReader` component."""
@@ -107,7 +107,7 @@ async def test_file_reader(df: pd.DataFrame, read_path: str, chunk_size: _t.Opti
         await reader.step()
 
 
-@pytest.mark.anyio
+@pytest.mark.asyncio
 @pytest.mark.parametrize("chunk_size", [None, 2, 4, 10])
 async def test_file_writer(df: pd.DataFrame, write_path: str, chunk_size: _t.Optional[int]) -> None:
     """Test the `FileWriter` component."""

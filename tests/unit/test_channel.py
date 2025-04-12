@@ -28,7 +28,7 @@ TEST_ITEMS = [
 ]
 
 
-@pytest.mark.anyio
+@pytest.mark.asyncio
 @pytest_cases.parametrize("connector_cls", [AsyncioConnector, RayConnector, zmq_connector_cls])
 async def test_channel(connector_cls: type[Connector]) -> None:
     """Tests the various Channel implementations."""
@@ -62,7 +62,7 @@ async def test_channel(connector_cls: type[Connector]) -> None:
     assert send_channel.is_closed
 
 
-@pytest.mark.anyio
+@pytest.mark.asyncio
 @pytest_cases.parametrize("connector_cls", [zmq_connector_cls])
 async def test_multiprocessing_channel(connector_cls: type[Connector]) -> None:
     """Tests the various Channel implementations in a multiprocess environment."""

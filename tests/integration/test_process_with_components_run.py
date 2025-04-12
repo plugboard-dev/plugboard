@@ -69,7 +69,7 @@ def tempfile_path() -> _t.Generator[Path, None, None]:
         yield Path(f.name)
 
 
-@pytest.mark.anyio
+@pytest.mark.asyncio
 @pytest_cases.parametrize(
     "process_cls, connector_cls",
     [
