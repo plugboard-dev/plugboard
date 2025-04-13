@@ -31,6 +31,10 @@ ENV UV_LINK_MODE=copy
 RUN echo "export PATH=${UV_PROJECT_ENVIRONMENT}/bin:\$PATH" >> /home/appuser/.profile && \
     chown appuser:appuser /home/appuser/.profile
 
+# Install required system dependencies for running in kuberay
+RUN --mount=type=cache,id=apt,target=/var/cache/apt \
+  apt update && apt install -y --no-install-recommends wget
+
 COPY --from=builder ${UV_PROJECT_ENVIRONMENT} ${UV_PROJECT_ENVIRONMENT}
 
 # Install package with version string passed as build arg
