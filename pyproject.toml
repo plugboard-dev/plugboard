@@ -42,7 +42,7 @@ llm = [
     "llama-index-core>=0.12.30",
     "llama-index-llms-openai>=0.3.33",
 ]
-ray = ["ray[default]>=2.42.1"]
+ray = ["ray[default,tune]>=2.42.1"]
 websockets = ["websockets>=14.2"]
 
 [dependency-groups]
