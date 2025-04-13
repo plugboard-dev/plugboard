@@ -27,6 +27,10 @@ ENV UV_PROJECT_ENVIRONMENT=/opt/venv
 ENV PATH="${UV_PROJECT_ENVIRONMENT}/bin:${PATH}"
 ENV UV_LINK_MODE=copy
 
+# Ensure PATH with venv is set in user's bash profile for login shells (required for running in kuberay)
+RUN echo "export PATH=${UV_PROJECT_ENVIRONMENT}/bin:\$PATH" >> /home/appuser/.profile && \
+    chown appuser:appuser /home/appuser/.profile
+
 COPY --from=builder ${UV_PROJECT_ENVIRONMENT} ${UV_PROJECT_ENVIRONMENT}
 
 # Install package with version string passed as build arg
