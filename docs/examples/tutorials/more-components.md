@@ -1,3 +1,9 @@
+---
+tags:
+  - logging
+  - llm
+  - io
+---
 Plugboard's [`Component`][plugboard.component.Component] objects can run anything you can code in Python. This includes:
 
 * Using your own or third-party Python packages;
@@ -53,6 +59,9 @@ We can now define a component to query a weather API and get temperature and win
 
 --8<-- "examples/tutorials/003_more_components/hello_llm.py:weather"
 ```
+
+!!! info
+    See how we used `self._logger` to record log messages. All Plugboard [`Component`][plugboard.component.Component] objects have a [structlog](https://www.structlog.org/) logger on the `_logger` attribute. See [configuration](../../../usage/configuration/) for more information on configuring the logging.
 
 ### Putting it all together
 

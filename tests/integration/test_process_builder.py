@@ -94,7 +94,7 @@ def process_spec() -> ProcessSpec:
     )
 
 
-@pytest.mark.anyio
+@pytest.mark.asyncio
 async def test_process_builder_build(process_spec: ProcessSpec) -> None:
     """Tests building a process."""
     process = ProcessBuilder.build(process_spec)

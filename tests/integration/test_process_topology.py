@@ -1,6 +1,9 @@
 """Integration tests for different `Process` topologies."""
 # ruff: noqa: D101,D102,D103
 
+import asyncio
+import typing as _t
+
 import pytest
 
 from plugboard.component import IOController as IO
@@ -20,7 +23,30 @@ class C(ComponentTestHelper):
         await super().step()
 
 
-@pytest.mark.anyio
+class D(ComponentTestHelper):
+    io = IO(outputs=["out_1"])
+
+    def __init__(self, iters: int, *args: _t.Any, factor: float = 1.0, **kwargs: _t.Any) -> None:
+        super().__init__(*args, **kwargs)
+        self._iters = iters
+        self._factor = factor
+
+    async def init(self) -> None:
+        await super().init()
+        self._seq = iter(range(1, self._iters + 1))
+
+    async def step(self) -> None:
+        try:
+            value = next(self._seq)
+            self.out_1 = int(self._factor * value)
+            await asyncio.sleep(0.1)
+        except StopIteration:
+            await self.io.close()
+        else:
+            await super().step()
+
+
+@pytest.mark.asyncio
 async def test_circular_process_topology() -> None:
     """Tests a circular `Process` topology."""
     comp_a = A(name="comp_a", iters=10)
@@ -52,7 +78,7 @@ async def test_circular_process_topology() -> None:
     _ = markdown_diagram(process)
 
 
-@pytest.mark.anyio
+@pytest.mark.asyncio
 async def test_branching_process_topology() -> None:
     """Tests a branching `Process` topology."""
     comp_a = A(name="comp_a", iters=10)
@@ -76,6 +102,41 @@ async def test_branching_process_topology() -> None:
     # Check the final outputs
     assert comp_c.out_1 == 9
     assert comp_c.out_2 == 9 * 2
+
+    assert all(comp.is_finished for comp in components)
+
+    # Create a markdown diagram of the process without error
+    _ = markdown_diagram(process)
+
+
+@pytest.mark.asyncio
+async def test_multiple_inputs_to_one_field_process_topology() -> None:
+    """Tests a `Process` topology with multiple inputs to a single field."""
+    comp_d1 = D(name="comp_d1", iters=3, factor=1)
+    comp_d2 = D(name="comp_d2", iters=3, factor=4)
+    comp_d3 = D(name="comp_d3", iters=6, factor=5)
+    comp_c = C(name="comp_c")
+    components = [comp_d1, comp_d2, comp_d3, comp_c]
+
+    # Connect both D1.out_1 and D2.out_1 to C.in_1
+    conn_d1c = AsyncioConnector(spec=ConnectorSpec(source="comp_d1.out_1", target="comp_c.in_1"))
+    conn_d2c = AsyncioConnector(spec=ConnectorSpec(source="comp_d2.out_1", target="comp_c.in_1"))
+    conn_d3c = AsyncioConnector(spec=ConnectorSpec(source="comp_d3.out_1", target="comp_c.in_2"))
+    connectors = [conn_d1c, conn_d2c, conn_d3c]
+
+    process = LocalProcess(components, connectors)
+
+    # Process should run without error
+    async with process:
+        await process.run()
+
+    # We expect C.in_1 to have the last value received from either D1 or D2
+    assert comp_c.in_1 in (3, 12)  # Either D1's final output (3) or D2's final output (3*4=12)
+    assert comp_c.in_2 == 30  # Should be D3's final output (6*5=30)
+
+    # Both outputs should match the inputs
+    assert comp_c.out_1 == comp_c.in_1
+    assert comp_c.out_2 == comp_c.in_2
 
     assert all(comp.is_finished for comp in components)
 

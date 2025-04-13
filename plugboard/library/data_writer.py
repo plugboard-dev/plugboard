@@ -7,7 +7,7 @@ from collections import defaultdict, deque
 import typing as _t
 
 from plugboard.component import Component
-from plugboard.component.io_controller import IOController, IODirection
+from plugboard.component.io_controller import IOController
 from plugboard.exceptions import IOSetupError
 from plugboard.schemas import ComponentArgsDict
 
@@ -74,10 +74,10 @@ class DataWriter(Component, ABC):
 
     def _bind_inputs(self) -> None:
         """Binds input fields to component fields and append to internal buffer."""
+        super()._bind_inputs()
         for field in self.io.inputs:
-            data = self.io.data[IODirection.INPUT][field]
-            setattr(self, field, data)
-            self._buffer[field].append(data)
+            value = getattr(self, field, None)
+            self._buffer[field].append(value)
 
     async def _save_chunk(self) -> None:
         """Write data from the buffer."""

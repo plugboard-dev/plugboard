@@ -47,8 +47,7 @@ jobs:
           echo "PACKAGE_VERSION=$VERSION" >> $GITHUB_ENV
 
       - name: Export requirements.txt file
-        run: |
-          uv export --all-extras --format requirements-txt --no-hashes --no-editable --no-dev --no-emit-project >> requirements.txt
+        run: uv export --all-extras --format requirements-txt --no-hashes --no-editable --no-dev --no-emit-project > requirements.txt
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
@@ -108,8 +107,7 @@ jobs:
           push-to-registry: true
 
       - name: Delete untagged images
-        uses: actions/delete-package-versions@v5
+        uses: dataaxiom/ghcr-cleanup-action@v1
         with:
-          package-name: 'plugboard'
-          package-type: 'container'
-          delete-only-untagged-versions: 'true'
+          delete-untagged: true
+          older-than: 30 days

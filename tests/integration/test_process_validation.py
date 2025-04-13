@@ -24,7 +24,7 @@ def filter_logs(logs: list[EventDict], field: str, regex: str) -> list[EventDict
     return [l for l in logs if pattern.match(l[field])]
 
 
-@pytest.mark.anyio
+@pytest.mark.asyncio
 async def test_missing_connections() -> None:
     """Tests that missing connections are logged."""
     p_missing_input = LocalProcess(
@@ -65,7 +65,7 @@ async def test_missing_connections() -> None:
     assert not logs, "Logs indicate missing connection"
 
 
-@pytest.mark.anyio
+@pytest.mark.asyncio
 async def test_component_validation() -> None:
     """Tests that invalid components are detected."""
 

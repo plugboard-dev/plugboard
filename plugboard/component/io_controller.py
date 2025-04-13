@@ -1,7 +1,7 @@
 """Provides the `IOController` class for handling input/output operations."""
 
 import asyncio
-from collections import deque
+from collections import defaultdict, deque
 from functools import cached_property
 import typing as _t
 
@@ -14,6 +14,7 @@ from plugboard.utils import DI
 
 IO_NS_UNSET = "__UNSET__"
 
+_t_field_key = tuple[str, str]
 _io_key_in: str = str(IODirection.INPUT)
 _io_key_out: str = str(IODirection.OUTPUT)
 _fields_read_task: str = "__READ_FIELDS__"
@@ -41,25 +42,36 @@ class IOController:
         self.output_events = output_events or []
         if set(self.initial_values.keys()) - set(self.inputs):
             raise ValueError("Initial values must be for input fields only.")
-        self.data: dict[str, dict[str, _t.Any]] = {_io_key_in: {}, _io_key_out: {}}
-        self.events: dict[str, deque[Event]] = {_io_key_in: deque(), _io_key_out: deque()}
+
+        self.buf_fields: dict[str, IOBuffer] = {
+            _io_key_in: IOFieldBuffer(),
+            _io_key_out: IOFieldBuffer(),
+        }
+        self.buf_events: dict[str, IOBuffer] = {
+            _io_key_in: IOEventBuffer(),
+            _io_key_out: IOEventBuffer(),
+        }
+
         self._input_channels: dict[tuple[str, str], Channel] = {}
         self._output_channels: dict[tuple[str, str], Channel] = {}
         self._input_event_channels: dict[str, Channel] = {}
         self._output_event_channels: dict[str, Channel] = {}
         self._input_event_types = {Event.safe_type(evt.type) for evt in self.input_events}
         self._output_event_types = {Event.safe_type(evt.type) for evt in self.output_events}
-        self._read_tasks: dict[str, asyncio.Task] = {}
         self._initial_values = {k: deque(v) for k, v in self.initial_values.items()}
+        self._read_tasks: dict[str | _t_field_key, asyncio.Task] = {}
         self._is_closed = False
+
         self._logger = DI.logger.sync_resolve().bind(
             cls=self.__class__.__name__, namespace=self.namespace
         )
         self._logger.info("IOController created")
 
+        self._received_fields: dict[str, _t.Any] = {}
+        self._received_fields_lock = asyncio.Lock()
         self._received_events: deque[Event] = deque()
+        self._received_events_lock = asyncio.Lock()
         self._has_received_events = asyncio.Event()
-        self._has_received_events_lock = asyncio.Lock()
 
     @property
     def is_closed(self) -> bool:
@@ -108,8 +120,9 @@ class IOController:
                     if (e := task.exception()) is not None:
                         raise e
                     self._read_tasks.pop(task.get_name())
-                    self._set_read_tasks()
-                    await self._flush_event_buffer()
+                self._set_read_tasks()
+                await self._flush_internal_field_buffer()
+                await self._flush_internal_event_buffer()
             except* ChannelClosedError as eg:
                 await self.close()
                 raise self._build_io_stream_error(IODirection.INPUT, eg) from eg
@@ -122,49 +135,96 @@ class IOController:
         read_tasks: list[asyncio.Task] = []
         if self._has_field_inputs:
             if _fields_read_task not in self._read_tasks:
-                read_fields_task = asyncio.create_task(self._read_fields())
-                read_fields_task.set_name(_fields_read_task)
+                read_fields_task = asyncio.create_task(self._read_fields(), name=_fields_read_task)
                 self._read_tasks[_fields_read_task] = read_fields_task
             read_tasks.append(self._read_tasks[_fields_read_task])
         if self._has_event_inputs:
             if _events_read_task not in self._read_tasks:
-                read_events_task = asyncio.create_task(self._read_events())
-                read_events_task.set_name(_events_read_task)
+                read_events_task = asyncio.create_task(self._read_events(), name=_events_read_task)
                 self._read_tasks[_events_read_task] = read_events_task
             if _events_wait_task not in self._read_tasks:
-                wait_for_events_task = asyncio.create_task(self._has_received_events.wait())
-                wait_for_events_task.set_name(_events_wait_task)
+                wait_for_events_task = asyncio.create_task(
+                    self._has_received_events.wait(), name=_events_wait_task
+                )
                 self._read_tasks[_events_wait_task] = wait_for_events_task
             read_tasks.append(self._read_tasks[_events_wait_task])
         return read_tasks
 
-    async def _flush_event_buffer(self) -> None:
+    async def _flush_internal_field_buffer(self) -> None:
+        async with self._received_fields_lock:
+            self.buf_fields[_io_key_in].put(self._received_fields.items())
+            self._received_fields = {}
+
+    async def _flush_internal_event_buffer(self) -> None:
         if self._has_received_events.is_set():
-            async with self._has_received_events_lock:
+            async with self._received_events_lock:
                 self._has_received_events.clear()
-                self.events[_io_key_in].extend(self._received_events)
+                events = sorted(self._received_events, key=lambda e: e.timestamp)
+                self.buf_events[_io_key_in].put(events)
                 self._received_events.clear()
 
-    async def _read_fields(
-        self,
-    ) -> None:
-        read_tasks = []
-        for (key, _), chan in self._input_channels.items():
-            # FIXME : Looks like multiple channels for same field will trample each other
-            if key not in self._read_tasks:
-                task = asyncio.create_task(self._read_channel("field", key, chan))
-                task.set_name(key)
-                self._read_tasks[key] = task
-            read_tasks.append(self._read_tasks[key])
-        if len(read_tasks) == 0:
+    async def _read_fields(self) -> None:
+        if self.buf_fields[_io_key_in]:
+            return  # Don't read new data if buffered input data has not been consumed
+
+        read_tasks: dict[str, asyncio.Task] = {}
+
+        for key in self._input_channels:
+            field, _ = key
+            _key = (field, _io_key_in) if f"group:{field}" in self._read_tasks else key
+            task_name = f"field:{_key}"
+            if task_name not in self._read_tasks:
+                task = asyncio.create_task(
+                    self._read_field(_key, self._input_channels[_key]), name=task_name
+                )
+                self._read_tasks[task_name] = task
+            read_tasks[task_name] = self._read_tasks[task_name]
+        if len(read_tasks.keys()) == 0:
             return
-        done, _ = await asyncio.wait(read_tasks, return_when=asyncio.ALL_COMPLETED)
-        for task in done:
-            key = task.get_name()
-            self._read_tasks.pop(key)
-            if (e := task.exception()) is not None:
-                raise e
-            self.data[_io_key_in][key] = task.result()
+
+        done, _ = await asyncio.wait(read_tasks.values(), return_when=asyncio.ALL_COMPLETED)
+
+        async with self._received_fields_lock:
+            for task in done:
+                task_name = task.get_name()
+                self._read_tasks.pop(task_name)
+                if (e := task.exception()) is not None:
+                    raise e
+                key, data = task.result()
+                field, _ = key
+                self._received_fields[field] = data
+
+    async def _read_field_group(
+        self, field_channels: list[tuple[_t_field_key, Channel]], fan_in: AsyncioChannel
+    ) -> None:
+        """Reads a group of fields and sends the results to a fan-in channel."""
+
+        async def _iter_field_channel(key: _t_field_key, chan: Channel) -> None:
+            while True:
+                try:
+                    _, result = await self._read_field(key, chan)
+                except ChannelClosedError:
+                    break
+                await fan_in.send(result)
+
+        async with asyncio.TaskGroup() as tg:
+            for key, chan in field_channels:
+                tg.create_task(_iter_field_channel(key, chan))
+
+        await fan_in.close()
+
+    async def _read_field(self, key: _t_field_key, channel: Channel) -> tuple[_t_field_key, _t.Any]:
+        """Reads a single field and returns the key and result."""
+        field, _ = key
+        try:
+            # Use an initial value if available
+            return key, self._initial_values[field].popleft()
+        except (IndexError, KeyError):
+            pass
+        try:
+            return key, await channel.recv()
+        except ChannelClosedError as e:
+            raise ChannelClosedError(f"Channel closed for field: {key}.") from e
 
     async def _read_events(self) -> None:
         fan_in = AsyncioChannel()
@@ -180,20 +240,9 @@ class IOController:
 
             while True:
                 event = await fan_in.recv()
-                async with self._has_received_events_lock:
+                async with self._received_events_lock:
                     self._received_events.append(event)
                     self._has_received_events.set()
-
-    async def _read_channel(self, channel_type: str, key: str, channel: Channel) -> _t.Any:
-        try:
-            # Use an initial value if available
-            return self._initial_values[key].popleft()
-        except (IndexError, KeyError):
-            pass
-        try:
-            return await channel.recv()
-        except ChannelClosedError as e:
-            raise ChannelClosedError(f"Channel closed for {channel_type}: {key}.") from e
 
     async def write(self) -> None:
         """Writes data to output channels."""
@@ -207,19 +256,21 @@ class IOController:
             raise self._build_io_stream_error(IODirection.OUTPUT, eg) from eg
 
     async def _write_fields(self) -> None:
+        if not self.buf_fields[_io_key_out]:
+            return  # Don't attempt to write data if no data added to the output buffer
+        buffer = dict(self.buf_fields[_io_key_out].flush())
         async with asyncio.TaskGroup() as tg:
             for (field, _), chan in self._output_channels.items():
-                tg.create_task(self._write_field(field, chan))
+                tg.create_task(self._write_field(field, chan, buffer[field]))
 
-    async def _write_field(self, field: str, channel: Channel) -> None:
-        item = self.data[_io_key_out][field]
+    async def _write_field(self, field: str, channel: Channel, item: _t.Any) -> None:
         try:
             await channel.send(item)
         except ChannelClosedError as e:
             raise ChannelClosedError(f"Channel closed for field: {field}.") from e
 
     async def _write_events(self) -> None:
-        queue = self.events[_io_key_out]
+        queue = deque(self.buf_events[_io_key_out].flush())
         async with asyncio.TaskGroup() as tg:
             for _ in range(len(queue)):
                 event = queue.popleft()
@@ -248,7 +299,7 @@ class IOController:
             raise IOStreamClosedError("Attempted queue_event on a closed io controller.")
         if event.safe_type() not in self._output_event_channels:
             raise ValueError(f"Unrecognised output event {event.type}.")
-        self.events[_io_key_out].append(event)
+        self.buf_events[_io_key_out].put([event])
 
     async def close(self) -> None:
         """Closes all input/output channels."""
@@ -258,6 +309,33 @@ class IOController:
             task.cancel()
         self._is_closed = True
         self._logger.info("IOController closed")
+
+    async def connect(self, connectors: list[Connector]) -> None:
+        """Connects the input/output fields to input/output channels."""
+        async with asyncio.TaskGroup() as tg:
+            for conn in connectors:
+                tg.create_task(self._add_channel(conn))
+        self._create_input_field_group_tasks()
+        self._validate_connections()
+        self._logger.info("IOController connected")
+
+    async def _add_channel(self, connector: Connector) -> None:
+        if connector.spec.source.connects_to([self.namespace]):
+            chan = await connector.connect_send()
+            self._add_channel_for_field(
+                connector.spec.source.descriptor, connector.spec.id, IODirection.OUTPUT, chan
+            )
+        if connector.spec.target.connects_to([self.namespace]):
+            chan = await connector.connect_recv()
+            self._add_channel_for_field(
+                connector.spec.target.descriptor, connector.spec.id, IODirection.INPUT, chan
+            )
+        if connector.spec.source.connects_to(self._output_event_types):
+            chan = await connector.connect_send()
+            self._add_channel_for_event(connector.spec.source.entity, IODirection.OUTPUT, chan)
+        if connector.spec.target.connects_to(self._input_event_types):
+            chan = await connector.connect_recv()
+            self._add_channel_for_event(connector.spec.target.entity, IODirection.INPUT, chan)
 
     def _add_channel_for_field(
         self, field: str, connector_id: str, direction: IODirection, channel: Channel
@@ -277,31 +355,24 @@ class IOController:
         io_channels = getattr(self, f"_{direction}_event_channels")
         io_channels[event_type] = channel
 
-    async def _add_channel(self, connector: Connector) -> None:
-        if connector.spec.source.connects_to([self.namespace]):
-            channel = await connector.connect_send()
-            self._add_channel_for_field(
-                connector.spec.source.descriptor, connector.spec.id, IODirection.OUTPUT, channel
+    def _create_input_field_group_tasks(self) -> None:
+        """Groups input field channels by field name and launches read tasks for group inputs."""
+        if not self._has_field_inputs:
+            return
+        field_channels: dict[str, list[tuple[_t_field_key, Channel]]] = defaultdict(list)
+        for key, chan in self._input_channels.items():
+            field, _ = key
+            field_channels[field].append((key, chan))
+        for field, channels in field_channels.items():
+            if len(channels) == 1:
+                continue
+            fan_in = AsyncioChannel(maxsize=100)
+            self._input_channels[(field, _io_key_in)] = fan_in
+            task_name = f"group:{field}"
+            group_task = asyncio.create_task(
+                self._read_field_group(channels, fan_in), name=task_name
             )
-        if connector.spec.target.connects_to([self.namespace]):
-            channel = await connector.connect_recv()
-            self._add_channel_for_field(
-                connector.spec.target.descriptor, connector.spec.id, IODirection.INPUT, channel
-            )
-        if connector.spec.source.connects_to(self._output_event_types):
-            channel = await connector.connect_send()
-            self._add_channel_for_event(connector.spec.source.entity, IODirection.OUTPUT, channel)
-        if connector.spec.target.connects_to(self._input_event_types):
-            channel = await connector.connect_recv()
-            self._add_channel_for_event(connector.spec.target.entity, IODirection.INPUT, channel)
-
-    async def connect(self, connectors: list[Connector]) -> None:
-        """Connects the input/output fields to input/output channels."""
-        async with asyncio.TaskGroup() as tg:
-            for conn in connectors:
-                tg.create_task(self._add_channel(conn))
-        self._validate_connections()
-        self._logger.info("IOController connected")
+            self._read_tasks[task_name] = group_task
 
     def _validate_connections(self) -> None:
         connected_inputs = set(k for k, _ in self._input_channels.keys())
@@ -312,3 +383,55 @@ class IOController:
             )
         if unconnected_outputs := set(self.outputs) - connected_outputs:
             self._logger.warning("Output fields not connected", unconnected=unconnected_outputs)
+
+
+class IOBuffer(_t.Protocol):
+    """`IOBuffer` is a buffer for input/output data."""
+
+    def put(self, items: _t.Iterable) -> None:
+        """Adds items to the buffer."""
+        ...
+
+    def flush(self) -> _t.Iterable:
+        """Returns items in the buffer and resets the buffer."""
+        ...
+
+
+class IOFieldBuffer(IOBuffer):
+    """`IOFieldBuffer` is a buffer for input/output data."""
+
+    def __init__(self) -> None:
+        self._buf: dict[str, _t.Any] = dict()
+
+    def put(self, items: _t.Iterable) -> None:
+        """Adds items to the buffer."""
+        self._buf.update(dict(items))
+
+    def flush(self) -> _t.Iterable:
+        """Returns items in the buffer and resets the buffer."""
+        items = self._buf.items()
+        self._buf = dict()
+        return items
+
+    def __bool__(self) -> bool:
+        return bool(self._buf)
+
+
+class IOEventBuffer(IOBuffer):
+    """`IOEventBuffer` is a buffer for input/output events."""
+
+    def __init__(self) -> None:
+        self._buf: deque = deque()
+
+    def put(self, items: _t.Iterable) -> None:
+        """Adds items to the buffer."""
+        self._buf.extend(items)
+
+    def flush(self) -> _t.Iterable:
+        """Returns items in the buffer and resets the buffer."""
+        items = self._buf
+        self._buf = deque()
+        return items
+
+    def __bool__(self) -> bool:
+        return bool(self._buf)

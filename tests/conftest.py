@@ -17,12 +17,6 @@ from plugboard.utils.di import DI
 from plugboard.utils.settings import Settings
 
 
-@pytest.fixture(scope="session")
-def anyio_backend() -> str:
-    """Returns the name of the AnyIO backend to use."""
-    return "asyncio"
-
-
 @pytest.fixture(scope="session", autouse=True)
 def mp_set_start_method() -> None:
     """Set the start method for multiprocessing to 'spawn'."""

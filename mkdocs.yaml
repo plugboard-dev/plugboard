@@ -34,6 +34,8 @@ plugins:
 - mike:
     alias_type: symlink
     canonical_version: latest
+- meta
+- tags
 
 markdown_extensions:
 - admonition
@@ -112,6 +114,7 @@ nav:
     - Running in parallel: examples/tutorials/running-in-parallel.md
     - Event-driven models: examples/tutorials/event-driven-models.md
   - Configuration: usage/configuration.md
+  - Topics: usage/topics.md
 - Demos:
   - Fundamentals:
     - Simple model: examples/demos/fundamentals/001_simple_model/simple-model.ipynb

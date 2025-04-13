@@ -118,7 +118,7 @@ def test_registry_default_key() -> None:
         RegistryA.get("A1")
 
 
-@pytest.mark.anyio
+@pytest.mark.asyncio
 async def test_actor_wrapper() -> None:
     """Tests the `build_actor_wrapper` utility."""
     WrappedC = build_actor_wrapper(C)
@@ -168,7 +168,7 @@ def test_depends_on_optional() -> None:
     assert func_ok(1) == 1
 
 
-@pytest.mark.anyio
+@pytest.mark.asyncio
 async def test_gather_except() -> None:
     """Tests the `gather_except` utility."""
 
