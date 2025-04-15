@@ -41,6 +41,7 @@ class Tuner:
             algorithm: Configuration for the underlying Optuna algorithm used for optimisation.
         """
         self._objective = objective
+        self._parameter_locations = {p.name: p.location for p in parameters}
         self._parameters = dict(self._build_parameter(p) for p in parameters)
         if algorithm:
             algo_cls: _t.Optional[_t.Any] = locate(algorithm.type)
@@ -57,13 +58,11 @@ class Tuner:
             search_alg=_algo,
         )
 
-    def _build_parameter(
-        self, parameter: ParameterSpec
-    ) -> tuple[tuple[str, str], ray.tune.search.Parameter]:
+    def _build_parameter(self, parameter: ParameterSpec) -> tuple[str, ray.tune.search.Parameter]:
         parameter_cls: _t.Optional[_t.Any] = locate(parameter.type)
         if not parameter_cls or parameter_cls not in _t.get_args(ParameterSpec):
             raise ValueError(f"Could not locate parameter class {parameter.type}")
-        return (parameter.name, parameter.location), parameter_cls(
+        return parameter.name, parameter_cls(
             **parameter.model_dump(exclude={"type", "name", "location"})
         )
 
@@ -75,7 +74,8 @@ class Tuner:
         """
 
         def _objective(config: dict[str, _t.Any]) -> _t.Any:
-            # TODO: Patch parameters into spec
+            # for name, value in config.items():
+            #    location = self._parameter_locations[name]
             # process = ProcessBuilder.build(spec)
             # TODO: Implement this
             return None

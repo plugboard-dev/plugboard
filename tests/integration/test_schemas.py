@@ -1,6 +1,8 @@
 """Integration tests for loading schemas from a Plugboard YAML config."""
 # ruff: noqa: D101,D102,D103
 
+import typing as _t
+
 import msgspec
 import pytest
 
@@ -27,3 +29,17 @@ def test_load(config: dict) -> None:
     assert len(process_spec.args.connectors) == 1
     # Must default to AsyncioChannelBuilder
     assert process_spec.connector_builder.type == DEFAULT_CONNECTOR_CLS_PATH
+
+
+@pytest.mark.parametrize(
+    "location, value",
+    [
+        ("plugboard.process.args.components.c.args.path", "new_path"),
+        ("plugboard.process.args.connectors.c.name", "new_name"),
+        ("plugboard.process.connector_builder.type", "new_type"),
+    ],
+)
+def test_override(config: dict, location: str, value: _t.Any) -> None:
+    # spec = ConfigSpec.model_validate(config)
+
+    pass
