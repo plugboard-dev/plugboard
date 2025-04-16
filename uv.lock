@@ -1764,15 +1764,15 @@ wheels = [
 
 [[package]]
 name = "llama-index-llms-openai"
-version = "0.3.33"
+version = "0.3.35"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "llama-index-core" },
     { name = "openai" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/21/b2/75777bebf8695645bf52a2fe6f5886c87cef41541a66e1b2ed6b36bec898/llama_index_llms_openai-0.3.33.tar.gz", hash = "sha256:112942ca221c2233ed2cf995fdaf0865f2b7f9295d9b01c5a7fcaef373c1ac87", size = 22675 }
+sdist = { url = "https://files.pythonhosted.org/packages/bb/8a/be9a120a375d8608aa534799eccc29bb8f78130194f5f97462770ff3a875/llama_index_llms_openai-0.3.35.tar.gz", hash = "sha256:00cd5ab7a79882caf22b56a6b3ddfa9a6dc0ad028479b06020455c6fc1843f40", size = 22714 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/62/3c/011b790282ce54e226f2415583092cb90453b43b19f3ce66e06654b228a2/llama_index_llms_openai-0.3.33-py3-none-any.whl", hash = "sha256:d76eab8658d905514b2fa3de7702e47aecd9dbd70d34a0faac39e1ed50c116a5", size = 23778 },
+    { url = "https://files.pythonhosted.org/packages/ca/fe/9e1cad5eddd01635cee4e7eb5eb675d8511e3646f09049dfd1bf4b928600/llama_index_llms_openai-0.3.35-py3-none-any.whl", hash = "sha256:569273aad10c1aff7d1a63555d1931947af230bfcd041df36bf16d869258cc13", size = 23823 },
 ]
 
 [[package]]
