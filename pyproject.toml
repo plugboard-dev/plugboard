@@ -17,6 +17,7 @@ classifiers = [
   "Typing :: Typed",
 ]
 dependencies = [
+    "aio-pika>=9.5.5",
     "aiosqlite>=0.20,<1",
     "annotated-types>=0.7,<1",
     "async-lru>=2.0,<3",
