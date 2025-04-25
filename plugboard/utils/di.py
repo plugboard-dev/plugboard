@@ -3,6 +3,7 @@
 import multiprocessing
 import typing as _t
 
+import aio_pika
 import structlog
 from that_depends import BaseContainer
 from that_depends.providers import Resource, Singleton
@@ -10,6 +11,11 @@ from that_depends.providers import Resource, Singleton
 from plugboard._zmq.zmq_proxy import ZMQProxy
 from plugboard.utils.logging import configure_logging
 from plugboard.utils.settings import Settings
+
+
+def _logger(settings: Settings) -> structlog.BoundLogger:
+    configure_logging(settings)
+    return structlog.get_logger()
 
 
 def _mp_set_start_method(
@@ -37,9 +43,17 @@ def _zmq_proxy(
             logger.warning(f"Error during ZMQProxy termination: {e}")
 
 
-def _logger(settings: Settings) -> structlog.BoundLogger:
-    configure_logging(settings)
-    return structlog.get_logger()
+async def _rabbitmq_conn(
+    logger: Singleton[structlog.BoundLogger], url: _t.Optional[str] = None
+) -> _t.AsyncIterator[aio_pika.RobustConnection]:
+    url = url or "amqp://guest:guest@localhost:5672/"
+    conn = await aio_pika.RobustConnection(url)
+    try:
+        yield conn
+    except aio_pika.exceptions.AMQPConnectionError as e:  # pragma: no cover
+        logger.error(f"Failed to connect to RabbitMQ: {e}")
+    finally:
+        await conn.close()  # pragma: no cover
 
 
 class DI(BaseContainer):
@@ -51,3 +65,6 @@ class DI(BaseContainer):
         _mp_set_start_method, logger, use_fork=settings.flags.multiprocessing_fork
     )
     zmq_proxy: Resource[ZMQProxy] = Resource(_zmq_proxy, mp_ctx, logger)
+    rabbitmq_conn: Resource[aio_pika.RobustConnection] = Resource(
+        _rabbitmq_conn, logger, url=settings.rabbitmq.url
+    )
