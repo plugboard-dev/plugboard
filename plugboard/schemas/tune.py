@@ -1,6 +1,5 @@
 """Provides the `TuneSpec` class for configuring optimisation jobs."""
 
-from abc import ABC
 import typing as _t
 
 from pydantic import Field, PositiveInt, model_validator
@@ -26,7 +25,7 @@ class OptunaSpec(PlugboardBaseModel):
     storage: str | None = None
 
 
-class BaseFieldSpec(PlugboardBaseModel, ABC):
+class FieldSpec(PlugboardBaseModel):
     """Base class for specifying fields within a Plugboard [`Process`][plugboard.process.Process].
 
     These fields may be used as adjustable parameter inputs or as an optimisation objective.
@@ -44,7 +43,7 @@ class BaseFieldSpec(PlugboardBaseModel, ABC):
     field_name: str
 
 
-class FloatParameterSpec(BaseFieldSpec):
+class FloatParameterSpec(FieldSpec):
     """Specification for a uniform float parameter.
 
     See: https://docs.ray.io/en/latest/tune/api/search_space.html.
@@ -60,7 +59,7 @@ class FloatParameterSpec(BaseFieldSpec):
     upper: float
 
 
-class IntParameterSpec(BaseFieldSpec):
+class IntParameterSpec(FieldSpec):
     """Specification for a uniform integer parameter.
 
     See: https://docs.ray.io/en/latest/tune/api/search_space.html.
@@ -76,7 +75,7 @@ class IntParameterSpec(BaseFieldSpec):
     upper: int
 
 
-class CategoricalParameterSpec(BaseFieldSpec):
+class CategoricalParameterSpec(FieldSpec):
     """Specification for a categorical parameter.
 
     See: https://docs.ray.io/en/latest/tune/api/search_space.html.
