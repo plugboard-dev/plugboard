@@ -26,19 +26,25 @@ class OptunaSpec(PlugboardBaseModel):
     storage: str | None = None
 
 
-class BaseParameterSpec(PlugboardBaseModel, ABC):
-    """Base class for parameter specifications.
+class BaseFieldSpec(PlugboardBaseModel, ABC):
+    """Base class for specifying fields within a Plugboard [`Process`][plugboard.process.Process].
+
+    These fields may be used as adjustable parameter inputs or as an optimisation objective.
 
     Attributes:
-        name: The name of the parameter.
-        location: The location of the parameter within the [`Process`][plugboard.process.Process].
+        object_name: The name of the object on which the field is defined.
+        object: The type of object on which the field is defined. Defaults to "component".
+        field_type: The type of field. This can be "arg", "initial_value", or "field".
+        field_name: The name of the field.
     """
 
-    name: str
-    location: str
+    object_name: str
+    object: _t.Literal["component"] = "component"
+    field_type: _t.Literal["arg", "initial_value", "field"]
+    field_name: str
 
 
-class FloatParameterSpec(BaseParameterSpec):
+class FloatParameterSpec(BaseFieldSpec):
     """Specification for a uniform float parameter.
 
     See: https://docs.ray.io/en/latest/tune/api/search_space.html.
@@ -54,7 +60,7 @@ class FloatParameterSpec(BaseParameterSpec):
     upper: float
 
 
-class IntParameterSpec(BaseParameterSpec):
+class IntParameterSpec(BaseFieldSpec):
     """Specification for a uniform integer parameter.
 
     See: https://docs.ray.io/en/latest/tune/api/search_space.html.
@@ -70,7 +76,7 @@ class IntParameterSpec(BaseParameterSpec):
     upper: int
 
 
-class CategoricalParameterSpec(BaseParameterSpec):
+class CategoricalParameterSpec(BaseFieldSpec):
     """Specification for a categorical parameter.
 
     See: https://docs.ray.io/en/latest/tune/api/search_space.html.
