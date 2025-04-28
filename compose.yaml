@@ -11,6 +11,9 @@ services:
       - rabbitmq-data:/var/lib/rabbitmq
     networks:
       - main
+    environment:
+      - RABBITMQ_DEFAULT_USER=user
+      - RABBITMQ_DEFAULT_PASS=password
     restart: always
 
   valkey:
