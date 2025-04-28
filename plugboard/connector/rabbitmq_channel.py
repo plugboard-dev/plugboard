@@ -113,5 +113,6 @@ class RabbitMQConnector(Connector):
         if self._recv_channel is not None:
             return self._recv_channel
         channel = await rabbitmq_conn.channel()
+        await channel.set_qos(prefetch_count=1)
         self._recv_channel = RabbitMQChannel(recv_channel=channel, topic=self._topic)
         return self._recv_channel
