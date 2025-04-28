@@ -46,9 +46,10 @@ def _zmq_proxy(
 async def _rabbitmq_conn(
     logger: Singleton[structlog.BoundLogger], url: _t.Optional[str] = None
 ) -> _t.AsyncIterator[aio_pika.RobustConnection]:
-    url = url or "amqp://guest:guest@localhost:5672/"
-    conn = await aio_pika.RobustConnection(url)
+    url = url or "amqp://user:password@localhost:5672/"
+    conn = aio_pika.RobustConnection(url)
     try:
+        await conn.connect()
         yield conn
     except aio_pika.exceptions.AMQPConnectionError as e:  # pragma: no cover
         logger.error(f"Failed to connect to RabbitMQ: {e}")
