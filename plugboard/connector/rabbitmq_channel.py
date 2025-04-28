@@ -37,9 +37,9 @@ class RabbitMQChannel(SerdeChannel):
         if self._send_channel is None:
             raise RuntimeError("Send channel is not initialized.")
         if self._send_queue is None:
-            self._send_queue = await self._send_channel.declare_queue(self._topic, auto_delete=True)
+            self._send_queue = await self._send_channel.declare_queue(self._topic, durable=True)
         await self._send_channel.default_exchange.publish(
-            aio_pika.Message(body=msg),
+            aio_pika.Message(body=msg, delivery_mode=aio_pika.DeliveryMode.PERSISTENT),
             routing_key=self._send_queue.name,
         )
 
@@ -48,7 +48,7 @@ class RabbitMQChannel(SerdeChannel):
         if self._recv_channel is None:
             raise RuntimeError("Receive channel is not initialized.")
         if self._recv_queue is None:
-            self._recv_queue = await self._recv_channel.declare_queue(self._topic, auto_delete=True)
+            self._recv_queue = await self._recv_channel.declare_queue(self._topic, durable=True)
             # TODO : Can't explicitly bind to default exchange. Reinstate for non-default exchanges.
             # await self._recv_queue.bind(
             #     self._recv_channel.default_exchange,
