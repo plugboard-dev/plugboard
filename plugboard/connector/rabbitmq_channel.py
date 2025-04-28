@@ -4,7 +4,13 @@ from __future__ import annotations
 
 import typing as _t
 
-import aio_pika
+from aio_pika import (
+    DeliveryMode,
+    Message,
+    Queue,
+    RobustChannel,
+    RobustConnection,
+)
 from that_depends import Provide, inject
 
 from plugboard.connector.connector import Connector
@@ -18,16 +24,16 @@ class RabbitMQChannel(SerdeChannel):
     def __init__(
         self,
         *args: _t.Any,
-        send_channel: _t.Optional[aio_pika.RobustChannel] = None,
-        recv_channel: _t.Optional[aio_pika.RobustChannel] = None,
+        send_channel: _t.Optional[RobustChannel] = None,
+        recv_channel: _t.Optional[RobustChannel] = None,
         topic: str = "",
         **kwargs: _t.Any,
     ) -> None:
         super().__init__(*args, **kwargs)
-        self._send_channel: _t.Optional[aio_pika.RobustChannel] = send_channel
-        self._recv_channel: _t.Optional[aio_pika.RobustChannel] = recv_channel
-        self._send_queue: _t.Optional[aio_pika.Queue] = None
-        self._recv_queue: _t.Optional[aio_pika.Queue] = None
+        self._send_channel: _t.Optional[RobustChannel] = send_channel
+        self._recv_channel: _t.Optional[RobustChannel] = recv_channel
+        self._send_queue: _t.Optional[Queue] = None
+        self._recv_queue: _t.Optional[Queue] = None
         self._is_send_closed = send_channel is None
         self._is_recv_closed = recv_channel is None
         self._topic: str = topic
@@ -39,7 +45,7 @@ class RabbitMQChannel(SerdeChannel):
         if self._send_queue is None:
             self._send_queue = await self._send_channel.declare_queue(self._topic, durable=True)
         await self._send_channel.default_exchange.publish(
-            aio_pika.Message(body=msg, delivery_mode=aio_pika.DeliveryMode.PERSISTENT),
+            Message(body=msg, delivery_mode=DeliveryMode.PERSISTENT),
             routing_key=self._send_queue.name,
         )
 
@@ -96,7 +102,7 @@ class RabbitMQConnector(Connector):
 
     @inject
     async def connect_send(
-        self, rabbitmq_conn: aio_pika.RobustConnection = Provide[DI.rabbitmq_conn]
+        self, rabbitmq_conn: RobustConnection = Provide[DI.rabbitmq_conn]
     ) -> RabbitMQChannel:
         """Returns a `RabbitMQ` channel for sending messages."""
         if self._send_channel is not None:
@@ -107,7 +113,7 @@ class RabbitMQConnector(Connector):
 
     @inject
     async def connect_recv(
-        self, rabbitmq_conn: aio_pika.RobustConnection = Provide[DI.rabbitmq_conn]
+        self, rabbitmq_conn: RobustConnection = Provide[DI.rabbitmq_conn]
     ) -> RabbitMQChannel:
         """Returns a `RabbitMQ` channel for receiving messages."""
         if self._recv_channel is not None:
