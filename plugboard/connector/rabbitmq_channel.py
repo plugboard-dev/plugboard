@@ -2,10 +2,13 @@
 
 from __future__ import annotations
 
+import asyncio
 import typing as _t
 
 from aio_pika import (
     DeliveryMode,
+    Exchange,
+    ExchangeType,
     Message,
     Queue,
     RobustChannel,
@@ -15,6 +18,7 @@ from that_depends import Provide, inject
 
 from plugboard.connector.connector import Connector
 from plugboard.connector.serde_channel import SerdeChannel
+from plugboard.schemas.connector import ConnectorMode
 from plugboard.utils import DI
 
 
@@ -24,42 +28,31 @@ class RabbitMQChannel(SerdeChannel):
     def __init__(
         self,
         *args: _t.Any,
-        send_channel: _t.Optional[RobustChannel] = None,
-        recv_channel: _t.Optional[RobustChannel] = None,
+        send_exchange: _t.Optional[Exchange] = None,
+        recv_queue: _t.Optional[Queue] = None,
         topic: str = "",
         **kwargs: _t.Any,
     ) -> None:
         super().__init__(*args, **kwargs)
-        self._send_channel: _t.Optional[RobustChannel] = send_channel
-        self._recv_channel: _t.Optional[RobustChannel] = recv_channel
-        self._send_queue: _t.Optional[Queue] = None
-        self._recv_queue: _t.Optional[Queue] = None
-        self._is_send_closed = send_channel is None
-        self._is_recv_closed = recv_channel is None
+        self._send_exchange: _t.Optional[RobustChannel] = send_exchange
+        self._recv_queue: _t.Optional[Queue] = recv_queue
+        self._is_send_closed = send_exchange is None
+        self._is_recv_closed = recv_queue is None
         self._topic: str = topic
 
     async def send(self, msg: bytes) -> None:
         """Send a message to the RabbitMQ channel."""
-        if self._send_channel is None:
-            raise RuntimeError("Send channel is not initialized.")
-        if self._send_queue is None:
-            self._send_queue = await self._send_channel.declare_queue(self._topic, durable=True)
-        await self._send_channel.default_exchange.publish(
+        if self._send_exchange is None:
+            raise RuntimeError("Send exchange is not initialized.")
+        await self._send_exchange.publish(
             Message(body=msg, delivery_mode=DeliveryMode.PERSISTENT),
-            routing_key=self._send_queue.name,
+            routing_key=self._topic,
         )
 
     async def recv(self) -> bytes:
         """Receive a message from the RabbitMQ channel."""
-        if self._recv_channel is None:
-            raise RuntimeError("Receive channel is not initialized.")
         if self._recv_queue is None:
-            self._recv_queue = await self._recv_channel.declare_queue(self._topic, durable=True)
-            # TODO : Can't explicitly bind to default exchange. Reinstate for non-default exchanges.
-            # await self._recv_queue.bind(
-            #     self._recv_channel.default_exchange,
-            #     routing_key=self._recv_queue.name,
-            # )
+            raise RuntimeError("Receive queue is not initialized.")
         while True:
             # TODO : Observed ~10% time that the timeout is not respected. Instead multiple `get`
             #      : calls are made within a few ms. Try to create an MRE and raise issue on
@@ -74,18 +67,6 @@ class RabbitMQChannel(SerdeChannel):
 
     async def close(self) -> None:
         """Closes the `RabbitMQChannel`."""
-        if self._send_channel is not None and self._send_queue is not None:
-            # TODO : Can't explicitly bind to default exchange. Reinstate for non-default exchanges.
-            # await self._send_queue.unbind(
-            #     self._send_channel.default_exchange, routing_key=self._topic
-            # )
-            await self._send_queue.delete()
-        if self._recv_channel is not None and self._recv_queue is not None:
-            # TODO : Can't explicitly bind to default exchange. Reinstate for non-default exchanges.
-            # await self._recv_queue.unbind(
-            #     self._recv_channel.default_exchange, routing_key=self._topic
-            # )
-            await self._recv_queue.delete()
         self._is_send_closed = True
         self._is_recv_closed = True
 
@@ -96,7 +77,9 @@ class RabbitMQConnector(Connector):
     def __init__(self, *args: _t.Any, **kwargs: _t.Any) -> None:
         super().__init__(*args, **kwargs)
         self._topic: str = str(self.spec.source)
-
+        self._exchange_type: ExchangeType = (
+            ExchangeType.FANOUT if self.spec.mode == ConnectorMode.PUBSUB else ExchangeType.DIRECT
+        )
         self._send_channel: _t.Optional[RabbitMQChannel] = None
         self._recv_channel: _t.Optional[RabbitMQChannel] = None
 
@@ -108,7 +91,9 @@ class RabbitMQConnector(Connector):
         if self._send_channel is not None:
             return self._send_channel
         channel = await rabbitmq_conn.channel()
-        self._send_channel = RabbitMQChannel(send_channel=channel, topic=self._topic)
+        exchange = await channel.declare_exchange(self._topic, self._exchange_type, durable=True)
+        self._send_channel = RabbitMQChannel(send_exchange=exchange, topic=self._topic)
+        await asyncio.sleep(0.1)  # Ensure connections established before first send. Better way?
         return self._send_channel
 
     @inject
@@ -119,6 +104,12 @@ class RabbitMQConnector(Connector):
         if self._recv_channel is not None:
             return self._recv_channel
         channel = await rabbitmq_conn.channel()
+        exchange = await channel.declare_exchange(self._topic, self._exchange_type, durable=True)
         await channel.set_qos(prefetch_count=1)
-        self._recv_channel = RabbitMQChannel(recv_channel=channel, topic=self._topic)
+        queue_name = self._topic if self.spec.mode != ConnectorMode.PUBSUB else None
+        queue_auto_delete = self.spec.mode == ConnectorMode.PUBSUB
+        queue = await channel.declare_queue(queue_name, auto_delete=queue_auto_delete, durable=True)
+        await queue.bind(exchange, routing_key=self._topic)
+        self._recv_channel = RabbitMQChannel(recv_queue=queue, topic=self._topic)
+        await asyncio.sleep(0.1)  # Ensure connections established before first send. Better way?
         return self._recv_channel
