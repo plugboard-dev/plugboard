@@ -26,6 +26,7 @@ class RabbitMQChannel(SerdeChannel):
         super().__init__(*args, **kwargs)
         self._send_channel: _t.Optional[aio_pika.RobustChannel] = send_channel
         self._recv_channel: _t.Optional[aio_pika.RobustChannel] = recv_channel
+        self._send_queue: _t.Optional[aio_pika.Queue] = None
         self._recv_queue: _t.Optional[aio_pika.Queue] = None
         self._is_send_closed = send_channel is None
         self._is_recv_closed = recv_channel is None
@@ -35,9 +36,11 @@ class RabbitMQChannel(SerdeChannel):
         """Send a message to the RabbitMQ channel."""
         if self._send_channel is None:
             raise RuntimeError("Send channel is not initialized.")
+        if self._send_queue is None:
+            self._send_queue = await self._send_channel.declare_queue(self._topic, auto_delete=True)
         await self._send_channel.default_exchange.publish(
             aio_pika.Message(body=msg),
-            routing_key=self._topic,
+            routing_key=self._send_queue.name,
         )
 
     async def recv(self) -> bytes:
@@ -46,20 +49,36 @@ class RabbitMQChannel(SerdeChannel):
             raise RuntimeError("Receive channel is not initialized.")
         if self._recv_queue is None:
             self._recv_queue = await self._recv_channel.declare_queue(self._topic, auto_delete=True)
-            await self._recv_channel.default_exchange.bind(
-                self._recv_queue,
-                routing_key=self._topic,
-            )
-        msg = await self._recv_queue.get()
-        await self._recv_queue.ack(msg)
+            # TODO : Can't explicitly bind to default exchange. Reinstate for non-default exchanges.
+            # await self._recv_queue.bind(
+            #     self._recv_channel.default_exchange,
+            #     routing_key=self._recv_queue.name,
+            # )
+        while True:
+            # TODO : Observed ~10% time that the timeout is not respected. Instead multiple `get`
+            #      : calls are made within a few ms. Try to create an MRE and raise issue on
+            #      : https://github.com/mosquito/aio-pika/issues
+            # import time
+            # for _ in range(3):
+            #     print(f"{time.monotonic()} - Waiting for message ...")
+            if (msg := await self._recv_queue.get(timeout=10, fail=False)) is not None:
+                break
+        await msg.ack()
         return msg.body
 
     async def close(self) -> None:
         """Closes the `RabbitMQChannel`."""
+        if self._send_channel is not None and self._send_queue is not None:
+            # TODO : Can't explicitly bind to default exchange. Reinstate for non-default exchanges.
+            # await self._send_queue.unbind(
+            #     self._send_channel.default_exchange, routing_key=self._topic
+            # )
+            await self._send_queue.delete()
         if self._recv_channel is not None and self._recv_queue is not None:
-            await self._recv_queue.unbind(
-                self._recv_channel.default_exchange, routing_key=self._topic
-            )
+            # TODO : Can't explicitly bind to default exchange. Reinstate for non-default exchanges.
+            # await self._recv_queue.unbind(
+            #     self._recv_channel.default_exchange, routing_key=self._topic
+            # )
             await self._recv_queue.delete()
         self._is_send_closed = True
         self._is_recv_closed = True
@@ -68,9 +87,8 @@ class RabbitMQChannel(SerdeChannel):
 class RabbitMQConnector(Connector):
     """`RabbitMQConnector` connects components via RabbitMQ AMQP broker."""
 
-    def __init__(self, *args: _t.Any, rabbitmq_address: str, **kwargs: _t.Any) -> None:
+    def __init__(self, *args: _t.Any, **kwargs: _t.Any) -> None:
         super().__init__(*args, **kwargs)
-        self._rabbitmq_address: str = rabbitmq_address
         self._topic: str = str(self.spec.source)
 
         self._send_channel: _t.Optional[RabbitMQChannel] = None
@@ -84,7 +102,7 @@ class RabbitMQConnector(Connector):
         if self._send_channel is not None:
             return self._send_channel
         channel = await rabbitmq_conn.channel()
-        self._send_channel = RabbitMQChannel(send_channel=channel)
+        self._send_channel = RabbitMQChannel(send_channel=channel, topic=self._topic)
         return self._send_channel
 
     @inject
@@ -95,5 +113,5 @@ class RabbitMQConnector(Connector):
         if self._recv_channel is not None:
             return self._recv_channel
         channel = await rabbitmq_conn.channel()
-        self._recv_channel = RabbitMQChannel(recv_channel=channel)
+        self._recv_channel = RabbitMQChannel(recv_channel=channel, topic=self._topic)
         return self._recv_channel
