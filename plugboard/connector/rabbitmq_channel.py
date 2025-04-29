@@ -44,10 +44,8 @@ class RabbitMQChannel(SerdeChannel):
         """Send a message to the RabbitMQ channel."""
         if self._send_exchange is None:
             raise RuntimeError("Send exchange is not initialized.")
-        await self._send_exchange.publish(
-            Message(body=msg, delivery_mode=DeliveryMode.PERSISTENT),
-            routing_key=self._topic,
-        )
+        msg_out = Message(body=msg, delivery_mode=DeliveryMode.PERSISTENT)
+        await self._send_exchange.publish(msg_out, routing_key=self._topic)
 
     async def recv(self) -> bytes:
         """Receive a message from the RabbitMQ channel."""
@@ -60,10 +58,10 @@ class RabbitMQChannel(SerdeChannel):
             # import time
             # for _ in range(3):
             #     print(f"{time.monotonic()} - Waiting for message ...")
-            if (msg := await self._recv_queue.get(timeout=10, fail=False)) is not None:
+            if (msg_in := await self._recv_queue.get(timeout=10, fail=False)) is not None:
                 break
-        await msg.ack()
-        return msg.body
+        await msg_in.ack()
+        return msg_in.body
 
     async def close(self) -> None:
         """Closes the `RabbitMQChannel`."""
