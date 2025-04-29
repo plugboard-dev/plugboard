@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+from random import random
 import typing as _t
 
 from aio_pika import (
@@ -51,14 +52,16 @@ class RabbitMQChannel(SerdeChannel):
         """Receive a message from the RabbitMQ channel."""
         if self._recv_queue is None:
             raise RuntimeError("Receive queue is not initialized.")
+        # TODO : Observed ~10% time that the timeout is not respected. Instead multiple `get`
+        #      : calls are made within a few ms. Try to create an MRE and raise issue on
+        #      : https://github.com/mosquito/aio-pika/issues
+        # import time
+        # for _ in range(3):
+        #     print(f"{time.monotonic()} - Waiting for message ...")
         while True:
-            # TODO : Observed ~10% time that the timeout is not respected. Instead multiple `get`
-            #      : calls are made within a few ms. Try to create an MRE and raise issue on
-            #      : https://github.com/mosquito/aio-pika/issues
-            # import time
-            # for _ in range(3):
-            #     print(f"{time.monotonic()} - Waiting for message ...")
-            if (msg_in := await self._recv_queue.get(timeout=10, fail=False)) is not None:
+            # Jitter requests to avoid thundering herd problem
+            timeout = 20.0 + random() * 5.0  # noqa: S311 (non-cryptographic usage)
+            if (msg_in := await self._recv_queue.get(timeout=timeout, fail=False)) is not None:
                 break
         await msg_in.ack()
         return msg_in.body
@@ -88,8 +91,10 @@ class RabbitMQConnector(Connector):
         """Returns a `RabbitMQ` channel for sending messages."""
         if self._send_channel is not None:
             return self._send_channel
+
         channel = await rabbitmq_conn.channel()
-        exchange = await channel.declare_exchange(self._topic, self._exchange_type, durable=True)
+        exchange = await self._declare_exchange(channel)
+
         self._send_channel = RabbitMQChannel(send_exchange=exchange, topic=self._topic)
         await asyncio.sleep(0.1)  # Ensure connections established before first send. Better way?
         return self._send_channel
@@ -101,13 +106,24 @@ class RabbitMQConnector(Connector):
         """Returns a `RabbitMQ` channel for receiving messages."""
         if self._recv_channel is not None:
             return self._recv_channel
+
         channel = await rabbitmq_conn.channel()
-        exchange = await channel.declare_exchange(self._topic, self._exchange_type, durable=True)
+        await self._declare_exchange(channel)
+        queue = await self._declare_queue(channel)
+
+        self._recv_channel = RabbitMQChannel(recv_queue=queue, topic=self._topic)
+        await asyncio.sleep(0.1)  # Ensure connections established before first send. Better way?
+        return self._recv_channel
+
+    async def _declare_exchange(self, channel: RobustChannel) -> Exchange:
+        """Declares an exchange on the RabbitMQ channel."""
+        return await channel.declare_exchange(self._topic, self._exchange_type, durable=True)
+
+    async def _declare_queue(self, channel: RobustChannel) -> Queue:
+        """Declares a queue on the RabbitMQ channel."""
         await channel.set_qos(prefetch_count=1)
         queue_name = self._topic if self.spec.mode != ConnectorMode.PUBSUB else None
         queue_auto_delete = self.spec.mode == ConnectorMode.PUBSUB
         queue = await channel.declare_queue(queue_name, auto_delete=queue_auto_delete, durable=True)
-        await queue.bind(exchange, routing_key=self._topic)
-        self._recv_channel = RabbitMQChannel(recv_queue=queue, topic=self._topic)
-        await asyncio.sleep(0.1)  # Ensure connections established before first send. Better way?
-        return self._recv_channel
+        await queue.bind(self._topic, routing_key=self._topic)
+        return queue
