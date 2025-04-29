@@ -28,8 +28,14 @@ TEST_ITEMS = [
 ]
 
 
+@pytest_cases.fixture
+@pytest_cases.parametrize("_connector_cls", [AsyncioConnector, RayConnector, zmq_connector_cls])
+def connector_cls(_connector_cls: type[Connector]) -> type[Connector]:
+    """Fixture for `Connector` of various types."""
+    return _connector_cls
+
+
 @pytest.mark.asyncio
-@pytest_cases.parametrize("connector_cls", [AsyncioConnector, RayConnector, zmq_connector_cls])
 async def test_channel(connector_cls: type[Connector]) -> None:
     """Tests the various Channel implementations."""
     spec = ConnectorSpec(mode=ConnectorMode.PIPELINE, source="test.send", target="test.recv")
@@ -62,12 +68,18 @@ async def test_channel(connector_cls: type[Connector]) -> None:
     assert send_channel.is_closed
 
 
+@pytest_cases.fixture
+@pytest_cases.parametrize("_connector_cls_mp", [RayConnector, zmq_connector_cls])
+def connector_cls_mp(_connector_cls_mp: type[Connector]) -> type[Connector]:
+    """Fixture for `Connector` of various types for use in multiprocess context."""
+    return _connector_cls_mp
+
+
 @pytest.mark.asyncio
-@pytest_cases.parametrize("connector_cls", [RayConnector, zmq_connector_cls])
-async def test_multiprocessing_channel(connector_cls: type[Connector]) -> None:
+async def test_multiprocessing_channel(connector_cls_mp: type[Connector]) -> None:
     """Tests the various Channel implementations in a multiprocess environment."""
     spec = ConnectorSpec(mode=ConnectorMode.PIPELINE, source="test.send", target="test.recv")
-    connector = ConnectorBuilder(connector_cls=connector_cls).build(spec)
+    connector = ConnectorBuilder(connector_cls=connector_cls_mp).build(spec)
 
     async def _send_proc_async(connector: Connector) -> None:
         channel = await connector.connect_send()
