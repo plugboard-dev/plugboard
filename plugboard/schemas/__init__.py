@@ -20,7 +20,15 @@ from .entities import Entity
 from .io import IODirection
 from .process import ProcessArgsDict, ProcessArgsSpec, ProcessSpec
 from .state import StateBackendArgsDict, StateBackendArgsSpec, StateBackendSpec
-from .tune import Direction, OptunaSpec, ParameterSpec, TuneArgsDict, TuneArgsSpec, TuneSpec
+from .tune import (
+    Direction,
+    ObjectiveSpec,
+    OptunaSpec,
+    ParameterSpec,
+    TuneArgsDict,
+    TuneArgsSpec,
+    TuneSpec,
+)
 
 
 __all__ = [
@@ -37,6 +45,7 @@ __all__ = [
     "Direction",
     "Entity",
     "IODirection",
+    "ObjectiveSpec",
     "OptunaSpec",
     "ParameterSpec",
     "ProcessConfigSpec",

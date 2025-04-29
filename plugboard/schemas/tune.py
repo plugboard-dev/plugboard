@@ -1,5 +1,6 @@
 """Provides the `TuneSpec` class for configuring optimisation jobs."""
 
+from abc import ABC
 import typing as _t
 
 from pydantic import Field, PositiveInt, model_validator
@@ -25,7 +26,7 @@ class OptunaSpec(PlugboardBaseModel):
     storage: str | None = None
 
 
-class FieldSpec(PlugboardBaseModel):
+class BaseFieldSpec(PlugboardBaseModel, ABC):
     """Base class for specifying fields within a Plugboard [`Process`][plugboard.process.Process].
 
     These fields may be used as adjustable parameter inputs or as an optimisation objective.
@@ -37,13 +38,28 @@ class FieldSpec(PlugboardBaseModel):
         field_name: The name of the field.
     """
 
-    object_name: str
-    object: _t.Literal["component"] = "component"
-    field_type: _t.Literal["arg", "initial_value", "field"]
-    field_name: str
+    object_name: str = Field(..., exclude=True)
+    object: _t.Literal["component"] = Field("component", exclude=True)
+    field_type: _t.Literal["arg", "initial_value", "field"] = Field(..., exclude=True)
+    field_name: str = Field(..., exclude=True)
+
+    @property
+    def full_name(self) -> str:
+        """Returns the full name of the field, including the object name and field name."""
+        return f"{self.object_name}.{self.field_name}"
 
 
-class FloatParameterSpec(FieldSpec):
+class ObjectiveSpec(BaseFieldSpec):
+    """Specification for an objective field."""
+
+    @model_validator(mode="after")
+    def _validate_model(self: _t.Self) -> _t.Self:
+        if self.field_type != "field":
+            raise ValueError("The field type must be 'field' for an objective specification.")
+        return self
+
+
+class FloatParameterSpec(BaseFieldSpec):
     """Specification for a uniform float parameter.
 
     See: https://docs.ray.io/en/latest/tune/api/search_space.html.
@@ -59,7 +75,7 @@ class FloatParameterSpec(FieldSpec):
     upper: float
 
 
-class IntParameterSpec(FieldSpec):
+class IntParameterSpec(BaseFieldSpec):
     """Specification for a uniform integer parameter.
 
     See: https://docs.ray.io/en/latest/tune/api/search_space.html.
@@ -75,7 +91,7 @@ class IntParameterSpec(FieldSpec):
     upper: int
 
 
-class CategoricalParameterSpec(FieldSpec):
+class CategoricalParameterSpec(BaseFieldSpec):
     """Specification for a categorical parameter.
 
     See: https://docs.ray.io/en/latest/tune/api/search_space.html.
@@ -122,7 +138,7 @@ class TuneArgsSpec(PlugboardBaseModel):
         algorithm: The algorithm to use for the optimisation.
     """
 
-    objective: str | list[str]
+    objective: ObjectiveSpec | list[ObjectiveSpec]
     parameters: list[ParameterSpec] = Field(min_length=1)
     num_samples: PositiveInt
     mode: Direction | list[list[Direction]] = "max"
