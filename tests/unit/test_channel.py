@@ -63,7 +63,7 @@ async def test_channel(connector_cls: type[Connector]) -> None:
 
 
 @pytest.mark.asyncio
-@pytest_cases.parametrize("connector_cls", [zmq_connector_cls])
+@pytest_cases.parametrize("connector_cls", [RayConnector, zmq_connector_cls])
 async def test_multiprocessing_channel(connector_cls: type[Connector]) -> None:
     """Tests the various Channel implementations in a multiprocess environment."""
     spec = ConnectorSpec(mode=ConnectorMode.PIPELINE, source="test.send", target="test.recv")
