@@ -117,8 +117,15 @@ jobs:
       - name: Install project
         run: uv sync --group test
 
+      - name: Run backing services
+        run: |
+          docker compose up rabbitmq -d
+          sleep 10 # Wait for services to start
+
       - name: Run integration tests
         run: COVERAGE_FILE=.coverage.py${{ matrix.python_version }}.integration uv run coverage run -m pytest ./tests/integration/
+        env:
+          RABBITMQ_URL: amqp://user:password@localhost:5672/
 
       - name: Upload integration test coverage
         uses: actions/upload-artifact@v4
