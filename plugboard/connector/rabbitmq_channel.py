@@ -35,7 +35,7 @@ class RabbitMQChannel(SerdeChannel):
         **kwargs: _t.Any,
     ) -> None:
         super().__init__(*args, **kwargs)
-        self._send_exchange: _t.Optional[RobustChannel] = send_exchange
+        self._send_exchange: _t.Optional[Exchange] = send_exchange
         self._recv_queue: _t.Optional[Queue] = recv_queue
         self._is_send_closed = send_exchange is None
         self._is_recv_closed = recv_queue is None
@@ -68,6 +68,9 @@ class RabbitMQChannel(SerdeChannel):
 
     async def close(self) -> None:
         """Closes the `RabbitMQChannel`."""
+        if self._send_exchange is not None:
+            await super().close()
+            await self._send_exchange.channel.close()
         self._is_send_closed = True
         self._is_recv_closed = True
 
