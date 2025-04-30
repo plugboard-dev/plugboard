@@ -1,6 +1,9 @@
 """Unit tests for channels."""
 
 import asyncio
+import os
+import typing as _t
+from unittest.mock import patch
 
 import pytest
 import pytest_cases
@@ -11,10 +14,12 @@ from plugboard.connector import (
     Connector,
     ConnectorBuilder,
     RayConnector,
+    ZMQConnector,
 )
 from plugboard.exceptions import ChannelClosedError
 from plugboard.schemas.connector import ConnectorMode, ConnectorSpec
-from tests.conftest import zmq_connector_cls
+from plugboard.utils.di import DI
+from plugboard.utils.settings import Settings
 
 
 TEST_ITEMS = [
@@ -26,6 +31,23 @@ TEST_ITEMS = [
     ["this", 15],
     {"a", "test"},
 ]
+
+
+@pytest_cases.fixture
+@pytest_cases.parametrize(zmq_pubsub_proxy=[False])
+def zmq_connector_cls(zmq_pubsub_proxy: bool) -> _t.Iterator[_t.Type[ZMQConnector]]:
+    """Returns the ZMQConnector class with the specified proxy setting.
+
+    Patches the env var `PLUGBOARD_FLAGS_ZMQ_PUBSUB_PROXY` to control the proxy setting.
+    """
+    with patch.dict(
+        os.environ,
+        {"PLUGBOARD_FLAGS_ZMQ_PUBSUB_PROXY": str(zmq_pubsub_proxy)},
+    ):
+        testing_settings = Settings()
+        DI.settings.override(testing_settings)
+        yield ZMQConnector
+        DI.settings.reset_override()
 
 
 @pytest_cases.fixture
