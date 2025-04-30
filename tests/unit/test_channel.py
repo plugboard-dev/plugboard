@@ -55,7 +55,6 @@ async def test_channel(connector_cls: type[Connector]) -> None:
     for _ in TEST_ITEMS[1:]:
         results.append(await recv_channel.recv())
     await send_channel.close()
-    await recv_channel.close()
 
     # Ensure that the sent and received items are the same.
     assert results == TEST_ITEMS, "Failed on iteration: {}".format(iter)
