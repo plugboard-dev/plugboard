@@ -95,7 +95,7 @@ async def test_pubsub_channel_multiple_publishers(
         (connector_cls, 3, 10, 10, 100),
     ],
 )
-async def test_pubsub_channel_multiple_topics(
+async def test_pubsub_channel_multiple_topics_and_publishers(
     connector_cls: type[Connector],
     num_topics: int,
     num_publishers: int,
