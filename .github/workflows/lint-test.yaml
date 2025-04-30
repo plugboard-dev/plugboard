@@ -62,6 +62,7 @@ jobs:
   test-unit:
     name: Tests - unit
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     strategy:
       matrix:
         python_version: [3.12]
@@ -96,6 +97,7 @@ jobs:
   test-integration:
     name: Tests - integration
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     strategy:
       matrix:
         python_version: [3.12]
