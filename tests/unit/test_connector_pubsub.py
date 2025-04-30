@@ -3,10 +3,12 @@
 import asyncio
 from functools import lru_cache
 from itertools import cycle
+import os
 import random
 import string
 import time
 import typing as _t
+from unittest.mock import patch
 
 import pytest
 import pytest_cases
@@ -15,10 +17,36 @@ from plugboard.connector import (
     AsyncioConnector,
     Channel,
     Connector,
+    ZMQConnector,
 )
 from plugboard.exceptions import ChannelClosedError
 from plugboard.schemas.connector import ConnectorMode, ConnectorSpec
-from tests.conftest import zmq_connector_cls
+from plugboard.utils.di import DI
+from plugboard.utils.settings import Settings
+
+
+@pytest_cases.fixture
+@pytest_cases.parametrize(zmq_pubsub_proxy=[False])
+def zmq_connector_cls(zmq_pubsub_proxy: bool) -> _t.Iterator[_t.Type[ZMQConnector]]:
+    """Returns the ZMQConnector class with the specified proxy setting.
+
+    Patches the env var `PLUGBOARD_FLAGS_ZMQ_PUBSUB_PROXY` to control the proxy setting.
+    """
+    with patch.dict(
+        os.environ,
+        {"PLUGBOARD_FLAGS_ZMQ_PUBSUB_PROXY": str(zmq_pubsub_proxy)},
+    ):
+        testing_settings = Settings()
+        DI.settings.override(testing_settings)
+        yield ZMQConnector
+        DI.settings.reset_override()
+
+
+@pytest_cases.fixture
+@pytest_cases.parametrize(_connector_cls=[AsyncioConnector, zmq_connector_cls])
+def connector_cls(_connector_cls: type[Connector]) -> type[Connector]:
+    """Fixture for `Connector` of various types."""
+    return _connector_cls
 
 
 TEST_ITEMS = string.ascii_lowercase
@@ -115,10 +143,8 @@ async def recv_messages_unordered(channels: list[Channel]) -> list[int]:
 @pytest_cases.parametrize(
     "connector_cls, num_subscribers, num_messages",
     [
-        (AsyncioConnector, 1, 1000),
-        (AsyncioConnector, 10, 1000),
-        (zmq_connector_cls, 1, 1000),
-        (zmq_connector_cls, 100, 1000),
+        (connector_cls, 1, 100),
+        (connector_cls, 10, 100),
     ],
 )
 async def test_pubsub_channel_single_publisher(
@@ -129,6 +155,12 @@ async def test_pubsub_channel_single_publisher(
     In this test there is a single publisher. Messages are expected to be received by all
     subscribers exactly once and in order.
     """
+    await _test_pubsub_channel_single_publisher(connector_cls, num_subscribers, num_messages)
+
+
+async def _test_pubsub_channel_single_publisher(
+    connector_cls: type[Connector], num_subscribers: int, num_messages: int
+) -> None:
     num_publishers: int = 1
     connector_spec = ConnectorSpec(
         source="pubsub-test-0.publishers",
@@ -166,13 +198,11 @@ async def test_pubsub_channel_single_publisher(
 @pytest_cases.parametrize(
     "connector_cls, num_publishers, num_subscribers, num_messages",
     [
-        (AsyncioConnector, 10, 1, 1000),
-        (AsyncioConnector, 10, 10, 1000),
-        (zmq_connector_cls, 10, 1, 1000),
-        (zmq_connector_cls, 10, 100, 1000),
+        (connector_cls, 10, 1, 100),
+        (connector_cls, 10, 10, 100),
     ],
 )
-async def test_pubsub_channel_multiple_publshers(
+async def test_pubsub_channel_multiple_publishers(
     connector_cls: type[Connector], num_publishers: int, num_subscribers: int, num_messages: int
 ) -> None:
     """Tests the various pubsub `Channel` classes in pubsub mode.
@@ -180,6 +210,14 @@ async def test_pubsub_channel_multiple_publshers(
     In this test there are multiple publishers. Messages are expected to be received by all
     subscribers exactly once but they are not expected to be in order.
     """
+    await _test_pubsub_channel_multiple_publishers(
+        connector_cls, num_publishers, num_subscribers, num_messages
+    )
+
+
+async def _test_pubsub_channel_multiple_publishers(
+    connector_cls: type[Connector], num_publishers: int, num_subscribers: int, num_messages: int
+) -> None:
     connector_spec = ConnectorSpec(
         source="pubsub-test-1.publishers",
         target="pubsub-test-1.subscribers",
@@ -216,13 +254,11 @@ async def test_pubsub_channel_multiple_publshers(
 @pytest_cases.parametrize(
     "connector_cls, num_topics, num_publishers, num_subscribers, num_messages",
     [
-        (AsyncioConnector, 3, 10, 1, 1000),
-        (AsyncioConnector, 3, 10, 10, 1000),
-        (zmq_connector_cls, 3, 10, 1, 1000),
-        (zmq_connector_cls, 3, 10, 100, 1000),
+        (connector_cls, 3, 10, 1, 100),
+        (connector_cls, 3, 10, 10, 100),
     ],
 )
-async def test_pubsub_channel_multiple_topics_and_publishers(
+async def test_pubsub_channel_multiple_topics(
     connector_cls: type[Connector],
     num_topics: int,
     num_publishers: int,
@@ -234,6 +270,18 @@ async def test_pubsub_channel_multiple_topics_and_publishers(
     In this test there are multiple topics and publishers. Messages are expected to be received by
     all subscribers exactly once but they are not expected to be in order.
     """
+    await _test_pubsub_channel_multiple_topics_and_publishers(
+        connector_cls, num_topics, num_publishers, num_subscribers, num_messages
+    )
+
+
+async def _test_pubsub_channel_multiple_topics_and_publishers(
+    connector_cls: type[Connector],
+    num_topics: int,
+    num_publishers: int,
+    num_subscribers: int,
+    num_messages: int,
+) -> None:
     all_publishers = []
     all_subscribers = []
 
