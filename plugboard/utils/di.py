@@ -7,6 +7,7 @@ import aio_pika
 import structlog
 from that_depends import BaseContainer
 from that_depends.providers import Resource, Singleton
+from yarl import URL
 
 from plugboard._zmq.zmq_proxy import ZMQProxy
 from plugboard.utils.logging import configure_logging
@@ -45,11 +46,10 @@ def _zmq_proxy(
 
 async def _rabbitmq_conn(
     logger: Singleton[structlog.BoundLogger], url: _t.Optional[str] = None
-) -> _t.AsyncIterator[aio_pika.RobustConnection]:
+) -> _t.AsyncIterator[aio_pika.abc.AbstractRobustConnection]:
     url = url or "amqp://user:password@localhost:5672/"
-    conn = aio_pika.RobustConnection(url)
     try:
-        await conn.connect()
+        conn = await aio_pika.connect_robust(URL(url))
         yield conn
     except aio_pika.exceptions.AMQPConnectionError as e:  # pragma: no cover
         logger.error(f"Failed to connect to RabbitMQ: {e}")

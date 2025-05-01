@@ -8,12 +8,14 @@ import typing as _t
 
 from aio_pika import (
     DeliveryMode,
-    Exchange,
     ExchangeType,
     Message,
-    Queue,
-    RobustChannel,
-    RobustConnection,
+)
+from aio_pika.abc import (
+    AbstractChannel,
+    AbstractExchange,
+    AbstractQueue,
+    AbstractRobustConnection,
 )
 from that_depends import Provide, inject
 
@@ -29,14 +31,14 @@ class RabbitMQChannel(SerdeChannel):
     def __init__(
         self,
         *args: _t.Any,
-        send_exchange: _t.Optional[Exchange] = None,
-        recv_queue: _t.Optional[Queue] = None,
+        send_exchange: _t.Optional[AbstractExchange] = None,
+        recv_queue: _t.Optional[AbstractQueue] = None,
         topic: str = "",
         **kwargs: _t.Any,
     ) -> None:
         super().__init__(*args, **kwargs)
-        self._send_exchange: _t.Optional[Exchange] = send_exchange
-        self._recv_queue: _t.Optional[Queue] = recv_queue
+        self._send_exchange: _t.Optional[AbstractExchange] = send_exchange
+        self._recv_queue: _t.Optional[AbstractQueue] = recv_queue
         self._is_send_closed = send_exchange is None
         self._is_recv_closed = recv_queue is None
         self._topic: str = topic
@@ -70,7 +72,8 @@ class RabbitMQChannel(SerdeChannel):
         """Closes the `RabbitMQChannel`."""
         if self._send_exchange is not None:
             await super().close()
-            await self._send_exchange.channel.close()
+            # TODO : Type annotations in aio-pika make no sense. Raise issue on repo.
+            await self._send_exchange.channel.close()  # type: ignore
         self._is_send_closed = True
         self._is_recv_closed = True
 
@@ -89,7 +92,7 @@ class RabbitMQConnector(Connector):
 
     @inject
     async def connect_send(
-        self, rabbitmq_conn: RobustConnection = Provide[DI.rabbitmq_conn]
+        self, rabbitmq_conn: AbstractRobustConnection = Provide[DI.rabbitmq_conn]
     ) -> RabbitMQChannel:
         """Returns a `RabbitMQ` channel for sending messages."""
         if self._send_channel is not None:
@@ -104,7 +107,7 @@ class RabbitMQConnector(Connector):
 
     @inject
     async def connect_recv(
-        self, rabbitmq_conn: RobustConnection = Provide[DI.rabbitmq_conn]
+        self, rabbitmq_conn: AbstractRobustConnection = Provide[DI.rabbitmq_conn]
     ) -> RabbitMQChannel:
         """Returns a `RabbitMQ` channel for receiving messages."""
         if self._recv_channel is not None:
@@ -118,11 +121,11 @@ class RabbitMQConnector(Connector):
         await asyncio.sleep(0.1)  # Ensure connections established before first send. Better way?
         return self._recv_channel
 
-    async def _declare_exchange(self, channel: RobustChannel) -> Exchange:
+    async def _declare_exchange(self, channel: AbstractChannel) -> AbstractExchange:
         """Declares an exchange on the RabbitMQ channel."""
         return await channel.declare_exchange(self._topic, self._exchange_type, durable=True)
 
-    async def _declare_queue(self, channel: RobustChannel) -> Queue:
+    async def _declare_queue(self, channel: AbstractChannel) -> AbstractQueue:
         """Declares a queue on the RabbitMQ channel."""
         await channel.set_qos(prefetch_count=1)
         queue_name = self._topic if self.spec.mode != ConnectorMode.PUBSUB else None
