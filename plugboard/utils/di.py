@@ -66,6 +66,6 @@ class DI(BaseContainer):
         _mp_set_start_method, logger, use_fork=settings.flags.multiprocessing_fork
     )
     zmq_proxy: Resource[ZMQProxy] = Resource(_zmq_proxy, mp_ctx, logger)
-    rabbitmq_conn: Resource[aio_pika.RobustConnection] = Resource(
+    rabbitmq_conn: Resource[aio_pika.abc.AbstractRobustConnection] = Resource(
         _rabbitmq_conn, logger, url=settings.rabbitmq.url
     )
