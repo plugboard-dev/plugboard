@@ -15,9 +15,8 @@ def config() -> dict:
         return msgspec.yaml.decode(f.read())
 
 
-@pytest.mark.asyncio
-async def test_tune(config: dict) -> None:
-    """Tests loading the YAML config."""
+def test_tune(config: dict) -> None:
+    """Tests running of optimisation jobs."""
     spec = ConfigSpec.model_validate(config)
     process_spec = spec.plugboard.process
     tuner = Tuner(
@@ -40,6 +39,7 @@ async def test_tune(config: dict) -> None:
         num_samples=10,
         mode="max",
     )
-    await tuner.run(
+    result = tuner.run(
         spec=process_spec,
     )
+    assert result is not None

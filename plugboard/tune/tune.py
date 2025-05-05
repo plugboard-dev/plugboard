@@ -1,5 +1,6 @@
 """Provides `Tuner` class for optimising Plugboard processes."""
 
+import asyncio
 from inspect import isfunction
 from pydoc import locate
 import typing as _t
@@ -118,7 +119,7 @@ class Tuner:
         component = process.components[objective.object_name]
         return getattr(component, objective.field_name)
 
-    async def run(self, spec: ProcessSpec) -> None:
+    def run(self, spec: ProcessSpec) -> ray.tune.ResultGrid:
         """Run the optimisation job on Ray.
 
         Args:
@@ -127,13 +128,17 @@ class Tuner:
         self._logger.info("Running optimisation job on Ray")
         spec = spec.model_copy()
 
-        async def _objective(config: dict[str, _t.Any]) -> _t.Any:
+        def _objective(config: dict[str, _t.Any]) -> _t.Any:
             for name, value in config.items():
                 self._override_parameter(spec, self._parameters_dict[name], value)
 
             process = ProcessBuilder.build(spec)
-            async with process:
-                await process.run()
+
+            async def _run() -> None:
+                async with process:
+                    await process.run()
+
+            asyncio.run(_run())
             return {obj.full_name: self._get_objective(process, obj) for obj in self._objective}
 
         # See https://github.com/ray-project/ray/issues/24445 and
@@ -154,5 +159,6 @@ class Tuner:
             tune_config=self._config,
         )
         self._logger.info("Starting Tuner")
-        _tune.fit()
+        result_grid = _tune.fit()
         self._logger.info("Tuner finished")
+        return result_grid
