@@ -69,6 +69,7 @@ test = [
     "llama-index-llms-openai>=0.3.33,<1",
     "moto[server]>=5.0,<6",
     "openai-responses>=0.11.4,<1",
+    "optuna>=4.0,<5",
     "pytest>=8.3,<9",
     "pytest-asyncio>=0.23,<1",
     "pytest-cases>=3.8,<4",
