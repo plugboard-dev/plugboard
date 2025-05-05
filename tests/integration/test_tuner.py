@@ -6,6 +6,7 @@ import pytest
 from plugboard.schemas import ConfigSpec, ObjectiveSpec
 from plugboard.schemas.tune import IntParameterSpec
 from plugboard.tune import Tuner
+from tests.integration.test_process_with_components_run import A, C  # noqa: F401
 
 
 @pytest.fixture
@@ -39,8 +40,12 @@ def test_tune(config: dict) -> None:
         num_samples=10,
         mode="max",
     )
-    result = tuner.run(
+    best_result = tuner.run(
         spec=process_spec,
     )
+    result = tuner.result_grid
     # There must be no failed trials
     assert not [t for t in result if t.error]
+    # Correct optimimum must be found
+    assert best_result.config["a.iters"] == 9
+    assert best_result.metrics["c.in_1"] == 8

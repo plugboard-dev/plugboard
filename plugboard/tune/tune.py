@@ -7,6 +7,7 @@ import typing as _t
 
 import ray.tune.search.optuna
 
+from plugboard.component.component import Component, ComponentRegistry
 from plugboard.process import Process, ProcessBuilder
 from plugboard.schemas import Direction, ObjectiveSpec, OptunaSpec, ParameterSpec, ProcessSpec
 from plugboard.utils import DI
@@ -62,7 +63,15 @@ class Tuner:
             num_samples=num_samples,
             search_alg=_algo,
         )
+        self._result_grid: _t.Optional[ray.tune.ResultGrid] = None
         self._logger.info("Tuner created")
+
+    @property
+    def result_grid(self) -> ray.tune.ResultGrid:
+        """Returns a [`ResultGrid`][ray.tune.ResultGrid] summarising the optimisation results."""
+        if self._result_grid is None:
+            raise ValueError("No result grid available. Run the optimisation job first.")
+        return self._result_grid
 
     def _build_algorithm(
         self, algorithm: _t.Optional[OptunaSpec] = None
@@ -124,16 +133,26 @@ class Tuner:
         async with process:
             await process.run()
 
-    def run(self, spec: ProcessSpec) -> ray.tune.ResultGrid:
+    def run(self, spec: ProcessSpec) -> ray.tune.Result:
         """Run the optimisation job on Ray.
 
         Args:
             spec: The [`ProcessSpec`][plugboard.schemas.ProcessSpec] to optimise.
+
+        Returns:
+            A [`Result`][ray.tune.Result] containing the best trial result. Use the `result_grid`
+            property to get full trial results.
         """
         self._logger.info("Running optimisation job on Ray")
         spec = spec.model_copy()
+        # TODO: Is there a better way to do this?
+        registry = ComponentRegistry._classes  # type: ignore[misc]
 
-        def _objective(config: dict[str, _t.Any]) -> _t.Any:
+        def _objective(
+            config: dict[str, _t.Any], registry: _t.Dict[_t.Hashable, type[Component]]
+        ) -> _t.Any:
+            # Recreate the ComponentRegistry in the Ray worker
+            ComponentRegistry._classes = registry  # type: ignore[misc]
             for name, value in config.items():
                 self._override_parameter(spec, self._parameters_dict[name], value)
 
@@ -145,7 +164,7 @@ class Tuner:
         # See https://github.com/ray-project/ray/issues/24445 and
         # https://docs.ray.io/en/latest/tune/api/doc/ray.tune.execution.placement_groups.PlacementGroupFactory.html
         trainable_with_resources = ray.tune.with_resources(
-            _objective,
+            lambda x: _objective(x, registry),
             ray.tune.PlacementGroupFactory(
                 # Reserve 1 CPU for the tune process and 1 CPU for each component in the Process
                 # TODO: Implement better resource allocation based on Process requirements
@@ -160,6 +179,10 @@ class Tuner:
             tune_config=self._config,
         )
         self._logger.info("Starting Tuner")
-        result_grid = _tune.fit()
+        self._result_grid = _tune.fit()
         self._logger.info("Tuner finished")
-        return result_grid
+        return self._result_grid.get_best_result(
+            # Choose the first metric and mode if multiple are provided
+            metric=self._metric[0] if isinstance(self._metric, list) else self._metric,
+            mode=self._mode[0] if isinstance(self._mode, list) else self._mode,
+        )
