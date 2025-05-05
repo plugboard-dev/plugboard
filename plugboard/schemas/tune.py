@@ -52,11 +52,14 @@ class BaseFieldSpec(PlugboardBaseModel, ABC):
 class ObjectiveSpec(BaseFieldSpec):
     """Specification for an objective field."""
 
-    @model_validator(mode="after")
-    def _validate_model(self: _t.Self) -> _t.Self:
-        if self.field_type != "field":
+    @model_validator(mode="before")
+    @classmethod
+    def _fill_defaults(cls, data: dict[str, _t.Any]) -> dict[str, _t.Any]:
+        if "field_type" not in data:
+            data["field_type"] = "field"
+        if data["field_type"] != "field":
             raise ValueError("The field type must be 'field' for an objective specification.")
-        return self
+        return data
 
 
 class FloatParameterSpec(BaseFieldSpec):
