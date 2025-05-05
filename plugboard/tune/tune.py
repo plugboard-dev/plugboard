@@ -7,6 +7,7 @@ import ray.tune.search.optuna
 
 from plugboard.process import Process, ProcessBuilder
 from plugboard.schemas import Direction, ObjectiveSpec, OptunaSpec, ParameterSpec, ProcessSpec
+from plugboard.utils import DI
 from plugboard.utils.dependencies import depends_on_optional
 
 
@@ -58,6 +59,8 @@ class Tuner:
             num_samples=num_samples,
             search_alg=_algo,
         )
+        self._logger = DI.logger.sync_resolve().bind(cls=self.__class__.__name__)
+        self._logger.info("Tuner created")
 
     def _build_algorithm(
         self, algorithm: _t.Optional[OptunaSpec] = None
@@ -71,7 +74,13 @@ class Tuner:
             algo_cls: _t.Optional[_t.Any] = locate(algorithm.type)
             if not algo_cls or not issubclass(algo_cls, ray.tune.search.searcher.Searcher):
                 raise ValueError(f"Could not locate `Searcher` class {algorithm.type}")
+            self._logger.info(
+                "Using custom search algorithm",
+                algorithm=algorithm.type,
+                params=_algo_kwargs,
+            )
             return algo_cls(**_algo_kwargs)
+        self._logger.info("Using default Optuna search algorithm")
         return ray.tune.search.optuna.OptunaSearch(
             metric=self._metric,
             mode=self._mode,
@@ -114,11 +123,13 @@ class Tuner:
         Args:
             spec: The [`ProcessSpec`][plugboard.schemas.ProcessSpec] to optimise.
         """
+        self._logger.info("Running optimisation job on Ray")
         spec = spec.model_copy()
 
         async def _objective(config: dict[str, _t.Any]) -> _t.Any:
             for name, value in config.items():
                 self._override_parameter(spec, self._parameters_dict[name], value)
+
             process = ProcessBuilder.build(spec)
             async with process:
                 await process.run()
@@ -135,6 +146,7 @@ class Tuner:
             ),
         )
 
+        self._logger.info("Setting Tuner with parameters", params=list(self._parameters.keys()))
         self._tune = ray.tune.Tuner(
             trainable_with_resources,
             param_space=self._parameters,
