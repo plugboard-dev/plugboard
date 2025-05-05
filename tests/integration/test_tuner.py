@@ -42,4 +42,5 @@ def test_tune(config: dict) -> None:
     result = tuner.run(
         spec=process_spec,
     )
-    assert result is not None
+    # There must be no failed trials
+    assert not [t for t in result if t.error]
