@@ -16,7 +16,8 @@ def config() -> dict:
         return msgspec.yaml.decode(f.read())
 
 
-def test_tune(config: dict) -> None:
+@pytest.mark.parametrize("mode", ["min", "max"])
+def test_tune(config: dict, mode: str) -> None:
     """Tests running of optimisation jobs."""
     spec = ConfigSpec.model_validate(config)
     process_spec = spec.plugboard.process
@@ -38,7 +39,8 @@ def test_tune(config: dict) -> None:
             )
         ],
         num_samples=10,
-        mode="max",
+        mode=mode,
+        max_concurrent=2,
     )
     best_result = tuner.run(
         spec=process_spec,
@@ -47,5 +49,9 @@ def test_tune(config: dict) -> None:
     # There must be no failed trials
     assert not [t for t in result if t.error]
     # Correct optimimum must be found
-    assert best_result.config["a.iters"] == 9
-    assert best_result.metrics["c.in_1"] == 8
+    if mode == "min":
+        assert best_result.config["a.iters"] == 5
+        assert best_result.metrics["c.in_1"] == 4
+    else:
+        assert best_result.config["a.iters"] == 9
+        assert best_result.metrics["c.in_1"] == 8
