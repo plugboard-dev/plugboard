@@ -119,6 +119,11 @@ class Tuner:
         component = process.components[objective.object_name]
         return getattr(component, objective.field_name)
 
+    @staticmethod
+    async def _run_process(process: Process) -> None:
+        async with process:
+            await process.run()
+
     def run(self, spec: ProcessSpec) -> ray.tune.ResultGrid:
         """Run the optimisation job on Ray.
 
@@ -133,12 +138,8 @@ class Tuner:
                 self._override_parameter(spec, self._parameters_dict[name], value)
 
             process = ProcessBuilder.build(spec)
+            asyncio.run(self._run_process(process))
 
-            async def _run() -> None:
-                async with process:
-                    await process.run()
-
-            asyncio.run(_run())
             return {obj.full_name: self._get_objective(process, obj) for obj in self._objective}
 
         # See https://github.com/ray-project/ray/issues/24445 and
