@@ -1,5 +1,6 @@
 """Provides `Tuner` class for optimising Plugboard processes."""
 
+from inspect import isfunction
 from pydoc import locate
 import typing as _t
 
@@ -42,8 +43,9 @@ class Tuner:
             max_concurrent: The maximum number of concurrent trials. Defaults to None.
             algorithm: Configuration for the underlying Optuna algorithm used for optimisation.
         """
+        self._logger = DI.logger.sync_resolve().bind(cls=self.__class__.__name__)
         self._objective = objective if isinstance(objective, list) else [objective]
-        self._mode = [str(m) for m in mode] if isinstance(mode, list) else [str(mode)]
+        self._mode = [str(m) for m in mode] if isinstance(mode, list) else str(mode)
         self._metric = (
             [obj.full_name for obj in self._objective]
             if len(self._objective) > 1
@@ -59,7 +61,6 @@ class Tuner:
             num_samples=num_samples,
             search_alg=_algo,
         )
-        self._logger = DI.logger.sync_resolve().bind(cls=self.__class__.__name__)
         self._logger.info("Tuner created")
 
     def _build_algorithm(
@@ -90,11 +91,11 @@ class Tuner:
         self, parameter: ParameterSpec
     ) -> tuple[str, ray.tune.search.sample.Sampler]:
         parameter_cls: _t.Optional[_t.Any] = locate(parameter.type)
-        if not parameter_cls or parameter_cls not in _t.get_args(ParameterSpec):
+        if not parameter_cls or not isfunction(parameter_cls):
             raise ValueError(f"Could not locate parameter class {parameter.type}")
         return parameter.full_name, parameter_cls(
             # The schema will exclude the object and field names and types
-            **parameter.model_dump()
+            **parameter.model_dump(exclude={"type"})
         )
 
     @staticmethod
@@ -147,8 +148,11 @@ class Tuner:
         )
 
         self._logger.info("Setting Tuner with parameters", params=list(self._parameters.keys()))
-        self._tune = ray.tune.Tuner(
+        _tune = ray.tune.Tuner(
             trainable_with_resources,
             param_space=self._parameters,
             tune_config=self._config,
         )
+        self._logger.info("Starting Tuner")
+        _tune.fit()
+        self._logger.info("Tuner finished")
