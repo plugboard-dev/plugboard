@@ -32,14 +32,14 @@ class BaseFieldSpec(PlugboardBaseModel, ABC):
     These fields may be used as adjustable parameter inputs or as an optimisation objective.
 
     Attributes:
+        object_type: The type of object on which the field is defined. Defaults to "component".
         object_name: The name of the object on which the field is defined.
-        object: The type of object on which the field is defined. Defaults to "component".
         field_type: The type of field. This can be "arg", "initial_value", or "field".
         field_name: The name of the field.
     """
 
+    object_type: _t.Literal["component"] = Field("component", exclude=True)
     object_name: str = Field(..., exclude=True)
-    object: _t.Literal["component"] = Field("component", exclude=True)
     field_type: _t.Literal["arg", "initial_value", "field"] = Field(..., exclude=True)
     field_name: str = Field(..., exclude=True)
 

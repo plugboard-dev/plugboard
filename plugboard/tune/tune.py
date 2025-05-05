@@ -99,7 +99,7 @@ class Tuner:
 
     @staticmethod
     def _override_parameter(process: ProcessSpec, param: ParameterSpec, value: _t.Any) -> None:
-        if param.object != "component":
+        if param.object_type != "component":
             raise NotImplementedError("Only component parameters are currently supported.")
         try:
             component = next(c for c in process.args.components if c.args.name == param.object_name)
@@ -112,7 +112,7 @@ class Tuner:
 
     @staticmethod
     def _get_objective(process: Process, objective: ObjectiveSpec) -> _t.Any:
-        if objective.object != "component":
+        if objective.object_type != "component":
             raise NotImplementedError("Only component objectives are currently supported.")
         component = process.components[objective.object_name]
         return getattr(component, objective.field_name)
