@@ -1,6 +1,7 @@
 """Provides `Tuner` class for optimising Plugboard processes."""
 
 import asyncio
+from functools import partial
 from inspect import isfunction
 from pydoc import locate
 import typing as _t
@@ -145,14 +146,17 @@ class Tuner:
         """
         self._logger.info("Running optimisation job on Ray")
         spec = spec.model_copy()
-        # TODO: Is there a better way to do this?
-        registry = ComponentRegistry._classes  # type: ignore[misc]
+        # The Ray worker won't necessarily have the same registry as the driver, so we need to
+        # re-register the classes in the worker
+        required_classes = {c.type: ComponentRegistry.get(c.type) for c in spec.args.components}
 
         def _objective(
-            config: dict[str, _t.Any], registry: _t.Dict[_t.Hashable, type[Component]]
+            config: dict[str, _t.Any], component_classes: dict[str, type[Component]]
         ) -> _t.Any:
             # Recreate the ComponentRegistry in the Ray worker
-            ComponentRegistry._classes = registry  # type: ignore[misc]
+            for key, cls in component_classes.items():
+                ComponentRegistry.add(cls, key=key)
+
             for name, value in config.items():
                 self._override_parameter(spec, self._parameters_dict[name], value)
 
@@ -164,7 +168,7 @@ class Tuner:
         # See https://github.com/ray-project/ray/issues/24445 and
         # https://docs.ray.io/en/latest/tune/api/doc/ray.tune.execution.placement_groups.PlacementGroupFactory.html
         trainable_with_resources = ray.tune.with_resources(
-            lambda x: _objective(x, registry),
+            partial(_objective, component_classes=required_classes),
             ray.tune.PlacementGroupFactory(
                 # Reserve 1 CPU for the tune process and 1 CPU for each component in the Process
                 # TODO: Implement better resource allocation based on Process requirements

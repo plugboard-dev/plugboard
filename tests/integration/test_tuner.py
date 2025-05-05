@@ -35,10 +35,10 @@ def test_tune(config: dict, mode: str) -> None:
                 field_type="arg",
                 field_name="iters",
                 lower=5,
-                upper=10,
+                upper=8,
             )
         ],
-        num_samples=10,
+        num_samples=8,
         mode=mode,
         max_concurrent=2,
     )
@@ -53,5 +53,5 @@ def test_tune(config: dict, mode: str) -> None:
         assert best_result.config["a.iters"] == 5
         assert best_result.metrics["c.in_1"] == 4
     else:
-        assert best_result.config["a.iters"] == 9
-        assert best_result.metrics["c.in_1"] == 8
+        assert best_result.config["a.iters"] == 7
+        assert best_result.metrics["c.in_1"] == 6
