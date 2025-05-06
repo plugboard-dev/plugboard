@@ -2,6 +2,7 @@
 
 from plugboard.schemas._common import PlugboardBaseModel
 from .process import ProcessSpec
+from .tune import TuneSpec
 
 
 class ProcessConfigSpec(PlugboardBaseModel):
@@ -9,9 +10,11 @@ class ProcessConfigSpec(PlugboardBaseModel):
 
     Attributes:
         process: A `ProcessSpec` that specifies the process.
+        tune: Optional; A `TuneSpec` that specifies an optimisation configuration.
     """
 
     process: ProcessSpec
+    tune: TuneSpec | None = None
 
 
 class ConfigSpec(PlugboardBaseModel):
