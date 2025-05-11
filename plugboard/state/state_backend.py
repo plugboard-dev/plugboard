@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from datetime import datetime, timezone
+import os
 from types import TracebackType
 import typing as _t
 
@@ -59,16 +60,30 @@ class StateBackend(ABC, ExportMixin):
         self, job_id: _t.Optional[str] = None, metadata: _t.Optional[dict] = None, **kwargs: _t.Any
     ) -> None:
         """Initialises the state data."""
-        if job_id is not None:
-            _job_data = await self._get_job(job_id)
+        if (_job_id := self._resolve_job_id(job_id)) is not None:
+            job_data = await self._get_job(_job_id)
         else:
-            _job_data = {
+            job_data = {
                 "job_id": DI.job_id.sync_resolve(),
                 "created_at": datetime.now(timezone.utc).isoformat(),
                 "metadata": metadata or dict(),
             }
-            await self._upsert_job(_job_data)
-        self._local_state.update(_job_data)
+            await self._upsert_job(job_data)
+        self._local_state.update(job_data)
+
+    @staticmethod
+    def _resolve_job_id(job_id: _t.Optional[str] = None) -> _t.Optional[str]:
+        """Resolves the job id from the environment or argument if present."""
+        env_job_id = os.environ.get("PLUGBOARD_JOB_ID")
+        if job_id is not None:
+            if env_job_id is not None and job_id != env_job_id:
+                raise RuntimeError(
+                    f"Job ID {job_id} does not match environment variable "
+                    f"PLUGBOARD_JOB_ID={env_job_id}"
+                )
+            os.environ["PLUGBOARD_JOB_ID"] = job_id
+            return job_id
+        return env_job_id
 
     @abstractmethod
     async def _get(self, key: str | tuple[str, ...], value: _t.Optional[_t.Any] = None) -> _t.Any:
