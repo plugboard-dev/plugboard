@@ -63,10 +63,11 @@ def _job_id() -> _t.Iterator[str]:
     """Returns a job ID which uniquely identifies the current plugboard run.
 
     If a job ID is set in the environment variable `PLUGBOARD_JOB_ID`, it will be used.
-    Otherwise, a new unique job ID will be generated.
+    Otherwise, a new unique job ID will be generated and set in the environment.
     """
-    job_id = os.getenv("PLUGBOARD_JOB_ID")
-    yield job_id or EntityIdGen.job_id()
+    if (job_id := os.environ.get("PLUGBOARD_JOB_ID")) is None:
+        os.environ["PLUGBOARD_JOB_ID"] = job_id = EntityIdGen.job_id()
+    yield job_id
 
 
 class DI(BaseContainer):
