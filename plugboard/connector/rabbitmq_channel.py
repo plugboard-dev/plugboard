@@ -63,6 +63,7 @@ class RabbitMQChannel(SerdeChannel):
         while True:
             # Jitter requests to avoid thundering herd problem
             timeout = 20.0 + random() * 5.0  # noqa: S311 (non-cryptographic usage)
+            # TODO : Refactor to avoid using basic `get`
             if (msg_in := await self._recv_queue.get(timeout=timeout, fail=False)) is not None:
                 break
         await msg_in.ack()
@@ -116,20 +117,23 @@ class RabbitMQConnector(Connector):
         channel = await rabbitmq_conn.channel()
         await self._declare_exchange(channel)
         queue = await self._declare_queue(channel)
-
         self._recv_channel = RabbitMQChannel(recv_queue=queue, topic=self._topic)
         await asyncio.sleep(0.1)  # Ensure connections established before first send. Better way?
         return self._recv_channel
 
     async def _declare_exchange(self, channel: AbstractChannel) -> AbstractExchange:
         """Declares an exchange on the RabbitMQ channel."""
-        return await channel.declare_exchange(self._topic, self._exchange_type, durable=True)
+        return await channel.declare_exchange(
+            self._topic,
+            self._exchange_type,
+            auto_delete=True,
+            durable=True,
+        )
 
     async def _declare_queue(self, channel: AbstractChannel) -> AbstractQueue:
         """Declares a queue on the RabbitMQ channel."""
         await channel.set_qos(prefetch_count=1)
         queue_name = self._topic if self.spec.mode != ConnectorMode.PUBSUB else None
-        queue_auto_delete = self.spec.mode == ConnectorMode.PUBSUB
-        queue = await channel.declare_queue(queue_name, auto_delete=queue_auto_delete, durable=True)
+        queue = await channel.declare_queue(queue_name, auto_delete=True, durable=True)
         await queue.bind(self._topic, routing_key=self._topic)
         return queue
