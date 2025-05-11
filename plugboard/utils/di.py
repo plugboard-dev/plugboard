@@ -1,6 +1,7 @@
 """Provides a dependency injection container and utils."""
 
 import multiprocessing
+import os
 import typing as _t
 
 import aio_pika
@@ -10,6 +11,7 @@ from that_depends.providers import Resource, Singleton
 from yarl import URL
 
 from plugboard._zmq.zmq_proxy import ZMQProxy
+from plugboard.utils.entities import EntityIdGen
 from plugboard.utils.logging import configure_logging
 from plugboard.utils.settings import Settings
 
@@ -57,6 +59,16 @@ async def _rabbitmq_conn(
         await conn.close()  # pragma: no cover
 
 
+def _job_id() -> _t.Iterator[str]:
+    """Returns a job ID which uniquely identifies the current plugboard run.
+
+    If a job ID is set in the environment variable `PLUGBOARD_JOB_ID`, it will be used.
+    Otherwise, a new unique job ID will be generated.
+    """
+    job_id = os.getenv("PLUGBOARD_JOB_ID")
+    yield job_id or EntityIdGen.job_id()
+
+
 class DI(BaseContainer):
     """`DI` is a dependency injection container for plugboard."""
 
@@ -69,3 +81,4 @@ class DI(BaseContainer):
     rabbitmq_conn: Resource[aio_pika.abc.AbstractRobustConnection] = Resource(
         _rabbitmq_conn, logger, url=settings.rabbitmq.url
     )
+    job_id: Singleton[str] = Singleton(_job_id)
