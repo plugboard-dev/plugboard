@@ -51,8 +51,8 @@ class ProcessBuilder:
         cls._handle_job_id(state_spec)
         return statebackend_class(**dict(spec.args.state.args))
 
-    @classmethod
-    def _handle_job_id(cls, state_spec: StateBackendSpec) -> None:
+    @staticmethod
+    def _handle_job_id(state_spec: StateBackendSpec) -> None:
         """Handle job ID for the state backend.
 
         If a job ID is provided in the state spec, it will be set as an environment variable.
