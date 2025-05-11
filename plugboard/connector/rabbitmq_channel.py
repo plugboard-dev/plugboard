@@ -124,10 +124,7 @@ class RabbitMQConnector(Connector):
     async def _declare_exchange(self, channel: AbstractChannel) -> AbstractExchange:
         """Declares an exchange on the RabbitMQ channel."""
         return await channel.declare_exchange(
-            self._topic,
-            self._exchange_type,
-            auto_delete=True,
-            durable=True,
+            self._topic, self._exchange_type, auto_delete=True, durable=True
         )
 
     async def _declare_queue(self, channel: AbstractChannel) -> AbstractQueue:
