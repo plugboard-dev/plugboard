@@ -65,6 +65,8 @@ def _job_id() -> str:
     If a job ID is set in the environment variable `PLUGBOARD_JOB_ID`, it will be used.
     Otherwise, a new unique job ID will be generated and set in the environment.
     """
+    # TODO : Should the env var be unset on DI teardown? Consider notebook execution.
+    #      : Where multiple process runs may be executed from the same os process.
     if (job_id := os.environ.get("PLUGBOARD_JOB_ID")) is None:
         os.environ["PLUGBOARD_JOB_ID"] = job_id = EntityIdGen.job_id()
     return job_id
