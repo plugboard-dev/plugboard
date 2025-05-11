@@ -1,6 +1,7 @@
 """Plugboard Process CLI."""
 
 import asyncio
+import os
 from pathlib import Path
 
 import msgspec
@@ -57,9 +58,22 @@ def run(
             help="Path to the YAML configuration file.",
         ),
     ],
+    job_id: Annotated[
+        str,
+        typer.Option(
+            None,
+            "--job-id",
+            help="Job ID for the process. If not provided, a random job ID will be generated.",
+        ),
+    ],
 ) -> None:
     """Run a Plugboard process."""
     config_spec = _read_yaml(config)
+
+    if job_id:
+        # Override job ID in env and config file if set
+        os.environ["PLUGBOARD_JOB_ID"] = job_id
+        config_spec.plugboard.process.args.state.args.job_id = job_id
 
     with Progress(
         SpinnerColumn("arrow3"),

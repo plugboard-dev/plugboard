@@ -1,5 +1,6 @@
 """Provides `ProcessBuilder` to build `Process` objects."""
 
+import os
 from pydoc import locate
 import typing as _t
 
@@ -8,7 +9,7 @@ from plugboard.connector.connector import Connector
 from plugboard.connector.connector_builder import ConnectorBuilder
 from plugboard.events.event_connector_builder import EventConnectorBuilder
 from plugboard.process.process import Process
-from plugboard.schemas import ProcessSpec
+from plugboard.schemas import ProcessSpec, StateBackendSpec
 from plugboard.state import StateBackend
 from plugboard.utils import DI
 
@@ -47,7 +48,27 @@ class ProcessBuilder:
         statebackend_class: _t.Optional[_t.Any] = locate(state_spec.type)
         if not statebackend_class or not issubclass(statebackend_class, StateBackend):
             raise ValueError(f"StateBackend class {spec.args.state.type} not found.")
+        cls._handle_job_id(state_spec)
         return statebackend_class(**dict(spec.args.state.args))
+
+    @classmethod
+    def _handle_job_id(cls, state_spec: StateBackendSpec) -> None:
+        """Handle job ID for the state backend.
+
+        If a job ID is provided in the state spec, it will be set as an environment variable.
+        If the job ID is already set in the environment, it will be checked against the one in the
+        state spec. If they do not match, a RuntimeError will be raised.
+        """
+        if state_spec.args.job_id is None:
+            return
+        if (
+            env_job_id := os.environ.get("PLUGBOARD_JOB_ID")
+        ) is not None and env_job_id != state_spec.args.job_id:
+            raise RuntimeError(
+                f"Job ID {state_spec.args.job_id} does not match environment variable "
+                f"PLUGBOARD_JOB_ID={env_job_id}"
+            )
+        os.environ["PLUGBOARD_JOB_ID"] = state_spec.args.job_id
 
     @classmethod
     def _build_components(cls, spec: ProcessSpec) -> list[Component]:
