@@ -7,7 +7,7 @@ from datetime import datetime, timezone
 from types import TracebackType
 import typing as _t
 
-from plugboard.utils import DI, EntityIdGen, ExportMixin
+from plugboard.utils import DI, ExportMixin
 
 
 if _t.TYPE_CHECKING:
@@ -63,7 +63,7 @@ class StateBackend(ABC, ExportMixin):
             _job_data = await self._get_job(job_id)
         else:
             _job_data = {
-                "job_id": EntityIdGen.job_id(),
+                "job_id": DI.job_id.sync_resolve(),
                 "created_at": datetime.now(timezone.utc).isoformat(),
                 "metadata": metadata or dict(),
             }
