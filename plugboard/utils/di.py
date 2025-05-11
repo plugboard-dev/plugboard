@@ -59,7 +59,7 @@ async def _rabbitmq_conn(
         await conn.close()  # pragma: no cover
 
 
-def _job_id() -> _t.Iterator[str]:
+def _job_id() -> str:
     """Returns a job ID which uniquely identifies the current plugboard run.
 
     If a job ID is set in the environment variable `PLUGBOARD_JOB_ID`, it will be used.
@@ -67,7 +67,7 @@ def _job_id() -> _t.Iterator[str]:
     """
     if (job_id := os.environ.get("PLUGBOARD_JOB_ID")) is None:
         os.environ["PLUGBOARD_JOB_ID"] = job_id = EntityIdGen.job_id()
-    yield job_id
+    return job_id
 
 
 class DI(BaseContainer):
