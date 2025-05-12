@@ -75,15 +75,14 @@ class StateBackend(ABC, ExportMixin):
     def _resolve_job_id(job_id: _t.Optional[str] = None) -> _t.Optional[str]:
         """Resolves the job id from the environment or argument if present."""
         env_job_id = os.environ.get("PLUGBOARD_JOB_ID")
-        if job_id is not None:
-            if env_job_id is not None and job_id != env_job_id:
-                raise RuntimeError(
-                    f"Job ID {job_id} does not match environment variable "
-                    f"PLUGBOARD_JOB_ID={env_job_id}"
-                )
-            os.environ["PLUGBOARD_JOB_ID"] = job_id
-            return job_id
-        return env_job_id
+        if job_id is None:
+            return env_job_id
+        if env_job_id is not None and job_id != env_job_id:
+            raise RuntimeError(
+                f"Job ID {job_id} does not match environment variable PLUGBOARD_JOB_ID={env_job_id}"
+            )
+        os.environ["PLUGBOARD_JOB_ID"] = job_id
+        return job_id
 
     @abstractmethod
     async def _get(self, key: str | tuple[str, ...], value: _t.Optional[_t.Any] = None) -> _t.Any:
