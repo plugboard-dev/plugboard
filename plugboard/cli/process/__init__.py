@@ -1,7 +1,6 @@
 """Plugboard Process CLI."""
 
 import asyncio
-import os
 from pathlib import Path
 
 import msgspec
@@ -71,8 +70,7 @@ def run(
     config_spec = _read_yaml(config)
 
     if job_id:
-        # Override job ID in env and config file if set
-        os.environ["PLUGBOARD_JOB_ID"] = job_id
+        # Override job ID in config file if set
         config_spec.plugboard.process.args.state.args.job_id = job_id
 
     with Progress(

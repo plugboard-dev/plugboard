@@ -3,11 +3,14 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
+from contextlib import AsyncExitStack
 from datetime import datetime, timezone
-import os
 from types import TracebackType
 import typing as _t
 
+from that_depends import Provide, container_context, inject
+
+from plugboard.exceptions import NotFoundError
 from plugboard.utils import DI, ExportMixin
 
 
@@ -33,13 +36,18 @@ class StateBackend(ABC, ExportMixin):
         self._local_state = {"job_id": job_id, "metadata": metadata, **kwargs}
         self._logger = DI.logger.sync_resolve().bind(cls=self.__class__.__name__, job_id=job_id)
         self._logger.info("StateBackend created")
+        self._ctx = AsyncExitStack()
 
     async def init(self) -> None:
         """Initialises the `StateBackend`."""
+        job_id = self._local_state.pop("job_id", None)
+        container_cm = container_context(global_context={"job_id": job_id})
+        await self._ctx.enter_async_context(container_cm)
         await self._initialise_data(**self._local_state)
 
     async def destroy(self) -> None:
         """Destroys the `StateBackend`."""
+        await self._ctx.aclose()
         pass
 
     async def __aenter__(self) -> StateBackend:
@@ -56,33 +64,22 @@ class StateBackend(ABC, ExportMixin):
         """Exits the context manager."""
         await self.destroy()
 
+    @inject
     async def _initialise_data(
-        self, job_id: _t.Optional[str] = None, metadata: _t.Optional[dict] = None, **kwargs: _t.Any
+        self, job_id: str = Provide[DI.job_id], metadata: _t.Optional[dict] = None, **kwargs: _t.Any
     ) -> None:
         """Initialises the state data."""
-        if (_job_id := self._resolve_job_id(job_id)) is not None:
-            job_data = await self._get_job(_job_id)
-        else:
+        try:
+            # TODO : Requires state for if this is a new job to conditionally raise exception?
+            job_data = await self._get_job(job_id)
+        except NotFoundError:
             job_data = {
-                "job_id": DI.job_id.sync_resolve(),
+                "job_id": job_id,
                 "created_at": datetime.now(timezone.utc).isoformat(),
                 "metadata": metadata or dict(),
             }
             await self._upsert_job(job_data)
         self._local_state.update(job_data)
-
-    @staticmethod
-    def _resolve_job_id(job_id: _t.Optional[str] = None) -> _t.Optional[str]:
-        """Resolves the job id from the environment or argument if present."""
-        env_job_id = os.environ.get("PLUGBOARD_JOB_ID")
-        if job_id is None:
-            return env_job_id
-        if env_job_id is not None and job_id != env_job_id:
-            raise RuntimeError(
-                f"Job ID {job_id} does not match environment variable PLUGBOARD_JOB_ID={env_job_id}"
-            )
-        os.environ["PLUGBOARD_JOB_ID"] = job_id
-        return job_id
 
     @abstractmethod
     async def _get(self, key: str | tuple[str, ...], value: _t.Optional[_t.Any] = None) -> _t.Any:

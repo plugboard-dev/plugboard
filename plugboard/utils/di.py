@@ -6,8 +6,8 @@ import typing as _t
 
 import aio_pika
 import structlog
-from that_depends import BaseContainer
-from that_depends.providers import Resource, Singleton
+from that_depends import BaseContainer, fetch_context_item
+from that_depends.providers import ContextResource, Resource, Singleton
 from yarl import URL
 
 from plugboard._zmq.zmq_proxy import ZMQProxy
@@ -59,17 +59,29 @@ async def _rabbitmq_conn(
         await conn.close()  # pragma: no cover
 
 
-def _job_id() -> str:
+def _job_id() -> _t.Iterator[str]:
     """Returns a job ID which uniquely identifies the current plugboard run.
 
-    If a job ID is set in the environment variable `PLUGBOARD_JOB_ID`, it will be used.
-    Otherwise, a new unique job ID will be generated and set in the environment.
+    If a job ID is available in the context (from the cli, the state spec, or an argument to the
+    StateBackend), it will take precedence. If the job ID is set in the env var `PLUGBOARD_JOB_ID`,
+    it will be checked against the one in the context, if present. If they do not match, a
+    RuntimeError will be raised. If the job ID is not set in the context or the env var, a new
+    unique job ID will be generated.
     """
-    # TODO : Should the env var be unset on DI teardown? Consider notebook execution.
-    #      : Where multiple process runs may be executed from the same os process.
-    if (job_id := os.environ.get("PLUGBOARD_JOB_ID")) is None:
-        os.environ["PLUGBOARD_JOB_ID"] = job_id = EntityIdGen.job_id()
-    return job_id
+    arg_job_id = fetch_context_item("job_id")
+    env_job_id = os.environ.get("PLUGBOARD_JOB_ID")
+    if arg_job_id is not None:
+        if env_job_id is not None and arg_job_id != env_job_id:
+            raise RuntimeError(
+                f"Job ID {arg_job_id} does not match environment variable "
+                f"PLUGBOARD_JOB_ID={env_job_id}"
+            )
+        job_id = arg_job_id
+    elif env_job_id is not None:
+        job_id = env_job_id
+    else:
+        job_id = EntityIdGen.job_id()
+    yield job_id
 
 
 class DI(BaseContainer):
@@ -84,4 +96,4 @@ class DI(BaseContainer):
     rabbitmq_conn: Resource[aio_pika.abc.AbstractRobustConnection] = Resource(
         _rabbitmq_conn, logger, url=settings.rabbitmq.url
     )
-    job_id: Singleton[str] = Singleton(_job_id)
+    job_id: ContextResource[str] = ContextResource(_job_id)
