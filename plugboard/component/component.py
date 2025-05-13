@@ -73,7 +73,7 @@ class Component(ABC, ExportMixin):
         self._field_inputs: dict[str, _t.Any] = {}
         self._field_inputs_ready: bool = False
 
-        self._logger = DI.logger.sync_resolve().bind(cls=self.__class__.__name__, name=self.name)
+        self._logger = DI.logger.resolve_sync().bind(cls=self.__class__.__name__, name=self.name)
         self._logger.info("Component created")
 
     def __init_subclass__(cls, *args: _t.Any, **kwargs: _t.Any) -> None:

@@ -34,14 +34,14 @@ class StateBackend(ABC, ExportMixin):
             kwargs: Additional keyword arguments.
         """
         self._local_state = {"job_id": job_id, "metadata": metadata, **kwargs}
-        self._logger = DI.logger.sync_resolve().bind(cls=self.__class__.__name__, job_id=job_id)
+        self._logger = DI.logger.resolve_sync().bind(cls=self.__class__.__name__, job_id=job_id)
         self._logger.info("StateBackend created")
         self._ctx = AsyncExitStack()
 
     async def init(self) -> None:
         """Initialises the `StateBackend`."""
         job_id = self._local_state.pop("job_id", None)
-        container_cm = container_context(global_context={"job_id": job_id})
+        container_cm = container_context(DI, global_context={"job_id": job_id})
         await self._ctx.enter_async_context(container_cm)
         await self._initialise_data(**self._local_state)
 

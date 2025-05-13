@@ -45,9 +45,9 @@ def zmq_connector_cls(zmq_pubsub_proxy: bool) -> _t.Iterator[_t.Type[ZMQConnecto
         {"PLUGBOARD_FLAGS_ZMQ_PUBSUB_PROXY": str(zmq_pubsub_proxy)},
     ):
         testing_settings = Settings()
-        DI.settings.override(testing_settings)
+        DI.settings.override_sync(testing_settings)
         yield ZMQConnector
-        DI.settings.reset_override()
+        DI.settings.reset_override_sync()
 
 
 @pytest_cases.fixture

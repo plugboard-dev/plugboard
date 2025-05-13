@@ -68,7 +68,7 @@ class ProcessBuilder:
         event_connector_builder = EventConnectorBuilder(connector_builder=connector_builder)
         # TODO: Remove this when https://github.com/plugboard-dev/plugboard/issues/101 is resolved
         if spec.type.endswith("RayProcess"):
-            DI.logger.sync_resolve().warning(
+            DI.logger.resolve_sync().warning(
                 "RayProcess does not yet support event-based models. "
                 "Event connectors will not be built."
             )
