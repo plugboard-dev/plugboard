@@ -8,7 +8,7 @@ from datetime import datetime, timezone
 from types import TracebackType
 import typing as _t
 
-from that_depends import Provide, container_context, inject
+from that_depends import ContextScopes, Provide, container_context, inject
 
 from plugboard.exceptions import NotFoundError
 from plugboard.utils import DI, ExportMixin
@@ -41,7 +41,9 @@ class StateBackend(ABC, ExportMixin):
     async def init(self) -> None:
         """Initialises the `StateBackend`."""
         job_id = self._local_state.pop("job_id", None)
-        container_cm = container_context(DI, global_context={"job_id": job_id})
+        container_cm = container_context(
+            DI, global_context={"job_id": job_id}, scope=ContextScopes.APP
+        )
         await self._ctx.enter_async_context(container_cm)
         await self._initialise_data(**self._local_state)
 
@@ -70,7 +72,7 @@ class StateBackend(ABC, ExportMixin):
     ) -> None:
         """Initialises the state data."""
         try:
-            # TODO : Requires state for if this is a new job to conditionally raise exception?
+            # TODO : Requires indication of new or existing job to conditionally raise exception?
             job_data = await self._get_job(job_id)
         except NotFoundError:
             job_data = {

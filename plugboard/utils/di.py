@@ -6,7 +6,7 @@ import typing as _t
 
 import aio_pika
 import structlog
-from that_depends import BaseContainer, fetch_context_item
+from that_depends import BaseContainer, ContextScopes, fetch_context_item
 from that_depends.providers import ContextResource, Resource, Singleton
 from yarl import URL
 
@@ -86,6 +86,8 @@ def _job_id() -> _t.Iterator[str]:
 
 class DI(BaseContainer):
     """`DI` is a dependency injection container for plugboard."""
+
+    default_scope = ContextScopes.APP
 
     settings: Singleton[Settings] = Singleton(Settings)
     logger: Singleton[structlog.BoundLogger] = Singleton(_logger, settings.cast)
