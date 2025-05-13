@@ -2836,12 +2836,12 @@ test = [
 [package.metadata]
 requires-dist = [
     { name = "adlfs", marker = "extra == 'azure'", specifier = ">=2024.7.0" },
-    { name = "aio-pika", specifier = ">=9.5.5" },
+    { name = "aio-pika", specifier = ">=9.5.5,<10" },
     { name = "aiosqlite", specifier = ">=0.20,<1" },
     { name = "annotated-types", specifier = ">=0.7,<1" },
     { name = "async-lru", specifier = ">=2.0,<3" },
     { name = "fsspec", specifier = ">=2024.9.0" },
-    { name = "gcsfs", marker = "extra == 'gcp'", specifier = ">=2024.9.0.post1" },
+    { name = "gcsfs", marker = "extra == 'gcp'", specifier = ">=2024.9.0" },
     { name = "llama-index-core", marker = "extra == 'llm'", specifier = ">=0.12.30,<1" },
     { name = "llama-index-llms-openai", marker = "extra == 'llm'", specifier = ">=0.3.33,<1" },
     { name = "msgspec", extras = ["yaml"], specifier = ">=0.18,<1" },
@@ -2855,7 +2855,7 @@ requires-dist = [
     { name = "s3fs", marker = "extra == 'aws'", specifier = ">=2024.9.0" },
     { name = "sqlalchemy", extras = ["asyncio"], specifier = ">=2.0,<3" },
     { name = "structlog", specifier = ">=25.1.0,<26" },
-    { name = "that-depends", specifier = ">=2.1.0,<3" },
+    { name = "that-depends", specifier = ">=3.4.1,<4" },
     { name = "typer", specifier = ">=0.12,<1" },
     { name = "websockets", marker = "extra == 'websockets'", specifier = ">=14.2,<15" },
 ]
@@ -2875,7 +2875,7 @@ dev = [
     { name = "xenon", specifier = ">=0.9.3,<1" },
 ]
 docs = [
-    { name = "mike", specifier = "~=2.1" },
+    { name = "mike", specifier = ">=2.1,<3" },
     { name = "mkdocs-jupyter", specifier = ">=0.25.1,<1" },
     { name = "mkdocs-material", specifier = ">=9.5,<10" },
     { name = "mkdocstrings", extras = ["python"], specifier = ">=0.25,<1" },
@@ -3939,11 +3939,11 @@ wheels = [
 
 [[package]]
 name = "that-depends"
-version = "2.2.0"
+version = "3.4.1"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/c7/b0/34c605dd7e9dbfc736a2ffe5d96683a852d1e5b68542272dcb6f553ab015/that_depends-2.2.0.tar.gz", hash = "sha256:bc7871e54f6050a19c0f4cabc07ee893ce5585b416ff604b09de8006f491c418", size = 56856 }
+sdist = { url = "https://files.pythonhosted.org/packages/2d/96/d1faaa9dd65a5bcc46af2947322eabd1e653984dca0bba78dacfb60150bd/that_depends-3.4.1.tar.gz", hash = "sha256:e763bbc95cad5d0d7bc204181e46caa903244abd08d8cdd1179dd71742eeedcb", size = 71266 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/54/5b/ea8218e6def9f8fc4c778688ae724fdb11c00959958cf0a085198e5bed87/that_depends-2.2.0-py3-none-any.whl", hash = "sha256:36a5b7ff8859955f81982a6aee03357b825599409960573ef1e3d64ba7ac3801", size = 26294 },
+    { url = "https://files.pythonhosted.org/packages/76/58/103c59aa3ecfe28c8d3bb6c9c4f345ec885f11695aca333d363b8adf2404/that_depends-3.4.1-py3-none-any.whl", hash = "sha256:834544897316fd1132759db606ec5b79318114045a79ee6c3922cdc183780d06", size = 32406 },
 ]
 
 [[package]]
