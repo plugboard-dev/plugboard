@@ -2,8 +2,11 @@
 
 import typing as _t
 
+from that_depends import Provide, inject
+
 from plugboard.exceptions import StateBackendError
 from plugboard.state.state_backend import StateBackend
+from plugboard.utils import DI
 
 
 class DictStateBackend(StateBackend):
@@ -24,10 +27,11 @@ class DictStateBackend(StateBackend):
         """Set state dictionary."""
         self._state_dict.update(value)
 
+    @inject
     async def _initialise_data(
-        self, job_id: _t.Optional[str] = None, metadata: _t.Optional[dict] = None, **kwargs: _t.Any
+        self, job_id: str = Provide[DI.job_id], metadata: _t.Optional[dict] = None, **kwargs: _t.Any
     ) -> None:
-        await super()._initialise_data(job_id, metadata, **kwargs)
+        await super()._initialise_data(job_id=job_id, metadata=metadata, **kwargs)
         comp_proc_map: dict = dict()
         await self._set("_comp_proc_map", comp_proc_map)
         conn_proc_map: dict = dict()
