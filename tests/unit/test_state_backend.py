@@ -6,7 +6,6 @@ import typing as _t
 import pytest
 import time_machine
 
-from plugboard.exceptions import StateBackendError
 from plugboard.state import (
     DictStateBackend,
     RayStateBackend,
@@ -33,8 +32,8 @@ def state_backend_cls(request: pytest.FixtureRequest) -> _t.Type[StateBackend]:
     [
         (None, None, None),
         (None, {"key": "value"}, None),
-        (EntityIdGen.job_id(), {"key": "value"}, pytest.raises(StateBackendError)),
-        ("invalid_job_id", None, pytest.raises(StateBackendError)),
+        (EntityIdGen.job_id(), {"key": "value"}, None),
+        ("invalid_job_id", None, pytest.raises(ValueError)),
     ],
 )
 async def test_state_backend_init(

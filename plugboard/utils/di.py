@@ -81,6 +81,8 @@ def _job_id() -> _t.Iterator[str]:
         job_id = env_job_id
     else:
         job_id = EntityIdGen.job_id()
+    if not EntityIdGen.is_job_id(job_id):
+        raise ValueError(f"Invalid job ID: {job_id}.")
     yield job_id
 
 
