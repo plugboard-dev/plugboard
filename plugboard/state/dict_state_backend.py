@@ -4,7 +4,7 @@ import typing as _t
 
 from that_depends import Provide, inject
 
-from plugboard.exceptions import StateBackendError
+from plugboard.exceptions import NotFoundError
 from plugboard.state.state_backend import StateBackend
 from plugboard.utils import DI
 
@@ -38,7 +38,7 @@ class DictStateBackend(StateBackend):
         await self._set("_conn_proc_map", conn_proc_map)
 
     async def _get_job(self, job_id: str) -> dict:
-        raise StateBackendError("Cannot reuse job ID for non-persistent backend.")
+        raise NotFoundError("Cannot reuse job ID for non-persistent backend.")
 
     async def _get(self, key: str | tuple[str, ...], value: _t.Optional[_t.Any] = None) -> _t.Any:
         _state, _key = self._state_dict, key
