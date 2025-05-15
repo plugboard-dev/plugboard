@@ -21,24 +21,6 @@ def datetime_now() -> str:
     return "2024-10-04T12:00:00+00:00"
 
 
-@pytest.fixture(scope="module")
-def null_job_id() -> None:
-    """A null job id."""
-    return None
-
-
-@pytest.fixture(scope="module")
-def valid_job_id() -> str:
-    """An existing valid job id."""
-    return EntityIdGen.job_id()
-
-
-@pytest.fixture(scope="module")
-def invalid_job_id() -> str:
-    """An invalid job id."""
-    return "invalid_job_id"
-
-
 @pytest.fixture(scope="module", params=[DictStateBackend, RayStateBackend])
 def state_backend_cls(request: pytest.FixtureRequest) -> _t.Type[StateBackend]:
     """Returns a `StateBackend` class."""
@@ -47,25 +29,22 @@ def state_backend_cls(request: pytest.FixtureRequest) -> _t.Type[StateBackend]:
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
-    "job_id_fixture, metadata, exc_ctx",
+    "job_id, metadata, exc_ctx",
     [
-        ("null_job_id", None, None),
-        ("null_job_id", {"key": "value"}, None),
-        ("valid_job_id", {"key": "value"}, pytest.raises(StateBackendError)),
+        (None, None, None),
+        (None, {"key": "value"}, None),
+        (EntityIdGen.job_id(), {"key": "value"}, pytest.raises(StateBackendError)),
         ("invalid_job_id", None, pytest.raises(StateBackendError)),
     ],
 )
 async def test_state_backend_init(
     datetime_now: str,
     state_backend_cls: _t.Type[StateBackend],
-    job_id_fixture: str,
+    job_id: _t.Optional[str],
     metadata: _t.Optional[dict],
     exc_ctx: AbstractContextManager,
-    request: pytest.FixtureRequest,
 ) -> None:
     """Tests `StateBackend` initialisation."""
-    job_id: _t.Optional[str] = request.getfixturevalue(job_id_fixture)
-
     state_backend = state_backend_cls(job_id=job_id, metadata=metadata)
 
     with exc_ctx or nullcontext():
