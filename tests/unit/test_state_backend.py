@@ -28,7 +28,7 @@ def state_backend_cls(request: pytest.FixtureRequest) -> _t.Type[StateBackend]:
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
-    "job_id_fixture, metadata, exc_ctx",
+    "job_id, metadata, exc_ctx",
     [
         (None, None, None),
         (None, {"key": "value"}, None),
