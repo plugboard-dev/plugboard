@@ -3,11 +3,15 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
+from contextlib import AsyncExitStack
 from datetime import datetime, timezone
 from types import TracebackType
 import typing as _t
 
-from plugboard.utils import DI, EntityIdGen, ExportMixin
+from that_depends import ContextScopes, Provide, container_context, inject
+
+from plugboard.exceptions import NotFoundError
+from plugboard.utils import DI, ExportMixin
 
 
 if _t.TYPE_CHECKING:
@@ -30,15 +34,22 @@ class StateBackend(ABC, ExportMixin):
             kwargs: Additional keyword arguments.
         """
         self._local_state = {"job_id": job_id, "metadata": metadata, **kwargs}
-        self._logger = DI.logger.sync_resolve().bind(cls=self.__class__.__name__, job_id=job_id)
+        self._logger = DI.logger.resolve_sync().bind(cls=self.__class__.__name__, job_id=job_id)
         self._logger.info("StateBackend created")
+        self._ctx = AsyncExitStack()
 
     async def init(self) -> None:
         """Initialises the `StateBackend`."""
+        job_id = self._local_state.pop("job_id", None)
+        container_cm = container_context(
+            DI, global_context={"job_id": job_id}, scope=ContextScopes.APP
+        )
+        await self._ctx.enter_async_context(container_cm)
         await self._initialise_data(**self._local_state)
 
     async def destroy(self) -> None:
         """Destroys the `StateBackend`."""
+        await self._ctx.aclose()
         pass
 
     async def __aenter__(self) -> StateBackend:
@@ -55,20 +66,22 @@ class StateBackend(ABC, ExportMixin):
         """Exits the context manager."""
         await self.destroy()
 
+    @inject
     async def _initialise_data(
-        self, job_id: _t.Optional[str] = None, metadata: _t.Optional[dict] = None, **kwargs: _t.Any
+        self, job_id: str = Provide[DI.job_id], metadata: _t.Optional[dict] = None, **kwargs: _t.Any
     ) -> None:
         """Initialises the state data."""
-        if job_id is not None:
-            _job_data = await self._get_job(job_id)
-        else:
-            _job_data = {
-                "job_id": EntityIdGen.job_id(),
+        try:
+            # TODO : Requires indication of new or existing job to conditionally raise exception?
+            job_data = await self._get_job(job_id)
+        except NotFoundError:
+            job_data = {
+                "job_id": job_id,
                 "created_at": datetime.now(timezone.utc).isoformat(),
                 "metadata": metadata or dict(),
             }
-            await self._upsert_job(_job_data)
-        self._local_state.update(_job_data)
+            await self._upsert_job(job_data)
+        self._local_state.update(job_data)
 
     @abstractmethod
     async def _get(self, key: str | tuple[str, ...], value: _t.Optional[_t.Any] = None) -> _t.Any:

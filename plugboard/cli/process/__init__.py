@@ -2,6 +2,7 @@
 
 import asyncio
 from pathlib import Path
+import typing as _t
 
 import msgspec
 from rich import print
@@ -57,9 +58,19 @@ def run(
             help="Path to the YAML configuration file.",
         ),
     ],
+    job_id: Annotated[
+        _t.Optional[str],
+        typer.Option(
+            help="Job ID for the process. If not provided, a random job ID will be generated.",
+        ),
+    ] = None,
 ) -> None:
     """Run a Plugboard process."""
     config_spec = _read_yaml(config)
+
+    if job_id is not None:
+        # Override job ID in config file if set
+        config_spec.plugboard.process.args.state.args.job_id = job_id
 
     with Progress(
         SpinnerColumn("arrow3"),

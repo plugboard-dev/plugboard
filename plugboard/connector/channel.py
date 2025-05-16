@@ -28,7 +28,7 @@ class Channel(ABC):
         self._is_recv_closed = False
         setattr(self, "send", self._handle_send_wrapper())
         setattr(self, "recv", self._handle_recv_wrapper())
-        self._logger = DI.logger.sync_resolve().bind(cls=self.__class__.__name__)
+        self._logger = DI.logger.resolve_sync().bind(cls=self.__class__.__name__)
         self._logger.info("Channel created")
 
     @property
