@@ -18,7 +18,7 @@ from plugboard.utils.dependencies import depends_on_optional
 try:
     import ray.tune
     import ray.tune.search
-except ImportError:
+except ImportError:  # pragma: no cover
     pass
 
 
@@ -110,7 +110,9 @@ class Tuner:
         )
 
     @staticmethod
-    def _override_parameter(process: ProcessSpec, param: ParameterSpec, value: _t.Any) -> None:
+    def _override_parameter(
+        process: ProcessSpec, param: ParameterSpec, value: _t.Any
+    ) -> None:  # pragma: no cover
         if param.object_type != "component":
             raise NotImplementedError("Only component parameters are currently supported.")
         try:
@@ -123,14 +125,14 @@ class Tuner:
             component.args.initial_values[param.field_name] = value
 
     @staticmethod
-    def _get_objective(process: Process, objective: ObjectiveSpec) -> _t.Any:
+    def _get_objective(process: Process, objective: ObjectiveSpec) -> _t.Any:  # pragma: no cover
         if objective.object_type != "component":
             raise NotImplementedError("Only component objectives are currently supported.")
         component = process.components[objective.object_name]
         return getattr(component, objective.field_name)
 
     @staticmethod
-    async def _run_process(process: Process) -> None:
+    async def _run_process(process: Process) -> None:  # pragma: no cover
         async with process:
             await process.run()
 
@@ -150,7 +152,7 @@ class Tuner:
         # re-register the classes in the worker
         required_classes = {c.type: ComponentRegistry.get(c.type) for c in spec.args.components}
 
-        def _objective(
+        def _objective(  # pragma: no cover
             config: dict[str, _t.Any], component_classes: dict[str, type[Component]]
         ) -> _t.Any:
             # Recreate the ComponentRegistry in the Ray worker
