@@ -58,9 +58,9 @@ class RayProcess(Process):
         name = component.id
         args = component.export()["args"]
         actor_cls = build_actor_wrapper(component.__class__)
-        return ray.remote(num_cpus=0, name=name, namespace=f"plugboard-{gen_rand_str(16)}")(
+        return ray.remote(num_cpus=0, name=name, namespace=f"plugboard-{gen_rand_str(16)}")(  # type: ignore
             actor_cls
-        ).remote(**args)  # type: ignore
+        ).remote(**args)
 
     async def _update_component_attributes(self) -> None:
         """Updates attributes on local components from remote actors."""
