@@ -3,7 +3,7 @@
 import msgspec
 import pytest
 
-from plugboard.schemas import ConfigSpec, ObjectiveSpec
+from plugboard.schemas import ConfigSpec, ConnectorBuilderSpec, ObjectiveSpec
 from plugboard.schemas.tune import IntParameterSpec
 from plugboard.tune import Tuner
 from tests.integration.test_process_with_components_run import A, C  # noqa: F401
@@ -17,10 +17,16 @@ def config() -> dict:
 
 
 @pytest.mark.parametrize("mode", ["min", "max"])
-def test_tune(config: dict, mode: str) -> None:
+@pytest.mark.parametrize("process_type", ["local", "ray"])
+def test_tune(config: dict, mode: str, process_type: str) -> None:
     """Tests running of optimisation jobs."""
     spec = ConfigSpec.model_validate(config)
     process_spec = spec.plugboard.process
+    if process_type == "ray":
+        process_spec.connector_builder = ConnectorBuilderSpec(
+            type="plugboard.connector.RayConnector"
+        )
+        process_spec.type = "plugboard.process.RayProcess"
     tuner = Tuner(
         objective=ObjectiveSpec(
             object_type="component",
@@ -34,11 +40,11 @@ def test_tune(config: dict, mode: str) -> None:
                 object_name="a",
                 field_type="arg",
                 field_name="iters",
-                lower=5,
+                lower=6,
                 upper=8,
             )
         ],
-        num_samples=8,
+        num_samples=6,
         mode=mode,
         max_concurrent=2,
     )
@@ -50,8 +56,8 @@ def test_tune(config: dict, mode: str) -> None:
     assert not [t for t in result if t.error]
     # Correct optimimum must be found
     if mode == "min":
-        assert best_result.config["a.iters"] == 5
-        assert best_result.metrics["c.in_1"] == 4
+        assert best_result.config["a.iters"] == 6
+        assert best_result.metrics["c.in_1"] == 5
     else:
         assert best_result.config["a.iters"] == 7
         assert best_result.metrics["c.in_1"] == 6

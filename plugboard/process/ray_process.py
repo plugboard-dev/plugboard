@@ -8,7 +8,7 @@ from plugboard.component.io_controller import IODirection
 from plugboard.connector import Connector
 from plugboard.process.process import Process
 from plugboard.state import RayStateBackend, StateBackend
-from plugboard.utils import build_actor_wrapper, depends_on_optional, gather_except
+from plugboard.utils import build_actor_wrapper, depends_on_optional, gather_except, gen_rand_str
 
 
 try:
@@ -58,7 +58,9 @@ class RayProcess(Process):
         name = component.id
         args = component.export()["args"]
         actor_cls = build_actor_wrapper(component.__class__)
-        return ray.remote(num_cpus=0, name=name)(actor_cls).remote(**args)  # type: ignore
+        return ray.remote(num_cpus=0, name=name, namespace=f"plugboard-{gen_rand_str(16)}")(
+            actor_cls
+        ).remote(**args)  # type: ignore
 
     async def _update_component_attributes(self) -> None:
         """Updates attributes on local components from remote actors."""
