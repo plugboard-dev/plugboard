@@ -13,7 +13,7 @@ from plugboard.utils import build_actor_wrapper, depends_on_optional, gather_exc
 
 try:
     import ray
-except ImportError:
+except ImportError:  # pragma: no cover
     pass
 
 
