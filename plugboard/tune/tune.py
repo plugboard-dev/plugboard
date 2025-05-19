@@ -136,15 +136,20 @@ class Tuner:
         async with process:
             await process.run()
 
-    def run(self, spec: ProcessSpec) -> ray.tune.Result:
+    @property
+    def is_multi_objective(self) -> bool:
+        """Returns `True` if the optimisation is multi-objective."""
+        return len(self._objective) > 1
+
+    def run(self, spec: ProcessSpec) -> ray.tune.Result | list[ray.tune.Result]:
         """Run the optimisation job on Ray.
 
         Args:
             spec: The [`ProcessSpec`][plugboard.schemas.ProcessSpec] to optimise.
 
         Returns:
-            A [`Result`][ray.tune.Result] containing the best trial result. Use the `result_grid`
-            property to get full trial results.
+            Either a single of list of [`Result`][ray.tune.Result] objects containing the best trial
+            result. Use the `result_grid` property to get full trial results.
         """
         self._logger.info("Running optimisation job on Ray")
         spec = spec.model_copy()
@@ -187,8 +192,11 @@ class Tuner:
         self._logger.info("Starting Tuner")
         self._result_grid = _tune.fit()
         self._logger.info("Tuner finished")
-        return self._result_grid.get_best_result(
-            # Choose the first metric and mode if multiple are provided
-            metric=self._metric[0] if isinstance(self._metric, list) else self._metric,
-            mode=self._mode[0] if isinstance(self._mode, list) else self._mode,
-        )
+        if self.is_multi_objective:
+            return [
+                self._result_grid.get_best_result(metric=metric, mode=mode)
+                for metric, mode in zip(self._metric, self._mode)
+            ]
+        if isinstance(self._metric, list) or isinstance(self._mode, list):  # pragma: no cover
+            raise RuntimeError("Invalid configuration found for single-objective optimisation.")
+        return self._result_grid.get_best_result(metric=self._metric, mode=self._mode)

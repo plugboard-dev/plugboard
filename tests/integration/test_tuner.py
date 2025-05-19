@@ -110,7 +110,8 @@ def test_multi_objective_tune(config: dict) -> None:
     # There must be no failed trials
     assert not [t for t in result if t.error]
     # Results must contain two objectives and correct optimimum must be found
-    assert best_result.config["a.iters"] == 2
-    assert best_result.config["b.factor"] == -1
-    assert best_result.metrics["c.in_1"] == 1
-    assert best_result.metrics["b.out_1"] == -1
+    # The best result must be a list of two results
+    assert best_result[0].config["a.iters"] == 2
+    assert best_result[1].config["b.factor"] == -1
+    assert best_result[0].metrics["c.in_1"] == 1
+    assert best_result[1].metrics["b.out_1"] == -1
