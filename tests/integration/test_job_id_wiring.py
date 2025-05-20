@@ -1,18 +1,21 @@
 """Tests mechanisms for setting and getting job IDs throughout the application."""
 
+from __future__ import annotations
+
 import os
 from pathlib import Path
 import typing as _t
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 from typer.testing import CliRunner
 
-from plugboard.cli.process import _read_yaml
+from plugboard.cli import app
 from plugboard.component import Component
 from plugboard.component.io_controller import IOController as IO
 from plugboard.process import ProcessBuilder
-from plugboard.process.local_process import LocalProcess
+from plugboard.process.local_process import LocalProcess, Process
+from plugboard.schemas import ProcessSpec
 from plugboard.state import DictStateBackend
 from plugboard.utils import DI
 from plugboard.utils.entities import EntityIdGen
@@ -40,6 +43,27 @@ class MockComponent(Component):
     async def step(self) -> None:
         """Step the component."""
         pass
+
+
+class ProcessBuilderMock:
+    """A mock process builder for testing."""
+
+    def __init__(self) -> None:
+        """Initialize the mock process builder."""
+        self._actual_build_fn = ProcessBuilder.build
+        self._built_process: _t.Optional[Process] = None
+
+    @property
+    def built_process(self) -> _t.Optional[Process]:
+        """Get the built process."""
+        return self._built_process
+
+    def build(self, spec: ProcessSpec) -> Process:
+        """Build the process."""
+        # Call the parent class's build method
+        self._built_process = self._actual_build_fn(spec)
+        setattr(self._built_process, "run", AsyncMock())
+        return self._built_process
 
 
 @pytest.fixture
@@ -83,93 +107,91 @@ def config_file_with_job_id(tmp_path: Path) -> Path:
 
 def test_cli_process_run_with_yaml_job_id(config_file_with_job_id: Path) -> None:
     """Test running a process with a job ID specified in the YAML file."""
-    # Read the config directly without running the whole CLI
-    config_spec = _read_yaml(config_file_with_job_id)
+    # Create the process builder mock
+    process_builder = ProcessBuilderMock()
 
-    # Verify that the job ID in the YAML was loaded correctly
-    assert config_spec.plugboard.process.args.state.args.job_id == "Job_predefined12345678"
+    # Patch the ProcessBuilder.build class method with our mock function
+    with patch("plugboard.cli.process.ProcessBuilder.build", side_effect=process_builder.build):
+        result = runner.invoke(app, ["process", "run", str(config_file_with_job_id)])
+        # CLI must run without error
+        assert result.exit_code == 0
 
-    # Test that the process builder would receive this job ID
-    process = ProcessBuilder.build(config_spec.plugboard.process)
-    assert process.state.job_id == "Job_predefined12345678"
+    # Verify the process was built and has the expected job ID
+    assert process_builder.built_process is not None
+    assert process_builder.built_process.state.job_id == "Job_predefined12345678"
 
 
 def test_cli_process_run_with_cmd_job_id(minimal_config_file: Path) -> None:
     """Test running a process with a job ID specified via the command line argument."""
-    # Read the config directly without running the whole CLI
-    config_spec = _read_yaml(minimal_config_file)
+    # Create the process builder mock
+    process_builder = ProcessBuilderMock()
+    job_id = "Job_cmdline12345678"
 
-    # Set the job ID as if it came from the command line
-    config_spec.plugboard.process.args.state.args.job_id = "Job_cmdline12345678"
+    # Patch the ProcessBuilder.build class method with our mock function
+    with patch("plugboard.cli.process.ProcessBuilder.build", side_effect=process_builder.build):
+        result = runner.invoke(
+            app, ["process", "run", "--job-id", job_id, str(minimal_config_file)]
+        )
+        # CLI must run without error
+        assert result.exit_code == 0
 
-    # Verify the job ID was set correctly
-    assert config_spec.plugboard.process.args.state.args.job_id == "Job_cmdline12345678"
-
-    # Test that the process builder would receive this job ID
-    process = ProcessBuilder.build(config_spec.plugboard.process)
-    assert process.state.job_id == "Job_cmdline12345678"
+    # Verify the process was built and has the expected job ID
+    assert process_builder.built_process is not None
+    assert process_builder.built_process.state.job_id == job_id
 
 
 def test_cli_process_run_override_yaml_job_id(config_file_with_job_id: Path) -> None:
     """Test overriding a YAML-specified job ID with a command line argument."""
-    # Read the config directly without running the whole CLI
-    config_spec = _read_yaml(config_file_with_job_id)
+    # Create the process builder mock
+    process_builder = ProcessBuilderMock()
+    job_id = "Job_cmdline12345678"
 
-    # Verify the original job ID from YAML
-    assert config_spec.plugboard.process.args.state.args.job_id == "Job_predefined12345678"
+    # Patch the ProcessBuilder.build class method with our mock function
+    with patch("plugboard.cli.process.ProcessBuilder.build", side_effect=process_builder.build):
+        result = runner.invoke(
+            app, ["process", "run", "--job-id", job_id, str(config_file_with_job_id)]
+        )
+        # CLI must run without error
+        assert result.exit_code == 0
 
-    # Override the job ID as if it came from the command line
-    config_spec.plugboard.process.args.state.args.job_id = "Job_override12345678"
-
-    # Verify the job ID was overridden correctly
-    assert config_spec.plugboard.process.args.state.args.job_id == "Job_override12345678"
-
-    # Test that the process builder would receive this job ID
-    process = ProcessBuilder.build(config_spec.plugboard.process)
-    assert process.state.job_id == "Job_override12345678"
+    # Verify the process was built and has the expected job ID
+    assert process_builder.built_process is not None
+    assert process_builder.built_process.state.job_id == job_id
 
 
-@pytest.mark.asyncio
-async def test_cli_process_run_with_env_var(minimal_config_file: Path) -> None:
+def test_cli_process_run_with_env_var(minimal_config_file: Path) -> None:
     """Test running a process with a job ID specified via environment variable."""
-    # Define the job ID we want to set in the environment
-    job_id_env: str = "Job_envvar12345678"
+    # Create the process builder mock
+    process_builder = ProcessBuilderMock()
+    job_id: str = "Job_envvar12345678"
 
     # Set the environment variable
-    with patch.dict(os.environ, {"PLUGBOARD_JOB_ID": job_id_env}):
-        # Read the config directly without running the whole CLI
-        config_spec = _read_yaml(minimal_config_file)
+    with patch.dict(os.environ, {"PLUGBOARD_JOB_ID": job_id}):
+        # Patch the ProcessBuilder.build class method with our mock function
+        with patch("plugboard.cli.process.ProcessBuilder.build", side_effect=process_builder.build):
+            result = runner.invoke(app, ["process", "run", str(minimal_config_file)])
+            # CLI must run without error
+            assert result.exit_code == 0
 
-        # Verify no job ID was set in the config
-        assert config_spec.plugboard.process.args.state.args.job_id is None
-
-        # Create a process - it should pick up the job ID from the environment
-        process = ProcessBuilder.build(config_spec.plugboard.process)
-
-        # Initialize to ensure job_id is set from env
-        async with process:
-            # The job ID from the environment should be used
-            assert process.state.job_id == job_id_env
+    # Verify the process was built and has the expected job ID
+    assert process_builder.built_process is not None
+    assert process_builder.built_process.state.job_id == job_id
 
 
-@pytest.mark.asyncio
-async def test_cli_process_run_with_no_job_id(minimal_config_file: Path) -> None:
+def test_cli_process_run_with_no_job_id(minimal_config_file: Path) -> None:
     """Test running a process with no job ID specified (auto-generated)."""
-    with patch.dict(os.environ, {}, clear=True):  # Clear environment variables
-        # Read the config directly without running the whole CLI
-        config_spec = _read_yaml(minimal_config_file)
+    # Create the process builder mock
+    process_builder = ProcessBuilderMock()
 
-        # Verify no job ID was set in the config
-        assert config_spec.plugboard.process.args.state.args.job_id is None
+    # Patch the ProcessBuilder.build class method with our mock function
+    with patch("plugboard.cli.process.ProcessBuilder.build", side_effect=process_builder.build):
+        result = runner.invoke(app, ["process", "run", str(minimal_config_file)])
+        # CLI must run without error
+        assert result.exit_code == 0
 
-        # Create a process - it should generate a job ID
-        process = ProcessBuilder.build(config_spec.plugboard.process)
-
-        # Initialize to ensure job_id is generated
-        async with process:
-            # A job ID should have been auto-generated
-            assert process.state.job_id is not None
-            assert EntityIdGen.is_job_id(process.state.job_id)
+    # Verify the process was built and has the expected job ID
+    assert process_builder.built_process is not None
+    assert EntityIdGen.is_job_id(process_builder.built_process.state.job_id)
 
 
 @pytest.mark.asyncio
