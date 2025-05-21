@@ -27,7 +27,6 @@ runner = CliRunner()
 class MockComponent(Component):
     """A mock component for testing."""
 
-    # Define custom IO for this component to satisfy the abstract base class requirement
     io = IO(inputs=["test_input"], outputs=["test_output"])
 
     def __init__(self, *args: _t.Any, name: str = "mock_component", **kwargs: _t.Any) -> None:
@@ -50,6 +49,7 @@ class ProcessBuilderMock:
 
     def __init__(self) -> None:
         """Initialize the mock process builder."""
+        # Store the original build method. Must occur before patching.
         self._actual_build_fn = ProcessBuilder.build
         self._built_process: _t.Optional[Process] = None
 
@@ -60,7 +60,6 @@ class ProcessBuilderMock:
 
     def build(self, spec: ProcessSpec) -> Process:
         """Build the process."""
-        # Call the parent class's build method
         self._built_process = self._actual_build_fn(spec)
         setattr(self._built_process, "run", AsyncMock())
         return self._built_process
@@ -107,10 +106,8 @@ def config_file_with_job_id(tmp_path: Path) -> Path:
 
 def test_cli_process_run_with_yaml_job_id(config_file_with_job_id: Path) -> None:
     """Test running a process with a job ID specified in the YAML file."""
-    # Create the process builder mock
     process_builder = ProcessBuilderMock()
 
-    # Patch the ProcessBuilder.build class method with our mock function
     with patch("plugboard.cli.process.ProcessBuilder.build", side_effect=process_builder.build):
         result = runner.invoke(app, ["process", "run", str(config_file_with_job_id)])
         # CLI must run without error
@@ -123,11 +120,9 @@ def test_cli_process_run_with_yaml_job_id(config_file_with_job_id: Path) -> None
 
 def test_cli_process_run_with_cmd_job_id(minimal_config_file: Path) -> None:
     """Test running a process with a job ID specified via the command line argument."""
-    # Create the process builder mock
     process_builder = ProcessBuilderMock()
     job_id = "Job_cmdline12345678"
 
-    # Patch the ProcessBuilder.build class method with our mock function
     with patch("plugboard.cli.process.ProcessBuilder.build", side_effect=process_builder.build):
         result = runner.invoke(
             app, ["process", "run", "--job-id", job_id, str(minimal_config_file)]
@@ -142,11 +137,9 @@ def test_cli_process_run_with_cmd_job_id(minimal_config_file: Path) -> None:
 
 def test_cli_process_run_override_yaml_job_id(config_file_with_job_id: Path) -> None:
     """Test overriding a YAML-specified job ID with a command line argument."""
-    # Create the process builder mock
     process_builder = ProcessBuilderMock()
     job_id = "Job_cmdline12345678"
 
-    # Patch the ProcessBuilder.build class method with our mock function
     with patch("plugboard.cli.process.ProcessBuilder.build", side_effect=process_builder.build):
         result = runner.invoke(
             app, ["process", "run", "--job-id", job_id, str(config_file_with_job_id)]
@@ -161,13 +154,10 @@ def test_cli_process_run_override_yaml_job_id(config_file_with_job_id: Path) -> 
 
 def test_cli_process_run_with_env_var(minimal_config_file: Path) -> None:
     """Test running a process with a job ID specified via environment variable."""
-    # Create the process builder mock
     process_builder = ProcessBuilderMock()
     job_id: str = "Job_envvar12345678"
 
-    # Set the environment variable
     with patch.dict(os.environ, {"PLUGBOARD_JOB_ID": job_id}):
-        # Patch the ProcessBuilder.build class method with our mock function
         with patch("plugboard.cli.process.ProcessBuilder.build", side_effect=process_builder.build):
             result = runner.invoke(app, ["process", "run", str(minimal_config_file)])
             # CLI must run without error
@@ -180,10 +170,8 @@ def test_cli_process_run_with_env_var(minimal_config_file: Path) -> None:
 
 def test_cli_process_run_with_no_job_id(minimal_config_file: Path) -> None:
     """Test running a process with no job ID specified (auto-generated)."""
-    # Create the process builder mock
     process_builder = ProcessBuilderMock()
 
-    # Patch the ProcessBuilder.build class method with our mock function
     with patch("plugboard.cli.process.ProcessBuilder.build", side_effect=process_builder.build):
         result = runner.invoke(app, ["process", "run", str(minimal_config_file)])
         # CLI must run without error
@@ -200,24 +188,37 @@ async def test_direct_process_with_job_id() -> None:
     # Create a state backend with a specific job ID
     state: DictStateBackend = DictStateBackend(job_id="Job_direct12345678")
 
-    # Create a mock component that will check the job ID
     component: MockComponent = MockComponent()
-
-    # Create a process with the state backend
     process: LocalProcess = LocalProcess(components=[component], connectors=[], state=state)
 
-    # We need to set up a container context for the job_id
     async with process:
-        # The job ID should be available in the process
+        # The specified job ID should be set in the process and component
         assert process.state.job_id == "Job_direct12345678"
-
-        # The job ID should be available in the DI container during component init
         assert component.job_id_during_init == "Job_direct12345678"
 
 
 @pytest.mark.asyncio
+async def test_direct_process_with_env_var() -> None:
+    """Test building a process without a job ID while environment variable is set."""
+    # Set the environment variable to match the job ID to avoid conflict
+    job_id: str = "Job_direct12345678"
+
+    with patch.dict(os.environ, {"PLUGBOARD_JOB_ID": job_id}):
+        # Create a state backend without a job ID
+        state: DictStateBackend = DictStateBackend()
+
+        component: MockComponent = MockComponent()
+        process: LocalProcess = LocalProcess(components=[component], connectors=[], state=state)
+
+        async with process:
+            # The specified job ID should be set in the process and component
+            assert process.state.job_id == job_id
+            assert component.job_id_during_init == job_id
+
+
+@pytest.mark.asyncio
 async def test_direct_process_with_job_id_and_env_var() -> None:
-    """Test building a process with a job ID while environment variable is set."""
+    """Test building a process with a job ID while environment variable is set with same value."""
     # Set the environment variable to match the job ID to avoid conflict
     job_id: str = "Job_direct12345678"
 
@@ -225,17 +226,25 @@ async def test_direct_process_with_job_id_and_env_var() -> None:
         # Create a state backend with a specific job ID
         state: DictStateBackend = DictStateBackend(job_id=job_id)
 
-        # Create a mock component
         component: MockComponent = MockComponent()
-
-        # Create a process with the state backend
         process: LocalProcess = LocalProcess(components=[component], connectors=[], state=state)
 
-        # Initialize and run the process
         async with process:
-            # The job ID from the direct argument should take precedence
+            # The specified job ID should be set in the process and component
             assert process.state.job_id == job_id
             assert component.job_id_during_init == job_id
+
+
+@pytest.mark.asyncio
+async def test_direct_process_with_conflicting_job_ids() -> None:
+    """Test building a process with a job ID that conflicts with the environment variable."""
+    with patch.dict(os.environ, {"PLUGBOARD_JOB_ID": "Job_envconf12345678"}):
+        # Create a state backend with a different job ID
+        state: DictStateBackend = DictStateBackend(job_id="Job_dircon12345678")
+        with pytest.raises(RuntimeError, match="Job ID .* does not match environment variable"):
+            # This should raise a RuntimeError because the job IDs don't match
+            async with state:
+                pass
 
 
 @pytest.mark.asyncio
@@ -244,13 +253,9 @@ async def test_direct_process_without_job_id() -> None:
     # Create a state backend without a job ID
     state: DictStateBackend = DictStateBackend()
 
-    # Create a mock component
     component: MockComponent = MockComponent()
-
-    # Create a process with the state backend
     process: LocalProcess = LocalProcess(components=[component], connectors=[], state=state)
 
-    # Initialize and run the process - we'll let the DI container create a job ID
     async with process:
         # A job ID should have been auto-generated
         assert process.state.job_id is not None
@@ -258,16 +263,3 @@ async def test_direct_process_without_job_id() -> None:
 
         # The job ID should be available in the DI container during component init
         assert component.job_id_during_init == process.state.job_id
-
-
-@pytest.mark.asyncio
-async def test_direct_process_with_conflicting_job_ids() -> None:
-    """Test building a process with a job ID that conflicts with the environment variable."""
-    # Set the environment variable
-    with patch.dict(os.environ, {"PLUGBOARD_JOB_ID": "Job_envconf12345678"}):
-        # Create a state backend with a different job ID
-        state: DictStateBackend = DictStateBackend(job_id="Job_dircon12345678")
-        with pytest.raises(RuntimeError, match="Job ID .* does not match environment variable"):
-            # This should raise a RuntimeError because the job IDs don't match
-            async with state:
-                pass  # This code should not execute
