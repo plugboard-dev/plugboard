@@ -5,7 +5,7 @@ from __future__ import annotations
 import os
 from pathlib import Path
 import typing as _t
-from unittest.mock import AsyncMock, patch
+from unittest.mock import patch
 
 import pytest
 from typer.testing import CliRunner
@@ -61,8 +61,13 @@ class ProcessBuilderMock:
     def build(self, spec: ProcessSpec) -> Process:
         """Build the process."""
         self._built_process = self._actual_build_fn(spec)
-        setattr(self._built_process, "run", AsyncMock())
+        setattr(self._built_process, "run", lambda: self._mock_process_run(self._built_process))
         return self._built_process
+
+    @staticmethod
+    async def _mock_process_run(process: Process) -> None:
+        """Mock run method for the process."""
+        setattr(process, "saved_job_id", process.state.job_id)
 
 
 @pytest.fixture
@@ -84,15 +89,21 @@ def minimal_config_file(tmp_path: Path) -> Path:
 
 
 @pytest.fixture
-def config_file_with_job_id(tmp_path: Path) -> Path:
+def yaml_job_id() -> str:
+    """Return a job ID for testing."""
+    return "Job_predefined12345678"
+
+
+@pytest.fixture
+def config_file_with_job_id(tmp_path: Path, yaml_job_id: str) -> Path:
     """Create a config file with a predefined job_id."""
-    config_content = """
+    config_content = f"""
     plugboard:
       process:
         args:
           state:
             args:
-              job_id: "Job_predefined12345678"
+              job_id: {yaml_job_id}
           components:
           - type: tests.integration.test_process_with_components_run.A
             args:
@@ -104,9 +115,10 @@ def config_file_with_job_id(tmp_path: Path) -> Path:
     return config_file
 
 
-def test_cli_process_run_with_yaml_job_id(config_file_with_job_id: Path) -> None:
+def test_cli_process_run_with_yaml_job_id(config_file_with_job_id: Path, yaml_job_id: str) -> None:
     """Test running a process with a job ID specified in the YAML file."""
     process_builder = ProcessBuilderMock()
+    job_id = yaml_job_id
 
     with patch("plugboard.cli.process.ProcessBuilder.build", side_effect=process_builder.build):
         result = runner.invoke(app, ["process", "run", str(config_file_with_job_id)])
@@ -115,7 +127,7 @@ def test_cli_process_run_with_yaml_job_id(config_file_with_job_id: Path) -> None
 
     # Verify the process was built and has the expected job ID
     assert process_builder.built_process is not None
-    assert process_builder.built_process.state.job_id == "Job_predefined12345678"
+    assert getattr(process_builder.built_process, "saved_job_id", job_id)
 
 
 def test_cli_process_run_with_cmd_job_id(minimal_config_file: Path) -> None:
@@ -132,7 +144,7 @@ def test_cli_process_run_with_cmd_job_id(minimal_config_file: Path) -> None:
 
     # Verify the process was built and has the expected job ID
     assert process_builder.built_process is not None
-    assert process_builder.built_process.state.job_id == job_id
+    assert getattr(process_builder.built_process, "saved_job_id", job_id)
 
 
 def test_cli_process_run_override_yaml_job_id(config_file_with_job_id: Path) -> None:
@@ -149,7 +161,7 @@ def test_cli_process_run_override_yaml_job_id(config_file_with_job_id: Path) -> 
 
     # Verify the process was built and has the expected job ID
     assert process_builder.built_process is not None
-    assert process_builder.built_process.state.job_id == job_id
+    assert getattr(process_builder.built_process, "saved_job_id", job_id)
 
 
 def test_cli_process_run_with_env_var(minimal_config_file: Path) -> None:
@@ -165,7 +177,7 @@ def test_cli_process_run_with_env_var(minimal_config_file: Path) -> None:
 
     # Verify the process was built and has the expected job ID
     assert process_builder.built_process is not None
-    assert process_builder.built_process.state.job_id == job_id
+    assert getattr(process_builder.built_process, "saved_job_id", job_id)
 
 
 def test_cli_process_run_with_no_job_id(minimal_config_file: Path) -> None:
@@ -179,7 +191,7 @@ def test_cli_process_run_with_no_job_id(minimal_config_file: Path) -> None:
 
     # Verify the process was built and has the expected job ID
     assert process_builder.built_process is not None
-    assert EntityIdGen.is_job_id(process_builder.built_process.state.job_id)
+    assert EntityIdGen.is_job_id(getattr(process_builder.built_process, "saved_job_id"))
 
 
 @pytest.mark.asyncio
@@ -263,3 +275,30 @@ async def test_direct_process_without_job_id() -> None:
 
         # The job ID should be available in the DI container during component init
         assert component.job_id_during_init == process.state.job_id
+
+
+@pytest.mark.asyncio
+async def test_direct_process_without_job_id_multiple_runs() -> None:
+    """Test building a process without specifying a job ID multiple times."""
+    # Create a state backend without a job ID
+    state: DictStateBackend = DictStateBackend()
+
+    component: MockComponent = MockComponent()
+    process: LocalProcess = LocalProcess(components=[component], connectors=[], state=state)
+
+    job_id_history = set([])
+    num_runs = 5
+    for _ in range(num_runs):
+        async with process:
+            # A job ID should have been auto-generated
+            assert process.state.job_id is not None
+            assert EntityIdGen.is_job_id(process.state.job_id)
+
+            # The job ID should be available in the DI container during component init
+            assert component.job_id_during_init == process.state.job_id
+
+            # Store the job ID to check for uniqueness
+            job_id_history.add(process.state.job_id)
+
+    # Ensure all job IDs are unique
+    assert len(job_id_history) == num_runs

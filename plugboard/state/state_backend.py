@@ -34,6 +34,7 @@ class StateBackend(ABC, ExportMixin):
             kwargs: Additional keyword arguments.
         """
         self._local_state = {"job_id": job_id, "metadata": metadata, **kwargs}
+        self._initialised_with_job_id = False
         self._logger = DI.logger.resolve_sync().bind(cls=self.__class__.__name__, job_id=job_id)
         self._logger.info("StateBackend created")
         self._ctx = AsyncExitStack()
@@ -41,6 +42,8 @@ class StateBackend(ABC, ExportMixin):
     async def init(self) -> None:
         """Initialises the `StateBackend`."""
         job_id = self._local_state.pop("job_id", None)
+        if job_id is not None:
+            self._initialised_with_job_id = True
         container_cm = container_context(
             DI, global_context={"job_id": job_id}, scope=ContextScopes.APP
         )
@@ -50,6 +53,8 @@ class StateBackend(ABC, ExportMixin):
     async def destroy(self) -> None:
         """Destroys the `StateBackend`."""
         await self._ctx.aclose()
+        if not self._initialised_with_job_id:
+            self._local_state["job_id"] = None
         pass
 
     async def __aenter__(self) -> StateBackend:

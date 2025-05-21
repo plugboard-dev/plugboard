@@ -103,9 +103,16 @@ class Process(ExportMixin, ABC):
 
     async def destroy(self) -> None:
         """Performs tear-down actions for the `Process` and its `Component`s."""
-        await self._state.destroy()
-        await DI.tear_down()
-        self._logger.info("Process destroyed")
+        try:
+            await self._state.destroy()
+            await DI.tear_down()
+            self._logger.info("Process destroyed")
+        except Exception as e:
+            self._logger.error(f"Error destroying process: {e}")
+            raise
+        finally:
+            self._is_initialised = False
+            self._state_is_connected = False
 
     async def __aenter__(self) -> Process:
         """Enters the context manager."""
