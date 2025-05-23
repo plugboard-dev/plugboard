@@ -13,10 +13,9 @@ from typer.testing import CliRunner
 from plugboard.cli import app
 from plugboard.component import Component
 from plugboard.component.io_controller import IOController as IO
-from plugboard.process import ProcessBuilder
-from plugboard.process.local_process import LocalProcess, Process
+from plugboard.process import LocalProcess, Process, ProcessBuilder, RayProcess
 from plugboard.schemas import ProcessSpec
-from plugboard.state import DictStateBackend
+from plugboard.state import DictStateBackend, SqliteStateBackend
 from plugboard.utils import DI
 from plugboard.utils.entities import EntityIdGen
 
@@ -28,6 +27,7 @@ class MockComponent(Component):
     """A mock component for testing."""
 
     io = IO(inputs=["test_input"], outputs=["test_output"])
+    exports = ["job_id_during_init"]
 
     def __init__(self, *args: _t.Any, name: str = "mock_component", **kwargs: _t.Any) -> None:
         """Initialize the mock component."""
@@ -296,6 +296,36 @@ async def test_direct_process_without_job_id_multiple_runs() -> None:
 
             # The job ID should be available in the DI container during component init
             assert component.job_id_during_init == process.state.job_id
+
+            # Store the job ID to check for uniqueness
+            job_id_history.add(process.state.job_id)
+
+    # Ensure all job IDs are unique
+    assert len(job_id_history) == num_runs
+
+
+@pytest.mark.asyncio
+async def test_direct_process_without_job_id_multiple_runs_multiprocessing() -> None:
+    """Test building a process without a job ID in a multiprocessing context."""
+    # Create a state backend without a specific job ID
+    state: SqliteStateBackend = SqliteStateBackend()
+
+    components: list[MockComponent] = [MockComponent(name=f"mock-component-{i}") for i in range(4)]
+    process: RayProcess = RayProcess(components=components, connectors=[], state=state)
+
+    job_id_history: set[str] = set([])
+    num_runs: int = 5
+    for _ in range(num_runs):
+        async with process:
+            # A job ID should have been auto-generated
+            assert process.state.job_id is not None
+            assert EntityIdGen.is_job_id(process.state.job_id)
+
+            await process.run()
+
+            # Ensure the job ID is set correctly in each component
+            for component in components:
+                assert component.job_id_during_init == process.state.job_id
 
             # Store the job ID to check for uniqueness
             job_id_history.add(process.state.job_id)

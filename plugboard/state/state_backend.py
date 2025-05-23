@@ -11,7 +11,7 @@ import typing as _t
 from that_depends import ContextScopes, Provide, container_context, inject
 
 from plugboard.exceptions import NotFoundError
-from plugboard.utils import DI, ExportMixin
+from plugboard.utils import DI, ExportMixin, run_coroutine_in_thread
 
 
 if _t.TYPE_CHECKING:
@@ -38,17 +38,55 @@ class StateBackend(ABC, ExportMixin):
         self._logger = DI.logger.resolve_sync().bind(cls=self.__class__.__name__, job_id=job_id)
         self._logger.info("StateBackend created")
         self._ctx = AsyncExitStack()
+        self._ctx_job_id: _t.Optional[str] = None
+
+    def __getstate__(self) -> dict:
+        """Customize state for serialization.
+
+        Excludes the non-serializable AsyncExitStack _ctx attribute.
+        """
+        state = self.__dict__.copy()
+        # Remove the AsyncExitStack, which is not serializable
+        state.pop("_ctx", None)
+        return state
+
+    def __setstate__(self, state: dict) -> None:
+        """Restore state during deserialization.
+
+        Reinitializes the AsyncExitStack _ctx attribute.
+        """
+        self.__dict__.update(state)
+        # Reinitialize the AsyncExitStack
+        self._ctx = AsyncExitStack()
+        run_coroutine_in_thread(self.init())
 
     async def init(self) -> None:
-        """Initialises the `StateBackend`."""
-        job_id = self._local_state.pop("job_id", None)
-        if job_id is not None:
-            self._initialised_with_job_id = True
+        """Initialises the `StateBackend`.
+
+        This handles both fresh initialization and reinitialization after deserialization.
+        """
+        job_id = None
+
+        if self._ctx_job_id is None:
+            # Fresh initialization
+            job_id = self._local_state.pop("job_id", None)
+            if job_id is not None:
+                self._initialised_with_job_id = True
+        else:
+            # Reinitialization after deserialization
+            job_id = self._ctx_job_id
+            self._logger.debug(f"Reinitializing state backend with job_id: {job_id}")
+
+        # Enter the container context with the job_id (same for both fresh init and reinit)
         container_cm = container_context(
             DI, global_context={"job_id": job_id}, scope=ContextScopes.APP
         )
         await self._ctx.enter_async_context(container_cm)
-        await self._initialise_data(**self._local_state)
+
+        if self._ctx_job_id is None:
+            # Only initialize data for fresh initialization
+            await self._initialise_data(**self._local_state)
+        # else: We're reinitialized after deserialization, data is already set up
 
     async def destroy(self) -> None:
         """Destroys the `StateBackend`."""
@@ -76,6 +114,7 @@ class StateBackend(ABC, ExportMixin):
         self, job_id: str = Provide[DI.job_id], metadata: _t.Optional[dict] = None, **kwargs: _t.Any
     ) -> None:
         """Initialises the state data."""
+        self._ctx_job_id = job_id
         try:
             # TODO : Requires indication of new or existing job to conditionally raise exception?
             job_data = await self._get_job(job_id)
