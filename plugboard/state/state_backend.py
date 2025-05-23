@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from contextlib import AsyncExitStack
+from contextlib import ExitStack
 from datetime import datetime, timezone
 from types import TracebackType
 import typing as _t
@@ -11,7 +11,7 @@ import typing as _t
 from that_depends import ContextScopes, Provide, container_context, inject
 
 from plugboard.exceptions import NotFoundError
-from plugboard.utils import DI, ExportMixin, run_coroutine_in_thread
+from plugboard.utils import DI, ExportMixin
 
 
 if _t.TYPE_CHECKING:
@@ -37,8 +37,7 @@ class StateBackend(ABC, ExportMixin):
         self._initialised_with_job_id = False
         self._logger = DI.logger.resolve_sync().bind(cls=self.__class__.__name__, job_id=job_id)
         self._logger.info("StateBackend created")
-        self._ctx = AsyncExitStack()
-        self._ctx_job_id: _t.Optional[str] = None
+        self._ctx = ExitStack()
 
     def __getstate__(self) -> dict:
         """Customize state for serialization.
@@ -46,7 +45,6 @@ class StateBackend(ABC, ExportMixin):
         Excludes the non-serializable AsyncExitStack _ctx attribute.
         """
         state = self.__dict__.copy()
-        # Remove the AsyncExitStack, which is not serializable
         state.pop("_ctx", None)
         return state
 
@@ -56,41 +54,23 @@ class StateBackend(ABC, ExportMixin):
         Reinitializes the AsyncExitStack _ctx attribute.
         """
         self.__dict__.update(state)
-        # Reinitialize the AsyncExitStack
-        self._ctx = AsyncExitStack()
-        run_coroutine_in_thread(self.init())
+        self._ctx = ExitStack()
+        job_id = self._local_state.get("job_id")
+        self._enter_container_context(job_id)
 
     async def init(self) -> None:
         """Initialises the `StateBackend`.
 
         This handles both fresh initialization and reinitialization after deserialization.
         """
-        job_id = None
-
-        if self._ctx_job_id is None:
-            # Fresh initialization
-            job_id = self._local_state.pop("job_id", None)
-            if job_id is not None:
-                self._initialised_with_job_id = True
-        else:
-            # Reinitialization after deserialization
-            job_id = self._ctx_job_id
-            self._logger.debug(f"Reinitializing state backend with job_id: {job_id}")
-
-        # Enter the container context with the job_id (same for both fresh init and reinit)
-        container_cm = container_context(
-            DI, global_context={"job_id": job_id}, scope=ContextScopes.APP
-        )
-        await self._ctx.enter_async_context(container_cm)
-
-        if self._ctx_job_id is None:
-            # Only initialize data for fresh initialization
-            await self._initialise_data(**self._local_state)
-        # else: We're reinitialized after deserialization, data is already set up
+        job_id = self._local_state.pop("job_id", None)
+        self._initialised_with_job_id = job_id is not None
+        self._enter_container_context(job_id)
+        await self._initialise_data(**self._local_state)
 
     async def destroy(self) -> None:
         """Destroys the `StateBackend`."""
-        await self._ctx.aclose()
+        self._ctx.close()
         if not self._initialised_with_job_id:
             self._local_state["job_id"] = None
         pass
@@ -109,12 +89,19 @@ class StateBackend(ABC, ExportMixin):
         """Exits the context manager."""
         await self.destroy()
 
+    def _enter_container_context(self, job_id: _t.Optional[str] = None) -> None:
+        """Enters the container context with the job_id."""
+        # Enter the container context with the job_id (same for both fresh init and reinit)
+        container_cm = container_context(
+            DI, global_context={"job_id": job_id}, scope=ContextScopes.APP
+        )
+        self._ctx.enter_context(container_cm)
+
     @inject
     async def _initialise_data(
         self, job_id: str = Provide[DI.job_id], metadata: _t.Optional[dict] = None, **kwargs: _t.Any
     ) -> None:
         """Initialises the state data."""
-        self._ctx_job_id = job_id
         try:
             # TODO : Requires indication of new or existing job to conditionally raise exception?
             job_data = await self._get_job(job_id)
