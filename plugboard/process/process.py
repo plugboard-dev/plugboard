@@ -43,6 +43,7 @@ class Process(ExportMixin, ABC):
         self._state_is_connected: bool = False
         # TODO: Replace when we have state tracking in StateBackend
         self._is_initialised: bool = False
+        # FIXME : Job ID unavailable for logger until state.init() is called.
         self._logger = DI.logger.resolve_sync().bind(
             cls=self.__class__.__name__, name=self.name, job_id=self.state.job_id
         )
