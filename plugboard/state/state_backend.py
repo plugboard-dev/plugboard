@@ -40,29 +40,18 @@ class StateBackend(ABC, ExportMixin):
         self._ctx = ExitStack()
 
     def __getstate__(self) -> dict:
-        """Customize state for serialization.
-
-        Excludes the non-serializable AsyncExitStack _ctx attribute.
-        """
         state = self.__dict__.copy()
         state.pop("_ctx", None)
         return state
 
     def __setstate__(self, state: dict) -> None:
-        """Restore state during deserialization.
-
-        Reinitializes the AsyncExitStack _ctx attribute.
-        """
         self.__dict__.update(state)
         self._ctx = ExitStack()
         job_id = self._local_state.get("job_id")
         self._enter_container_context(job_id)
 
     async def init(self) -> None:
-        """Initialises the `StateBackend`.
-
-        This handles both fresh initialization and reinitialization after deserialization.
-        """
+        """Initialises the `StateBackend`."""
         job_id = self._local_state.pop("job_id", None)
         self._initialised_with_job_id = job_id is not None
         self._enter_container_context(job_id)
