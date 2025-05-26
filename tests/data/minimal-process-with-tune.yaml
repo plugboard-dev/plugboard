@@ -1,0 +1,38 @@
+plugboard:
+  process:
+    args:
+      components:
+      - type: tests.integration.test_process_with_components_run.A
+        args:
+          name: "a"
+          iters: 10
+      - type: tests.integration.test_process_with_components_run.B
+        args:
+          name: "b"
+          factor: 1
+      - type: tests.integration.test_process_with_components_run.C
+        args:
+          name: "c"
+          path: "./c.txt"
+      connectors:
+      - source: "a.out_1"
+        target: "b.in_1"
+      - source: "a.out_1"
+        target: "c.in_1"
+  tune:
+    args:
+      objective:
+        object_name: c
+        field_type: field
+        field_name: in_1
+      parameters:
+      - type: ray.tune.randint
+        object_type: component
+        object_name: a
+        field_type: arg
+        field_name: iters
+        lower: 1
+        upper: 50
+      num_samples: 10
+      mode: max
+      max_concurrent: 2
