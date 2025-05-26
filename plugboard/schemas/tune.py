@@ -62,7 +62,7 @@ class ObjectiveSpec(BaseFieldSpec):
             return data
         if "field_type" not in data:
             data["field_type"] = "field"
-        if data["field_type"] != "field":
+        if data["field_type"] != "field":  # pragma: no cover
             raise ValueError("The field type must be 'field' for an objective specification.")
         return data
 
