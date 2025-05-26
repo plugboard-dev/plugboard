@@ -8,6 +8,8 @@ from collections import defaultdict, deque
 from functools import wraps
 import typing as _t
 
+from that_depends import ContextScopes, container_context
+
 from plugboard.component.io_controller import IOController as IO, IODirection
 from plugboard.events import Event, EventHandlers, StopEvent
 from plugboard.exceptions import (
@@ -154,6 +156,18 @@ class Component(ABC, ExportMixin):
         """State backend for the process."""
         return self._state
 
+    def _job_id_ctx(self) -> container_context:
+        """Context manager for the job ID."""
+        job_id = self._state.job_id if self._state else None
+        # if job_id is None:
+        #     raise RuntimeError("StateBackend for Component uninitialised. Cannot resolve job_id.")
+        return container_context(
+            DI,
+            global_context={"job_id": job_id},
+            scope=ContextScopes.APP,
+            preserve_global_context=True,
+        )
+
     async def connect_state(self, state: _t.Optional[StateBackend] = None) -> None:
         """Connects the `Component` to the `StateBackend`."""
         try:
@@ -166,8 +180,16 @@ class Component(ABC, ExportMixin):
         self._state = state or self._state
         if self._state is None:
             return
-        await self._state.upsert_component(self)
-        self._state_is_connected = True
+        with self._job_id_ctx():
+            await self._state.upsert_component(self)
+            self._state_is_connected = True
+            self._logger.debug("Component DI container", container_addr=hex(id(DI)))
+            job_id = DI.job_id.resolve_sync()
+            self._logger.debug(
+                "Component retrieved job_id",
+                resumed_job_id=job_id,
+                container_addr=hex(id(DI)),
+            )
 
     async def init(self) -> None:
         """Performs component initialisation actions."""
@@ -178,9 +200,10 @@ class Component(ABC, ExportMixin):
 
         @wraps(self.init)
         async def _wrapper() -> None:
-            await self._init()
-            if self._state is not None and self._state_is_connected:
-                await self._state.upsert_component(self)
+            with self._job_id_ctx():
+                await self._init()
+                if self._state is not None and self._state_is_connected:
+                    await self._state.upsert_component(self)
 
         return _wrapper
 
@@ -208,14 +231,15 @@ class Component(ABC, ExportMixin):
 
         @wraps(self.step)
         async def _wrapper() -> None:
-            await self.io.read()
-            await self._handle_events()
-            self._bind_inputs()
-            if self._can_step:
-                await self._step()
-            self._bind_outputs()
-            await self.io.write()
-            self._field_inputs_ready = False
+            with self._job_id_ctx():
+                await self.io.read()
+                await self._handle_events()
+                self._bind_inputs()
+                if self._can_step:
+                    await self._step()
+                self._bind_outputs()
+                await self.io.write()
+                self._field_inputs_ready = False
 
         return _wrapper
 
