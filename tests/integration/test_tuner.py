@@ -4,7 +4,7 @@ import msgspec
 import pytest
 
 from plugboard.schemas import ConfigSpec, ConnectorBuilderSpec, ObjectiveSpec
-from plugboard.schemas.tune import CategoricalParameterSpec, IntParameterSpec
+from plugboard.schemas.tune import CategoricalParameterSpec, IntParameterSpec, OptunaSpec
 from plugboard.tune import Tuner
 from tests.integration.test_process_with_components_run import A, B, C  # noqa: F401
 
@@ -47,6 +47,7 @@ def test_tune(config: dict, mode: str, process_type: str) -> None:
         num_samples=6,
         mode=mode,
         max_concurrent=2,
+        algorithm=OptunaSpec(),
     )
     best_result = tuner.run(
         spec=process_spec,
