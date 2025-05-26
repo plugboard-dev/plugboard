@@ -149,7 +149,7 @@ class TuneArgsSpec(PlugboardBaseModel):
     objective: ObjectiveSpec | list[ObjectiveSpec]
     parameters: list[ParameterSpec] = Field(min_length=1)
     num_samples: PositiveInt
-    mode: Direction | list[list[Direction]] = "max"
+    mode: Direction | list[Direction] = "max"
     max_concurrent: PositiveInt | None = None
     algorithm: _t.Union[OptunaSpec] = Field(OptunaSpec(), discriminator="type")
 
