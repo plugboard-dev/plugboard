@@ -64,11 +64,12 @@ def _run_tune(tuner: Tuner, config_spec: ConfigSpec) -> None:
     # Build the process to import the component types
     _build_process(config_spec)
     result = tuner.run(spec=process_spec)
+    print("[green]Best parameters found:[/green]")
     if isinstance(result, list):
         for r in result:
-            print(f"Trial {r.trial_id} - Best config: {r.config} - Metrics: {r.metrics}")
+            print(f"Config: {r.config} - Metrics: {r.metrics}")
     else:
-        print(f"Best config: {result.config} - Metrics: {result.metrics}")
+        print(f"Config: {result.config} - Metrics: {result.metrics}")
 
 
 @app.command()
