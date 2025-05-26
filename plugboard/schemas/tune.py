@@ -54,7 +54,12 @@ class ObjectiveSpec(BaseFieldSpec):
 
     @model_validator(mode="before")
     @classmethod
-    def _fill_defaults(cls, data: dict[str, _t.Any]) -> dict[str, _t.Any]:
+    def _fill_defaults(
+        cls, data: dict[str, _t.Any] | list[dict[str, _t.Any]]
+    ) -> dict[str, _t.Any] | list[dict[str, _t.Any]]:
+        if isinstance(data, list):
+            # If the data is a list, skip because it is already a list of objectives
+            return data
         if "field_type" not in data:
             data["field_type"] = "field"
         if data["field_type"] != "field":
