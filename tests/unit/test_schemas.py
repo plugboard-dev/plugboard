@@ -1,8 +1,25 @@
 """Provides unit tests for the schemas module."""
 
+import msgspec
 import pytest
 
-from plugboard.schemas import TuneArgsSpec, TuneSpec
+from plugboard.schemas import ConfigSpec, TuneArgsSpec, TuneSpec
+
+
+def test_config_spec() -> None:
+    """Tests loading the `ConfigSpec` schema."""
+    with open("tests/data/minimal-process.yaml", "rb") as f:
+        config_minimal = msgspec.yaml.decode(f.read())
+    # Validate the ConfigSpec with the loaded configuration
+    minimal = ConfigSpec.model_validate(config_minimal)
+
+    with open("tests/data/minimal-process-with-tune.yaml", "rb") as f:
+        config_tune = msgspec.yaml.decode(f.read())
+    # Validate the ConfigSpec with the configuration containing TuneSpec
+    with_tune = ConfigSpec.model_validate(config_tune)
+
+    # ProcessSpec should be present in both configurations
+    assert minimal.plugboard.process == with_tune.plugboard.process
 
 
 def test_tune_spec() -> None:
