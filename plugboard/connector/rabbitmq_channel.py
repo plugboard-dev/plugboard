@@ -91,6 +91,18 @@ class RabbitMQConnector(Connector):
         self._send_channel: _t.Optional[RabbitMQChannel] = None
         self._recv_channel: _t.Optional[RabbitMQChannel] = None
 
+    def __getstate__(self) -> dict:
+        state = self.__dict__.copy()
+        for attr in ("_send_channel", "_recv_channel"):
+            if attr in state:
+                del state[attr]
+        return state
+
+    def __setstate__(self, state: dict) -> None:
+        self.__dict__.update(state)
+        self._send_channel = None
+        self._recv_channel = None
+
     @inject
     async def connect_send(
         self, rabbitmq_conn: AbstractRobustConnection = Provide[DI.rabbitmq_conn]
