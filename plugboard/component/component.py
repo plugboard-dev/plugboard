@@ -165,14 +165,15 @@ class Component(ABC, ExportMixin):
         job ID context must be set for each remote function call.
         """
         job_id = self._state.job_id if self._state else None
-        # if job_id is None:
-        #     raise RuntimeError("StateBackend for Component uninitialised. Cannot resolve job_id.")
-        return container_context(
+        cm = container_context(
             DI,
             global_context={"job_id": job_id},
             scope=ContextScopes.APP,
             preserve_global_context=True,
         )
+        with cm:
+            self._logger = self._logger.bind(job_id=job_id)
+        return cm
 
     async def connect_state(self, state: _t.Optional[StateBackend] = None) -> None:
         """Connects the `Component` to the `StateBackend`."""
@@ -189,13 +190,6 @@ class Component(ABC, ExportMixin):
         with self._job_id_ctx():
             await self._state.upsert_component(self)
             self._state_is_connected = True
-            self._logger.debug("Component DI container", container_addr=hex(id(DI)))
-            job_id = DI.job_id.resolve_sync()
-            self._logger.debug(
-                "Component retrieved job_id",
-                resumed_job_id=job_id,
-                container_addr=hex(id(DI)),
-            )
 
     async def init(self) -> None:
         """Performs component initialisation actions."""
