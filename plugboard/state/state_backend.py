@@ -56,6 +56,7 @@ class StateBackend(ABC, ExportMixin):
         self._initialised_with_job_id = job_id is not None
         self._enter_container_context(job_id)
         await self._initialise_data(**self._local_state)
+        self._logger = self._logger.bind(job_id=self.job_id)
 
     async def destroy(self) -> None:
         """Destroys the `StateBackend`."""
