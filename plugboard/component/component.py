@@ -320,6 +320,8 @@ class Component(ABC, ExportMixin):
 
     async def destroy(self) -> None:
         """Performs tear-down actions for `Component`."""
+        self._state = None
+        self._state_is_connected = False
         self._logger.info("Component destroyed")
 
     def dict(self) -> dict[str, _t.Any]:  # noqa: D102
