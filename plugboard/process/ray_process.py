@@ -40,6 +40,8 @@ class RayProcess(Process):
             parameters: Optional; Parameters for the `Process`.
             state: Optional; `StateBackend` for the `Process`.
         """
+        # TODO: Replace with a namespace based on the job ID or similar
+        self._namespace = f"plugboard-{gen_rand_str(16)}"
         self._component_actors = {
             # Recreate components on remote actors
             c.id: self._create_component_actor(c)
@@ -58,7 +60,7 @@ class RayProcess(Process):
         name = component.id
         args = component.export()["args"]
         actor_cls = build_actor_wrapper(component.__class__)
-        return ray.remote(num_cpus=0, name=name, namespace=f"plugboard-{gen_rand_str(16)}")(  # type: ignore
+        return ray.remote(num_cpus=0, name=name, namespace=self._namespace)(  # type: ignore
             actor_cls
         ).remote(**args)
 
