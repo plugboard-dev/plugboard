@@ -97,7 +97,9 @@ def connector_cls_mp(_connector_cls_mp: type[Connector]) -> type[Connector]:
 
 
 @pytest.mark.asyncio
-async def test_multiprocessing_channel(connector_cls_mp: type[Connector]) -> None:
+async def test_multiprocessing_channel(
+    connector_cls_mp: type[Connector], ray_context: None
+) -> None:
     """Tests the various Channel implementations in a multiprocess environment."""
     spec = ConnectorSpec(mode=ConnectorMode.PIPELINE, source="test.send", target="test.recv")
     connector = ConnectorBuilder(connector_cls=connector_cls_mp).build(spec)

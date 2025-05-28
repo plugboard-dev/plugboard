@@ -91,6 +91,7 @@ async def test_state_backend_multiprocess(
     state_backend: StateBackend,  # noqa: F811
     components: list[Component],  # noqa: F811
     connectors: list[Connector],  # noqa: F811
+    ray_context: None,
 ) -> None:
     """Tests `StateBackend.upsert_process` method."""
     comp_a1, comp_a2, comp_b1, comp_b2 = components
