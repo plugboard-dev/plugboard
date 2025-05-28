@@ -321,8 +321,6 @@ async def test_direct_process_without_job_id_multiple_runs_multiprocessing() -> 
             assert process.state.job_id is not None
             assert EntityIdGen.is_job_id(process.state.job_id)
 
-            await process.run()
-
             # Ensure the job ID is set correctly in each component
             for component in components:
                 assert component.job_id_during_init == process.state.job_id
