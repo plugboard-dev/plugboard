@@ -4,6 +4,7 @@ import json
 import typing as _t
 
 import pytest
+import pytest_asyncio
 from websockets.asyncio.client import ClientConnection, connect
 from websockets.asyncio.server import ServerConnection, serve
 
@@ -26,8 +27,8 @@ async def _handler(websocket: ServerConnection) -> None:
         CLIENTS.remove(websocket)
 
 
-@pytest.fixture
-async def connected_client() -> _t.AsyncIterable[ClientConnection]:
+@pytest_asyncio.fixture
+async def connected_client() -> _t.AsyncGenerator[ClientConnection, None]:
     """Returns a client to a websocket broadcast server."""
     async with serve(_handler, HOST, PORT):
         async with connect(f"ws://{HOST}:{PORT}") as client:

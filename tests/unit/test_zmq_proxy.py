@@ -4,13 +4,14 @@ import asyncio
 import typing as _t
 
 import pytest
+import pytest_asyncio
 import zmq
 import zmq.asyncio
 
 from plugboard._zmq.zmq_proxy import ZMQ_ADDR, ZMQProxy, create_socket, zmq_sockopts_t
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def zmq_proxy() -> _t.AsyncGenerator[ZMQProxy, None]:
     """Fixture for ZMQProxy instance."""
     proxy = ZMQProxy()
