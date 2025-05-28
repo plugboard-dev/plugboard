@@ -8,11 +8,7 @@ import pytest
 import pytest_cases
 
 from plugboard.component import Component, IOController as IO
-from plugboard.connector import (
-    AsyncioConnector,
-    Connector,
-    ConnectorBuilder,
-)
+from plugboard.connector import AsyncioConnector, Connector, ConnectorBuilder, RabbitMQConnector
 from plugboard.events import EventConnectorBuilder, StopEvent
 from plugboard.process import LocalProcess, Process, RayProcess
 from plugboard.schemas import ConnectorSpec
@@ -55,8 +51,10 @@ class B(ComponentTestHelper):
     [
         (LocalProcess, AsyncioConnector),
         (LocalProcess, zmq_connector_cls),
+        (LocalProcess, RabbitMQConnector),
         # (RayProcess, RayConnector),  # TODO : Pubsub/StopEvent unsupported. See https://github.com/plugboard-dev/plugboard/issues/101.
         (RayProcess, zmq_connector_cls),
+        (RayProcess, RabbitMQConnector),
     ],
 )
 async def test_process_stop_event(
