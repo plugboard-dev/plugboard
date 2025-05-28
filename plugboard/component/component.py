@@ -157,7 +157,13 @@ class Component(ABC, ExportMixin):
         return self._state
 
     def _job_id_ctx(self) -> container_context:
-        """Context manager for the job ID."""
+        """Sets job ID context from state backend.
+
+        Required for all Component entry points to ensure job ID is available when
+        executing on Ray workers. As Ray remote function calls are executed in
+        separate asyncio.Tasks, and ContextVars are local to asyncio.Tasks, the
+        job ID context must be set for each remote function call.
+        """
         job_id = self._state.job_id if self._state else None
         # if job_id is None:
         #     raise RuntimeError("StateBackend for Component uninitialised. Cannot resolve job_id.")
