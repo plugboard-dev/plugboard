@@ -1,6 +1,5 @@
 """Plugboard Process CLI."""
 
-import asyncio
 from pathlib import Path
 import typing as _t
 
@@ -15,7 +14,7 @@ from typing_extensions import Annotated
 from plugboard.diagram import MermaidDiagram
 from plugboard.process import Process, ProcessBuilder
 from plugboard.schemas import ConfigSpec
-from plugboard.utils import add_sys_path
+from plugboard.utils import add_sys_path, run_coro_sync
 
 
 app = typer.Typer(
@@ -80,7 +79,7 @@ def run(
         with add_sys_path(config.parent):
             process = _build_process(config_spec)
         progress.update(task, description=f"Running process...")
-        asyncio.run(_run_process(process))
+        run_coro_sync(_run_process(process))
         progress.update(task, description=f"[green]Process complete[/green]")
 
 
