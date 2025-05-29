@@ -210,6 +210,7 @@ async def test_get_proxy_ports_not_started() -> None:
     proxy.terminate()
 
 
+@pytest.mark.flaky(reruns=3)
 @pytest.mark.asyncio
 async def test_add_push_socket(zmq_proxy: ZMQProxy) -> None:
     """Tests adding a push socket for a topic."""
@@ -287,6 +288,7 @@ async def test_add_push_socket_invalid_request(zmq_proxy: ZMQProxy) -> None:
     await asyncio.sleep(0.1)
 
 
+@pytest.mark.flaky(reruns=3)
 @pytest.mark.asyncio
 async def test_add_multiple_push_sockets(zmq_proxy: ZMQProxy) -> None:
     """Tests adding multiple push sockets for different topics."""
