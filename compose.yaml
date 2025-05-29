@@ -1,3 +1,5 @@
+name: plugboard
+
 services:
   rabbitmq:
     image: rabbitmq:4.0-rc-management-alpine
@@ -6,9 +8,12 @@ services:
       - 5672:5672
       - 15672:15672
     volumes:
-      - plugboard-rabbitmq-data:/var/lib/rabbitmq
+      - rabbitmq-data:/var/lib/rabbitmq
     networks:
-      - plugboard-network
+      - main
+    environment:
+      - RABBITMQ_DEFAULT_USER=user
+      - RABBITMQ_DEFAULT_PASS=password
     restart: always
 
   valkey:
@@ -18,15 +23,15 @@ services:
     ports:
       - 6379:6379
     volumes:
-      - plugboard-valkey-data:/var/lib/valkey
+      - valkey-data:/var/lib/valkey
     networks:
-      - plugboard-network
+      - main
     restart: always
 
 networks:
-  plugboard-network:
+  main:
     driver: bridge
 
 volumes:
-  plugboard-rabbitmq-data:
-  plugboard-valkey-data:
+  rabbitmq-data:
+  valkey-data:

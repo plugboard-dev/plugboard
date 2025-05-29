@@ -5,6 +5,7 @@ import typing as _t
 
 from pydantic import BaseModel
 import pytest
+import pytest_asyncio
 import pytest_cases
 
 from plugboard.component import Component, IOController
@@ -150,7 +151,7 @@ async def test_component_event_handlers(
     await a.io.close()
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def field_connectors(connector_cls: _t.Type[Connector]) -> list[Connector]:
     """Fixture for a list of field connectors."""
     return [

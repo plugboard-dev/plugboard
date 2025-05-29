@@ -62,7 +62,7 @@ class IOController:
         self._read_tasks: dict[str | _t_field_key, asyncio.Task] = {}
         self._is_closed = False
 
-        self._logger = DI.logger.sync_resolve().bind(
+        self._logger = DI.logger.resolve_sync().bind(
             cls=self.__class__.__name__, namespace=self.namespace
         )
         self._logger.info("IOController created")

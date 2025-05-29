@@ -7,6 +7,7 @@ import typing as _t
 from unittest.mock import patch
 
 import pytest
+import pytest_asyncio
 import pytest_cases
 import ray
 
@@ -35,11 +36,13 @@ def ray_context() -> _t.Iterator[None]:
     ray.shutdown()
 
 
-@pytest.fixture(scope="function", autouse=True)
-async def DI_teardown() -> _t.AsyncIterable[None]:
+@pytest_asyncio.fixture(scope="function", autouse=True)
+async def DI_teardown() -> _t.AsyncGenerator[None, None]:
     """Cleans up any resources created in DI container after each test."""
-    yield
-    await DI.tear_down()
+    try:
+        yield
+    finally:
+        await DI.tear_down()
 
 
 @pytest_cases.fixture
@@ -54,9 +57,9 @@ def zmq_connector_cls(zmq_pubsub_proxy: bool) -> _t.Iterator[_t.Type[ZMQConnecto
         {"PLUGBOARD_FLAGS_ZMQ_PUBSUB_PROXY": str(zmq_pubsub_proxy)},
     ):
         testing_settings = Settings()
-        DI.settings.override(testing_settings)
+        DI.settings.override_sync(testing_settings)
         yield ZMQConnector
-        DI.settings.reset_override()
+        DI.settings.reset_override_sync()
 
 
 class ComponentTestHelper(Component, ABC):

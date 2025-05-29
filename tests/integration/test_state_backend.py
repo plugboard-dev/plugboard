@@ -3,6 +3,7 @@
 import typing as _t
 
 import pytest
+import pytest_asyncio
 
 from plugboard.component import Component, IOController
 from plugboard.connector import AsyncioConnector, Connector
@@ -80,7 +81,7 @@ def C_connectors() -> list[Connector]:
     ]
 
 
-@pytest.fixture(
+@pytest_asyncio.fixture(
     params=[
         setup_DictStateBackend,
         setup_SqliteStateBackend,

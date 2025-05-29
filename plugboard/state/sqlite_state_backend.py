@@ -50,10 +50,6 @@ class SqliteStateBackend(StateBackend):
         await self._initialise_db()
         await super().init()
 
-    async def destroy(self) -> None:
-        """Destroys the `SqliteStateBackend`."""
-        pass
-
     async def _fetchone(
         self, statement: str, params: _t.Tuple[_t.Any, ...]
     ) -> aiosqlite.Row | None:

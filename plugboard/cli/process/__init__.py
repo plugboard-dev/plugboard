@@ -1,7 +1,7 @@
 """Plugboard Process CLI."""
 
-import asyncio
 from pathlib import Path
+import typing as _t
 
 import msgspec
 from rich import print
@@ -14,7 +14,7 @@ from typing_extensions import Annotated
 from plugboard.diagram import MermaidDiagram
 from plugboard.process import Process, ProcessBuilder
 from plugboard.schemas import ConfigSpec
-from plugboard.utils import add_sys_path
+from plugboard.utils import add_sys_path, run_coro_sync
 
 
 app = typer.Typer(
@@ -57,9 +57,19 @@ def run(
             help="Path to the YAML configuration file.",
         ),
     ],
+    job_id: Annotated[
+        _t.Optional[str],
+        typer.Option(
+            help="Job ID for the process. If not provided, a random job ID will be generated.",
+        ),
+    ] = None,
 ) -> None:
     """Run a Plugboard process."""
     config_spec = _read_yaml(config)
+
+    if job_id is not None:
+        # Override job ID in config file if set
+        config_spec.plugboard.process.args.state.args.job_id = job_id
 
     with Progress(
         SpinnerColumn("arrow3"),
@@ -69,7 +79,7 @@ def run(
         with add_sys_path(config.parent):
             process = _build_process(config_spec)
         progress.update(task, description=f"Running process...")
-        asyncio.run(_run_process(process))
+        run_coro_sync(_run_process(process))
         progress.update(task, description=f"[green]Process complete[/green]")
 
 
