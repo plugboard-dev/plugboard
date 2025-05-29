@@ -1,4 +1,8 @@
-"""Tests mechanisms for setting and getting job IDs throughout the application."""
+"""Tests mechanisms for setting and getting job IDs throughout the application.
+
+Note: Tests which run async code synchronously from CLI entrypoints must be
+marked async so that they do not interfere with pytest-asyncio's event loop.
+"""
 
 from __future__ import annotations
 
@@ -115,7 +119,10 @@ def config_file_with_job_id(tmp_path: Path, yaml_job_id: str) -> Path:
     return config_file
 
 
-def test_cli_process_run_with_yaml_job_id(config_file_with_job_id: Path, yaml_job_id: str) -> None:
+@pytest.mark.asyncio
+async def test_cli_process_run_with_yaml_job_id(
+    config_file_with_job_id: Path, yaml_job_id: str
+) -> None:
     """Test running a process with a job ID specified in the YAML file."""
     process_builder = ProcessBuilderMock()
     job_id = yaml_job_id
@@ -130,7 +137,8 @@ def test_cli_process_run_with_yaml_job_id(config_file_with_job_id: Path, yaml_jo
     assert getattr(process_builder.built_process, "saved_job_id", job_id)
 
 
-def test_cli_process_run_with_cmd_job_id(minimal_config_file: Path) -> None:
+@pytest.mark.asyncio
+async def test_cli_process_run_with_cmd_job_id(minimal_config_file: Path) -> None:
     """Test running a process with a job ID specified via the command line argument."""
     process_builder = ProcessBuilderMock()
     job_id = "Job_cmdline12345678"
@@ -147,7 +155,8 @@ def test_cli_process_run_with_cmd_job_id(minimal_config_file: Path) -> None:
     assert getattr(process_builder.built_process, "saved_job_id", job_id)
 
 
-def test_cli_process_run_override_yaml_job_id(config_file_with_job_id: Path) -> None:
+@pytest.mark.asyncio
+async def test_cli_process_run_override_yaml_job_id(config_file_with_job_id: Path) -> None:
     """Test overriding a YAML-specified job ID with a command line argument."""
     process_builder = ProcessBuilderMock()
     job_id = "Job_cmdline12345678"
@@ -164,7 +173,8 @@ def test_cli_process_run_override_yaml_job_id(config_file_with_job_id: Path) -> 
     assert getattr(process_builder.built_process, "saved_job_id", job_id)
 
 
-def test_cli_process_run_with_env_var(minimal_config_file: Path) -> None:
+@pytest.mark.asyncio
+async def test_cli_process_run_with_env_var(minimal_config_file: Path) -> None:
     """Test running a process with a job ID specified via environment variable."""
     process_builder = ProcessBuilderMock()
     job_id: str = "Job_envvar12345678"
@@ -180,7 +190,8 @@ def test_cli_process_run_with_env_var(minimal_config_file: Path) -> None:
     assert getattr(process_builder.built_process, "saved_job_id", job_id)
 
 
-def test_cli_process_run_with_no_job_id(minimal_config_file: Path) -> None:
+@pytest.mark.asyncio
+async def test_cli_process_run_with_no_job_id(minimal_config_file: Path) -> None:
     """Test running a process with no job ID specified (auto-generated)."""
     process_builder = ProcessBuilderMock()
 
