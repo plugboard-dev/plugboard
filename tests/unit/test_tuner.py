@@ -7,7 +7,7 @@ import pytest
 
 from plugboard.schemas import ConfigSpec, ObjectiveSpec
 from plugboard.schemas.tune import CategoricalParameterSpec, FloatParameterSpec, IntParameterSpec
-from plugboard.tune.tune import Tuner
+from plugboard.tune import Tuner
 from tests.integration.test_process_with_components_run import A, B, C  # noqa: F401
 
 
