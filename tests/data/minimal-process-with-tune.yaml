@@ -1,0 +1,19 @@
+plugboard:
+  process: tests/data/minimal-process.yaml
+  tune:
+    args:
+      objective:
+        object_name: c
+        field_type: field
+        field_name: in_1
+      parameters:
+      - type: ray.tune.randint
+        object_type: component
+        object_name: a
+        field_type: arg
+        field_name: iters
+        lower: 1
+        upper: 50
+      num_samples: 10
+      mode: max
+      max_concurrent: 2

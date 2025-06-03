@@ -11,7 +11,7 @@ from plugboard.utils import build_actor_wrapper, depends_on_optional
 
 try:
     import ray
-except ImportError:
+except ImportError:  # pragma: no cover
     pass
 
 _AsyncioChannelActor = build_actor_wrapper(AsyncioChannel)
