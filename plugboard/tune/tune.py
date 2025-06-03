@@ -43,7 +43,8 @@ class Tuner:
             parameters: The parameters to optimise over.
             num_samples: The number of trial samples to use for the optimisation.
             mode: The direction of the optimisation.
-            max_concurrent: The maximum number of concurrent trials. Defaults to None.
+            max_concurrent: The maximum number of concurrent trials. Defaults to None, which means
+                that Ray will use its default concurrency of 1 trial per CPU core.
             algorithm: Configuration for the underlying Optuna algorithm used for optimisation.
         """
         self._logger = DI.logger.sync_resolve().bind(cls=self.__class__.__name__)
