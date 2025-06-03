@@ -128,7 +128,7 @@ class TuneArgsDict(_t.TypedDict):
     objective: str | list[str]
     parameters: list[ParameterSpec]
     num_samples: int
-    mode: _t.NotRequired[Direction | list[list[Direction]]]
+    mode: _t.NotRequired[Direction | list[Direction]]
     max_concurrent: _t.NotRequired[int | None]
     algorithm: OptunaSpec
 
