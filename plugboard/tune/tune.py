@@ -1,7 +1,6 @@
 """Provides `Tuner` class for optimising Plugboard processes."""
 
 import asyncio
-from functools import partial
 from inspect import isfunction
 from pydoc import locate
 import typing as _t
@@ -10,7 +9,13 @@ import ray.tune.search.optuna
 
 from plugboard.component.component import Component, ComponentRegistry
 from plugboard.process import Process, ProcessBuilder
-from plugboard.schemas import Direction, ObjectiveSpec, OptunaSpec, ParameterSpec, ProcessSpec
+from plugboard.schemas import (
+    Direction,
+    ObjectiveSpec,
+    OptunaSpec,
+    ParameterSpec,
+    ProcessSpec,
+)
 from plugboard.utils import DI
 from plugboard.utils.dependencies import depends_on_optional
 
@@ -75,24 +80,24 @@ class Tuner:
             raise ValueError("No result grid available. Run the optimisation job first.")
         return self._result_grid
 
-   def _build_algorithm(
-       self, algorithm: _t.Optional[OptunaSpec] = None
-   ) -> ray.tune.search.Searcher:
-       if algorithm is None:
-           self._logger.info("Using default Optuna search algorithm")
-           return ray.tune.search.optuna.OptunaSearch(metric=self._metric, mode=self._mode)
-       _algo_kwargs = {
-           **algorithm.model_dump(exclude={"type"}),
-           "mode": self._mode,
-           "metric": self._metric,
-       }
-       algo_cls: _t.Optional[_t.Any] = locate(algorithm.type)
-       if not algo_cls or not issubclass(algo_cls, ray.tune.search.searcher.Searcher):
-           raise ValueError(f"Could not locate `Searcher` class {algorithm.type}")
-       self._logger.info(
-           "Using custom search algorithm", algorithm=algorithm.type, params=_algo_kwargs
-       )
-       return algo_cls(**_algo_kwargs)
+    def _build_algorithm(
+        self, algorithm: _t.Optional[OptunaSpec] = None
+    ) -> ray.tune.search.Searcher:
+        if algorithm is None:
+            self._logger.info("Using default Optuna search algorithm")
+            return ray.tune.search.optuna.OptunaSearch(metric=self._metric, mode=self._mode)
+        _algo_kwargs = {
+            **algorithm.model_dump(exclude={"type"}),
+            "mode": self._mode,
+            "metric": self._metric,
+        }
+        algo_cls: _t.Optional[_t.Any] = locate(algorithm.type)
+        if not algo_cls or not issubclass(algo_cls, ray.tune.search.searcher.Searcher):
+            raise ValueError(f"Could not locate `Searcher` class {algorithm.type}")
+        self._logger.info(
+            "Using custom search algorithm", algorithm=algorithm.type, params=_algo_kwargs
+        )
+        return algo_cls(**_algo_kwargs)
 
     def _build_parameter(
         self, parameter: ParameterSpec
@@ -105,11 +110,6 @@ class Tuner:
             **parameter.model_dump(exclude={"type"})
         )
 
-    @functools.cache
-    @staticmethod
-    def _process_components_map(process: ProcessSpec) -> dict[str, ComponentSpec]:
-        return {c.args.name: c for c in process.args.components}
-
     @staticmethod
     def _override_parameter(
         process: ProcessSpec, param: ParameterSpec, value: _t.Any
@@ -117,9 +117,9 @@ class Tuner:
         if param.object_type != "component":
             raise NotImplementedError("Only component parameters are currently supported.")
         try:
-            component = Tuner._process_components_map(process)[param.object_name]
-        except KeyError as e:
-            raise ValueError(f"Component {param.object_name} not found in process.") from e
+            component = next(c for c in process.args.components if c.args.name == param.object_name)
+        except StopIteration:
+            raise ValueError(f"Component {param.object_name} not found in process.")
         if param.field_type == "arg":
             setattr(component.args, param.field_name, value)
         elif param.field_type == "initial_value":
@@ -158,11 +158,10 @@ class Tuner:
         # re-register the classes in the worker
         required_classes = {c.type: ComponentRegistry.get(c.type) for c in spec.args.components}
 
-
         # See https://github.com/ray-project/ray/issues/24445 and
         # https://docs.ray.io/en/latest/tune/api/doc/ray.tune.execution.placement_groups.PlacementGroupFactory.html
         trainable_with_resources = ray.tune.with_resources(
-            self._build_objective(required_classes),
+            self._build_objective(required_classes, spec),
             ray.tune.PlacementGroupFactory(
                 # Reserve 1 CPU for the tune process and 1 CPU for each component in the Process
                 # TODO: Implement better resource allocation based on Process requirements
@@ -187,8 +186,10 @@ class Tuner:
         if isinstance(self._metric, list) or isinstance(self._mode, list):  # pragma: no cover
             raise RuntimeError("Invalid configuration found for single-objective optimisation.")
         return self._result_grid.get_best_result(metric=self._metric, mode=self._mode)
-        
-    def _build_objective(self, component_classes: dict[str, type[Component]) -> _t.Callable:
+
+    def _build_objective(
+        self, component_classes: dict[str, type[Component]], spec: ProcessSpec
+    ) -> _t.Callable:
         def fn(config: dict[str, _t.Any]) -> _t.Any:  # pragma: no-cover
             # Recreate the ComponentRegistry in the Ray worker
             for key, cls in component_classes.items():
@@ -201,5 +202,5 @@ class Tuner:
             asyncio.run(self._run_process(process))
 
             return {obj.full_name: self._get_objective(process, obj) for obj in self._objective}
-            
+
         return fn
