@@ -100,7 +100,7 @@ def test_multi_objective_tune(config: dict) -> None:
                 categories=[1, -1],
             ),
         ],
-        num_samples=8,
+        num_samples=10,
         mode=["max", "min"],
         max_concurrent=2,
     )
