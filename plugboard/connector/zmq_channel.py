@@ -308,10 +308,10 @@ class _ZMQPubsubConnectorProxy(_ZMQConnector):
             return self._send_channel
         send_socket = create_socket(zmq.PUB, [(zmq.SNDHWM, self._maxsize)])
         send_socket.connect(self._zmq_proxy.xsub_addr)
-        await asyncio.sleep(0.1)  # Ensure connections established before first send. Better way?
         self._send_channel = ZMQChannel(
             send_socket=send_socket, topic=self._topic, maxsize=self._maxsize
         )
+        await asyncio.sleep(0.1)  # Ensure connections established before first send. Better way?
         return self._send_channel
 
     async def connect_recv(self) -> ZMQChannel:
@@ -324,10 +324,10 @@ class _ZMQPubsubConnectorProxy(_ZMQConnector):
         ]
         recv_socket = create_socket(zmq.SUB, socket_opts)
         recv_socket.connect(self._zmq_proxy.xpub_addr)
-        await asyncio.sleep(0.1)  # Ensure connections established before first send. Better way?
         self._recv_channel = ZMQChannel(
             recv_socket=recv_socket, topic=self._topic, maxsize=self._maxsize
         )
+        await asyncio.sleep(0.1)  # Ensure connections established before first send. Better way?
         return self._recv_channel
 
 
