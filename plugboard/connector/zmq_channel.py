@@ -351,10 +351,10 @@ class _ZMQPipelineConnectorProxy(_ZMQPubsubConnectorProxy):
         )
         recv_socket = create_socket(zmq.PULL, [(zmq.RCVHWM, self._maxsize)])
         recv_socket.connect(self._push_address)
-        await asyncio.sleep(0.1)  # Ensure connections established before first send. Better way?
         self._recv_channel = ZMQChannel(
             recv_socket=recv_socket, topic=self._topic, maxsize=self._maxsize
         )
+        await asyncio.sleep(0.1)  # Ensure connections established before first send. Better way?
         return self._recv_channel
 
 
