@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+from contextlib import nullcontext
 from random import random
 import typing as _t
 
@@ -22,7 +23,7 @@ from that_depends import Provide, inject
 from plugboard.connector.connector import Connector
 from plugboard.connector.serde_channel import SerdeChannel
 from plugboard.schemas.connector import ConnectorMode
-from plugboard.utils import DI
+from plugboard.utils import DI, gen_rand_str
 
 
 class RabbitMQChannel(SerdeChannel):
@@ -90,10 +91,11 @@ class RabbitMQConnector(Connector):
         )
         self._send_channel: _t.Optional[RabbitMQChannel] = None
         self._recv_channel: _t.Optional[RabbitMQChannel] = None
+        self._recv_channel_lock = asyncio.Lock()
 
     def __getstate__(self) -> dict:
         state = self.__dict__.copy()
-        for attr in ("_send_channel", "_recv_channel"):
+        for attr in ("_send_channel", "_recv_channel", "_recv_channel_lock"):
             if attr in state:
                 del state[attr]
         return state
@@ -102,6 +104,7 @@ class RabbitMQConnector(Connector):
         self.__dict__.update(state)
         self._send_channel = None
         self._recv_channel = None
+        self._recv_channel_lock = asyncio.Lock()
 
     @inject
     async def connect_send(
@@ -123,15 +126,18 @@ class RabbitMQConnector(Connector):
         self, rabbitmq_conn: AbstractRobustConnection = Provide[DI.rabbitmq_conn]
     ) -> RabbitMQChannel:
         """Returns a `RabbitMQ` channel for receiving messages."""
-        if self._recv_channel is not None:
-            return self._recv_channel
-
-        channel = await rabbitmq_conn.channel()
-        await self._declare_exchange(channel)
-        queue = await self._declare_queue(channel)
-        self._recv_channel = RabbitMQChannel(recv_queue=queue, topic=self._topic)
+        cm = self._recv_channel_lock if self.spec.mode != ConnectorMode.PUBSUB else nullcontext()
+        async with cm:
+            if self._recv_channel is not None:
+                return self._recv_channel
+            channel = await rabbitmq_conn.channel()
+            await self._declare_exchange(channel)
+            queue = await self._declare_queue(channel)
+            recv_channel = RabbitMQChannel(recv_queue=queue, topic=self._topic)
+            if self.spec.mode != ConnectorMode.PUBSUB:
+                self._recv_channel = recv_channel
         await asyncio.sleep(0.1)  # Ensure connections established before first send. Better way?
-        return self._recv_channel
+        return recv_channel
 
     async def _declare_exchange(self, channel: AbstractChannel) -> AbstractExchange:
         """Declares an exchange on the RabbitMQ channel."""
@@ -142,7 +148,18 @@ class RabbitMQConnector(Connector):
     async def _declare_queue(self, channel: AbstractChannel) -> AbstractQueue:
         """Declares a queue on the RabbitMQ channel."""
         await channel.set_qos(prefetch_count=1)
-        queue_name = self._topic if self.spec.mode != ConnectorMode.PUBSUB else None
-        queue = await channel.declare_queue(queue_name, auto_delete=True, durable=True)
-        await queue.bind(self._topic, routing_key=self._topic)
+        if self.spec.mode == ConnectorMode.PUBSUB:
+            # In pubsub mode, we use a fanout exchange and do not need a specific queue name.
+            queue_name = f"{self._topic}_queue_{gen_rand_str()}"  # noqa: S311 (non-cryptographic usage)
+            queue = await channel.declare_queue(
+                queue_name, auto_delete=True, durable=False, exclusive=True
+            )
+            await queue.bind(self._topic, routing_key="")
+        else:
+            # In direct mode, we use the topic as the queue name.
+            queue_name = self._topic
+            queue = await channel.declare_queue(
+                queue_name, auto_delete=True, durable=True, arguments={"x-priority": 10}
+            )
+            await queue.bind(self._topic, routing_key=self._topic)
         return queue
