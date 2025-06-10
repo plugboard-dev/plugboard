@@ -90,6 +90,7 @@ class RabbitMQConnector(Connector):
             ExchangeType.FANOUT if self.spec.mode == ConnectorMode.PUBSUB else ExchangeType.DIRECT
         )
         self._send_channel: _t.Optional[RabbitMQChannel] = None
+        self._send_channel_lock = asyncio.Lock()
         self._recv_channel: _t.Optional[RabbitMQChannel] = None
         self._recv_channel_lock = asyncio.Lock()
 
@@ -103,6 +104,7 @@ class RabbitMQConnector(Connector):
     def __setstate__(self, state: dict) -> None:
         self.__dict__.update(state)
         self._send_channel = None
+        self._send_channel_lock = asyncio.Lock()
         self._recv_channel = None
         self._recv_channel_lock = asyncio.Lock()
 
@@ -111,13 +113,14 @@ class RabbitMQConnector(Connector):
         self, rabbitmq_conn: AbstractRobustConnection = Provide[DI.rabbitmq_conn]
     ) -> RabbitMQChannel:
         """Returns a `RabbitMQ` channel for sending messages."""
-        if self._send_channel is not None:
-            return self._send_channel
+        async with self._send_channel_lock:
+            if self._send_channel is not None:
+                return self._send_channel
 
-        channel = await rabbitmq_conn.channel()
-        exchange = await self._declare_exchange(channel)
+            channel = await rabbitmq_conn.channel()
+            exchange = await self._declare_exchange(channel)
 
-        self._send_channel = RabbitMQChannel(send_exchange=exchange, topic=self._topic)
+            self._send_channel = RabbitMQChannel(send_exchange=exchange, topic=self._topic)
         await asyncio.sleep(0.1)  # Ensure connections established before first send. Better way?
         return self._send_channel
 
