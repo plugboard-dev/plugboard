@@ -133,9 +133,11 @@ class RabbitMQConnector(Connector):
         async with cm:
             if self._recv_channel is not None:
                 return self._recv_channel
+
             channel = await rabbitmq_conn.channel()
             await self._declare_exchange(channel)
             queue = await self._declare_queue(channel)
+
             recv_channel = RabbitMQChannel(recv_queue=queue, topic=self._topic)
             if self.spec.mode != ConnectorMode.PUBSUB:
                 self._recv_channel = recv_channel
