@@ -1,14 +1,14 @@
 """Plugboard Process CLI."""
 
-import typing as _t
 from pathlib import Path
+import typing as _t
 
 import msgspec
-import typer
 from rich import print
 from rich.console import Console
 from rich.markdown import Markdown
 from rich.progress import Progress, SpinnerColumn, TextColumn
+import typer
 from typing_extensions import Annotated
 
 from plugboard.diagram import MermaidDiagram
@@ -16,6 +16,7 @@ from plugboard.process import Process, ProcessBuilder
 from plugboard.schemas import ConfigSpec
 from plugboard.tune import Tuner
 from plugboard.utils import add_sys_path, run_coro_sync
+
 
 app = typer.Typer(
     rich_markup_mode="rich", no_args_is_help=True, pretty_exceptions_show_locals=False
