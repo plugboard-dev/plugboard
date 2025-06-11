@@ -10,6 +10,7 @@ import pytest
 import pytest_asyncio
 import pytest_cases
 import ray
+from that_depends import ContextScopes, container_context
 
 from plugboard.component import Component, IOController as IO
 from plugboard.component.io_controller import IOStreamClosedError
@@ -34,6 +35,14 @@ def ray_context() -> _t.Iterator[None]:
     ray.init(num_cpus=2, num_gpus=0, include_dashboard=False)
     yield
     ray.shutdown()
+
+
+@pytest.fixture(scope="function")
+def job_id_ctx() -> _t.Iterator[str]:
+    """Enters the container context with the job_id."""
+    with container_context(DI, global_context={"job_id": None}, scope=ContextScopes.APP):
+        job_id = DI.job_id.resolve_sync()
+        yield job_id
 
 
 @pytest_asyncio.fixture(scope="function", autouse=True)

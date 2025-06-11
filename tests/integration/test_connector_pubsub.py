@@ -56,7 +56,7 @@ def connector_cls(_connector_cls: type[Connector]) -> type[Connector]:
     ],
 )
 async def test_pubsub_channel_single_publisher(
-    connector_cls: type[Connector], num_subscribers: int, num_messages: int
+    connector_cls: type[Connector], num_subscribers: int, num_messages: int, job_id_ctx: str
 ) -> None:
     """Tests the various pubsub `Channel` classes in pubsub mode.
 
@@ -75,7 +75,11 @@ async def test_pubsub_channel_single_publisher(
     ],
 )
 async def test_pubsub_channel_multiple_publishers(
-    connector_cls: type[Connector], num_publishers: int, num_subscribers: int, num_messages: int
+    connector_cls: type[Connector],
+    num_publishers: int,
+    num_subscribers: int,
+    num_messages: int,
+    job_id_ctx: str,
 ) -> None:
     """Tests the various pubsub `Channel` classes in pubsub mode.
 
@@ -101,6 +105,7 @@ async def test_pubsub_channel_multiple_topics_and_publishers(
     num_publishers: int,
     num_subscribers: int,
     num_messages: int,
+    job_id_ctx: str,
 ) -> None:
     """Tests the various pubsub `Channel` classes in pubsub mode.
 

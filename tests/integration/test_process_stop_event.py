@@ -86,14 +86,16 @@ async def test_process_stop_event(
 
     process = process_cls(components, connectors)
 
-    stop_evt_conn = event_connectors_map[StopEvent.type]
-    stop_chan = await stop_evt_conn.connect_send()
-
-    async def stop_after() -> None:
-        await asyncio.sleep((iters_before_stop + 0.5) * sleep_time)
-        await stop_chan.send(StopEvent(source="test-driver", data={}))  # TODO : Shouldn't need data
-
     async with process:
+        stop_evt_conn = event_connectors_map[StopEvent.type]
+        stop_chan = await stop_evt_conn.connect_send()
+
+        async def stop_after() -> None:
+            await asyncio.sleep((iters_before_stop + 0.5) * sleep_time)
+            await stop_chan.send(
+                StopEvent(source="test-driver", data={})  # TODO : Shouldn't need data
+            )
+
         for c in components:
             assert c.is_initialised
 
