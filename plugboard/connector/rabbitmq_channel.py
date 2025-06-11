@@ -144,25 +144,30 @@ class RabbitMQConnector(Connector):
         await asyncio.sleep(0.1)  # Ensure connections established before first send. Better way?
         return recv_channel
 
-    async def _declare_exchange(self, channel: AbstractChannel) -> AbstractExchange:
+    @inject
+    async def _declare_exchange(
+        self, channel: AbstractChannel, job_id: str = Provide[DI.job_id]
+    ) -> AbstractExchange:
         """Declares an exchange on the RabbitMQ channel."""
+        name = f"{job_id}.{self._topic}"
         return await channel.declare_exchange(
-            self._topic, self._exchange_type, auto_delete=True, durable=True
+            name, self._exchange_type, auto_delete=True, durable=True
         )
 
-    async def _declare_queue(self, channel: AbstractChannel) -> AbstractQueue:
+    @inject
+    async def _declare_queue(
+        self, channel: AbstractChannel, job_id: str = Provide[DI.job_id]
+    ) -> AbstractQueue:
         """Declares a queue on the RabbitMQ channel."""
         await channel.set_qos(prefetch_count=1)
         if self.spec.mode == ConnectorMode.PUBSUB:
-            # In pubsub mode, we use a fanout exchange and do not need a specific queue name.
-            queue_name = f"{self._topic}_queue_{gen_rand_str()}"  # noqa: S311 (non-cryptographic usage)
+            queue_name = f"{job_id}.{self._topic}.{gen_rand_str()}"  # noqa: S311 (non-cryptographic usage)
             queue = await channel.declare_queue(
                 queue_name, auto_delete=True, durable=False, exclusive=True
             )
             await queue.bind(self._topic, routing_key="")
         else:
-            # In direct mode, we use the topic as the queue name.
-            queue_name = self._topic
+            queue_name = f"{job_id}.{self._topic}"
             queue = await channel.declare_queue(
                 queue_name, auto_delete=True, durable=True, arguments={"x-priority": 10}
             )
