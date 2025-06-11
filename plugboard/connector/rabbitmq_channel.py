@@ -160,16 +160,16 @@ class RabbitMQConnector(Connector):
     ) -> AbstractQueue:
         """Declares a queue on the RabbitMQ channel."""
         await channel.set_qos(prefetch_count=1)
+        exchange_name = f"{job_id}.{self._topic}"
         if self.spec.mode == ConnectorMode.PUBSUB:
-            queue_name = f"{job_id}.{self._topic}.{gen_rand_str()}"  # noqa: S311 (non-cryptographic usage)
+            queue_name = f"{exchange_name}.{gen_rand_str()}"  # noqa: S311 (non-cryptographic usage)
             queue = await channel.declare_queue(
                 queue_name, auto_delete=True, durable=False, exclusive=True
             )
-            await queue.bind(self._topic, routing_key="")
+            await queue.bind(exchange_name, routing_key="")
         else:
-            queue_name = f"{job_id}.{self._topic}"
             queue = await channel.declare_queue(
-                queue_name, auto_delete=True, durable=True, arguments={"x-priority": 10}
+                exchange_name, auto_delete=True, durable=True, arguments={"x-priority": 10}
             )
-            await queue.bind(self._topic, routing_key=self._topic)
+            await queue.bind(exchange_name, routing_key=self._topic)
         return queue
