@@ -61,8 +61,7 @@ class B(ComponentTestHelper):
     ],
 )
 async def test_process_stop_event(
-    process_cls: type[Process],
-    connector_cls: type[Connector],
+    process_cls: type[Process], connector_cls: type[Connector], ray_ctx: None
 ) -> None:
     connector_builder = ConnectorBuilder(connector_cls=connector_cls)
     event_connectors = EventConnectorBuilder(connector_builder=connector_builder)

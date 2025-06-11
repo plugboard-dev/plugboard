@@ -30,7 +30,7 @@ def mp_set_start_method() -> None:
 
 
 @pytest.fixture(scope="session")
-def ray_context() -> _t.Iterator[None]:
+def ray_ctx() -> _t.Iterator[None]:
     """Initialises and shuts down Ray."""
     ray.init(num_cpus=2, num_gpus=0, include_dashboard=False)
     yield

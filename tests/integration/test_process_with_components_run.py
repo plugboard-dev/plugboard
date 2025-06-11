@@ -94,7 +94,7 @@ async def test_process_with_components_run(
     iters: int,
     factor: float,
     tempfile_path: Path,
-    ray_context: None,
+    ray_ctx: None,
 ) -> None:
     comp_a = A(iters=iters, name="comp_a")
     comp_b = B(factor=factor, name="comp_b")

@@ -92,7 +92,7 @@ def test_io_inheritance_abc(io_args: dict[str, _t.Any], exc: _t.Optional[type[Ex
 
 @pytest.mark.parametrize("io_args, exc", [({"inputs": ["in_1", "in_2"]}, None)])
 def test_io_inheritance_ray(
-    io_args: dict[str, _t.Any], exc: _t.Optional[type[Exception]], ray_context: None
+    io_args: dict[str, _t.Any], exc: _t.Optional[type[Exception]], ray_ctx: None
 ) -> None:
     """Tests that `Component` subclasses inherit `IOController` attributes when running on Ray."""
 
