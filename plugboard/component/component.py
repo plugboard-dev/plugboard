@@ -71,6 +71,7 @@ class Component(ABC, ExportMixin):
             input_events=self.__class__.io.input_events,
             output_events=self.__class__.io.output_events,
             namespace=self.name,
+            component=self,
         )
         self._field_inputs: dict[str, _t.Any] = {}
         self._field_inputs_ready: bool = False
