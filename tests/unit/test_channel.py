@@ -8,6 +8,7 @@ from unittest.mock import patch
 import pytest
 import pytest_cases
 from ray.util.multiprocessing import Pool
+from that_depends import ContextScopes, container_context
 
 from plugboard.connector import (
     AsyncioConnector,
@@ -104,20 +105,26 @@ async def test_multiprocessing_channel(
     spec = ConnectorSpec(mode=ConnectorMode.PIPELINE, source="test.send", target="test.recv")
     connector = ConnectorBuilder(connector_cls=connector_cls_mp).build(spec)
 
+    container_ctx = container_context(
+        DI, global_context={"job_id": DI.job_id.resolve_sync()}, scope=ContextScopes.APP
+    )
+
     async def _send_proc_async(connector: Connector) -> None:
-        channel = await connector.connect_send()
-        await asyncio.sleep(0.1)  # Ensure the receiver is ready before sending messages
-        for item in TEST_ITEMS:
-            await channel.send(item)
-        await channel.close()
-        assert channel.is_closed
+        with container_ctx:
+            channel = await connector.connect_send()
+            await asyncio.sleep(0.1)  # Ensure the receiver is ready before sending messages
+            for item in TEST_ITEMS:
+                await channel.send(item)
+            await channel.close()
+            assert channel.is_closed
 
     async def _recv_proc_async(connector: Connector) -> None:
-        channel = await connector.connect_recv()
-        for item in TEST_ITEMS:
-            assert await channel.recv() == item
-        with pytest.raises(ChannelClosedError):
-            await channel.recv()
+        with container_ctx:
+            channel = await connector.connect_recv()
+            for item in TEST_ITEMS:
+                assert await channel.recv() == item
+            with pytest.raises(ChannelClosedError):
+                await channel.recv()
 
     def _send_proc(connector: Connector) -> None:
         asyncio.run(_send_proc_async(connector))
