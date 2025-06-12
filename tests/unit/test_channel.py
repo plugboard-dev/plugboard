@@ -59,7 +59,7 @@ def connector_cls(_connector_cls: type[Connector]) -> type[Connector]:
 
 
 @pytest.mark.asyncio
-async def test_channel(connector_cls: type[Connector], job_id_ctx: str) -> None:
+async def test_channel(connector_cls: type[Connector], ray_ctx: None, job_id_ctx: str) -> None:
     """Tests the various Channel implementations."""
     spec = ConnectorSpec(mode=ConnectorMode.PIPELINE, source="test.send", target="test.recv")
     connector = ConnectorBuilder(connector_cls=connector_cls).build(spec)
