@@ -18,7 +18,7 @@ def config() -> dict:
 
 @pytest.mark.parametrize("mode", ["min", "max"])
 @pytest.mark.parametrize("process_type", ["local", "ray"])
-def test_tune(config: dict, mode: str, process_type: str) -> None:
+def test_tune(config: dict, mode: str, process_type: str, ray_ctx: None) -> None:
     """Tests running of optimisation jobs."""
     spec = ConfigSpec.model_validate(config)
     process_spec = spec.plugboard.process
@@ -64,7 +64,7 @@ def test_tune(config: dict, mode: str, process_type: str) -> None:
         assert best_result.metrics["c.in_1"] == 6
 
 
-def test_multi_objective_tune(config: dict) -> None:
+def test_multi_objective_tune(config: dict, ray_ctx: None) -> None:
     """Tests multi-objective optimisation."""
     spec = ConfigSpec.model_validate(config)
     process_spec = spec.plugboard.process
