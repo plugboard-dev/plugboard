@@ -106,7 +106,7 @@ async def test_multiprocessing_channel(
     connector = ConnectorBuilder(connector_cls=connector_cls_mp).build(spec)
 
     container_ctx = container_context(
-        DI, global_context={"job_id": DI.job_id.resolve_sync()}, scope=ContextScopes.APP
+        DI, global_context={"job_id": job_id_ctx}, scope=ContextScopes.APP
     )
 
     async def _send_proc_async(connector: Connector) -> None:
