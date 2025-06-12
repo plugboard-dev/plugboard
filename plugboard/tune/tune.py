@@ -52,7 +52,7 @@ class Tuner:
                 that Ray will use its default concurrency of 1 trial per CPU core.
             algorithm: Configuration for the underlying Optuna algorithm used for optimisation.
         """
-        self._logger = DI.logger.sync_resolve().bind(cls=self.__class__.__name__)
+        self._logger = DI.logger.resolve_sync().bind(cls=self.__class__.__name__)
         self._objective = objective if isinstance(objective, list) else [objective]
         self._mode = [str(m) for m in mode] if isinstance(mode, list) else str(mode)
         self._metric = (
