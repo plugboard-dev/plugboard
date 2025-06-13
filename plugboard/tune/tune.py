@@ -1,6 +1,5 @@
 """Provides `Tuner` class for optimising Plugboard processes."""
 
-import asyncio
 from inspect import isfunction
 from pydoc import locate
 import typing as _t
@@ -16,7 +15,7 @@ from plugboard.schemas import (
     ParameterSpec,
     ProcessSpec,
 )
-from plugboard.utils import DI
+from plugboard.utils import DI, run_coro_sync
 from plugboard.utils.dependencies import depends_on_optional
 
 
@@ -199,7 +198,7 @@ class Tuner:
                 self._override_parameter(spec, self._parameters_dict[name], value)
 
             process = ProcessBuilder.build(spec)
-            asyncio.run(self._run_process(process))
+            run_coro_sync(self._run_process(process))
 
             return {obj.full_name: self._get_objective(process, obj) for obj in self._objective}
 
