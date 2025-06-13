@@ -8,11 +8,7 @@ import pytest
 import pytest_cases
 
 from plugboard.component import Component, IOController as IO
-from plugboard.connector import (
-    AsyncioConnector,
-    Connector,
-    ConnectorBuilder,
-)
+from plugboard.connector import AsyncioConnector, Connector, ConnectorBuilder, RabbitMQConnector
 from plugboard.events import EventConnectorBuilder, StopEvent
 from plugboard.process import LocalProcess, Process, RayProcess
 from plugboard.schemas import ConnectorSpec
@@ -58,13 +54,14 @@ class B(ComponentTestHelper):
     [
         (LocalProcess, AsyncioConnector),
         (LocalProcess, zmq_connector_cls),
+        (LocalProcess, RabbitMQConnector),
         # (RayProcess, RayConnector),  # TODO : Pubsub/StopEvent unsupported. See https://github.com/plugboard-dev/plugboard/issues/101.
         (RayProcess, zmq_connector_cls),
+        (RayProcess, RabbitMQConnector),
     ],
 )
 async def test_process_stop_event(
-    process_cls: type[Process],
-    connector_cls: type[Connector],
+    process_cls: type[Process], connector_cls: type[Connector], ray_ctx: None
 ) -> None:
     connector_builder = ConnectorBuilder(connector_cls=connector_cls)
     event_connectors = EventConnectorBuilder(connector_builder=connector_builder)
@@ -88,14 +85,16 @@ async def test_process_stop_event(
 
     process = process_cls(components, connectors)
 
-    stop_evt_conn = event_connectors_map[StopEvent.type]
-    stop_chan = await stop_evt_conn.connect_send()
-
-    async def stop_after() -> None:
-        await asyncio.sleep((iters_before_stop + 0.5) * sleep_time)
-        await stop_chan.send(StopEvent(source="test-driver", data={}))  # TODO : Shouldn't need data
-
     async with process:
+        stop_evt_conn = event_connectors_map[StopEvent.type]
+        stop_chan = await stop_evt_conn.connect_send()
+
+        async def stop_after() -> None:
+            await asyncio.sleep((iters_before_stop + 0.5) * sleep_time)
+            await stop_chan.send(
+                StopEvent(source="test-driver", data={})  # TODO : Shouldn't need data
+            )
+
         for c in components:
             assert c.is_initialised
 

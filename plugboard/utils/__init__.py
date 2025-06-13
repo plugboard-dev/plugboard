@@ -1,6 +1,6 @@
 """Provides utility functions for use throughout the code."""
 
-from plugboard.utils.async_utils import gather_except
+from plugboard.utils.async_utils import gather_except, run_coro_sync
 from plugboard.utils.dependencies import depends_on_optional
 from plugboard.utils.di import DI
 from plugboard.utils.entities import EntityIdGen
@@ -19,6 +19,7 @@ __all__ = [
     "gather_except",
     "gen_rand_str",
     "is_on_ray_worker",
+    "run_coro_sync",
     "ClassRegistry",
     "DI",
     "EntityIdGen",

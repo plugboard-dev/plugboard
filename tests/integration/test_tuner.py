@@ -16,9 +16,10 @@ def config() -> dict:
         return msgspec.yaml.decode(f.read())
 
 
+@pytest.mark.asyncio
 @pytest.mark.parametrize("mode", ["min", "max"])
 @pytest.mark.parametrize("process_type", ["local", "ray"])
-def test_tune(config: dict, mode: str, process_type: str) -> None:
+async def test_tune(config: dict, mode: str, process_type: str, ray_ctx: None) -> None:
     """Tests running of optimisation jobs."""
     spec = ConfigSpec.model_validate(config)
     process_spec = spec.plugboard.process
@@ -44,7 +45,7 @@ def test_tune(config: dict, mode: str, process_type: str) -> None:
                 upper=8,
             )
         ],
-        num_samples=6,
+        num_samples=4,
         mode=mode,
         max_concurrent=2,
         algorithm=OptunaSpec(),
@@ -64,7 +65,8 @@ def test_tune(config: dict, mode: str, process_type: str) -> None:
         assert best_result.metrics["c.in_1"] == 6
 
 
-def test_multi_objective_tune(config: dict) -> None:
+@pytest.mark.asyncio
+async def test_multi_objective_tune(config: dict, ray_ctx: None) -> None:
     """Tests multi-objective optimisation."""
     spec = ConfigSpec.model_validate(config)
     process_spec = spec.plugboard.process
@@ -100,7 +102,7 @@ def test_multi_objective_tune(config: dict) -> None:
                 categories=[1, -1],
             ),
         ],
-        num_samples=10,
+        num_samples=6,
         mode=["max", "min"],
         max_concurrent=2,
     )

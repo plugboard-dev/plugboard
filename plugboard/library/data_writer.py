@@ -51,6 +51,7 @@ class DataWriter(Component, ABC):
             input_events=self.__class__.io.input_events,
             output_events=self.__class__.io.output_events,
             namespace=self.name,
+            component=self,
         )
         self._task: _t.Optional[Task] = None
 

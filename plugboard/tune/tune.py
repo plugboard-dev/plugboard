@@ -1,6 +1,5 @@
 """Provides `Tuner` class for optimising Plugboard processes."""
 
-import asyncio
 from inspect import isfunction
 from pydoc import locate
 import typing as _t
@@ -16,7 +15,7 @@ from plugboard.schemas import (
     ParameterSpec,
     ProcessSpec,
 )
-from plugboard.utils import DI
+from plugboard.utils import DI, run_coro_sync
 from plugboard.utils.dependencies import depends_on_optional
 
 
@@ -52,7 +51,7 @@ class Tuner:
                 that Ray will use its default concurrency of 1 trial per CPU core.
             algorithm: Configuration for the underlying Optuna algorithm used for optimisation.
         """
-        self._logger = DI.logger.sync_resolve().bind(cls=self.__class__.__name__)
+        self._logger = DI.logger.resolve_sync().bind(cls=self.__class__.__name__)
         self._objective = objective if isinstance(objective, list) else [objective]
         self._mode = [str(m) for m in mode] if isinstance(mode, list) else str(mode)
         self._metric = (
@@ -163,9 +162,9 @@ class Tuner:
         trainable_with_resources = ray.tune.with_resources(
             self._build_objective(required_classes, spec),
             ray.tune.PlacementGroupFactory(
-                # Reserve 1 CPU for the tune process and 1 CPU for each component in the Process
+                # Reserve 0.5 CPU for the tune process and 0.5 CPU for each component in the Process
                 # TODO: Implement better resource allocation based on Process requirements
-                [{"CPU": 1.0}] + [{"CPU": 1.0}] * len(spec.args.components),
+                [{"CPU": 0.5}] + [{"CPU": 0.5}] * len(spec.args.components),
             ),
         )
 
@@ -199,7 +198,7 @@ class Tuner:
                 self._override_parameter(spec, self._parameters_dict[name], value)
 
             process = ProcessBuilder.build(spec)
-            asyncio.run(self._run_process(process))
+            run_coro_sync(self._run_process(process))
 
             return {obj.full_name: self._get_objective(process, obj) for obj in self._objective}
 
