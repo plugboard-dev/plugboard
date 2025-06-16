@@ -76,8 +76,12 @@ class RabbitMQChannel(SerdeChannel):
             await super().close()
             # TODO : Type annotations in aio-pika make no sense. Raise issue on repo.
             await self._send_exchange.channel.close()  # type: ignore
-        self._is_send_closed = True
-        self._is_recv_closed = True
+            self._send_exchange = None
+            self._is_send_closed = True
+        if self._recv_queue is not None:
+            await self._recv_queue.channel.close()
+            self._recv_queue = None
+            self._is_recv_closed = True
 
 
 class RabbitMQConnector(Connector):

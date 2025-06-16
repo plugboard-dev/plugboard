@@ -61,11 +61,10 @@ class Channel(ABC):
 
     async def close(self) -> None:
         """Closes the `Channel`."""
-        if self._is_send_closed:
-            return
-        await self.send(CHAN_CLOSE_MSG)
-        self._is_send_closed = True
-        self._logger.info("Channel closed")
+        if not self._is_send_closed:
+            await self.send(CHAN_CLOSE_MSG)
+            self._is_send_closed = True
+            self._logger.info("Channel closed")
 
     def _handle_send_wrapper(self) -> _t.Callable:
         self._send = self.send
@@ -87,6 +86,7 @@ class Channel(ABC):
                 raise ChannelClosedError("Attempted recv on closed channel.")
             msg = await self._recv()
             if msg == CHAN_CLOSE_MSG:
+                await self.close()
                 self._is_recv_closed = True
                 self._is_send_closed = True
                 raise ChannelClosedError("Attempted recv on closed channel.")

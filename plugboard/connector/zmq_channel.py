@@ -84,8 +84,10 @@ class ZMQChannel(SerdeChannel):
         if self._send_socket is not None:
             await super().close()
             self._send_socket.close()
+            self._send_socket = None
         if self._recv_socket is not None:
             self._recv_socket.close()
+            self._recv_socket = None
         self._is_send_closed = True
         self._is_recv_closed = True
 
