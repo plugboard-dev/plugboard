@@ -161,7 +161,5 @@ def diagram(
     with add_sys_path(config.parent):
         process = _build_process(config_spec)
     diagram = MermaidDiagram.from_process(process)
-    md = Markdown(
-        f"```\n{diagram.diagram}\n```\n[Editable diagram]({diagram.url}) (external link)"
-    )
+    md = Markdown(f"```\n{diagram.diagram}\n```\n[Editable diagram]({diagram.url}) (external link)")
     print(md)
