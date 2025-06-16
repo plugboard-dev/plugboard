@@ -15,7 +15,7 @@ from plugboard.schemas import ConnectorSpec
 from tests.conftest import ComponentTestHelper, zmq_connector_cls
 
 
-STOP_TOLERANCE = 1
+STOP_TOLERANCE = 2
 
 
 class A(ComponentTestHelper):

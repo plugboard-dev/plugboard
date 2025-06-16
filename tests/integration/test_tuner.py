@@ -46,7 +46,7 @@ async def test_tune(config: dict, mode: str, process_type: str, ray_ctx: None) -
                 upper=8,
             )
         ],
-        num_samples=4,
+        num_samples=5,
         mode=mode,
         max_concurrent=2,
         algorithm=OptunaSpec(),
@@ -104,7 +104,7 @@ async def test_multi_objective_tune(config: dict, ray_ctx: None) -> None:
                 categories=[1, -1],
             ),
         ],
-        num_samples=6,
+        num_samples=10,
         mode=["max", "min"],
         max_concurrent=2,
     )
