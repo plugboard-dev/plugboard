@@ -14,7 +14,7 @@ from plugboard.schemas.io import IODirection
 from plugboard.utils import DI
 
 
-if _t.TYPE_CHECKING:
+if _t.TYPE_CHECKING:  # pragma: no cover
     from plugboard.component import Component
 
 IO_NS_UNSET = "__UNSET__"

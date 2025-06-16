@@ -32,7 +32,7 @@ def run_coro_sync(coro: _t.Coroutine, timeout: _t.Optional[float] = None) -> _t.
     """
     try:
         loop = asyncio.get_running_loop()
-    except RuntimeError:
+    except RuntimeError:  # pragma: no cover
         # No loop running in current thread
         return asyncio.run(coro)
 
@@ -41,4 +41,4 @@ def run_coro_sync(coro: _t.Coroutine, timeout: _t.Optional[float] = None) -> _t.
         return _run_coro_in_thread(coro, timeout=timeout)
 
     # loop was obtained but is not running.
-    return loop.run_until_complete(coro)
+    return loop.run_until_complete(coro)  # pragma: no cover

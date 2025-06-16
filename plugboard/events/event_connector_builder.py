@@ -14,7 +14,7 @@ if _t.TYPE_CHECKING:
     from plugboard.connector import ConnectorBuilder
 
 
-class EventConnectorBuilder:
+class EventConnectorBuilder:  # pragma: no cover
     """`EventConnectorBuilder` constructs connectors for component event handlers."""
 
     _source_descriptor: str = "publishers"

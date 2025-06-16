@@ -108,7 +108,7 @@ class Process(ExportMixin, ABC):
             await self._state.destroy()
             await DI.tear_down()
             self._logger.info("Process destroyed")
-        except Exception as e:
+        except Exception as e:  # pragma: no cover
             self._logger.error(f"Error destroying process: {e}")
             raise
         finally:

@@ -55,9 +55,9 @@ async def _rabbitmq_conn(
         yield conn
     except aio_pika.exceptions.AMQPConnectionError as e:  # pragma: no cover
         logger.error(f"Failed to connect to RabbitMQ: {e}")
-    finally:
+    finally:  # pragma: no cover
         try:
-            await conn.close()  # pragma: no cover
+            await conn.close()
         except UnboundLocalError:
             pass
 

@@ -12,7 +12,7 @@ if _t.TYPE_CHECKING:
     from plugboard.events.event import Event
 
 
-class EventHandlers:
+class EventHandlers:  # pragma: no cover
     """`EventHandlers` provides a decorator for registering event handlers."""
 
     _handlers: _t.ClassVar[dict[str, dict[str, AsyncCallable]]] = defaultdict(dict)

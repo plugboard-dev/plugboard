@@ -14,7 +14,7 @@ from plugboard.exceptions import NotFoundError
 from plugboard.utils import DI, ExportMixin
 
 
-if _t.TYPE_CHECKING:
+if _t.TYPE_CHECKING:  # pragma: no cover
     from plugboard.component import Component
     from plugboard.connector import Connector
     from plugboard.process import Process

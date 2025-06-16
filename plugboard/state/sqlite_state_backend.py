@@ -14,7 +14,7 @@ from plugboard.state import sqlite_queries as q
 from plugboard.state.state_backend import StateBackend
 
 
-if _t.TYPE_CHECKING:
+if _t.TYPE_CHECKING:  # pragma: no cover
     from plugboard.component import Component
     from plugboard.connector import Connector
     from plugboard.process import Process
