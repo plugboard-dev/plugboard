@@ -16,6 +16,7 @@ def config() -> dict:
         return msgspec.yaml.decode(f.read())
 
 
+@pytest.mark.tuner
 @pytest.mark.asyncio
 @pytest.mark.parametrize("mode", ["min", "max"])
 @pytest.mark.parametrize("process_type", ["local", "ray"])
@@ -65,6 +66,7 @@ async def test_tune(config: dict, mode: str, process_type: str, ray_ctx: None) -
         assert best_result.metrics["c.in_1"] == 6
 
 
+@pytest.mark.tuner
 @pytest.mark.asyncio
 async def test_multi_objective_tune(config: dict, ray_ctx: None) -> None:
     """Tests multi-objective optimisation."""
