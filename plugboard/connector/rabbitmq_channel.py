@@ -79,6 +79,7 @@ class RabbitMQChannel(SerdeChannel):
             self._send_exchange = None
             self._is_send_closed = True
         if self._recv_queue is not None:
+            await self._recv_queue.delete(if_unused=False, if_empty=False)
             await self._recv_queue.channel.close()
             self._recv_queue = None
             self._is_recv_closed = True
