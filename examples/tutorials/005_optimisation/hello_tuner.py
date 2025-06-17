@@ -70,11 +70,11 @@ if __name__ == "__main__":
                     "type": "hello_tuner.Trajectory",
                     "args": {"name": "trajectory", "angle": 30, "velocity": 20},
                 },
-                {"type": "hello_tuner.MaxHeight", "args": {"name": "max_height"}},
+                {"type": "hello_tuner.MaxHeight", "args": {"name": "max-height"}},
             ],
             connectors=[
                 {"source": "horizontal.x", "target": "trajectory.x"},
-                {"source": "trajectory.y", "target": "max_height.y"},
+                {"source": "trajectory.y", "target": "max-height.y"},
             ],
         ),
         type="plugboard.process.LocalProcess",
@@ -86,7 +86,7 @@ if __name__ == "__main__":
     tuner = Tuner(
         objective=ObjectiveSpec(  # (1)!
             object_type="component",
-            object_name="max_height",
+            object_name="max-height",
             field_type="field",
             field_name="max_y",
         ),
