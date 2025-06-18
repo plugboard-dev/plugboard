@@ -55,8 +55,12 @@ class MaxHeight(Component):
 
     io = IO(inputs=["y"], outputs=["max_y"])
 
+    def __init__(self, **kwargs: _t.Unpack[ComponentArgsDict]) -> None:
+        super().__init__(**kwargs)
+        self.max_y: float = 0
+
     async def step(self) -> None:
-        self.max_y = max(self.y, self.max_y if self.max_y is not None else float("-inf"))  # type: ignore[has-type]
+        self.max_y = max(self.y, self.max_y)
 # --8<-- [end:components]
 
 
