@@ -116,5 +116,5 @@ if __name__ == "__main__":
     print(
         f"Best parameters: angle={result.config['trajectory.angle']}, velocity={result.config['trajectory.velocity']}"
     )
-    print(f"Best max height: {result.metrics['max_height.max_y']}")
+    print(f"Best max height: {result.metrics['max-height.max_y']}")
     # --8<-- [end:run_tuner]
