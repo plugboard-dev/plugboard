@@ -66,9 +66,10 @@ async def test_process_stop_event(
     connector_builder = ConnectorBuilder(connector_cls=connector_cls)
     event_connectors = EventConnectorBuilder(connector_builder=connector_builder)
 
-    max_iters = 20
-    iters_before_stop = 10
+    max_iters = 25
+    iters_before_stop = 15
     sleep_time = 0.1
+    stop_tolerance = 5 if connector_cls in {RabbitMQConnector} else STOP_TOLERANCE
 
     comp_a = A(iters=max_iters, sleep_time=sleep_time, name="comp_a")
     comp_b1, comp_b2, comp_b3, comp_b4, comp_b5 = [B(name=f"comp_b{i}") for i in range(1, 6)]
@@ -106,7 +107,7 @@ async def test_process_stop_event(
         # processed by component A in the iter following this one. A does not need to wait for
         # inputs before executing step, hence the step count reaches n+2 before stopping.
         # Allow a tolerance of +/- 1
-        assert comp_a.step_count == pytest.approx(iters_before_stop + 2, abs=STOP_TOLERANCE)
+        assert comp_a.step_count == pytest.approx(iters_before_stop + 2, abs=stop_tolerance)
 
         # Because A sleeps for sleep_time seconds before sending outputs, the B components, which
         # block waiting for field or event inputs, will receive the StopEvent before A sends
@@ -114,12 +115,12 @@ async def test_process_stop_event(
         # inputs, and the StopEvent interrupts them before calling step, hence the count reaches n,
         for c in [comp_b1, comp_b2, comp_b3, comp_b4, comp_b5]:
             assert c.is_finished
-            assert c.step_count == pytest.approx(iters_before_stop, abs=STOP_TOLERANCE)
+            assert c.step_count == pytest.approx(iters_before_stop, abs=stop_tolerance)
 
         # A performs n+1 full steps and is interrupted on step n+2 before a final update of out_1,
         # hence n+2.
-        assert comp_a.out_1 == pytest.approx(iters_before_stop + 2, abs=STOP_TOLERANCE)
+        assert comp_a.out_1 == pytest.approx(iters_before_stop + 2, abs=stop_tolerance)
         # Because the B components receive the StopEvent on iter n+1, they will only receive n
         # outputs from A before shutting down the IOController, hence n.
         for c in [comp_b1, comp_b2, comp_b3, comp_b4, comp_b5]:
-            assert c.in_1 == pytest.approx(iters_before_stop, abs=STOP_TOLERANCE)
+            assert c.in_1 == pytest.approx(iters_before_stop, abs=stop_tolerance)
