@@ -134,6 +134,7 @@ nav:
   - process: api/process/process.md
   - schemas: api/schemas/schemas.md
   - state: api/state/state.md
+  - tune: api/tune/tune.md
   - utils:
     - api/utils/index.md
     - settings: api/utils/settings/settings.md
