@@ -17,7 +17,7 @@ These capabilities are particularly useful when working with digital twins: for 
 As a simple example, we'll create a simple 3-component model to calculate the maximum height of a [projectile](https://en.wikipedia.org/wiki/Projectile_motion#Displacement) launched at a given angle and velocity.
 ```mermaid
  flowchart LR
-   horizonal@{ shape: rounded, label: Iterator<br>**horizonal** } --> trajectory@{ shape: rounded, label: Trajectory<br>**trajectory** }
+   horizontal@{ shape: rounded, label: Iterator<br>**horizontal** } --> trajectory@{ shape: rounded, label: Trajectory<br>**trajectory** }
    trajectory@{ shape: rounded, label: Trajectory<br>**trajectory** } --> max-height@{ shape: rounded, label: MaxHeight<br>**max-height** }
 ```
 

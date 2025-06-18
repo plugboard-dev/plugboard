@@ -4,7 +4,7 @@ plugboard:
       components:
       - type: hello_tuner.Iterator
         args:
-          name: horizonal
+          name: horizontal
           iters: 100
       - type: hello_tuner.Trajectory
         args:
@@ -15,7 +15,7 @@ plugboard:
         args:
           name: max-height
       connectors:
-      - source: horizonal.x
+      - source: horizontal.x
         target: trajectory.x
       - source: trajectory.y
         target: max-height.y
