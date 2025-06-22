@@ -1,0 +1,6 @@
+coverage:
+  status:
+    project:
+      default:
+        target: auto
+        threshold: 5  # All 5% drop in coverage
