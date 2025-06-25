@@ -23,7 +23,7 @@ class Status(StrEnum):
         WAITING: The `Component` or `Process` is waiting for input.
         COMPLETED: The `Component` or `Process` has completed successfully.
         FAILED: The `Component` or `Process` has failed.
-        CANCELLED: The `Component` or `Process` has been cancelled.
+        STOPPED: The `Component` or `Process` has been cancelled or stopped.
     """
 
     CREATED = "created"
@@ -32,12 +32,12 @@ class Status(StrEnum):
     WAITING = "waiting"
     COMPLETED = "completed"
     FAILED = "failed"
-    CANCELLED = "cancelled"
+    STOPPED = "stopped"
 
     @property
     def is_terminal(self) -> bool:
         """Returns whether the status is terminal."""
-        return self in {self.COMPLETED, self.FAILED, self.CANCELLED}
+        return self in {self.COMPLETED, self.FAILED, self.STOPPED}
 
 
 class StateBackendArgsDict(_t.TypedDict):
