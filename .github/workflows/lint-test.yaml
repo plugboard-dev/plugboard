@@ -86,6 +86,8 @@ jobs:
 
       - name: Run unit tests
         run: COVERAGE_FILE=.coverage.py${{ matrix.python_version }}.unit uv run coverage run -m pytest ./tests/unit/
+        env:
+          RAY_ENABLE_UV_RUN_RUNTIME_ENV: 0
 
       - name: Upload unit test coverage
         uses: actions/upload-artifact@v4
@@ -128,6 +130,7 @@ jobs:
         run: COVERAGE_FILE=.coverage.py${{ matrix.python_version }}.integration uv run coverage run -m pytest ./tests/integration/ -m "not tuner"
         env:
           RABBITMQ_URL: amqp://user:password@localhost:5672/
+          RAY_ENABLE_UV_RUN_RUNTIME_ENV: 0
 
       - name: Upload integration test coverage
         uses: actions/upload-artifact@v4
@@ -170,6 +173,7 @@ jobs:
         run: COVERAGE_FILE=.coverage.py${{ matrix.python_version }}.integration.tuner uv run coverage run -m pytest ./tests/integration/ -m "tuner"
         env:
           RABBITMQ_URL: amqp://user:password@localhost:5672/
+          RAY_ENABLE_UV_RUN_RUNTIME_ENV: 0
 
       - name: Upload integration test coverage
         uses: actions/upload-artifact@v4
