@@ -250,7 +250,7 @@ class Component(ABC, ExportMixin):
                         await self._step()
                     except Exception as e:
                         await self._set_status(Status.FAILED)
-                        self._logger.exception("Component step failed", exc_info=e)
+                        self._logger.exception("Component step failed")
                         raise e
                 self._bind_outputs()
                 await self.io.write()
