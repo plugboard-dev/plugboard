@@ -37,7 +37,7 @@ class _RabbitMQSettings(BaseSettings):
     """RabbitMQ settings.
 
     Attributes:
-        url: The URL of the RabbitMQ server.
+        url: The URL of the RabbitMQ server. Should contain credentials if required.
     """
 
     model_config = SettingsConfigDict(env_prefix="RABBITMQ_")

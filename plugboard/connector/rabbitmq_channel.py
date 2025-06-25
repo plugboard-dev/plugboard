@@ -27,7 +27,7 @@ from plugboard.utils import DI, gen_rand_str
 
 
 class RabbitMQChannel(SerdeChannel):
-    """`RabbitMQ` channel for sending and receiving messages via RabbitMQ AMQP broker."""
+    """`RabbitMQChannel` for sending and receiving messages via RabbitMQ AMQP broker."""
 
     def __init__(
         self,
@@ -37,6 +37,18 @@ class RabbitMQChannel(SerdeChannel):
         topic: str = "",
         **kwargs: _t.Any,
     ) -> None:
+        """Instantiates a `RabbitMQChannel`.
+
+        Uses RabbitMQ AMQP message broker to provide communication between components
+        on different processes. Requires a RabbitMQ broker to be running with the url
+        (and credentials if required) set in the `RABBITMQ_URL` environment variable.
+
+        Args:
+            send_exchange: Optional; The RabbitMQ exchange for sending messages.
+            recv_queue: Optional; The RabbitMQ queue for receiving messages.
+            topic: Optional; The topic for the `RabbitMQChannel`, defaults to an empty string.
+                Only relevant in the case of pub-sub mode channels.
+        """
         super().__init__(*args, **kwargs)
         self._send_exchange: _t.Optional[AbstractExchange] = send_exchange
         self._recv_queue: _t.Optional[AbstractQueue] = recv_queue
@@ -86,7 +98,12 @@ class RabbitMQChannel(SerdeChannel):
 
 
 class RabbitMQConnector(Connector):
-    """`RabbitMQConnector` connects components via RabbitMQ AMQP broker."""
+    """`RabbitMQConnector` connects components via RabbitMQ AMQP broker.
+
+    Uses exclusive queues for pub-sub mode to ensure that each subscriber
+    receives its own copy of each message. In direct mode, uses a single queue
+    for all subscribers, allowing them to share the same messages.
+    """
 
     def __init__(self, *args: _t.Any, **kwargs: _t.Any) -> None:
         super().__init__(*args, **kwargs)
