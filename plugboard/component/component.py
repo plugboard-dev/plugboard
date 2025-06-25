@@ -323,15 +323,17 @@ class Component(ABC, ExportMixin):
 
     async def run(self) -> None:
         """Executes component logic for all steps to completion."""
-        while True:
-            self._is_running = True
-            await self._set_status(Status.RUNNING)
-            try:
-                await self.step()
-            except IOStreamClosedError:
-                break
-        self._is_running = False
-        await self._set_status(Status.COMPLETED)
+        self._is_running = True
+        await self._set_status(Status.RUNNING)
+        try:
+            while True:
+                try:
+                    await self.step()
+                except IOStreamClosedError:
+                    break
+            await self._set_status(Status.COMPLETED)
+        finally:
+            self._is_running = False
 
     async def destroy(self) -> None:
         """Performs tear-down actions for `Component`."""
