@@ -1712,6 +1712,15 @@ What's new: 🚀 we've open-sourced Plugboard - please <a href="https://github.c
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#plugboard.utils.run_coro_sync" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;run_coro_sync
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -2885,6 +2894,31 @@ generate random strings for unique identifiers only.</p>
     <div class="doc doc-contents ">
 
         <p>Returns <code>True</code> if called from a Ray worker.</p>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h2 id="plugboard.utils.run_coro_sync" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-function"></code>            <span class="doc doc-object-name doc-function-name">run_coro_sync</span>
+
+
+</h2>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">run_coro_sync</span><span class="p">(</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    <span class="n">coro</span><span class="p">:</span> <span class="n">Coroutine</span><span class="p">,</span> <span class="n">timeout</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_t</span><span class="o">.</span><span class="n">Any</span>
+</span></code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Runs a coroutine synchronously, returning the result.</p>
+<p>This is useful for async code run from synchronous CLI entrypoints. In the
+test environment, it will run the coroutine in the current event loop, if
+present, otherwise it will create a new event loop for the coroutine.</p>
 
 
     </div>

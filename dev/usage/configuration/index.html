@@ -754,6 +754,24 @@ What's new: 🚀 we've open-sourced Plugboard - please <a href="https://github.c
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#message-brokers" class="md-nav__link">
+    <span class="md-ellipsis">
+      Message brokers
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#job-id" class="md-nav__link">
+    <span class="md-ellipsis">
+      Job ID
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -1544,6 +1562,24 @@ What's new: 🚀 we've open-sourced Plugboard - please <a href="https://github.c
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#message-brokers" class="md-nav__link">
+    <span class="md-ellipsis">
+      Message brokers
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#job-id" class="md-nav__link">
+    <span class="md-ellipsis">
+      Job ID
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -1566,7 +1602,7 @@ What's new: 🚀 we've open-sourced Plugboard - please <a href="https://github.c
   <h1>Configuration</h1>
 
 <h2 id="main-configuration-options">Main configuration options</h2>
-<p>Plugboard can either be configured via environment variables or using a <code>.env</code> file. Full details on the settings and feature flags can be found in <a class="autorefs autorefs-internal" title="            Settings" href="../../api/utils/settings/settings/#plugboard.utils.settings.Settings"><code>plugboard.utils.settings.Settings</code></a>.</p>
+<p>Plugboard can either be configured via shell environment variables or using a <code>.env</code> file. Full details on the settings and feature flags can be found in <a class="autorefs autorefs-internal" title="            Settings" href="../../api/utils/settings/settings/#plugboard.utils.settings.Settings"><code>plugboard.utils.settings.Settings</code></a>.</p>
 <h2 id="logging">Logging</h2>
 <p>Logging can be configured via the following environment variables:</p>
 <table>
@@ -1591,6 +1627,42 @@ What's new: 🚀 we've open-sourced Plugboard - please <a href="https://github.c
 </tbody>
 </table>
 <p>Plugboard uses <a href="https://www.structlog.org/en/stable/">structlog</a> as its logging library. For basic changes you can adjust the options above, but for more advanced configuration you may need to call <a href="https://www.structlog.org/en/stable/configuration.html"><code>structlog.configure()</code></a> and set the options yourself.</p>
+<h2 id="message-brokers">Message brokers</h2>
+<p>Plugboard can make use of a message broker for data exchange between components in a distributed setting such as a Ray cluster. To allow components to connect to a broker, a connection string containing the broker url (and credentials if required) should be set in the the environment. Below are the recognised environment variables for the supported message brokers. In general, only one broker would be used per plugboard run.</p>
+<table>
+<thead>
+<tr>
+<th>Option Name</th>
+<th>Description</th>
+<th>Default Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>RABBITMQ_URL</code></td>
+<td>URL for RabbitMQ AMQP message broker (must include credentials if required)</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<h2 id="job-id">Job ID</h2>
+<p>Each plugboard run has a unique job ID associated with it. This is used to: track state for each run; and separate data messages between runs when using a message broker. Typically, a run would be started without explicitly setting the job ID, in which case a unique job ID will be created automatically. However, there are instances when it may be desirable to specify the job ID, such as stopping a run and resuming the same run later with the existing persisted state. In these scenarios the job ID can be set with the below environment variable which will then be used by any <code>StateBackend</code>, <code>Process</code> and <code>Component</code> while the value is set.</p>
+<table>
+<thead>
+<tr>
+<th>Option Name</th>
+<th>Description</th>
+<th>Default Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>PLUGBOARD_JOB_ID</code></td>
+<td>Unique job ID for plugboard runs to track state and message broker topics</td>
+<td></td>
+</tr>
+</tbody>
+</table>
 
 
 
