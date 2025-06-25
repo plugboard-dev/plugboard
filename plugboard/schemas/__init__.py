@@ -19,7 +19,7 @@ from .connector import (
 from .entities import Entity
 from .io import IODirection
 from .process import ProcessArgsDict, ProcessArgsSpec, ProcessSpec
-from .state import StateBackendArgsDict, StateBackendArgsSpec, StateBackendSpec
+from .state import StateBackendArgsDict, StateBackendArgsSpec, StateBackendSpec, Status
 from .tune import (
     Direction,
     ObjectiveSpec,
@@ -55,6 +55,7 @@ __all__ = [
     "StateBackendSpec",
     "StateBackendArgsDict",
     "StateBackendArgsSpec",
+    "Status",
     "TuneArgsDict",
     "TuneArgsSpec",
     "TuneSpec",
