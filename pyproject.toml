@@ -46,7 +46,7 @@ llm = [
 ]
 # Pinning Ray due to hanging in Github Actions. Possibly related to:
 # https://github.com/ray-project/ray/issues/53848
-ray = ["ray[default,tune]>=2.42.1,<2.47", "optuna>=3.0,<4"]
+ray = ["ray[default,tune]>=2.42.1,<3", "optuna>=3.0,<4"]
 websockets = ["websockets>=14.2,<15"]
 
 [dependency-groups]
