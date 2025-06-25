@@ -41,9 +41,8 @@ jobs:
       - name: Install project
         id: install
         run: |
-          VERSION=$(uvx dunamai from git --style semver)
-          uvx --from=toml-cli toml set --toml-path=pyproject.toml project.version $VERSION
           uv sync --group docs
+          VERSION=$(uv run hatch version)
           echo "version=$VERSION" >> $GITHUB_OUTPUT
 
       - name: Set git credentials

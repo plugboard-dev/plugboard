@@ -1,6 +1,6 @@
 [project]
 name = "plugboard"
-version = "0.0.0"
+dynamic = ["version"]
 description = "Plugboard is an event driven modelling and orchestration framework for simulating and driving complex processes with many interconnected stateful components."
 readme = "README.md"
 license = "Apache-2.0"
@@ -51,6 +51,8 @@ websockets = ["websockets>=14.2,<15"]
 
 [dependency-groups]
 dev = [
+    "hatch>=1.14.1",
+    "hatch-vcs>=0.5.0",
     "ipython>=8.26,<9",
     "ipywidgets>=8.1.5,<9",
     "jupyterlab>=4.2,<5",
@@ -89,8 +91,11 @@ docs = [
 ]
 
 [build-system]
-requires = ["hatchling"]
+requires = ["hatchling", "hatch-vcs"]
 build-backend = "hatchling.build"
+
+[tool.hatch.version]
+source = "vcs"
 
 [tool.uv]
 package = true
