@@ -1,7 +1,12 @@
-"""Unit tests for the CLI."""
+"""Unit tests for the CLI.
+
+Note: Tests which run async code synchronously from CLI entrypoints must be
+marked async so that they do not interfere with pytest-asyncio's event loop.
+"""
 
 from unittest.mock import AsyncMock, MagicMock, patch
 
+import pytest
 from typer.testing import CliRunner
 
 from plugboard.cli import app
@@ -10,7 +15,8 @@ from plugboard.cli import app
 runner = CliRunner()
 
 
-def test_cli_process_run() -> None:
+@pytest.mark.asyncio
+async def test_cli_process_run() -> None:
     """Tests the process run command."""
     with patch("plugboard.cli.process.ProcessBuilder") as mock_process_builder:
         mock_process = AsyncMock()

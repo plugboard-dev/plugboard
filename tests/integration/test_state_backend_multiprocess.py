@@ -4,6 +4,7 @@ import asyncio
 import typing as _t
 
 import pytest
+import pytest_asyncio
 from ray.util.multiprocessing import Pool
 
 from plugboard.component import Component, IOController
@@ -57,7 +58,7 @@ class ConnectorTestHelper(ZMQConnector):
         return output
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def connectors() -> list[Connector]:
     """Returns a list of connectors."""
     return [
@@ -68,7 +69,7 @@ async def connectors() -> list[Connector]:
     ]
 
 
-@pytest.fixture(params=[setup_SqliteStateBackend, setup_RayStateBackend])
+@pytest_asyncio.fixture(params=[setup_SqliteStateBackend, setup_RayStateBackend])
 async def state_backend(request: pytest.FixtureRequest) -> _t.AsyncIterator[StateBackend]:
     """Returns a `StateBackend` instance."""
     state_backend_setup = request.param
@@ -91,6 +92,7 @@ async def test_state_backend_multiprocess(
     state_backend: StateBackend,  # noqa: F811
     components: list[Component],  # noqa: F811
     connectors: list[Connector],  # noqa: F811
+    ray_ctx: None,
 ) -> None:
     """Tests `StateBackend.upsert_process` method."""
     comp_a1, comp_a2, comp_b1, comp_b2 = components

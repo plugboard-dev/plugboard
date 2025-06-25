@@ -8,6 +8,8 @@ from collections import defaultdict, deque
 from functools import wraps
 import typing as _t
 
+from that_depends import ContextScopes, container_context
+
 from plugboard.component.io_controller import IOController as IO, IODirection
 from plugboard.events import Event, EventHandlers, StopEvent
 from plugboard.exceptions import (
@@ -69,11 +71,12 @@ class Component(ABC, ExportMixin):
             input_events=self.__class__.io.input_events,
             output_events=self.__class__.io.output_events,
             namespace=self.name,
+            component=self,
         )
         self._field_inputs: dict[str, _t.Any] = {}
         self._field_inputs_ready: bool = False
 
-        self._logger = DI.logger.sync_resolve().bind(cls=self.__class__.__name__, name=self.name)
+        self._logger = DI.logger.resolve_sync().bind(cls=self.__class__.__name__, name=self.name)
         self._logger.info("Component created")
 
     def __init_subclass__(cls, *args: _t.Any, **kwargs: _t.Any) -> None:
@@ -154,6 +157,25 @@ class Component(ABC, ExportMixin):
         """State backend for the process."""
         return self._state
 
+    def _job_id_ctx(self) -> container_context:
+        """Sets job ID context from state backend.
+
+        Required for all Component entry points to ensure job ID is available when
+        executing on Ray workers. As Ray remote function calls are executed in
+        separate asyncio.Tasks, and ContextVars are local to asyncio.Tasks, the
+        job ID context must be set for each remote function call.
+        """
+        job_id = self._state.job_id if self._state else None
+        cm = container_context(
+            DI,
+            global_context={"job_id": job_id},
+            scope=ContextScopes.APP,
+            preserve_global_context=True,
+        )
+        with cm:
+            self._logger = self._logger.bind(job_id=job_id)
+        return cm
+
     async def connect_state(self, state: _t.Optional[StateBackend] = None) -> None:
         """Connects the `Component` to the `StateBackend`."""
         try:
@@ -166,8 +188,9 @@ class Component(ABC, ExportMixin):
         self._state = state or self._state
         if self._state is None:
             return
-        await self._state.upsert_component(self)
-        self._state_is_connected = True
+        with self._job_id_ctx():
+            await self._state.upsert_component(self)
+            self._state_is_connected = True
 
     async def init(self) -> None:
         """Performs component initialisation actions."""
@@ -178,9 +201,10 @@ class Component(ABC, ExportMixin):
 
         @wraps(self.init)
         async def _wrapper() -> None:
-            await self._init()
-            if self._state is not None and self._state_is_connected:
-                await self._state.upsert_component(self)
+            with self._job_id_ctx():
+                await self._init()
+                if self._state is not None and self._state_is_connected:
+                    await self._state.upsert_component(self)
 
         return _wrapper
 
@@ -208,14 +232,15 @@ class Component(ABC, ExportMixin):
 
         @wraps(self.step)
         async def _wrapper() -> None:
-            await self.io.read()
-            await self._handle_events()
-            self._bind_inputs()
-            if self._can_step:
-                await self._step()
-            self._bind_outputs()
-            await self.io.write()
-            self._field_inputs_ready = False
+            with self._job_id_ctx():
+                await self.io.read()
+                await self._handle_events()
+                self._bind_inputs()
+                if self._can_step:
+                    await self._step()
+                self._bind_outputs()
+                await self.io.write()
+                self._field_inputs_ready = False
 
         return _wrapper
 
@@ -290,6 +315,8 @@ class Component(ABC, ExportMixin):
 
     async def destroy(self) -> None:
         """Performs tear-down actions for `Component`."""
+        self._state = None
+        self._state_is_connected = False
         self._logger.info("Component destroyed")
 
     def dict(self) -> dict[str, _t.Any]:  # noqa: D102
