@@ -241,7 +241,12 @@ class Component(ABC, ExportMixin):
                 await self._handle_events()
                 self._bind_inputs()
                 if self._can_step:
-                    await self._step()
+                    try:
+                        await self._step()
+                    except Exception as e:
+                        self.status = Status.FAILED
+                        self._logger.exception("Component step failed", exc_info=e)
+                        raise e
                 self._bind_outputs()
                 await self.io.write()
                 self._field_inputs_ready = False
