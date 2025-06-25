@@ -18,8 +18,9 @@ class Status(StrEnum):
 
     Attributes:
         CREATED: The `Component` or `Process` has been created but not yet started.
-        INIT: The `Component` or `Process` has been initialised.
+        INIT: The `Component` or `Process` has been initialised but has not started running.
         RUNNING: The `Component` or `Process` is currently running.
+        WAITING: The `Component` or `Process` is waiting for input.
         COMPLETED: The `Component` or `Process` has completed successfully.
         FAILED: The `Component` or `Process` has failed.
         CANCELLED: The `Component` or `Process` has been cancelled.
@@ -28,6 +29,7 @@ class Status(StrEnum):
     CREATED = "created"
     INIT = "init"
     RUNNING = "running"
+    WAITING = "waiting"
     COMPLETED = "completed"
     FAILED = "failed"
     CANCELLED = "cancelled"
