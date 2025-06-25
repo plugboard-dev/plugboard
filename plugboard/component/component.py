@@ -18,6 +18,7 @@ from plugboard.exceptions import (
     UnrecognisedEventError,
     ValidationError,
 )
+from plugboard.schemas.state import Status
 from plugboard.state import StateBackend
 from plugboard.utils import DI, ClassRegistry, ExportMixin, is_on_ray_worker
 
@@ -73,6 +74,7 @@ class Component(ABC, ExportMixin):
             namespace=self.name,
             component=self,
         )
+        self.status = Status.CREATED
         self._field_inputs: dict[str, _t.Any] = {}
         self._field_inputs_ready: bool = False
 
@@ -203,6 +205,7 @@ class Component(ABC, ExportMixin):
         async def _wrapper() -> None:
             with self._job_id_ctx():
                 await self._init()
+                self.status = Status.INIT
                 if self._state is not None and self._state_is_connected:
                     await self._state.upsert_component(self)
 
@@ -233,6 +236,7 @@ class Component(ABC, ExportMixin):
         @wraps(self.step)
         async def _wrapper() -> None:
             with self._job_id_ctx():
+                self.status = Status.RUNNING
                 await self.io.read()
                 await self._handle_events()
                 self._bind_inputs()
@@ -241,6 +245,7 @@ class Component(ABC, ExportMixin):
                 self._bind_outputs()
                 await self.io.write()
                 self._field_inputs_ready = False
+                self.status = Status.WAITING
 
         return _wrapper
 
@@ -312,6 +317,7 @@ class Component(ABC, ExportMixin):
                 await self.step()
             except IOStreamClosedError:
                 break
+        self.status = Status.COMPLETED
 
     async def destroy(self) -> None:
         """Performs tear-down actions for `Component`."""
