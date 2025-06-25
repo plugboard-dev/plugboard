@@ -94,7 +94,7 @@ class Component(ABC, ExportMixin):
     async def _set_status(self, status: Status, publish: bool = True) -> None:
         """Sets the status of the component and optionaly publishes it to the state backend."""
         self.status = status
-        if self._state and self._state_is_connected:
+        if publish and self._state and self._state_is_connected:
             await self._state.upsert_component(self)
 
     @classmethod
