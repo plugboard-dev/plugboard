@@ -10,6 +10,7 @@ from async_lru import alru_cache
 import msgspec
 
 from plugboard.exceptions import NotFoundError
+from plugboard.schemas.state import Status
 from plugboard.state import sqlite_queries as q
 from plugboard.state.state_backend import StateBackend
 
@@ -216,7 +217,7 @@ class SqliteStateBackend(StateBackend):
             raise NotFoundError(f"Connector with id {connector_id} not found.")
         return connector
 
-    async def update_process_status(self, process_id: str, status: str) -> None:
+    async def update_process_status(self, process_id: str, status: Status) -> None:
         """Updates the status of a process in the state."""
         process_db_id = self._get_db_id(process_id)
-        await self._execute(q.UPDATE_PROCESS_STATUS, (status, process_db_id))
+        await self._execute(q.UPDATE_PROCESS_STATUS, (str(status), process_db_id))
