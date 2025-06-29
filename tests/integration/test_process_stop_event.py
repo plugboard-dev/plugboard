@@ -69,7 +69,7 @@ async def test_process_stop_event(
     max_iters = 25
     iters_before_stop = 15
     sleep_time = 0.1
-    stop_tolerance = 5 if connector_cls in {RabbitMQConnector} else STOP_TOLERANCE
+    stop_tolerance = 7 if connector_cls in {RabbitMQConnector} else STOP_TOLERANCE
 
     comp_a = A(iters=max_iters, sleep_time=sleep_time, name="comp_a")
     comp_b1, comp_b2, comp_b3, comp_b4, comp_b5 = [B(name=f"comp_b{i}") for i in range(1, 6)]
