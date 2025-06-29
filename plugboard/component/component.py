@@ -26,6 +26,9 @@ from plugboard.utils import DI, ClassRegistry, ExportMixin, is_on_ray_worker
 _io_key_in: str = str(IODirection.INPUT)
 _io_key_out: str = str(IODirection.OUTPUT)
 
+# Component IO read timeout in seconds
+IO_READ_TIMEOUT_SECONDS = 20.0
+
 
 class Component(ABC, ExportMixin):
     """`Component` base class for all components in a process model.
@@ -242,7 +245,35 @@ class Component(ABC, ExportMixin):
         async def _wrapper() -> None:
             with self._job_id_ctx():
                 await self._set_status(Status.RUNNING, publish=not self._is_running)
-                await self.io.read()
+                # Keep trying to read until successful or process failure
+                read_successful = False
+                while not read_successful:
+                    try:
+                        # Try io.read() with timeout
+                        await asyncio.wait_for(self.io.read(), timeout=IO_READ_TIMEOUT_SECONDS)
+                        read_successful = True
+                    except asyncio.TimeoutError:
+                        # If timeout, check process status
+                        if self._state and self._state_is_connected:
+                            try:
+                                # Get the process ID from the state backend
+                                process_id = await self._state._get(("_comp_proc_map", self.id))
+                                if not process_id:
+                                    # If no process ID, just log and continue trying
+                                    self._logger.warning("No process ID found for component")
+                                else:
+                                    # Check the process status
+                                    process_status = await self._state.get_process_status(
+                                        process_id
+                                    )
+                                    if process_status == Status.FAILED:
+                                        # If the process has failed, stop this component
+                                        await self._set_status(Status.STOPPED)
+                                        return
+                            except Exception as e:
+                                self._logger.warning(f"Failed to check process status: {e}")
+                                # Continue trying to read even if checking status failed
+
                 await self._handle_events()
                 self._bind_inputs()
                 if self._can_step:
