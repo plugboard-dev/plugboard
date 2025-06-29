@@ -11,6 +11,7 @@ import typing as _t
 from that_depends import ContextScopes, Provide, container_context, inject
 
 from plugboard.exceptions import NotFoundError
+from plugboard.schemas.state import Status
 from plugboard.utils import DI, ExportMixin
 
 
@@ -194,6 +195,7 @@ class StateBackend(ABC, ExportMixin):
         key = self._connector_key(process_id, connector_id)
         return await self._get(key)
 
-    async def update_process_status(self, process_id: str, status: str) -> None:
+    async def update_process_status(self, process_id: str, status: Status) -> None:
         """Updates the status of a process in the state."""
-        pass
+        process_status_key = self._process_key(process_id) + ("status",)
+        await self._set(process_status_key, str(status))
