@@ -89,3 +89,9 @@ class ValidationError(Exception):
     """Raised when an invalid `Process` or `Component` is encountered."""
 
     pass
+
+
+class ConstraintError(Exception):
+    """Raised when a constraint is violated."""
+
+    pass
