@@ -221,3 +221,12 @@ class SqliteStateBackend(StateBackend):
         """Updates the status of a process in the state."""
         process_db_id = self._get_db_id(process_id)
         await self._execute(q.UPDATE_PROCESS_STATUS, (str(status), process_db_id))
+
+    async def get_process_status(self, process_id: str) -> Status:
+        """Gets the status of a process from the state."""
+        process_db_id = self._get_db_id(process_id)
+        row = await self._fetchone(q.GET_PROCESS_STATUS, (process_db_id,))
+        if row is None:
+            raise NotFoundError(f"Process with id {process_db_id} not found.")
+        status_str = row["status"]
+        return Status(status_str)

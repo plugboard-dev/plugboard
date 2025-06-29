@@ -202,3 +202,9 @@ class StateBackend(ABC, ExportMixin):
         """Updates the status of a process in the state."""
         process_status_key = self._process_key(process_id) + ("status",)
         await self._set(process_status_key, str(status))
+
+    async def get_process_status(self, process_id: str) -> Status:
+        """Gets the status of a process from the state."""
+        process_status_key = self._process_key(process_id) + ("status",)
+        status_str = await self._get(process_status_key)
+        return Status(status_str)

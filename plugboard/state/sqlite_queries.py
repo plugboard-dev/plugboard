@@ -138,3 +138,9 @@ UPDATE_PROCESS_STATUS: str = dedent(
     UPDATE process SET data = json_set(data, '$.status', ?) WHERE id = ?;
     """
 )
+
+GET_PROCESS_STATUS: str = dedent(
+    """\
+    SELECT json_extract(data, '$.status') AS status FROM process WHERE id = ?;
+    """
+)
