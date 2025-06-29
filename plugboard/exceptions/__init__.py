@@ -89,3 +89,9 @@ class ValidationError(Exception):
     """Raised when an invalid `Process` or `Component` is encountered."""
 
     pass
+
+
+class ProcessStatusError(Exception):
+    """Raised when a `Process` is in an invalid state for the requested operation."""
+
+    pass
