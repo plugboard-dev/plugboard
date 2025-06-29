@@ -349,6 +349,7 @@ class Component(ABC, ExportMixin):
         return {
             "id": self.id,
             "name": self.name,
+            "status": self.status,
             **field_data,
             "exports": {name: getattr(self, name, None) for name in self.exports or []},
         }
