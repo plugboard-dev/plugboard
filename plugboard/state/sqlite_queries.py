@@ -132,3 +132,9 @@ GET_CONNECTORS_FOR_PROCESS: str = dedent(
     SELECT id, data FROM connector WHERE process_id = ?;
     """
 )
+
+UPDATE_PROCESS_STATUS: str = dedent(
+    """\
+    UPDATE process SET data = json_set(data, '$.status', ?) WHERE id = ?;
+    """
+)

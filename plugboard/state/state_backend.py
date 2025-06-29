@@ -193,3 +193,7 @@ class StateBackend(ABC, ExportMixin):
         process_id = await self._get(("_conn_proc_map", connector_id))
         key = self._connector_key(process_id, connector_id)
         return await self._get(key)
+
+    async def update_process_status(self, process_id: str, status: str) -> None:
+        """Updates the status of a process in the state."""
+        pass
