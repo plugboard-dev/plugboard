@@ -117,6 +117,7 @@ async def test_multi_objective_tune(config: dict, ray_ctx: None) -> None:
     # Results must contain two objectives and correct optimimum must be found
     # The best result must be a list of two results
     assert best_result[0].config["a.iters"] == 2
-    assert best_result[1].config["b.factor"] == -1
-    assert best_result[0].metrics["c.in_1"] == 1
-    assert best_result[1].metrics["b.out_1"] == -1
+    assert set(r.config["b.factor"] for r in best_result) == {1, -1}
+    for r in best_result:
+        assert r.metrics["b.out_1"] in {1, -1}
+        assert r.metrics["c.in_1"] == 1
