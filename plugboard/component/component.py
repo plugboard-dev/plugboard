@@ -15,6 +15,7 @@ from plugboard.events import Event, EventHandlers, StopEvent
 from plugboard.exceptions import (
     IOSetupError,
     IOStreamClosedError,
+    ProcessStatusError,
     UnrecognisedEventError,
     ValidationError,
 )
@@ -245,21 +246,7 @@ class Component(ABC, ExportMixin):
         async def _wrapper() -> None:
             with self._job_id_ctx():
                 await self._set_status(Status.RUNNING, publish=not self._is_running)
-                while True:
-                    try:
-                        await asyncio.wait_for(self.io.read(), timeout=IO_READ_TIMEOUT_SECONDS)
-                        break
-                    except asyncio.TimeoutError:
-                        if self._state and self._state_is_connected:
-                            try:
-                                process_status = await self._state.get_process_status_for_component(
-                                    self.id
-                                )
-                                if process_status == Status.FAILED:
-                                    await self._set_status(Status.STOPPED)
-                                    return
-                            except Exception as e:
-                                self._logger.warning(f"Failed to check process status: {e}")
+                await self._io_read_with_status_check()
                 await self._handle_events()
                 self._bind_inputs()
                 if self._can_step:
@@ -275,6 +262,18 @@ class Component(ABC, ExportMixin):
                 await self._set_status(Status.WAITING, publish=not self._is_running)
 
         return _wrapper
+
+    async def _io_read_with_status_check(self) -> None:
+        while True:
+            try:
+                await asyncio.wait_for(self.io.read(), timeout=IO_READ_TIMEOUT_SECONDS)
+                break
+            except asyncio.TimeoutError:
+                if self._state and self._state_is_connected:
+                    process_status = await self._state.get_process_status_for_component(self.id)
+                    if process_status == Status.FAILED:
+                        await self._set_status(Status.STOPPED)
+                        raise ProcessStatusError(f"Process in failed state for component {self.id}")
 
     def _bind_inputs(self) -> None:
         """Binds input fields to component fields.
