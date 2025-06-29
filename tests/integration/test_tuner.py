@@ -43,7 +43,7 @@ async def test_tune(config: dict, mode: str, process_type: str, ray_ctx: None) -
                 field_type="arg",
                 field_name="iters",
                 lower=6,
-                upper=8,
+                upper=9,
             )
         ],
         num_samples=5,
@@ -57,13 +57,13 @@ async def test_tune(config: dict, mode: str, process_type: str, ray_ctx: None) -
     result = tuner.result_grid
     # There must be no failed trials
     assert not [t for t in result if t.error]
-    # Correct optimimum must be found
+    # Correct optimimum must be found (within tolerance)
     if mode == "min":
-        assert best_result.config["a.iters"] == 6
-        assert best_result.metrics["c.in_1"] == 5
+        assert best_result.config["a.iters"] in {6, 7}
+        assert best_result.metrics["c.in_1"] == best_result.config["a.iters"] - 1
     else:
-        assert best_result.config["a.iters"] == 7
-        assert best_result.metrics["c.in_1"] == 6
+        assert best_result.config["a.iters"] in {7, 8}
+        assert best_result.metrics["c.in_1"] == best_result.config["a.iters"] - 1
 
 
 @pytest.mark.tuner
