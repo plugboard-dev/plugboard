@@ -7,8 +7,10 @@ import typing as _t
 from unittest.mock import patch
 
 import pytest
+import pytest_asyncio
 import pytest_cases
 import ray
+from that_depends import ContextScopes, container_context
 
 from plugboard.component import Component, IOController as IO
 from plugboard.component.io_controller import IOStreamClosedError
@@ -28,18 +30,28 @@ def mp_set_start_method() -> None:
 
 
 @pytest.fixture(scope="session")
-def ray_context() -> _t.Iterator[None]:
+def ray_ctx() -> _t.Iterator[None]:
     """Initialises and shuts down Ray."""
     ray.init(num_cpus=2, num_gpus=0, include_dashboard=False)
     yield
     ray.shutdown()
 
 
-@pytest.fixture(scope="function", autouse=True)
-async def DI_teardown() -> _t.AsyncIterable[None]:
+@pytest.fixture(scope="function")
+def job_id_ctx() -> _t.Iterator[str]:
+    """Enters the container context with the job_id."""
+    with container_context(DI, global_context={"job_id": None}, scope=ContextScopes.APP):
+        job_id = DI.job_id.resolve_sync()
+        yield job_id
+
+
+@pytest_asyncio.fixture(scope="function", autouse=True)
+async def DI_teardown() -> _t.AsyncGenerator[None, None]:
     """Cleans up any resources created in DI container after each test."""
-    yield
-    await DI.tear_down()
+    try:
+        yield
+    finally:
+        await DI.tear_down()
 
 
 @pytest_cases.fixture
@@ -54,9 +66,9 @@ def zmq_connector_cls(zmq_pubsub_proxy: bool) -> _t.Iterator[_t.Type[ZMQConnecto
         {"PLUGBOARD_FLAGS_ZMQ_PUBSUB_PROXY": str(zmq_pubsub_proxy)},
     ):
         testing_settings = Settings()
-        DI.settings.override(testing_settings)
+        DI.settings.override_sync(testing_settings)
         yield ZMQConnector
-        DI.settings.reset_override()
+        DI.settings.reset_override_sync()
 
 
 class ComponentTestHelper(Component, ABC):

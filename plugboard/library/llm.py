@@ -19,7 +19,7 @@ try:
 except ImportError:
     pass
 
-if _t.TYPE_CHECKING:
+if _t.TYPE_CHECKING:  # pragma: no cover
     from llama_index.core.llms import LLM
 
 

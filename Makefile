@@ -1,87 +1,65 @@
 SHELL := /bin/bash
+VENV := .venv
 PROJECT := plugboard
-PYTHON_VERSION ?= 3.12
-WITH_PYENV := $(shell which pyenv > /dev/null && echo true || echo false)
-VENV_NAME := $(PROJECT)-$(PYTHON_VERSION)
-VIRTUAL_ENV ?= $(shell $(WITH_PYENV) && echo $(shell pyenv root)/versions/$(VENV_NAME) || echo $(PWD)/.venv)
-VENV := $(VIRTUAL_ENV)
+PYTHON_VERSION ?= 3.13
+PY := python$(PYTHON_VERSION)
 SRC := ./plugboard
 TESTS := ./tests
-
-PYTHON := $(VENV)/bin/python
 # Windows compatibility
 ifeq ($(OS), Windows_NT)
-    PYTHON := $(VENV)/Scripts/python
+    PY := python
 endif
-
-.EXPORT_ALL_VARIABLES:
-VIRTUAL_ENV = $(VENV)
-PATH = $(VENV)/bin:$(shell echo $$PATH)
-POETRY_VIRTUALENVS_PREFER_ACTIVE_PYTHON = true
-POETRY_VIRTUALENVS_CREATE = false
-POETRY_VIRTUALENVS_IN_PROJECT = true
 
 .PHONY: all
 all: lint test
 
 .PHONY: clean
 clean:
-	$(WITH_PYENV) && pyenv virtualenv-delete -f $(VENV_NAME) || rm -rf $(VENV)
-	$(WITH_PYENV) && pyenv local --unset || true
-	rm -f poetry.lock
+	rm -rf $(VENV)
+	rm -f uv.lock
 	find $(SRC) -type f -name *.pyc -delete
 	find $(SRC) -type d -name __pycache__ -delete
 
 $(VENV):
-	$(WITH_PYENV) && pyenv install -s $(PYTHON_VERSION) || true
-	$(WITH_PYENV) && pyenv virtualenv $(PYTHON_VERSION) $(VENV_NAME) || python$(PYTHON_VERSION) -m venv $(VENV)
-	$(WITH_PYENV) && pyenv local $(VENV_NAME) || true
+	uv venv ${VENV} --python $(PY)
+	mkdir -p $(VENV)/.stamps
 	@touch $@
 
-$(VENV)/.stamps/init-poetry: $(VENV)
-	$(PYTHON) -m pip install --upgrade pip setuptools poetry poetry-dynamic-versioning[plugin]
-	@mkdir -p $(VENV)/.stamps
+$(VENV)/.stamps/init: $(VENV) pyproject.toml
+	uv sync --all-extras --all-groups
 	@touch $@
-
-$(VENV)/.stamps/install: $(VENV)/.stamps/init-poetry pyproject.toml
-	$(PYTHON) -m poetry install --with docs
-	@mkdir -p $(VENV)/.stamps
-	@touch $@
-
-.PHONY: install
-install: $(VENV)/.stamps/install
 
 .PHONY: init
-init: install
+init: $(VENV)/.stamps/init
 
 .PHONY: lint
 lint: init
-	$(PYTHON) -m ruff check
-	$(PYTHON) -m ruff format --check
-	$(PYTHON) -m mypy $(SRC)/ --explicit-package-bases
-	$(PYTHON) -m mypy $(TESTS)/
+	uv run ruff check
+	uv run ruff format --check
+	uv run mypy $(SRC)/ --explicit-package-bases
+	uv run mypy $(TESTS)/
 
 .PHONY: test
 test: init
-	$(PYTHON) -m pytest -rs $(TESTS)/ --ignore=$(TESTS)/smoke
+	uv run pytest -rs $(TESTS)/ --ignore=$(TESTS)/smoke
+
+.PHONY: build
+build: $(VENV)
+	uv build
 
 .PHONY: docs
 docs: $(VENV)
-	$(PYTHON) -m mkdocs build
+	uv run -m mkdocs build
 
 MKDOCS_PORT ?= 8000
 .PHONY: docs-serve
 docs-serve: $(VENV) docs
-	$(PYTHON) -m mkdocs serve -a localhost:$(MKDOCS_PORT)
-
-.PHONY: build
-build: $(VENV) docs
-	$(PYTHON) -m poetry build
+	uv run -m mkdocs serve -a localhost:$(MKDOCS_PORT)
 
 GIT_HASH_SHORT ?= $(shell git rev-parse --short HEAD)
 GIT_BRANCH ?= $(shell git rev-parse --abbrev-ref HEAD | tr / -)
 BUILD_DATE = $(shell date -u -Iseconds)
-PACKAGE_VERSION ?= $(shell poetry version -s)
+PACKAGE_VERSION ?= $(shell uv run hatch version)
 PACKAGE_VERSION_DOCKER_SAFE = $(shell echo $(PACKAGE_VERSION) | tr + .)
 
 DOCKER_FILE ?= Dockerfile
@@ -90,13 +68,15 @@ DOCKER_IMAGE ?= plugboard
 DOCKER_REGISTRY_IMAGE=${DOCKER_REGISTRY}/plugboard-dev/${DOCKER_IMAGE}
 
 requirements.txt: $(VENV) pyproject.toml
-	$(PYTHON) -m poetry export -f requirements.txt -o requirements.txt --without-hashes
+	uv export --all-extras --format requirements-txt --no-hashes --no-editable --no-dev --no-emit-project > requirements.txt
 	@touch $@
 
 .PHONY: docker-build
 docker-build: ${DOCKER_FILE} requirements.txt
-	docker build . \
+	docker buildx build . \
 	  -f ${DOCKER_FILE} \
+  	  --provenance=false \
+	  --cache-from ${DOCKER_IMAGE}:latest \
 	  --build-arg semver=$(PACKAGE_VERSION) \
 	  --build-arg git_hash_short=$(GIT_HASH_SHORT) \
 	  --build-arg git_branch=$(GIT_BRANCH) \
@@ -108,7 +88,7 @@ docker-build: ${DOCKER_FILE} requirements.txt
 	  -t ${DOCKER_REGISTRY_IMAGE}:${PACKAGE_VERSION_DOCKER_SAFE} \
 	  -t ${DOCKER_REGISTRY_IMAGE}:${GIT_HASH_SHORT} \
 	  -t ${DOCKER_REGISTRY_IMAGE}:${GIT_BRANCH} \
-	  --progress=plain 2>&1 | tee docker-build.log
+	  --progress=plain
 
 .PHONY: docker-login
 docker-login:

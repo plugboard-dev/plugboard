@@ -84,8 +84,10 @@ class ZMQChannel(SerdeChannel):
         if self._send_socket is not None:
             await super().close()
             self._send_socket.close()
+            self._send_socket = None
         if self._recv_socket is not None:
             self._recv_socket.close()
+            self._recv_socket = None
         self._is_send_closed = True
         self._is_recv_closed = True
 
@@ -308,27 +310,23 @@ class _ZMQPubsubConnectorProxy(_ZMQConnector):
             return self._send_channel
         send_socket = create_socket(zmq.PUB, [(zmq.SNDHWM, self._maxsize)])
         send_socket.connect(self._zmq_proxy.xsub_addr)
-        await asyncio.sleep(0.1)  # Ensure connections established before first send. Better way?
         self._send_channel = ZMQChannel(
             send_socket=send_socket, topic=self._topic, maxsize=self._maxsize
         )
+        await asyncio.sleep(0.1)  # Ensure connections established before first send. Better way?
         return self._send_channel
 
     async def connect_recv(self) -> ZMQChannel:
         """Returns a `ZMQChannel` for receiving pubsub messages."""
-        if self._recv_channel is not None:
-            return self._recv_channel
         socket_opts: zmq_sockopts_t = [
             (zmq.RCVHWM, self._maxsize),
             (zmq.SUBSCRIBE, self._topic.encode("utf8")),
         ]
         recv_socket = create_socket(zmq.SUB, socket_opts)
         recv_socket.connect(self._zmq_proxy.xpub_addr)
+        recv_channel = ZMQChannel(recv_socket=recv_socket, topic=self._topic, maxsize=self._maxsize)
         await asyncio.sleep(0.1)  # Ensure connections established before first send. Better way?
-        self._recv_channel = ZMQChannel(
-            recv_socket=recv_socket, topic=self._topic, maxsize=self._maxsize
-        )
-        return self._recv_channel
+        return recv_channel
 
 
 class _ZMQPipelineConnectorProxy(_ZMQPubsubConnectorProxy):
@@ -351,10 +349,10 @@ class _ZMQPipelineConnectorProxy(_ZMQPubsubConnectorProxy):
         )
         recv_socket = create_socket(zmq.PULL, [(zmq.RCVHWM, self._maxsize)])
         recv_socket.connect(self._push_address)
-        await asyncio.sleep(0.1)  # Ensure connections established before first send. Better way?
         self._recv_channel = ZMQChannel(
             recv_socket=recv_socket, topic=self._topic, maxsize=self._maxsize
         )
+        await asyncio.sleep(0.1)  # Ensure connections established before first send. Better way?
         return self._recv_channel
 
 

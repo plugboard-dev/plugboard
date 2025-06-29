@@ -43,7 +43,8 @@ class Process(ExportMixin, ABC):
         self._state_is_connected: bool = False
         # TODO: Replace when we have state tracking in StateBackend
         self._is_initialised: bool = False
-        self._logger = DI.logger.sync_resolve().bind(
+        # FIXME : Job ID unavailable for logger until state.init() is called.
+        self._logger = DI.logger.resolve_sync().bind(
             cls=self.__class__.__name__, name=self.name, job_id=self.state.job_id
         )
         self._logger.info("Process created")
@@ -103,9 +104,16 @@ class Process(ExportMixin, ABC):
 
     async def destroy(self) -> None:
         """Performs tear-down actions for the `Process` and its `Component`s."""
-        await self._state.destroy()
-        await DI.tear_down()
-        self._logger.info("Process destroyed")
+        try:
+            await self._state.destroy()
+            await DI.tear_down()
+            self._logger.info("Process destroyed")
+        except Exception as e:  # pragma: no cover
+            self._logger.error(f"Error destroying process: {e}")
+            raise
+        finally:
+            self._is_initialised = False
+            self._state_is_connected = False
 
     async def __aenter__(self) -> Process:
         """Enters the context manager."""

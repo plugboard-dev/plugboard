@@ -20,7 +20,7 @@ try:
 except ImportError:
     pass
 
-if _t.TYPE_CHECKING:
+if _t.TYPE_CHECKING:  # pragma: no cover
     from websockets.asyncio.connection import Connection
 
 

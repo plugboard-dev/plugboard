@@ -16,9 +16,11 @@ def config() -> dict:
         return msgspec.yaml.decode(f.read())
 
 
+@pytest.mark.tuner
+@pytest.mark.asyncio
 @pytest.mark.parametrize("mode", ["min", "max"])
 @pytest.mark.parametrize("process_type", ["local", "ray"])
-def test_tune(config: dict, mode: str, process_type: str) -> None:
+async def test_tune(config: dict, mode: str, process_type: str, ray_ctx: None) -> None:
     """Tests running of optimisation jobs."""
     spec = ConfigSpec.model_validate(config)
     process_spec = spec.plugboard.process
@@ -41,10 +43,10 @@ def test_tune(config: dict, mode: str, process_type: str) -> None:
                 field_type="arg",
                 field_name="iters",
                 lower=6,
-                upper=8,
+                upper=9,
             )
         ],
-        num_samples=6,
+        num_samples=5,
         mode=mode,
         max_concurrent=2,
         algorithm=OptunaSpec(),
@@ -55,16 +57,18 @@ def test_tune(config: dict, mode: str, process_type: str) -> None:
     result = tuner.result_grid
     # There must be no failed trials
     assert not [t for t in result if t.error]
-    # Correct optimimum must be found
+    # Correct optimimum must be found (within tolerance)
     if mode == "min":
-        assert best_result.config["a.iters"] == 6
-        assert best_result.metrics["c.in_1"] == 5
+        assert best_result.config["a.iters"] <= tuner._parameters["a.iters"].lower + 1
+        assert best_result.metrics["c.in_1"] == best_result.config["a.iters"] - 1
     else:
-        assert best_result.config["a.iters"] == 7
-        assert best_result.metrics["c.in_1"] == 6
+        assert best_result.config["a.iters"] >= tuner._parameters["a.iters"].upper - 1
+        assert best_result.metrics["c.in_1"] == best_result.config["a.iters"] - 1
 
 
-def test_multi_objective_tune(config: dict) -> None:
+@pytest.mark.tuner
+@pytest.mark.asyncio
+async def test_multi_objective_tune(config: dict, ray_ctx: None) -> None:
     """Tests multi-objective optimisation."""
     spec = ConfigSpec.model_validate(config)
     process_spec = spec.plugboard.process

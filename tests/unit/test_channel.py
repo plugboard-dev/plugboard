@@ -1,20 +1,26 @@
 """Unit tests for channels."""
 
 import asyncio
+import os
+import typing as _t
+from unittest.mock import patch
 
 import pytest
 import pytest_cases
 from ray.util.multiprocessing import Pool
+from that_depends import ContextScopes, container_context
 
 from plugboard.connector import (
     AsyncioConnector,
     Connector,
     ConnectorBuilder,
     RayConnector,
+    ZMQConnector,
 )
 from plugboard.exceptions import ChannelClosedError
 from plugboard.schemas.connector import ConnectorMode, ConnectorSpec
-from tests.conftest import zmq_connector_cls
+from plugboard.utils.di import DI
+from plugboard.utils.settings import Settings
 
 
 TEST_ITEMS = [
@@ -28,9 +34,32 @@ TEST_ITEMS = [
 ]
 
 
+@pytest_cases.fixture
+@pytest_cases.parametrize(zmq_pubsub_proxy=[False])
+def zmq_connector_cls(zmq_pubsub_proxy: bool) -> _t.Iterator[_t.Type[ZMQConnector]]:
+    """Returns the ZMQConnector class with the specified proxy setting.
+
+    Patches the env var `PLUGBOARD_FLAGS_ZMQ_PUBSUB_PROXY` to control the proxy setting.
+    """
+    with patch.dict(
+        os.environ,
+        {"PLUGBOARD_FLAGS_ZMQ_PUBSUB_PROXY": str(zmq_pubsub_proxy)},
+    ):
+        testing_settings = Settings()
+        DI.settings.override_sync(testing_settings)
+        yield ZMQConnector
+        DI.settings.reset_override_sync()
+
+
+@pytest_cases.fixture
+@pytest_cases.parametrize("_connector_cls", [AsyncioConnector, RayConnector, zmq_connector_cls])
+def connector_cls(_connector_cls: type[Connector]) -> type[Connector]:
+    """Fixture for `Connector` of various types."""
+    return _connector_cls
+
+
 @pytest.mark.asyncio
-@pytest_cases.parametrize("connector_cls", [AsyncioConnector, RayConnector, zmq_connector_cls])
-async def test_channel(connector_cls: type[Connector]) -> None:
+async def test_channel(connector_cls: type[Connector], ray_ctx: None, job_id_ctx: str) -> None:
     """Tests the various Channel implementations."""
     spec = ConnectorSpec(mode=ConnectorMode.PIPELINE, source="test.send", target="test.recv")
     connector = ConnectorBuilder(connector_cls=connector_cls).build(spec)
@@ -49,7 +78,6 @@ async def test_channel(connector_cls: type[Connector]) -> None:
     for _ in TEST_ITEMS[1:]:
         results.append(await recv_channel.recv())
     await send_channel.close()
-    await recv_channel.close()
 
     # Ensure that the sent and received items are the same.
     assert results == TEST_ITEMS, "Failed on iteration: {}".format(iter)
@@ -62,27 +90,41 @@ async def test_channel(connector_cls: type[Connector]) -> None:
     assert send_channel.is_closed
 
 
+@pytest_cases.fixture
+@pytest_cases.parametrize("_connector_cls_mp", [RayConnector, zmq_connector_cls])
+def connector_cls_mp(_connector_cls_mp: type[Connector]) -> type[Connector]:
+    """Fixture for `Connector` of various types for use in multiprocess context."""
+    return _connector_cls_mp
+
+
 @pytest.mark.asyncio
-@pytest_cases.parametrize("connector_cls", [zmq_connector_cls])
-async def test_multiprocessing_channel(connector_cls: type[Connector]) -> None:
+async def test_multiprocessing_channel(
+    connector_cls_mp: type[Connector], ray_ctx: None, job_id_ctx: str
+) -> None:
     """Tests the various Channel implementations in a multiprocess environment."""
     spec = ConnectorSpec(mode=ConnectorMode.PIPELINE, source="test.send", target="test.recv")
-    connector = ConnectorBuilder(connector_cls=connector_cls).build(spec)
+    connector = ConnectorBuilder(connector_cls=connector_cls_mp).build(spec)
+
+    container_ctx = container_context(
+        DI, global_context={"job_id": job_id_ctx}, scope=ContextScopes.APP
+    )
 
     async def _send_proc_async(connector: Connector) -> None:
-        channel = await connector.connect_send()
-        await asyncio.sleep(0.1)  # Ensure the receiver is ready before sending messages
-        for item in TEST_ITEMS:
-            await channel.send(item)
-        await channel.close()
-        assert channel.is_closed
+        with container_ctx:
+            channel = await connector.connect_send()
+            await asyncio.sleep(0.1)  # Ensure the receiver is ready before sending messages
+            for item in TEST_ITEMS:
+                await channel.send(item)
+            await channel.close()
+            assert channel.is_closed
 
     async def _recv_proc_async(connector: Connector) -> None:
-        channel = await connector.connect_recv()
-        for item in TEST_ITEMS:
-            assert await channel.recv() == item
-        with pytest.raises(ChannelClosedError):
-            await channel.recv()
+        with container_ctx:
+            channel = await connector.connect_recv()
+            for item in TEST_ITEMS:
+                assert await channel.recv() == item
+            with pytest.raises(ChannelClosedError):
+                await channel.recv()
 
     def _send_proc(connector: Connector) -> None:
         asyncio.run(_send_proc_async(connector))

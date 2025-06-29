@@ -1,5 +1,7 @@
 """Provides the `IOController` class for handling input/output operations."""
 
+from __future__ import annotations
+
 import asyncio
 from collections import defaultdict, deque
 from functools import cached_property
@@ -11,6 +13,9 @@ from plugboard.exceptions import ChannelClosedError, IOStreamClosedError
 from plugboard.schemas.io import IODirection
 from plugboard.utils import DI
 
+
+if _t.TYPE_CHECKING:  # pragma: no cover
+    from plugboard.component import Component
 
 IO_NS_UNSET = "__UNSET__"
 
@@ -33,6 +38,7 @@ class IOController:
         input_events: _t.Optional[list[_t.Type[Event]]] = None,
         output_events: _t.Optional[list[_t.Type[Event]]] = None,
         namespace: str = IO_NS_UNSET,
+        component: _t.Optional[Component] = None,
     ) -> None:
         self.namespace = namespace
         self.inputs = inputs or []
@@ -42,6 +48,7 @@ class IOController:
         self.output_events = output_events or []
         if set(self.initial_values.keys()) - set(self.inputs):
             raise ValueError("Initial values must be for input fields only.")
+        self._component = component
 
         self.buf_fields: dict[str, IOBuffer] = {
             _io_key_in: IOFieldBuffer(),
@@ -62,7 +69,7 @@ class IOController:
         self._read_tasks: dict[str | _t_field_key, asyncio.Task] = {}
         self._is_closed = False
 
-        self._logger = DI.logger.sync_resolve().bind(
+        self._logger = DI.logger.resolve_sync().bind(
             cls=self.__class__.__name__, namespace=self.namespace
         )
         self._logger.info("IOController created")
@@ -312,12 +319,19 @@ class IOController:
 
     async def connect(self, connectors: list[Connector]) -> None:
         """Connects the input/output fields to input/output channels."""
-        async with asyncio.TaskGroup() as tg:
-            for conn in connectors:
-                tg.create_task(self._add_channel(conn))
-        self._create_input_field_group_tasks()
-        self._validate_connections()
-        self._logger.info("IOController connected")
+        if self._component is None:
+            raise RuntimeError("IOController must be bound to a component before connecting.")
+        # TODO : Cleaner way to create job id context for execution in Ray?
+        with self._component._job_id_ctx():
+            job_id = DI.job_id.resolve_sync()
+            self._logger = self._logger.bind(job_id=job_id)
+
+            async with asyncio.TaskGroup() as tg:
+                for conn in connectors:
+                    tg.create_task(self._add_channel(conn))
+            self._create_input_field_group_tasks()
+            self._validate_connections()
+            self._logger.info("IOController connected")
 
     async def _add_channel(self, connector: Connector) -> None:
         if connector.spec.source.connects_to([self.namespace]):
