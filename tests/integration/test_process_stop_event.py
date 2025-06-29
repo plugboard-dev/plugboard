@@ -11,7 +11,7 @@ from plugboard.component import Component, IOController as IO
 from plugboard.connector import AsyncioConnector, Connector, ConnectorBuilder, RabbitMQConnector
 from plugboard.events import EventConnectorBuilder, StopEvent
 from plugboard.process import LocalProcess, Process, RayProcess
-from plugboard.schemas import ConnectorSpec
+from plugboard.schemas import ConnectorSpec, Status
 from tests.conftest import ComponentTestHelper, zmq_connector_cls
 
 
@@ -98,6 +98,7 @@ async def test_process_stop_event(
 
         for c in components:
             assert c.is_initialised
+            assert c.status == Status.INIT
 
         async with asyncio.TaskGroup() as tg:
             tg.create_task(process.run())
@@ -116,6 +117,7 @@ async def test_process_stop_event(
         for c in [comp_b1, comp_b2, comp_b3, comp_b4, comp_b5]:
             assert c.is_finished
             assert c.step_count == pytest.approx(iters_before_stop, abs=stop_tolerance)
+            assert c.status == Status.STOPPED
 
         # A performs n+1 full steps and is interrupted on step n+2 before a final update of out_1,
         # hence n+2.

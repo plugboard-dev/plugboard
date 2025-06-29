@@ -18,6 +18,7 @@ from plugboard.exceptions import (
     UnrecognisedEventError,
     ValidationError,
 )
+from plugboard.schemas.state import Status
 from plugboard.state import StateBackend
 from plugboard.utils import DI, ClassRegistry, ExportMixin, is_on_ray_worker
 
@@ -73,6 +74,8 @@ class Component(ABC, ExportMixin):
             namespace=self.name,
             component=self,
         )
+        self.status = Status.CREATED
+        self._is_running = False
         self._field_inputs: dict[str, _t.Any] = {}
         self._field_inputs_ready: bool = False
 
@@ -87,6 +90,12 @@ class Component(ABC, ExportMixin):
         ComponentRegistry.add(cls)
         # Configure IO last in case it fails in case of components with dynamic io args
         cls._configure_io()
+
+    async def _set_status(self, status: Status, publish: bool = True) -> None:
+        """Sets the status of the component and optionaly publishes it to the state backend."""
+        self.status = status
+        if publish and self._state and self._state_is_connected:
+            await self._state.upsert_component(self)
 
     @classmethod
     def _configure_io(cls) -> None:
@@ -203,8 +212,7 @@ class Component(ABC, ExportMixin):
         async def _wrapper() -> None:
             with self._job_id_ctx():
                 await self._init()
-                if self._state is not None and self._state_is_connected:
-                    await self._state.upsert_component(self)
+                await self._set_status(Status.INIT)
 
         return _wrapper
 
@@ -233,14 +241,21 @@ class Component(ABC, ExportMixin):
         @wraps(self.step)
         async def _wrapper() -> None:
             with self._job_id_ctx():
+                await self._set_status(Status.RUNNING, publish=not self._is_running)
                 await self.io.read()
                 await self._handle_events()
                 self._bind_inputs()
                 if self._can_step:
-                    await self._step()
+                    try:
+                        await self._step()
+                    except Exception as e:
+                        await self._set_status(Status.FAILED)
+                        self._logger.exception("Component step failed")
+                        raise e
                 self._bind_outputs()
                 await self.io.write()
                 self._field_inputs_ready = False
+                await self._set_status(Status.WAITING, publish=not self._is_running)
 
         return _wrapper
 
@@ -304,14 +319,21 @@ class Component(ABC, ExportMixin):
             await self.io.close()
         except IOStreamClosedError:
             pass
+        await self._set_status(Status.STOPPED)
 
     async def run(self) -> None:
         """Executes component logic for all steps to completion."""
-        while True:
-            try:
-                await self.step()
-            except IOStreamClosedError:
-                break
+        self._is_running = True
+        await self._set_status(Status.RUNNING)
+        try:
+            while True:
+                try:
+                    await self.step()
+                except IOStreamClosedError:
+                    break
+            await self._set_status(Status.COMPLETED)
+        finally:
+            self._is_running = False
 
     async def destroy(self) -> None:
         """Performs tear-down actions for `Component`."""
@@ -327,6 +349,7 @@ class Component(ABC, ExportMixin):
         return {
             "id": self.id,
             "name": self.name,
+            "status": self.status,
             **field_data,
             "exports": {name: getattr(self, name, None) for name in self.exports or []},
         }

@@ -76,6 +76,7 @@ class RayProcess(Process):
                     **state[str(IODirection.INPUT)],
                     **state[str(IODirection.OUTPUT)],
                     **state["exports"],
+                    "status": state["status"],
                 }
             )
 

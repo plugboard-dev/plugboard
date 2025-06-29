@@ -1,6 +1,7 @@
 """Provides `StateBackendSpec` class."""
 
 from datetime import datetime, timezone
+from enum import StrEnum
 import typing as _t
 
 from pydantic import Field
@@ -10,6 +11,33 @@ from plugboard.schemas.entities import Entity
 
 
 DEFAULT_STATE_BACKEND_CLS_PATH: str = "plugboard.state.DictStateBackend"
+
+
+class Status(StrEnum):
+    """`Status` describes the status of either a `Component` or a `Process`.
+
+    Attributes:
+        CREATED: The `Component` or `Process` has been created but not yet started.
+        INIT: The `Component` or `Process` has been initialised but has not started running.
+        RUNNING: The `Component` or `Process` is currently running.
+        WAITING: The `Component` or `Process` is waiting for input.
+        COMPLETED: The `Component` or `Process` has completed successfully.
+        FAILED: The `Component` or `Process` has failed.
+        STOPPED: The `Component` or `Process` has been cancelled or stopped.
+    """
+
+    CREATED = "created"
+    INIT = "init"
+    RUNNING = "running"
+    WAITING = "waiting"
+    COMPLETED = "completed"
+    FAILED = "failed"
+    STOPPED = "stopped"
+
+    @property
+    def is_terminal(self) -> bool:
+        """Returns whether the status is terminal."""
+        return self in {self.COMPLETED, self.FAILED, self.STOPPED}
 
 
 class StateBackendArgsDict(_t.TypedDict):

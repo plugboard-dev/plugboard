@@ -8,7 +8,7 @@ import pytest_asyncio
 from plugboard.component import Component, IOController
 from plugboard.connector import AsyncioConnector, Connector
 from plugboard.process import LocalProcess
-from plugboard.schemas import ConnectorSpec
+from plugboard.schemas import ConnectorSpec, Status
 from plugboard.state import StateBackend
 from tests.conftest import ComponentTestHelper
 from tests.integration.conftest import (
@@ -207,5 +207,9 @@ async def test_state_backend_process_init(
     assert await state_backend.get_component(comp_b2.id) == comp_b2.dict()
     assert await state_backend.get_connector(conn_1.id) == conn_1.dict()
     assert await state_backend.get_connector(conn_2.id) == conn_2.dict()
+
+    # All components must report their INIT status to the StateBackend
+    for c in B_components:
+        assert (await state_backend.get_component(c.id))["status"] == Status.INIT
 
     await process.destroy()
