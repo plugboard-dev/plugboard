@@ -230,3 +230,12 @@ class SqliteStateBackend(StateBackend):
             raise NotFoundError(f"Process with id {process_db_id} not found.")
         status_str = row["status"]
         return Status(status_str)
+
+    async def get_process_status_for_component(self, component_id: str) -> Status:
+        """Gets the status of the process that a component belongs to."""
+        component_db_id = self._get_db_id(component_id)
+        row = await self._fetchone(q.GET_PROCESS_STATUS_FOR_COMPONENT, (component_db_id,))
+        if row is None:
+            raise NotFoundError(f"No process found for component with ID {component_id}")
+        status_str = row["status"]
+        return Status(status_str)
