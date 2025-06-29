@@ -176,6 +176,9 @@ class StateBackend(ABC, ExportMixin):
         process_id = await self._get(("_comp_proc_map", component.id))
         key = self._component_key(process_id, component.id)
         await self._set(key, component.dict())
+        if component.status in {Status.FAILED}:
+            # If the component is terminal, update the process status
+            await self.update_process_status(process_id, component.status)
 
     async def get_component(self, component_id: str) -> dict:
         """Returns a component from the state."""
