@@ -11,6 +11,7 @@ import typing as _t
 from that_depends import ContextScopes, Provide, container_context, inject
 
 from plugboard.exceptions import NotFoundError
+from plugboard.schemas.state import Status
 from plugboard.utils import DI, ExportMixin
 
 
@@ -175,6 +176,9 @@ class StateBackend(ABC, ExportMixin):
         process_id = await self._get(("_comp_proc_map", component.id))
         key = self._component_key(process_id, component.id)
         await self._set(key, component.dict())
+        if component.status in {Status.FAILED}:
+            # If the component is terminal, update the process status
+            await self.update_process_status(process_id, component.status)
 
     async def get_component(self, component_id: str) -> dict:
         """Returns a component from the state."""
@@ -193,3 +197,21 @@ class StateBackend(ABC, ExportMixin):
         process_id = await self._get(("_conn_proc_map", connector_id))
         key = self._connector_key(process_id, connector_id)
         return await self._get(key)
+
+    async def update_process_status(self, process_id: str, status: Status) -> None:
+        """Updates the status of a process in the state."""
+        process_status_key = self._process_key(process_id) + ("status",)
+        await self._set(process_status_key, str(status))
+
+    async def get_process_status(self, process_id: str) -> Status:
+        """Gets the status of a process from the state."""
+        process_status_key = self._process_key(process_id) + ("status",)
+        status_str = await self._get(process_status_key)
+        return Status(status_str)
+
+    async def get_process_status_for_component(self, component_id: str) -> Status:
+        """Gets the status of the process that a component belongs to."""
+        process_id = await self._get(("_comp_proc_map", component_id))
+        if not process_id:
+            raise NotFoundError(f"No process found for component with ID {component_id}")
+        return await self.get_process_status(process_id)
