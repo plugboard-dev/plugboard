@@ -1,9 +1,11 @@
 """Integration tests for running a Process with Components."""
 # ruff: noqa: D101,D102,D103
 
+import asyncio
 from pathlib import Path
 from tempfile import NamedTemporaryFile
 import typing as _t
+from unittest import mock
 
 from aiofile import async_open
 import pytest
@@ -12,8 +14,10 @@ import pytest_cases
 from plugboard import exceptions
 from plugboard.component import IOController as IO
 from plugboard.connector import AsyncioConnector, Connector, RabbitMQConnector, RayConnector
+from plugboard.exceptions import ProcessStatusError
 from plugboard.process import LocalProcess, Process, RayProcess
 from plugboard.schemas import ConnectorSpec
+from plugboard.schemas.state import Status
 from tests.conftest import ComponentTestHelper, zmq_connector_cls
 
 
@@ -133,3 +137,169 @@ async def test_process_with_components_run(
     comp_c_outputs = [float(output) for output in data.splitlines()]
     expected_comp_c_outputs = [factor * i for i in range(iters)]
     assert comp_c_outputs == expected_comp_c_outputs
+
+
+class SlowProducer(ComponentTestHelper):
+    """Component that produces data slowly, with delays longer than IO timeout."""
+
+    io = IO(outputs=["out_1"])
+
+    def __init__(self, delay: float, iters: int, *args: _t.Any, **kwargs: _t.Any) -> None:
+        super().__init__(*args, **kwargs)
+        self._delay = delay
+        self._iters = iters
+
+    async def init(self) -> None:
+        await super().init()
+        self._seq = iter(range(self._iters))
+
+    async def step(self) -> None:
+        # Delay before producing output to simulate slow data arrival
+        await asyncio.sleep(self._delay)
+        try:
+            self.out_1 = next(self._seq)
+        except StopIteration:
+            await self.io.close()
+        else:
+            await super().step()
+
+
+class SlowConsumer(ComponentTestHelper):
+    """Component that consumes data and should handle process failure gracefully."""
+
+    io = IO(inputs=["in_1"])
+
+    async def step(self) -> None:
+        # Just consume the input
+        _ = self.in_1
+        await super().step()
+
+
+@pytest.mark.asyncio
+@pytest_cases.parametrize(
+    "process_cls, connector_cls",
+    [
+        (LocalProcess, AsyncioConnector),
+        (RayProcess, RayConnector),
+    ],
+)
+@mock.patch("plugboard.component.component.IO_READ_TIMEOUT_SECONDS", 5.0)
+async def test_io_read_with_slow_data_arrival(
+    process_cls: type[Process], connector_cls: type[Connector]
+) -> None:
+    """Test that IO read succeeds when data arrives slowly (longer than timeout)."""
+    # Use a delay longer than the IO_READ_TIMEOUT_SECONDS (5s for this test)
+    delay = 7.0
+
+    slow_producer = SlowProducer(delay=delay, iters=2, name="slow_producer")
+    consumer = SlowConsumer(name="consumer")
+
+    connector = connector_cls(
+        spec=ConnectorSpec(source="slow_producer.out_1", target="consumer.in_1")
+    )
+
+    process = process_cls(
+        components=[slow_producer, consumer], connectors=[connector], name="slow_data_process"
+    )
+
+    await process.init()
+
+    # Mock the state backend method to verify it gets called during timeout
+    with mock.patch.object(
+        process.state, "get_process_status_for_component", return_value=Status.RUNNING
+    ) as mock_get_status:
+        # First step should succeed despite the delay
+        start_time = asyncio.get_event_loop().time()
+        await process.step()
+        end_time = asyncio.get_event_loop().time()
+
+        # Verify the step took at least the delay time
+        assert end_time - start_time >= delay
+        assert slow_producer.step_count == 1
+        assert consumer.step_count == 1
+
+        # Verify that the process status was checked during the timeout
+        mock_get_status.assert_called_once_with(consumer.id)
+
+    await process.destroy()
+
+
+class FailingComponent(ComponentTestHelper):
+    """Component that fails after a specified number of steps."""
+
+    io = IO(inputs=["in_1"], outputs=["out_1"])
+
+    def __init__(self, fail_after: int, *args: _t.Any, **kwargs: _t.Any) -> None:
+        super().__init__(*args, **kwargs)
+        self._fail_after = fail_after
+
+    async def step(self) -> None:
+        if self.step_count >= self._fail_after:
+            # Trigger failure by raising an exception
+            raise RuntimeError(f"Component {self.name} failed after {self._fail_after} steps")
+        self.out_1 = self.in_1
+        await super().step()
+
+
+@pytest.mark.asyncio
+@pytest_cases.parametrize(
+    "process_cls, connector_cls",
+    [
+        (LocalProcess, AsyncioConnector),
+        (RayProcess, RayConnector),
+    ],
+)
+async def test_io_read_with_process_failure(
+    process_cls: type[Process], connector_cls: type[Connector]
+) -> None:
+    """Test that ProcessStatusError is raised when process status is failed."""
+    producer = A(iters=5, name="producer")
+    failing_comp = FailingComponent(fail_after=2, name="failing_comp")
+    consumer = SlowConsumer(name="consumer")
+
+    conn1 = connector_cls(spec=ConnectorSpec(source="producer.out_1", target="failing_comp.in_1"))
+    conn2 = connector_cls(spec=ConnectorSpec(source="failing_comp.out_1", target="consumer.in_1"))
+
+    process = process_cls(
+        components=[producer, failing_comp, consumer],
+        connectors=[conn1, conn2],
+        name="failing_process",
+    )
+
+    await process.init()
+
+    # First step should succeed
+    await process.step()
+    assert producer.step_count == 1
+    assert failing_comp.step_count == 1
+    assert consumer.step_count == 1
+
+    # Second step should succeed
+    await process.step()
+    assert producer.step_count == 2
+    assert failing_comp.step_count == 2
+    assert consumer.step_count == 2
+
+    # Third step should cause failing_comp to fail
+    with pytest.raises(RuntimeError, match="Component failing_comp failed after 2 steps"):
+        await process.step()
+
+    # Verify the failing component status is FAILED
+    assert failing_comp.status == Status.FAILED
+
+    # Now if consumer tries to step, it should get ProcessStatusError due to process being failed
+    # The process status should be updated to FAILED due to the failing component
+    process_status = await process.state.get_process_status(process.id)
+    assert process_status == Status.FAILED
+
+    # Consumer should now raise ProcessStatusError when trying to read
+    with pytest.raises(ProcessStatusError, match="Process in failed state for component consumer"):
+        await consumer.step()
+
+    # Verify consumer status is now STOPPED
+    assert consumer.status == Status.STOPPED
+
+    await process.destroy()
+    assert consumer.status == Status.STOPPED
+
+    await process.destroy()
