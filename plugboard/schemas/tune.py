@@ -118,8 +118,10 @@ ParameterSpec = _t.Union[
     IntParameterSpec,
     CategoricalParameterSpec,
 ]
+"""A union type for all parameter specifications."""
 
 Direction = _t.Literal["min", "max"]
+"""A type for the direction of optimisation."""
 
 
 class TuneArgsDict(_t.TypedDict):
