@@ -1603,6 +1603,30 @@ What's new: 🚀 we've open-sourced Plugboard - please <a href="https://github.c
 </li>
       
         <li class="md-nav__item">
+  <a href="#plugboard.schemas.Status" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-class"></code>&nbsp;Status
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label=" Status">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#plugboard.schemas.Status.is_terminal" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-attribute"></code>&nbsp;is_terminal
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#plugboard.schemas.TuneArgsDict" class="md-nav__link">
     <span class="md-ellipsis">
       <code class="doc-symbol doc-symbol-toc doc-symbol-class"></code>&nbsp;TuneArgsDict
@@ -2072,6 +2096,30 @@ What's new: 🚀 we've open-sourced Plugboard - please <a href="https://github.c
       <code class="doc-symbol doc-symbol-toc doc-symbol-class"></code>&nbsp;StateBackendSpec
     </span>
   </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#plugboard.schemas.Status" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-class"></code>&nbsp;Status
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label=" Status">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#plugboard.schemas.Status.is_terminal" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-attribute"></code>&nbsp;is_terminal
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -3840,6 +3888,159 @@ process specification.</p>
 
 
 
+
+
+
+
+
+  </div>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
+<h2 id="plugboard.schemas.Status" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-class"></code>            <span class="doc doc-object-name doc-class-name">Status</span>
+
+
+</h2>
+
+
+    <div class="doc doc-contents ">
+            <p class="doc doc-class-bases">
+              Bases: <code><span title="enum.StrEnum">StrEnum</span></code></p>
+
+
+        <p><code>Status</code> describes the status of either a <code>Component</code> or a <code>Process</code>.</p>
+
+
+<p><span class="doc-section-title">Attributes:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td><code><span title="plugboard.schemas.Status.CREATED">CREATED</span></code></td>
+            <td>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>The <code>Component</code> or <code>Process</code> has been created but not yet started.</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code><span title="plugboard.schemas.Status.INIT">INIT</span></code></td>
+            <td>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>The <code>Component</code> or <code>Process</code> has been initialised but has not started running.</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code><span title="plugboard.schemas.Status.RUNNING">RUNNING</span></code></td>
+            <td>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>The <code>Component</code> or <code>Process</code> is currently running.</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code><span title="plugboard.schemas.Status.WAITING">WAITING</span></code></td>
+            <td>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>The <code>Component</code> or <code>Process</code> is waiting for input.</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code><span title="plugboard.schemas.Status.COMPLETED">COMPLETED</span></code></td>
+            <td>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>The <code>Component</code> or <code>Process</code> has completed successfully.</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code><span title="plugboard.schemas.Status.FAILED">FAILED</span></code></td>
+            <td>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>The <code>Component</code> or <code>Process</code> has failed.</p>
+              </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code><span title="plugboard.schemas.Status.STOPPED">STOPPED</span></code></td>
+            <td>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>The <code>Component</code> or <code>Process</code> has been cancelled or stopped.</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+
+
+
+
+
+
+
+
+  <div class="doc doc-children">
+
+
+
+
+
+
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h3 id="plugboard.schemas.Status.is_terminal" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-attribute"></code>            <span class="doc doc-object-name doc-attribute-name">is_terminal</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-property"><code>property</code></small>
+  </span>
+
+</h3>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="n">is_terminal</span><span class="p">:</span> <span class="nb">bool</span>
+</span></code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Returns whether the status is terminal.</p>
+
+    </div>
+
+</div>
 
 
 
