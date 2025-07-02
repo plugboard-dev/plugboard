@@ -147,7 +147,7 @@ GET_PROCESS_STATUS: str = dedent(
 
 GET_PROCESS_STATUS_FOR_COMPONENT: str = dedent(
     """\
-    SELECT json_extract(p.data, '$.status') AS status 
+    SELECT json_extract(p.data, '$.status') AS status
     FROM process p
     JOIN process_component pc ON p.id = pc.process_id
     WHERE pc.component_id = ?;
