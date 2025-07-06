@@ -105,24 +105,30 @@ class RayProcess(Process):
         await self.connect_state()
         await self._connect_components()
         coros = [component.init.remote() for component in self._component_actors.values()]
-        await gather_except(*coros)
-        await self._update_component_attributes()
+        try:
+            await gather_except(*coros)
+        finally:
+            await self._update_component_attributes()
         await super().init()
         self._logger.info("Process initialised")
 
     async def step(self) -> None:
         """Executes a single step for the process."""
         coros = [component.step.remote() for component in self._component_actors.values()]
-        await gather_except(*coros)
-        await self._update_component_attributes()
+        try:
+            await gather_except(*coros)
+        finally:
+            await self._update_component_attributes()
 
     async def run(self) -> None:
         """Runs the process to completion."""
         await super().run()
         self._logger.info("Starting process run")
         coros = [component.run.remote() for component in self._component_actors.values()]
-        await gather_except(*coros)
-        await self._update_component_attributes()
+        try:
+            await gather_except(*coros)
+        finally:
+            await self._update_component_attributes()
         self._logger.info("Process run complete")
 
     async def destroy(self) -> None:
