@@ -80,7 +80,7 @@ class Component(ABC, ExportMixin):
             namespace=self.name,
             component=self,
         )
-        self.status = Status.CREATED
+        self._status = Status.CREATED
         self._is_running = False
         self._field_inputs: dict[str, _t.Any] = {}
         self._field_inputs_ready: bool = False
@@ -99,9 +99,14 @@ class Component(ABC, ExportMixin):
 
     async def _set_status(self, status: Status, publish: bool = True) -> None:
         """Sets the status of the component and optionaly publishes it to the state backend."""
-        self.status = status
+        self._status = status
         if publish and self._state and self._state_is_connected:
             await self._state.upsert_component(self)
+
+    @property
+    def status(self) -> Status:
+        """Gets the status of the component."""
+        return self._status
 
     @classmethod
     def _configure_io(cls) -> None:
