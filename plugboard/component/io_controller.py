@@ -120,13 +120,13 @@ class IOController:
         timeout = 1e-3 if self._has_field_outputs and not self._has_field_inputs else None
         try:
             try:
-                done, _ = await asyncio.wait(
+                done, pending = await asyncio.wait(
                     read_tasks, return_when=asyncio.FIRST_COMPLETED, timeout=timeout
                 )
                 for task in done:
                     if (e := task.exception()) is not None:
                         raise e
-                    self._read_tasks.pop(task.get_name())
+                    self._read_tasks.pop(task.get_name(), None)
                 self._set_read_tasks()
                 await self._flush_internal_field_buffer()
                 await self._flush_internal_event_buffer()
@@ -134,8 +134,12 @@ class IOController:
                 await self.close()
                 raise self._build_io_stream_error(IODirection.INPUT, eg) from eg
         except asyncio.CancelledError:
+            # Clean up all read tasks when cancelled
             for task in read_tasks:
-                task.cancel()
+                if not task.done():
+                    task.cancel()
+                task_name = task.get_name()
+                self._read_tasks.pop(task_name, None)
             raise
 
     def _set_read_tasks(self) -> list[asyncio.Task]:
@@ -189,7 +193,14 @@ class IOController:
         if len(read_tasks.keys()) == 0:
             return
 
-        done, _ = await asyncio.wait(read_tasks.values(), return_when=asyncio.ALL_COMPLETED)
+        try:
+            done, _ = await asyncio.wait(read_tasks.values(), return_when=asyncio.ALL_COMPLETED)
+        except asyncio.CancelledError:
+            # If _read_fields is cancelled, cancel its sub-tasks and clean them up
+            for task_name, task in read_tasks.items():
+                task.cancel()
+                self._read_tasks.pop(task_name, None)
+            raise
 
         async with self._received_fields_lock:
             for task in done:
@@ -235,21 +246,35 @@ class IOController:
 
     async def _read_events(self) -> None:
         fan_in = AsyncioChannel()
+        event_tasks = []
 
         async def _iter_event_channel(chan: Channel) -> None:
             while True:
                 result = await chan.recv()
                 await fan_in.send(result)
 
-        async with asyncio.TaskGroup() as tg:
-            for chan in self._input_event_channels.values():
-                tg.create_task(_iter_event_channel(chan))
+        try:
+            async with asyncio.TaskGroup() as tg:
+                for chan in self._input_event_channels.values():
+                    task = tg.create_task(_iter_event_channel(chan))
+                    event_tasks.append(task)
 
-            while True:
-                event = await fan_in.recv()
-                async with self._received_events_lock:
-                    self._received_events.append(event)
-                    self._has_received_events.set()
+                while True:
+                    event = await fan_in.recv()
+                    async with self._received_events_lock:
+                        self._received_events.append(event)
+                        self._has_received_events.set()
+        except asyncio.CancelledError:
+            # If _read_events is cancelled, ensure fan_in channel is closed
+            # and all event tasks are properly cancelled
+            for task in event_tasks:
+                if not task.done():
+                    task.cancel()
+            try:
+                await fan_in.close()
+            except Exception:
+                pass  # Ignore errors during cleanup
+            raise
 
     async def write(self) -> None:
         """Writes data to output channels."""
