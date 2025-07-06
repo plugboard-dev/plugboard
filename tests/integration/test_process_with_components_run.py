@@ -305,25 +305,21 @@ async def test_io_read_with_process_failure(
         assert isinstance(inner_exception, RuntimeError)
         assert "Component failing_comp failed after 2 steps" in str(inner_exception)
 
+        # TODO : Change logic of process run to prevent cancellation (similar to Ray)?
+        # # Consumer should now raise ProcessStatusError when trying to read
+        with pytest.raises(
+            ProcessStatusError, match="Process in failed state for component consumer"
+        ):
+            await consumer.step()
+
     # Verify the failing component status is FAILED
     assert failing_comp.status == Status.FAILED
+
+    # Verify consumer status is now STOPPED
+    assert consumer.status == Status.STOPPED
 
     # The process status should be updated to FAILED due to the failing component
     process_status = await process.state.get_process_status(process.id)
     assert process_status == Status.FAILED
-
-    # For LocalProcess, manually test the consumer behavior
-    if process_cls == LocalProcess:
-        # TODO : Change logic of process run to prevent cancellation (similar to Ray)?
-        # # Consumer should now raise ProcessStatusError when trying to read
-        # with pytest.raises(
-        #     ProcessStatusError, match="Process in failed state for component consumer"
-        # ):
-        # # Verify consumer status is now STOPPED
-        # assert consumer.status == Status.STOPPED
-
-        with pytest.raises(asyncio.CancelledError):
-            await consumer.step()
-        assert consumer.status == Status.RUNNING
 
     await process.destroy()
