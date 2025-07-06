@@ -6,6 +6,7 @@ from abc import ABC, abstractmethod
 import asyncio
 from collections import defaultdict, deque
 from functools import wraps
+import os
 import typing as _t
 
 from that_depends import ContextScopes, container_context
@@ -28,7 +29,8 @@ _io_key_in: str = str(IODirection.INPUT)
 _io_key_out: str = str(IODirection.OUTPUT)
 
 # Component IO read timeout in seconds
-IO_READ_TIMEOUT_SECONDS = 20.0
+# Read timeout from env var with default as this is simplest way to patch in tests
+IO_READ_TIMEOUT_SECONDS = float(os.environ.get("PLUGBOARD_IO_READ_TIMEOUT", 20.0))
 
 
 class Component(ABC, ExportMixin):
@@ -279,6 +281,7 @@ class Component(ABC, ExportMixin):
                     process_status = await self._state.get_process_status_for_component(self.id)
                     if process_status == Status.FAILED:
                         await self._set_status(Status.STOPPED)
+                        self._logger.exception("Process in failed state")
                         raise ProcessStatusError(f"Process in failed state for component {self.id}")
 
     def _bind_inputs(self) -> None:
