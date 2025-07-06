@@ -158,12 +158,13 @@ class StateBackend(ABC, ExportMixin):
             process_data["components"] = {}
             process_data["connectors"] = {}
         await self._set(self._process_key(process.id), process_data)
+        await self.update_process_status(process.id, process.status)
         # TODO : Need to make this transactional.
-        comp_proc_map = await self._get("_comp_proc_map")
+        comp_proc_map = await self._get("_comp_proc_map", {})
         comp_proc_map.update({c.id: process.id for c in process.components.values()})
         await self._set("_comp_proc_map", comp_proc_map)
         # TODO : Need to make this transactional.
-        conn_proc_map = await self._get("_conn_proc_map")
+        conn_proc_map = await self._get("_conn_proc_map", {})
         conn_proc_map.update({c.id: process.id for c in process.connectors.values()})
         await self._set("_conn_proc_map", conn_proc_map)
 

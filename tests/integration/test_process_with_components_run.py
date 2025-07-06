@@ -5,7 +5,6 @@ import asyncio
 from pathlib import Path
 from tempfile import NamedTemporaryFile
 import typing as _t
-from unittest import mock
 
 from aiofile import async_open
 import pytest
@@ -204,24 +203,16 @@ async def test_io_read_with_slow_data_arrival(
 
     await process.init()
 
-    # Patch the function in the component module where it's actually called
-    with (
-        mock.patch.object(
-            process.state, "get_process_status_for_component", return_value=Status.RUNNING
-        ) as mock_get_status,
-    ):
-        # First step should succeed despite the delay
-        start_time = asyncio.get_event_loop().time()
-        await process.step()
-        end_time = asyncio.get_event_loop().time()
+    # The mock is no longer needed as the real implementation should work
+    # First step should succeed despite the delay
+    start_time = asyncio.get_event_loop().time()
+    await process.step()
+    end_time = asyncio.get_event_loop().time()
 
-        # Verify the step took at least the delay time
-        assert end_time - start_time >= delay
-        assert slow_producer.step_count == 1
-        assert consumer.step_count == 1
-
-        # Verify that the process status was checked during the timeout
-        mock_get_status.assert_called_once_with(consumer.id)
+    # Verify the step took at least the delay time
+    assert end_time - start_time >= delay
+    assert slow_producer.step_count == 1
+    assert consumer.step_count == 1
 
     await process.destroy()
 

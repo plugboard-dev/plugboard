@@ -7,6 +7,7 @@ from plugboard.component import Component
 from plugboard.component.io_controller import IODirection
 from plugboard.connector import Connector
 from plugboard.process.process import Process
+from plugboard.schemas.state import Status
 from plugboard.state import RayStateBackend, StateBackend
 from plugboard.utils import build_actor_wrapper, depends_on_optional, gather_except, gen_rand_str
 
@@ -127,6 +128,11 @@ class RayProcess(Process):
         coros = [component.run.remote() for component in self._component_actors.values()]
         try:
             await gather_except(*coros)
+        except Exception:
+            self._status = Status.FAILED
+            raise
+        else:
+            self._status = Status.COMPLETED
         finally:
             await self._update_component_attributes()
         self._logger.info("Process run complete")
