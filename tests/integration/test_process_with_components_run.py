@@ -184,7 +184,7 @@ class SlowConsumer(ComponentTestHelper):
     ],
 )
 async def test_io_read_with_slow_data_arrival(
-    process_cls: type[Process], connector_cls: type[Connector]
+    process_cls: type[Process], connector_cls: type[Connector], ray_ctx: None
 ) -> None:
     """Test that IO read succeeds when data arrives slowly (longer than timeout)."""
     # Use a delay longer than the IO_READ_TIMEOUT_SECONDS (set via env var for this test)
@@ -243,7 +243,7 @@ class FailingComponent(ComponentTestHelper):
     ],
 )
 async def test_io_read_with_process_failure(
-    process_cls: type[Process], connector_cls: type[Connector]
+    process_cls: type[Process], connector_cls: type[Connector], ray_ctx: None
 ) -> None:
     """Test that ProcessStatusError is raised when process status is failed."""
     producer = A(iters=5, name="producer")
