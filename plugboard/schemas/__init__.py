@@ -21,7 +21,10 @@ from .io import IODirection
 from .process import ProcessArgsDict, ProcessArgsSpec, ProcessSpec
 from .state import StateBackendArgsDict, StateBackendArgsSpec, StateBackendSpec, Status
 from .tune import (
+    CategoricalParameterSpec,
     Direction,
+    FloatParameterSpec,
+    IntParameterSpec,
     ObjectiveSpec,
     OptunaSpec,
     ParameterSpec,
@@ -32,6 +35,7 @@ from .tune import (
 
 
 __all__ = [
+    "CategoricalParameterSpec",
     "ComponentSpec",
     "ComponentArgsDict",
     "ComponentArgsSpec",
@@ -44,6 +48,8 @@ __all__ = [
     "ConnectorSpec",
     "Direction",
     "Entity",
+    "FloatParameterSpec",
+    "IntParameterSpec",
     "IODirection",
     "ObjectiveSpec",
     "OptunaSpec",
