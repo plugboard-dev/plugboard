@@ -7,6 +7,7 @@ import typing as _t
 import ray.tune.search.optuna
 
 from plugboard.component.component import Component, ComponentRegistry
+from plugboard.exceptions import ConstraintError
 from plugboard.process import Process, ProcessBuilder
 from plugboard.schemas import (
     Direction,
@@ -172,6 +173,7 @@ class Tuner:
         _tune = ray.tune.Tuner(
             trainable_with_resources,
             param_space=self._parameters,
+            run_config=ray.tune.RunConfig(stop={"constraint_hit": True}),
             tune_config=self._config,
         )
         self._logger.info("Starting Tuner")
@@ -197,8 +199,17 @@ class Tuner:
             for name, value in config.items():
                 self._override_parameter(spec, self._parameters_dict[name], value)
 
+            ray.tune.report({"constraint_hit": False})
             process = ProcessBuilder.build(spec)
-            run_coro_sync(self._run_process(process))
+            try:
+                run_coro_sync(self._run_process(process))
+            except ConstraintError as e:
+                # If a constraint is violated, we report it and return the objectives as None
+                self._logger.warning(
+                    "Constraint violated during optimisation",
+                    constraint_error=str(e),
+                )
+                ray.tune.report({"constraint_hit": True})
 
             return {obj.full_name: self._get_objective(process, obj) for obj in self._objective}
 
