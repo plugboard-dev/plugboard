@@ -2,102 +2,110 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
          <loc>https://docs.plugboard.dev/latest/</loc>
-         <lastmod>2025-07-02</lastmod>
+         <lastmod>2025-07-09</lastmod>
     </url>
     <url>
          <loc>https://docs.plugboard.dev/latest/contributing/</loc>
-         <lastmod>2025-07-02</lastmod>
+         <lastmod>2025-07-09</lastmod>
     </url>
     <url>
          <loc>https://docs.plugboard.dev/latest/api/component/component/</loc>
-         <lastmod>2025-07-02</lastmod>
+         <lastmod>2025-07-09</lastmod>
     </url>
     <url>
          <loc>https://docs.plugboard.dev/latest/api/connector/connector/</loc>
-         <lastmod>2025-07-02</lastmod>
+         <lastmod>2025-07-09</lastmod>
     </url>
     <url>
          <loc>https://docs.plugboard.dev/latest/api/diagram/diagram/</loc>
-         <lastmod>2025-07-02</lastmod>
+         <lastmod>2025-07-09</lastmod>
     </url>
     <url>
          <loc>https://docs.plugboard.dev/latest/api/events/events/</loc>
-         <lastmod>2025-07-02</lastmod>
+         <lastmod>2025-07-09</lastmod>
     </url>
     <url>
          <loc>https://docs.plugboard.dev/latest/api/exceptions/exceptions/</loc>
-         <lastmod>2025-07-02</lastmod>
+         <lastmod>2025-07-09</lastmod>
     </url>
     <url>
          <loc>https://docs.plugboard.dev/latest/api/library/library/</loc>
-         <lastmod>2025-07-02</lastmod>
+         <lastmod>2025-07-09</lastmod>
     </url>
     <url>
          <loc>https://docs.plugboard.dev/latest/api/process/process/</loc>
-         <lastmod>2025-07-02</lastmod>
+         <lastmod>2025-07-09</lastmod>
     </url>
     <url>
          <loc>https://docs.plugboard.dev/latest/api/schemas/schemas/</loc>
-         <lastmod>2025-07-02</lastmod>
+         <lastmod>2025-07-09</lastmod>
     </url>
     <url>
          <loc>https://docs.plugboard.dev/latest/api/state/state/</loc>
-         <lastmod>2025-07-02</lastmod>
+         <lastmod>2025-07-09</lastmod>
+    </url>
+    <url>
+         <loc>https://docs.plugboard.dev/latest/api/tune/tune/</loc>
+         <lastmod>2025-07-09</lastmod>
     </url>
     <url>
          <loc>https://docs.plugboard.dev/latest/api/utils/</loc>
-         <lastmod>2025-07-02</lastmod>
+         <lastmod>2025-07-09</lastmod>
     </url>
     <url>
          <loc>https://docs.plugboard.dev/latest/api/utils/settings/settings/</loc>
-         <lastmod>2025-07-02</lastmod>
+         <lastmod>2025-07-09</lastmod>
     </url>
     <url>
          <loc>https://docs.plugboard.dev/latest/examples/demos/fundamentals/001_simple_model/simple-model/</loc>
-         <lastmod>2025-07-02</lastmod>
+         <lastmod>2025-07-09</lastmod>
     </url>
     <url>
          <loc>https://docs.plugboard.dev/latest/examples/demos/llm/001_data_filter/llm-filtering/</loc>
-         <lastmod>2025-07-02</lastmod>
+         <lastmod>2025-07-09</lastmod>
     </url>
     <url>
          <loc>https://docs.plugboard.dev/latest/examples/demos/llm/002_bluesky_websocket/bluesky-websocket/</loc>
-         <lastmod>2025-07-02</lastmod>
+         <lastmod>2025-07-09</lastmod>
     </url>
     <url>
          <loc>https://docs.plugboard.dev/latest/examples/demos/physics-models/001-hot-water-tank/hot-water-tank/</loc>
-         <lastmod>2025-07-02</lastmod>
+         <lastmod>2025-07-09</lastmod>
     </url>
     <url>
          <loc>https://docs.plugboard.dev/latest/examples/tutorials/event-driven-models/</loc>
-         <lastmod>2025-07-02</lastmod>
+         <lastmod>2025-07-09</lastmod>
     </url>
     <url>
          <loc>https://docs.plugboard.dev/latest/examples/tutorials/hello-world/</loc>
-         <lastmod>2025-07-02</lastmod>
+         <lastmod>2025-07-09</lastmod>
     </url>
     <url>
          <loc>https://docs.plugboard.dev/latest/examples/tutorials/more-complex-process/</loc>
-         <lastmod>2025-07-02</lastmod>
+         <lastmod>2025-07-09</lastmod>
     </url>
     <url>
          <loc>https://docs.plugboard.dev/latest/examples/tutorials/more-components/</loc>
-         <lastmod>2025-07-02</lastmod>
+         <lastmod>2025-07-09</lastmod>
     </url>
     <url>
          <loc>https://docs.plugboard.dev/latest/examples/tutorials/running-in-parallel/</loc>
-         <lastmod>2025-07-02</lastmod>
+         <lastmod>2025-07-09</lastmod>
+    </url>
+    <url>
+         <loc>https://docs.plugboard.dev/latest/examples/tutorials/tuning-a-process/</loc>
+         <lastmod>2025-07-09</lastmod>
     </url>
     <url>
          <loc>https://docs.plugboard.dev/latest/usage/configuration/</loc>
-         <lastmod>2025-07-02</lastmod>
+         <lastmod>2025-07-09</lastmod>
     </url>
     <url>
          <loc>https://docs.plugboard.dev/latest/usage/key-concepts/</loc>
-         <lastmod>2025-07-02</lastmod>
+         <lastmod>2025-07-09</lastmod>
     </url>
     <url>
          <loc>https://docs.plugboard.dev/latest/usage/topics/</loc>
-         <lastmod>2025-07-02</lastmod>
+         <lastmod>2025-07-09</lastmod>
     </url>
 </urlset>
