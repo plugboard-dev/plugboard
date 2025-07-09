@@ -6,6 +6,7 @@ from abc import ABC, abstractmethod
 import asyncio
 from collections import defaultdict, deque
 from functools import wraps
+import os
 import typing as _t
 
 from that_depends import ContextScopes, container_context
@@ -15,6 +16,7 @@ from plugboard.events import Event, EventHandlers, StopEvent
 from plugboard.exceptions import (
     IOSetupError,
     IOStreamClosedError,
+    ProcessStatusError,
     UnrecognisedEventError,
     ValidationError,
 )
@@ -25,6 +27,10 @@ from plugboard.utils import DI, ClassRegistry, ExportMixin, is_on_ray_worker
 
 _io_key_in: str = str(IODirection.INPUT)
 _io_key_out: str = str(IODirection.OUTPUT)
+
+# Component IO read timeout in seconds
+# Read timeout from env var with default as this is simplest way to patch in tests
+IO_READ_TIMEOUT_SECONDS = float(os.environ.get("PLUGBOARD_IO_READ_TIMEOUT", 20.0))
 
 
 class Component(ABC, ExportMixin):
@@ -74,7 +80,7 @@ class Component(ABC, ExportMixin):
             namespace=self.name,
             component=self,
         )
-        self.status = Status.CREATED
+        self._status = Status.CREATED
         self._is_running = False
         self._field_inputs: dict[str, _t.Any] = {}
         self._field_inputs_ready: bool = False
@@ -93,9 +99,14 @@ class Component(ABC, ExportMixin):
 
     async def _set_status(self, status: Status, publish: bool = True) -> None:
         """Sets the status of the component and optionaly publishes it to the state backend."""
-        self.status = status
+        self._status = status
         if publish and self._state and self._state_is_connected:
             await self._state.upsert_component(self)
+
+    @property
+    def status(self) -> Status:
+        """Gets the status of the component."""
+        return self._status
 
     @classmethod
     def _configure_io(cls) -> None:
@@ -242,7 +253,7 @@ class Component(ABC, ExportMixin):
         async def _wrapper() -> None:
             with self._job_id_ctx():
                 await self._set_status(Status.RUNNING, publish=not self._is_running)
-                await self.io.read()
+                await self._io_read_with_status_check()
                 await self._handle_events()
                 self._bind_inputs()
                 if self._can_step:
@@ -258,6 +269,25 @@ class Component(ABC, ExportMixin):
                 await self._set_status(Status.WAITING, publish=not self._is_running)
 
         return _wrapper
+
+    async def _io_read_with_status_check(self) -> None:
+        """Repeatedly attempts to read from IO controller with periodic status checks.
+
+        Each read attempt is made with a timeout. If the read times out, the status of the
+        process is checked. If the process is in a failed state, the component status is set to
+        `STOPPED` and a `ProcessStatusError` is raised; otherwise another read attempt is made.
+        """
+        while True:
+            try:
+                await asyncio.wait_for(self.io.read(), timeout=IO_READ_TIMEOUT_SECONDS)
+                break
+            except asyncio.TimeoutError:
+                if self._state and self._state_is_connected:
+                    process_status = await self._state.get_process_status_for_component(self.id)
+                    if process_status == Status.FAILED:
+                        await self._set_status(Status.STOPPED)
+                        self._logger.exception("Process in failed state")
+                        raise ProcessStatusError(f"Process in failed state for component {self.id}")
 
     def _bind_inputs(self) -> None:
         """Binds input fields to component fields.
