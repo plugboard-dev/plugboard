@@ -252,7 +252,9 @@ class Component(ABC, ExportMixin):
         @wraps(self.step)
         async def _wrapper() -> None:
             with self._job_id_ctx():
+                # breakpoint()
                 await self._set_status(Status.RUNNING, publish=not self._is_running)
+                # await self.io.read()
                 await self._io_read_with_status_check()
                 await self._handle_events()
                 self._bind_inputs()
@@ -277,17 +279,43 @@ class Component(ABC, ExportMixin):
         process is checked. If the process is in a failed state, the component status is set to
         `STOPPED` and a `ProcessStatusError` is raised; otherwise another read attempt is made.
         """
+        # FIXME : Why is this causing `test_io_read_with_slow_data_arrival` to hang in Ray?
+        max_attempts = 3
+        attempts = 0
         while True:
+            attempts += 1
+            if attempts > max_attempts:
+                self._logger.error(f"Max IO read attempts reached ({max_attempts})")
+                raise RuntimeError("Max IO read attempts reached")
             try:
-                await asyncio.wait_for(self.io.read(), timeout=IO_READ_TIMEOUT_SECONDS)
-                break
+                self._logger.info(f"Attempting IO read (attempt {attempts}/{max_attempts})")
+                async with asyncio.timeout(IO_READ_TIMEOUT_SECONDS):
+                    # async with asyncio.timeout(60):
+                    await self.io.read()
             except asyncio.TimeoutError:
+                self._logger.error(f"IO read timed out after {IO_READ_TIMEOUT_SECONDS}s")
                 if self._state and self._state_is_connected:
                     process_status = await self._state.get_process_status_for_component(self.id)
+                    self._logger.info(f"Process status for component {self.id}: {process_status}")
                     if process_status == Status.FAILED:
                         await self._set_status(Status.STOPPED)
                         self._logger.exception("Process in failed state")
                         raise ProcessStatusError(f"Process in failed state for component {self.id}")
+            else:
+                break
+        # while True:
+        #     try:
+        #         async with asyncio.timeout(IO_READ_TIMEOUT_SECONDS):
+        #             await self.io.read()
+        #     except asyncio.TimeoutError:
+        #         if self._state and self._state_is_connected:
+        #             process_status = await self._state.get_process_status_for_component(self.id)
+        #             if process_status == Status.FAILED:
+        #                 await self._set_status(Status.STOPPED)
+        #                 self._logger.exception("Process in failed state")
+        #                 raise ProcessStatusError(f"Process in failed state for component {self.id}")
+        #     else:
+        #         break
 
     def _bind_inputs(self) -> None:
         """Binds input fields to component fields.
