@@ -253,6 +253,7 @@ class Component(ABC, ExportMixin):
         async def _wrapper() -> None:
             with self._job_id_ctx():
                 await self._set_status(Status.RUNNING, publish=not self._is_running)
+                # await self.io.read()
                 await self._io_read_with_status_check()
                 await self._handle_events()
                 self._bind_inputs()
@@ -279,7 +280,7 @@ class Component(ABC, ExportMixin):
         """
         done, pending = await asyncio.wait(
             (
-                asyncio.create_task(self._periodic_status_check()),
+                # asyncio.create_task(self._periodic_status_check()),
                 asyncio.create_task(self.io.read()),
             ),
             return_when=asyncio.FIRST_COMPLETED,
