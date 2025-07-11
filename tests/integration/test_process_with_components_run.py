@@ -168,11 +168,20 @@ class SlowConsumer(ComponentTestHelper):
     """Component that consumes data and should handle process failure gracefully."""
 
     io = IO(inputs=["in_1"])
+    exports = ["status_query_count"]
+
+    def __init__(self, *args: _t.Any, **kwargs: _t.Any) -> None:
+        super().__init__(*args, **kwargs)
+        self.status_query_count: int = 0
 
     async def step(self) -> None:
         # Just consume the input
         _ = self.in_1
         await super().step()
+
+    async def _status_check(self) -> None:
+        await super()._status_check()
+        self.status_query_count += 1
 
 
 @pytest.mark.asyncio
@@ -213,6 +222,7 @@ async def test_io_read_with_slow_data_arrival(
     assert end_time - start_time >= delay
     assert slow_producer.step_count == 1
     assert consumer.step_count == 1
+    assert consumer.status_query_count == 1
 
     await process.destroy()
 

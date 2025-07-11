@@ -288,17 +288,21 @@ class Component(ABC, ExportMixin):
 
     async def _periodic_status_check(self) -> None:
         """Periodically checks the status of the process and updates the component status."""
-        if not (self._state and self._state_is_connected):
-            self._logger.warning("State backend not connected, skipping periodic status check")
-            return
         while True:
             await asyncio.sleep(IO_READ_TIMEOUT_SECONDS)
-            process_status = await self._state.get_process_status_for_component(self.id)
-            self._logger.info(f"Process status for component {self.id}: {process_status}")
-            if process_status == Status.FAILED:
-                await self._set_status(Status.STOPPED)
-                self._logger.exception("Process in failed state")
-                raise ProcessStatusError(f"Process in failed state for component {self.id}")
+            await self._status_check()
+
+    async def _status_check(self) -> None:
+        """Checks the status of the process and updates the component status."""
+        if not (self._state and self._state_is_connected):
+            self._logger.warning("State backend not connected, skipping status check")
+            return
+        process_status = await self._state.get_process_status_for_component(self.id)
+        self._logger.info(f"Process status for component {self.id}: {process_status}")
+        if process_status == Status.FAILED:
+            await self._set_status(Status.STOPPED)
+            self._logger.exception("Process in failed state")
+            raise ProcessStatusError(f"Process in failed state for component {self.id}")
 
     def _bind_inputs(self) -> None:
         """Binds input fields to component fields.
