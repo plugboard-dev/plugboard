@@ -277,14 +277,26 @@ class Component(ABC, ExportMixin):
         process is checked. If the process is in a failed state, the component status is set to
         `STOPPED` and a `ProcessStatusError` is raised; otherwise another read attempt is made.
         """
-        async with asyncio.TaskGroup() as tg:
-            status_check_task = tg.create_task(self._periodic_status_check())
-            tg.create_task(self._io_read(status_check_task))
+        status_check_task = asyncio.create_task(self._periodic_status_check())
+        io_read_task = asyncio.create_task(self.io.read())
+        done, pending = await asyncio.wait(
+            (status_check_task, io_read_task), return_when=asyncio.FIRST_COMPLETED
+        )
+        for task in done:
+            exc = task.exception()
+            if exc is not None:
+                raise exc
+        for task in pending:
+            task.cancel()
 
-    async def _io_read(self, status_check_task: asyncio.Task) -> None:
-        """Attempts to read from the IO controller."""
-        await self.io.read()
-        status_check_task.cancel()
+    #     async with asyncio.TaskGroup() as tg:
+    #         status_check_task = tg.create_task(self._periodic_status_check())
+    #         tg.create_task(self._io_read(status_check_task))
+
+    # async def _io_read(self, status_check_task: asyncio.Task) -> None:
+    #     """Attempts to read from the IO controller."""
+    #     await self.io.read()
+    #     status_check_task.cancel()
 
     async def _periodic_status_check(self) -> None:
         """Periodically checks the status of the process and updates the component status."""
