@@ -171,7 +171,7 @@ class IOController:
                 self._received_events.clear()
 
     async def _read_fields(self) -> None:
-        if self.buf_fields[_io_key_in]:
+        if self._received_fields:
             return  # Don't read new data if buffered input data has not been consumed
 
         read_tasks: dict[str, asyncio.Task] = {}
