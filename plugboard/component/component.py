@@ -278,19 +278,20 @@ class Component(ABC, ExportMixin):
         process is checked. If the process is in a failed state, the component status is set to
         `STOPPED` and a `ProcessStatusError` is raised; otherwise another read attempt is made.
         """
-        done, pending = await asyncio.wait(
-            (
-                # asyncio.create_task(self._periodic_status_check()),
-                asyncio.create_task(self.io.read()),
-            ),
-            return_when=asyncio.FIRST_COMPLETED,
-        )
-        for task in done:
-            exc = task.exception()
-            if exc is not None:
-                raise exc
-        for task in pending:
-            task.cancel()
+        async with asyncio.TaskGroup():
+            done, pending = await asyncio.wait(
+                (
+                    # asyncio.create_task(self._periodic_status_check()),
+                    asyncio.create_task(self.io.read()),
+                ),
+                return_when=asyncio.FIRST_COMPLETED,
+            )
+            for task in done:
+                exc = task.exception()
+                if exc is not None:
+                    raise exc
+            for task in pending:
+                task.cancel()
 
     #     async with asyncio.TaskGroup() as tg:
     #         status_check_task = tg.create_task(self._periodic_status_check())
