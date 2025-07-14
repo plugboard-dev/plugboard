@@ -257,7 +257,6 @@ class Component(ABC, ExportMixin):
         @wraps(self.step)
         async def _wrapper() -> None:
             with self._job_id_ctx():
-                # breakpoint()
                 await self._set_status(Status.RUNNING, publish=not self._is_running)
                 await self._io_read_with_status_check()
                 await self._handle_events()
