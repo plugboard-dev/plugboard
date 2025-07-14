@@ -116,12 +116,12 @@ class Component(ABC, ExportMixin):
         io_args: dict[str, set] = defaultdict(set)
         exports: list[str] = []
         for c in parent_comps + [cls]:
-            if {c_io := getattr(c, "io")}:
+            if c_io := getattr(c, "io"):
                 io_args["inputs"].update(c_io.inputs)
                 io_args["outputs"].update(c_io.outputs)
                 io_args["input_events"].update(c_io.input_events)
                 io_args["output_events"].update(c_io.output_events)
-            if {c_exports := getattr(c, "exports")}:
+            if c_exports := getattr(c, "exports"):
                 exports.extend(c_exports)
         # Set io arguments for subclass
         cls.io = IO(
