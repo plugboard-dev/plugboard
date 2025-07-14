@@ -276,11 +276,11 @@ class Component(ABC, ExportMixin):
         return _wrapper
 
     async def _io_read_with_status_check(self) -> None:
-        """Repeatedly attempts to read from IO controller with periodic status checks.
+        """Reads from IO controller with concurrent periodic status checks.
 
-        Each read attempt is made with a timeout. If the read times out, the status of the
-        process is checked. If the process is in a failed state, the component status is set to
-        `STOPPED` and a `ProcessStatusError` is raised; otherwise another read attempt is made.
+        Status checks are performed periodically until the read completes. If the process is in a
+        failed state, the component status is set to `STOPPED` and a `ProcessStatusError` is raised;
+        otherwise another read attempt is made.
         """
         done, pending = await asyncio.wait(
             (
