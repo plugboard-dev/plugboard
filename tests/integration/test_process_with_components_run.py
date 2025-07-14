@@ -175,8 +175,6 @@ class SlowConsumer(ComponentTestHelper):
         self.status_query_count: int = 0
 
     async def step(self) -> None:
-        # Just consume the input
-        _ = self.in_1
         await super().step()
 
     async def _status_check(self) -> None:
@@ -212,7 +210,6 @@ async def test_io_read_with_slow_data_arrival(
 
     await process.init()
 
-    # The mock is no longer needed as the real implementation should work
     # First step should succeed despite the delay
     start_time = asyncio.get_event_loop().time()
     await process.step()
