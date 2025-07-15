@@ -1,6 +1,7 @@
 """Provides `Tuner` class for optimising Plugboard processes."""
 
 from inspect import isfunction
+import math
 from pydoc import locate
 import typing as _t
 
@@ -191,7 +192,7 @@ class Tuner:
     def _build_objective(
         self, component_classes: dict[str, type[Component]], spec: ProcessSpec
     ) -> _t.Callable:
-        def fn(config: dict[str, _t.Any]) -> _t.Any:  # pragma: no-cover
+        def fn(config: dict[str, _t.Any]) -> dict[str, _t.Any]:  # pragma: no-cover
             # Recreate the ComponentRegistry in the Ray worker
             for key, cls in component_classes.items():
                 ComponentRegistry.add(cls, key=key)
@@ -199,17 +200,19 @@ class Tuner:
             for name, value in config.items():
                 self._override_parameter(spec, self._parameters_dict[name], value)
 
-            ray.tune.report({"constraint_hit": False})
             process = ProcessBuilder.build(spec)
             try:
                 run_coro_sync(self._run_process(process))
             except ConstraintError as e:
-                # If a constraint is violated, we report it and return the objectives as None
+                modes = self._mode if isinstance(self._mode, list) else [self._mode]
                 self._logger.warning(
-                    "Constraint violated during optimisation",
+                    "Constraint violated during optimisation, stopping early",
                     constraint_error=str(e),
                 )
-                ray.tune.report({"constraint_hit": True})
+                return {
+                    obj.full_name: math.inf if mode == "min" else -math.inf
+                    for obj, mode in zip(self._objective, modes)
+                }
 
             return {obj.full_name: self._get_objective(process, obj) for obj in self._objective}
 
