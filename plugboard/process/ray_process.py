@@ -129,10 +129,10 @@ class RayProcess(Process):
         try:
             await gather_except(*coros)
         except Exception:
-            self._status = Status.FAILED
+            await self._set_status(Status.FAILED)
             raise
         else:
-            self._status = Status.COMPLETED
+            await self._set_status(Status.COMPLETED)
         finally:
             await self._update_component_attributes()
         self._logger.info("Process run complete")
