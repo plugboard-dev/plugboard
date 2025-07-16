@@ -50,10 +50,10 @@ class LocalProcess(Process):
                 for component in self.components.values():
                     tg.create_task(component.run())
         except Exception:
-            self._status = Status.FAILED
+            await self._set_status(Status.FAILED)
             raise
         else:
-            self._status = Status.COMPLETED
+            await self._set_status(Status.COMPLETED)
         self._logger.info("Process run complete")
 
     async def destroy(self) -> None:

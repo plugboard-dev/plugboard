@@ -93,11 +93,17 @@ class Process(ExportMixin, ABC):
         """Connects the `Components` and `Connectors` to the `StateBackend`."""
         pass
 
+    async def _set_status(self, status: Status, publish: bool = True) -> None:
+        """Sets the status of the component and optionaly publishes it to the state backend."""
+        self._status = status
+        if publish and self._state and self._state_is_connected:
+            await self._state.update_process_status(self.id, status)
+
     @abstractmethod
     async def init(self) -> None:
         """Performs component initialisation actions."""
         self._is_initialised = True
-        self._status = Status.INIT
+        await self._set_status(Status.INIT)
 
     @abstractmethod
     async def step(self) -> None:
@@ -109,7 +115,7 @@ class Process(ExportMixin, ABC):
         """Runs the process to completion."""
         if not self._is_initialised:
             raise NotInitialisedError("Process must be initialised before running")
-        self._status = Status.RUNNING
+        await self._set_status(Status.RUNNING)
 
     async def destroy(self) -> None:
         """Performs tear-down actions for the `Process` and its `Component`s."""
