@@ -142,7 +142,7 @@ class Process(ExportMixin, ABC):
         return {
             "id": self.id,
             "name": self.name,
-            "status": self.status,
+            "status": str(self.status),
             "components": {k: v.dict() for k, v in self.components.items()},
             "connectors": {k: v.dict() for k, v in self.connectors.items()},
             "parameters": self.parameters,
