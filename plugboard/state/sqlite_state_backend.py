@@ -227,7 +227,7 @@ class SqliteStateBackend(StateBackend):
         process_db_id = self._get_db_id(process_id)
         row = await self._fetchone(q.GET_PROCESS_STATUS, (process_db_id,))
         if row is None:
-            raise NotFoundError(f"Process with id {process_db_id} not found.")
+            raise NotFoundError(f"Process with id {process_id} not found.")
         status_str = row["status"]
         return Status(status_str)
 
