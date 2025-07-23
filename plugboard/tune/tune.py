@@ -201,19 +201,23 @@ class Tuner:
                 self._override_parameter(spec, self._parameters_dict[name], value)
 
             process = ProcessBuilder.build(spec)
+            result = {}
             try:
                 run_coro_sync(self._run_process(process))
-            except ConstraintError as e:
+                result = {
+                    obj.full_name: self._get_objective(process, obj) for obj in self._objective
+                }
+            except* ConstraintError as e:
                 modes = self._mode if isinstance(self._mode, list) else [self._mode]
                 self._logger.warning(
                     "Constraint violated during optimisation, stopping early",
                     constraint_error=str(e),
                 )
-                return {
+                result = {
                     obj.full_name: math.inf if mode == "min" else -math.inf
                     for obj, mode in zip(self._objective, modes)
                 }
 
-            return {obj.full_name: self._get_objective(process, obj) for obj in self._objective}
+            return result
 
         return fn
