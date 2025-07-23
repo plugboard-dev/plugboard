@@ -209,7 +209,7 @@ class Tuner:
     def _build_objective(
         self, component_classes: dict[str, type[Component]], spec: ProcessSpec
     ) -> _t.Callable:
-        def fn(config: dict[str, _t.Any]) -> dict[str, _t.Any]:  # pragma: no-cover
+        def fn(config: dict[str, _t.Any]) -> dict[str, _t.Any]:  # pragma: no cover
             # Recreate the ComponentRegistry in the Ray worker
             for key, cls in component_classes.items():
                 ComponentRegistry.add(cls, key=key)
