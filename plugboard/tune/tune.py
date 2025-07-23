@@ -192,7 +192,6 @@ class Tuner:
         _tune = ray.tune.Tuner(
             trainable_with_resources,
             param_space=self._parameters,
-            run_config=ray.tune.RunConfig(stop={"constraint_hit": True}),
             tune_config=self._config,
         )
         self._logger.info("Starting Tuner")
