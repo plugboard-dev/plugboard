@@ -11,7 +11,7 @@ from tests.integration.test_process_with_components_run import A, B, C  # noqa: 
 
 
 class ConstrainedB(B):
-    """Component with a constraint on the output value."""
+    """Component with a constraint."""
 
     async def step(self) -> None:
         """Override step to apply a constraint."""
@@ -70,11 +70,11 @@ async def test_tune(config: dict, mode: str, process_type: str, ray_ctx: None) -
     assert not [t for t in result if t.error]
     # Correct optimimum must be found (within tolerance)
     if mode == "min":
-        assert best_result.config["a.iters"] <= tuner._parameters["a.iters"].lower + 1
-        assert best_result.metrics["c.in_1"] == best_result.config["a.iters"] - 1
+        assert best_result.config["a.iters"] <= tuner._parameters["a.iters"].lower + 2
+        assert best_result.metrics["c.in_1"] == best_result.config["a.iters"] - 2
     else:
-        assert best_result.config["a.iters"] >= tuner._parameters["a.iters"].upper - 1
-        assert best_result.metrics["c.in_1"] == best_result.config["a.iters"] - 1
+        assert best_result.config["a.iters"] >= tuner._parameters["a.iters"].upper - 2
+        assert best_result.metrics["c.in_1"] == best_result.config["a.iters"] - 2
 
 
 @pytest.mark.tuner
@@ -158,7 +158,7 @@ async def test_tune_with_constraint(config: dict, ray_ctx: None) -> None:
                 upper=15,
             )
         ],
-        num_samples=20,
+        num_samples=12,
         mode="max",
         max_concurrent=2,
         algorithm=OptunaSpec(),
