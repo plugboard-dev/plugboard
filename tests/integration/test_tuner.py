@@ -1,5 +1,7 @@
 """Integration tests for the `Tuner` class."""
 
+import math
+
 import msgspec
 import pytest
 
@@ -167,7 +169,11 @@ async def test_tune_with_constraint(config: dict, ray_ctx: None) -> None:
         spec=process_spec,
     )
     result = tuner.result_grid
-    # There must be no failed trials with output less than or equal to 10
-    assert all(t.metrics["c.in_1"] <= 10 for t in result if not t.error)
+    # There must be no failed trials
+    assert not [t for t in result if t.error]
+    # Constraint must be respected
+    assert all(t.metrics["c.in_1"] <= 10 for t in result)
     # Optimum must be less than or equal to 10
     assert best_result.metrics["c.in_1"] <= 10
+    # If a.iters is greater than 11, the constraint will be violated
+    assert all(t.metrics["c.in_1"] == -math.inf for t in result if t.config["a.iters"] > 11)
