@@ -54,6 +54,8 @@ class Tuner:
             algorithm: Configuration for the underlying Optuna algorithm used for optimisation.
         """
         self._logger = DI.logger.resolve_sync().bind(cls=self.__class__.__name__)
+        # Check that objective and mode are lists of the same length if multiple objectives are used
+        self._check_objective(objective, mode)
         self._objective = objective if isinstance(objective, list) else [objective]
         self._mode = [str(m) for m in mode] if isinstance(mode, list) else str(mode)
         self._metric = (
@@ -80,6 +82,22 @@ class Tuner:
         if self._result_grid is None:
             raise ValueError("No result grid available. Run the optimisation job first.")
         return self._result_grid
+
+    @classmethod
+    def _check_objective(
+        cls, objective: ObjectiveSpec | list[ObjectiveSpec], mode: Direction | list[Direction]
+    ) -> None:
+        """Check that the objective and mode are valid."""
+        if isinstance(objective, list):
+            if not isinstance(mode, list):
+                raise ValueError("If using multiple objectives, `mode` must also be a list.")
+            if len(objective) != len(mode):
+                raise ValueError(
+                    "If using multiple objectives, `mode` and `objective` must be the same length."
+                )
+        else:
+            if isinstance(mode, list):
+                raise ValueError("If using a single objective, `mode` must not be a list.")
 
     def _build_algorithm(
         self, algorithm: _t.Optional[OptunaSpec] = None
