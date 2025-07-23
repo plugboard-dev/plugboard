@@ -1,0 +1,46 @@
+plugboard:
+  process:  # (1)!
+    args:
+      components:
+      - type: hello_tuner.Iterator
+        args:
+          name: horizontal
+          iters: 100
+      - type: hello_tuner.Trajectory
+        args:
+          name: trajectory
+          angle: 25
+          velocity: 20
+      - type: hello_tuner.MaxHeight
+        args:
+          name: max-height
+      connectors:
+      - source: horizontal.x
+        target: trajectory.x
+      - source: trajectory.y
+        target: max-height.y
+  tune:  # (2)!
+    args:
+      objective:
+        object_name: max-height
+        field_type: field
+        field_name: max_y
+      parameters:
+      - type: ray.tune.uniform  # (3)!
+        object_type: component
+        object_name: trajectory
+        field_type: arg
+        field_name: angle
+        lower: 0
+        upper: 90
+      - type: ray.tune.uniform
+        object_type: component
+        object_name: trajectory
+        field_type: arg
+        field_name: velocity
+        lower: 0
+        upper: 100
+      num_samples: 40
+      mode: max
+      max_concurrent: 4
+  
