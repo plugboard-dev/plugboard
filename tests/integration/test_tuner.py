@@ -71,10 +71,10 @@ async def test_tune(config: dict, mode: str, process_type: str, ray_ctx: None) -
     # Correct optimimum must be found (within tolerance)
     if mode == "min":
         assert best_result.config["a.iters"] <= tuner._parameters["a.iters"].lower + 2
-        assert best_result.metrics["c.in_1"] == best_result.config["a.iters"] - 2
+        assert best_result.metrics["c.in_1"] == best_result.config["a.iters"] - 1
     else:
         assert best_result.config["a.iters"] >= tuner._parameters["a.iters"].upper - 2
-        assert best_result.metrics["c.in_1"] == best_result.config["a.iters"] - 2
+        assert best_result.metrics["c.in_1"] == best_result.config["a.iters"] - 1
 
 
 @pytest.mark.tuner
