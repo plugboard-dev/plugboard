@@ -179,6 +179,9 @@ class SqliteStateBackend(StateBackend):
         component_data = component.dict()
         component_json = msgspec.json.encode(component_data)
         await self._execute(q.UPSERT_COMPONENT, (component_json, component_db_id, process_db_id))
+        if component.status in {Status.FAILED}:
+            # If the component is terminal, update the process status
+            await self._update_process_status(process_db_id, component.status)
 
     async def get_component(self, component_id: str) -> dict:
         """Returns a component from the state."""
@@ -217,10 +220,14 @@ class SqliteStateBackend(StateBackend):
             raise NotFoundError(f"Connector with id {connector_id} not found.")
         return connector
 
+    async def _update_process_status(self, process_db_id: str, status: Status) -> None:
+        """Updates the status of a process in the state."""
+        await self._execute(q.UPDATE_PROCESS_STATUS, (str(status), process_db_id))
+
     async def update_process_status(self, process_id: str, status: Status) -> None:
         """Updates the status of a process in the state."""
         process_db_id = self._get_db_id(process_id)
-        await self._execute(q.UPDATE_PROCESS_STATUS, (str(status), process_db_id))
+        await self._update_process_status(process_db_id, status)
 
     async def get_process_status(self, process_id: str) -> Status:
         """Gets the status of a process from the state."""
