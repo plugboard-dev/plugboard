@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from collections import defaultdict, deque
-from functools import cached_property
+from functools import cache, cached_property
 import typing as _t
 
 from plugboard.connector import AsyncioChannel, Channel, Connector
@@ -397,6 +397,17 @@ class IOController:
             )
         if unconnected_outputs := set(self.outputs) - connected_outputs:
             self._logger.warning("Output fields not connected", unconnected=unconnected_outputs)
+
+    @cache
+    def dict(self) -> dict[str, _t.Any]:  # noqa: D102
+        return {
+            "namespace": self.namespace,
+            "inputs": self.inputs,
+            "outputs": self.outputs,
+            "input_events": [e.safe_type() for e in self.input_events],
+            "output_events": [e.safe_type() for e in self.output_events],
+            "initial_values": {k: list(v) for k, v in self._initial_values.items()},
+        }
 
 
 class IOBuffer(_t.Protocol):

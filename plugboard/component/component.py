@@ -406,6 +406,7 @@ class Component(ABC, ExportMixin):
             "status": str(self.status),
             **field_data,
             "exports": {name: getattr(self, name, None) for name in self.exports or []},
+            "io": self.io.dict(),
         }
 
 
