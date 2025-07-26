@@ -58,6 +58,9 @@ Running this code will execute an optimisation job and print out information on 
 !!! tip
     Since [Optuna](https://optuna.org/) is used under the hood, you can configure the optional `algorithm` argument on the `Tuner` with additional configuration defined in [`OptunaSpec`][plugboard.schemas.OptunaSpec]. For example, the [`storage`](https://optuna.readthedocs.io/en/stable/reference/storages.html) argument allows you to save the optimisation results to a database or SQLite file. You can then use a tool like [Optuna Dashboard](https://optuna-dashboard.readthedocs.io/en/stable/getting-started.html) to study the optimisation output in more detail.
 
+!!! tip
+    You can impose arbitary constraints on variables within a `Process`. In your `step` method you can raise a [`ConstraintError`][plugboard.exceptions.ConstraintError] to indicate to the `Tuner` that a constraint has been breached. This will cause the trial to be stopped, and the optimisation will continue trying to find parameters that don't cause the constraint violation.
+
 ## Using YAML config
 
 Plugboard's YAML config supports an optional `tune` section, allowing you to define optimisation jobs alongside your model configuration:

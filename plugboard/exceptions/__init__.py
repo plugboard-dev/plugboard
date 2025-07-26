@@ -91,6 +91,12 @@ class ValidationError(Exception):
     pass
 
 
+class ConstraintError(Exception):
+    """Raised when a constraint is violated."""
+
+    pass
+
+
 class ProcessStatusError(Exception):
     """Raised when a `Process` is in an invalid state for the requested operation."""
 
