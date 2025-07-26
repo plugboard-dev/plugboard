@@ -1,12 +1,14 @@
 """Provides `Tuner` class for optimising Plugboard processes."""
 
 from inspect import isfunction
+import math
 from pydoc import locate
 import typing as _t
 
 import ray.tune.search.optuna
 
 from plugboard.component.component import Component, ComponentRegistry
+from plugboard.exceptions import ConstraintError
 from plugboard.process import Process, ProcessBuilder
 from plugboard.schemas import (
     Direction,
@@ -52,6 +54,8 @@ class Tuner:
             algorithm: Configuration for the underlying Optuna algorithm used for optimisation.
         """
         self._logger = DI.logger.resolve_sync().bind(cls=self.__class__.__name__)
+        # Check that objective and mode are lists of the same length if multiple objectives are used
+        self._check_objective(objective, mode)
         self._objective = objective if isinstance(objective, list) else [objective]
         self._mode = [str(m) for m in mode] if isinstance(mode, list) else str(mode)
         self._metric = (
@@ -78,6 +82,22 @@ class Tuner:
         if self._result_grid is None:
             raise ValueError("No result grid available. Run the optimisation job first.")
         return self._result_grid
+
+    @classmethod
+    def _check_objective(
+        cls, objective: ObjectiveSpec | list[ObjectiveSpec], mode: Direction | list[Direction]
+    ) -> None:
+        """Check that the objective and mode are valid."""
+        if isinstance(objective, list):
+            if not isinstance(mode, list):
+                raise ValueError("If using multiple objectives, `mode` must also be a list.")
+            if len(objective) != len(mode):
+                raise ValueError(
+                    "If using multiple objectives, `mode` and `objective` must be the same length."
+                )
+        else:
+            if isinstance(mode, list):
+                raise ValueError("If using a single objective, `mode` must not be a list.")
 
     def _build_algorithm(
         self, algorithm: _t.Optional[OptunaSpec] = None
@@ -189,7 +209,7 @@ class Tuner:
     def _build_objective(
         self, component_classes: dict[str, type[Component]], spec: ProcessSpec
     ) -> _t.Callable:
-        def fn(config: dict[str, _t.Any]) -> _t.Any:  # pragma: no-cover
+        def fn(config: dict[str, _t.Any]) -> dict[str, _t.Any]:  # pragma: no cover
             # Recreate the ComponentRegistry in the Ray worker
             for key, cls in component_classes.items():
                 ComponentRegistry.add(cls, key=key)
@@ -198,8 +218,23 @@ class Tuner:
                 self._override_parameter(spec, self._parameters_dict[name], value)
 
             process = ProcessBuilder.build(spec)
-            run_coro_sync(self._run_process(process))
+            result = {}
+            try:
+                run_coro_sync(self._run_process(process))
+                result = {
+                    obj.full_name: self._get_objective(process, obj) for obj in self._objective
+                }
+            except* ConstraintError as e:
+                modes = self._mode if isinstance(self._mode, list) else [self._mode]
+                self._logger.warning(
+                    "Constraint violated during optimisation, stopping early",
+                    constraint_error=str(e),
+                )
+                result = {
+                    obj.full_name: math.inf if mode == "min" else -math.inf
+                    for obj, mode in zip(self._objective, modes)
+                }
 
-            return {obj.full_name: self._get_objective(process, obj) for obj in self._objective}
+            return result
 
         return fn
