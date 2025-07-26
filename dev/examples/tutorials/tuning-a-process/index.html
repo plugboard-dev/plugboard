@@ -1827,6 +1827,10 @@ What's new: 🚀 we've open-sourced Plugboard - please <a href="https://github.c
 <p class="admonition-title">Tip</p>
 <p>Since <a href="https://optuna.org/">Optuna</a> is used under the hood, you can configure the optional <code>algorithm</code> argument on the <code>Tuner</code> with additional configuration defined in <a class="autorefs autorefs-internal" title="            OptunaSpec" href="../../../api/schemas/schemas/#plugboard.schemas.OptunaSpec"><code>OptunaSpec</code></a>. For example, the <a href="https://optuna.readthedocs.io/en/stable/reference/storages.html"><code>storage</code></a> argument allows you to save the optimisation results to a database or SQLite file. You can then use a tool like <a href="https://optuna-dashboard.readthedocs.io/en/stable/getting-started.html">Optuna Dashboard</a> to study the optimisation output in more detail.</p>
 </div>
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<p>You can impose arbitary constraints on variables within a <code>Process</code>. In your <code>step</code> method you can raise a <a class="autorefs autorefs-internal" title="            ConstraintError" href="../../../api/exceptions/exceptions/#plugboard.exceptions.ConstraintError"><code>ConstraintError</code></a> to indicate to the <code>Tuner</code> that a constraint has been breached. This will cause the trial to be stopped, and the optimisation will continue trying to find parameters that don't cause the constraint violation.</p>
+</div>
 <h2 id="using-yaml-config">Using YAML config</h2>
 <p>Plugboard's YAML config supports an optional <code>tune</code> section, allowing you to define optimisation jobs alongside your model configuration:
 <div class="language-yaml highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="nt">plugboard</span><span class="p">:</span>
