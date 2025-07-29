@@ -110,6 +110,9 @@ plugboard = "plugboard.cli:app"
 asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "session"
 asyncio_default_test_loop_scope = "session"
+markers = [
+    "smoke: marks tests as smoke tests (deselect with '-m \"not smoke\"')"
+]
 
 [tool.coverage.run]
 source = ["plugboard"]
