@@ -23,7 +23,9 @@ Help users set up the components they need to implement their model. Custom comp
 An empty component looks  like this:
 
 ```python
-from plugboard.component import Component
+import typing as _t
+
+from plugboard.component import Component, IOController as IO
 from plugboard.schemas import ComponentArgsDict
 
 class Offset(Component):
