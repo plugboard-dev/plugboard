@@ -208,7 +208,7 @@ jobs:
         run: uv sync --group test
 
       - name: Run smoke tests
-        run: uv run coverage run -m pytest ./tests/smoke/"
+        run: uv run coverage run -m pytest ./tests/smoke/
 
   coverage-report:
     name: Report coverage
