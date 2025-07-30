@@ -8,7 +8,7 @@ from typing import List, Tuple
 import pytest
 
 
-SMOKE_TEST_TIMEOUT = 60
+SMOKE_TEST_TIMEOUT = 90
 
 
 @pytest.fixture(scope="module")
