@@ -289,12 +289,12 @@ class Component(ABC, ExportMixin):
             ),
             return_when=asyncio.FIRST_COMPLETED,
         )
+        for task in pending:
+            task.cancel()
         for task in done:
             exc = task.exception()
             if exc is not None:
                 raise exc
-        for task in pending:
-            task.cancel()
 
     async def _periodic_status_check(self) -> None:
         """Periodically checks the status of the process and updates the component status."""
