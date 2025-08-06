@@ -6,7 +6,6 @@ from abc import ABC, abstractmethod
 import asyncio
 from collections import defaultdict, deque
 from functools import wraps
-import os
 import typing as _t
 
 from that_depends import ContextScopes, container_context
@@ -30,7 +29,7 @@ _io_key_out: str = str(IODirection.OUTPUT)
 
 # Component IO read timeout in seconds
 # Read timeout from env var with default as this is simplest way to patch in tests
-IO_READ_TIMEOUT_SECONDS = float(os.environ.get("PLUGBOARD_IO_READ_TIMEOUT", 20.0))
+IO_READ_TIMEOUT_SECONDS = DI.settings.resolve_sync().io_read_timeout or 20.0
 
 
 class Component(ABC, ExportMixin):

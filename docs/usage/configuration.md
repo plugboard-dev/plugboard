@@ -7,10 +7,11 @@ Plugboard can either be configured via shell environment variables or using a `.
 
 Logging can be configured via the following environment variables:
 
-| Option Name                | Description                                              | Default Value |
-|----------------------------|----------------------------------------------------------|---------------|
-| `PLUGBOARD_LOG_LEVEL`      | Sets the logging level (e.g., `DEBUG`, `INFO`, `ERROR`)  | `WARNING`     |
-| `PLUGBOARD_LOG_STRUCTURED` | Enables logging in JSON format.                          |               |
+| Option Name                 | Description                                                    | Default Value |
+|-----------------------------|----------------------------------------------------------------|---------------|
+| `PLUGBOARD_LOG_LEVEL`       | Sets the logging level (e.g., `DEBUG`, `INFO`, `ERROR`)        | `WARNING`     |
+| `PLUGBOARD_LOG_STRUCTURED`  | Enables logging in JSON format.                                |               |
+| `PLUGBOARD_IO_READ_TIMEOUT` | Time in seconds between periodic status checks during io reads | 20.0          |
 
 Plugboard uses [structlog](https://www.structlog.org/en/stable/) as its logging library. For basic changes you can adjust the options above, but for more advanced configuration you may need to call [`structlog.configure()`](https://www.structlog.org/en/stable/configuration.html) and set the options yourself.
 
