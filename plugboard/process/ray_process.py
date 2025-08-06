@@ -115,10 +115,15 @@ class RayProcess(Process):
 
     async def step(self) -> None:
         """Executes a single step for the process."""
+        await super().step()
         coros = [component.step.remote() for component in self._component_actors.values()]
         try:
             await gather_except(*coros)
+        except Exception:
+            await self._set_status(Status.FAILED)
+            raise
         finally:
+            await self._set_status(Status.WAITING)
             await self._update_component_attributes()
 
     async def run(self) -> None:

@@ -267,22 +267,26 @@ async def test_io_read_with_process_failure(
     )
 
     await process.init()
+    assert process.status == Status.INIT
 
     # First step should succeed
     await process.step()
     assert producer.step_count == 1
     assert failing_comp.step_count == 1
     assert consumer.step_count == 1
+    assert process.status == Status.WAITING
 
     # Second step should succeed
     await process.step()
     assert producer.step_count == 2
     assert failing_comp.step_count == 2
     assert consumer.step_count == 2
+    assert process.status == Status.WAITING
 
     # Third step should cause failing_comp to fail
     with pytest.raises(ExceptionGroup) as exc_info:
         await process.step()
+    assert process.status == Status.FAILED
 
     # Verify that we have the expected exceptions
     exceptions = exc_info.value.exceptions

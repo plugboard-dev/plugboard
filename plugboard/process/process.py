@@ -108,7 +108,9 @@ class Process(ExportMixin, ABC):
     @abstractmethod
     async def step(self) -> None:
         """Executes a single step for the process."""
-        pass
+        if not self._is_initialised:
+            raise NotInitialisedError("Process must be initialised before running")
+        await self._set_status(Status.RUNNING)
 
     @abstractmethod
     async def run(self) -> None:

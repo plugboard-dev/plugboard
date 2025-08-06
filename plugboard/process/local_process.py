@@ -37,9 +37,16 @@ class LocalProcess(Process):
 
     async def step(self) -> None:
         """Executes a single step for the process."""
-        async with asyncio.TaskGroup() as tg:
-            for component in self.components.values():
-                tg.create_task(component.step())
+        await super().step()
+        try:
+            async with asyncio.TaskGroup() as tg:
+                for component in self.components.values():
+                    tg.create_task(component.step())
+        except Exception:
+            await self._set_status(Status.FAILED)
+            raise
+        finally:
+            await self._set_status(Status.WAITING)
 
     async def run(self) -> None:
         """Runs the process to completion."""
