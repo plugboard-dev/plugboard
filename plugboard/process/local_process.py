@@ -45,7 +45,7 @@ class LocalProcess(Process):
         except Exception:
             await self._set_status(Status.FAILED)
             raise
-        finally:
+        else:
             await self._set_status(Status.WAITING)
 
     async def run(self) -> None:

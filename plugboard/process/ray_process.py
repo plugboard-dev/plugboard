@@ -122,8 +122,9 @@ class RayProcess(Process):
         except Exception:
             await self._set_status(Status.FAILED)
             raise
-        finally:
+        else:
             await self._set_status(Status.WAITING)
+        finally:
             await self._update_component_attributes()
 
     async def run(self) -> None:
