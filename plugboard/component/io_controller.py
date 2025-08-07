@@ -127,9 +127,9 @@ class IOController:
                     if (e := task.exception()) is not None:
                         raise e
                     self._read_tasks.pop(task.get_name())
-                self._set_read_tasks()
                 await self._flush_internal_field_buffer()
                 await self._flush_internal_event_buffer()
+                self._set_read_tasks()
             except* ChannelClosedError as eg:
                 await self.close()
                 raise self._build_io_stream_error(IODirection.INPUT, eg) from eg
@@ -171,7 +171,7 @@ class IOController:
                 self._received_events.clear()
 
     async def _read_fields(self) -> None:
-        if self.buf_fields[_io_key_in]:
+        if self._received_fields:
             return  # Don't read new data if buffered input data has not been consumed
 
         read_tasks: dict[str, asyncio.Task] = {}

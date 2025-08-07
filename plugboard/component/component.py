@@ -15,6 +15,7 @@ from plugboard.events import Event, EventHandlers, StopEvent
 from plugboard.exceptions import (
     IOSetupError,
     IOStreamClosedError,
+    ProcessStatusError,
     UnrecognisedEventError,
     ValidationError,
 )
@@ -25,6 +26,10 @@ from plugboard.utils import DI, ClassRegistry, ExportMixin, is_on_ray_worker
 
 _io_key_in: str = str(IODirection.INPUT)
 _io_key_out: str = str(IODirection.OUTPUT)
+
+# Component IO read timeout in seconds
+# Read timeout from env var with default as this is simplest way to patch in tests
+IO_READ_TIMEOUT_SECONDS = DI.settings.resolve_sync().io_read_timeout or 20.0
 
 
 class Component(ABC, ExportMixin):
@@ -74,7 +79,7 @@ class Component(ABC, ExportMixin):
             namespace=self.name,
             component=self,
         )
-        self.status = Status.CREATED
+        self._status = Status.CREATED
         self._is_running = False
         self._field_inputs: dict[str, _t.Any] = {}
         self._field_inputs_ready: bool = False
@@ -93,9 +98,14 @@ class Component(ABC, ExportMixin):
 
     async def _set_status(self, status: Status, publish: bool = True) -> None:
         """Sets the status of the component and optionaly publishes it to the state backend."""
-        self.status = status
+        self._status = status
         if publish and self._state and self._state_is_connected:
             await self._state.upsert_component(self)
+
+    @property
+    def status(self) -> Status:
+        """Gets the status of the component."""
+        return self._status
 
     @classmethod
     def _configure_io(cls) -> None:
@@ -103,12 +113,15 @@ class Component(ABC, ExportMixin):
         parent_comps = cls._get_component_bases()
         # Create combined set of all io arguments from this class and all parents
         io_args: dict[str, set] = defaultdict(set)
+        exports: list[str] = []
         for c in parent_comps + [cls]:
-            if {c_io := getattr(c, "io")}:
+            if c_io := getattr(c, "io"):
                 io_args["inputs"].update(c_io.inputs)
                 io_args["outputs"].update(c_io.outputs)
                 io_args["input_events"].update(c_io.input_events)
                 io_args["output_events"].update(c_io.output_events)
+            if c_exports := getattr(c, "exports"):
+                exports.extend(c_exports)
         # Set io arguments for subclass
         cls.io = IO(
             inputs=sorted(io_args["inputs"], key=str),
@@ -116,6 +129,8 @@ class Component(ABC, ExportMixin):
             input_events=sorted(io_args["input_events"], key=str),
             output_events=sorted(io_args["output_events"], key=str),
         )
+        # Set exports for subclass
+        cls.exports = sorted(set(exports))
         # Check that subclass io arguments is superset of abstract base class Component io arguments
         # Note: can't check cls.__abstractmethods__ as it's unset at this point. Maybe brittle...
         cls_is_concrete = ABC not in cls.__bases__
@@ -242,7 +257,7 @@ class Component(ABC, ExportMixin):
         async def _wrapper() -> None:
             with self._job_id_ctx():
                 await self._set_status(Status.RUNNING, publish=not self._is_running)
-                await self.io.read()
+                await self._io_read_with_status_check()
                 await self._handle_events()
                 self._bind_inputs()
                 if self._can_step:
@@ -258,6 +273,45 @@ class Component(ABC, ExportMixin):
                 await self._set_status(Status.WAITING, publish=not self._is_running)
 
         return _wrapper
+
+    async def _io_read_with_status_check(self) -> None:
+        """Reads from IO controller with concurrent periodic status checks.
+
+        Status checks are performed periodically until the read completes. If the process is in a
+        failed state, the component status is set to `STOPPED` and a `ProcessStatusError` is raised;
+        otherwise another read attempt is made.
+        """
+        done, pending = await asyncio.wait(
+            (
+                asyncio.create_task(self._periodic_status_check()),
+                asyncio.create_task(self.io.read()),
+            ),
+            return_when=asyncio.FIRST_COMPLETED,
+        )
+        for task in pending:
+            task.cancel()
+        for task in done:
+            exc = task.exception()
+            if exc is not None:
+                raise exc
+
+    async def _periodic_status_check(self) -> None:
+        """Periodically checks the status of the process and updates the component status."""
+        while True:
+            await asyncio.sleep(IO_READ_TIMEOUT_SECONDS)
+            await self._status_check()
+
+    async def _status_check(self) -> None:
+        """Checks the status of the process and updates the component status."""
+        if not (self._state and self._state_is_connected):
+            self._logger.warning("State backend not connected, skipping status check")
+            return
+        process_status = await self._state.get_process_status_for_component(self.id)
+        self._logger.info(f"Process status for component {self.id}: {process_status}")
+        if process_status == Status.FAILED:
+            await self._set_status(Status.STOPPED)
+            self._logger.exception("Process in failed state")
+            raise ProcessStatusError(f"Process in failed state for component {self.id}")
 
     def _bind_inputs(self) -> None:
         """Binds input fields to component fields.
@@ -349,7 +403,7 @@ class Component(ABC, ExportMixin):
         return {
             "id": self.id,
             "name": self.name,
-            "status": self.status,
+            "status": str(self.status),
             **field_data,
             "exports": {name: getattr(self, name, None) for name in self.exports or []},
         }

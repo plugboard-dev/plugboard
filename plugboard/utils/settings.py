@@ -53,6 +53,8 @@ class Settings(BaseSettings):
         log_level: The log level to use.
         log_structured: Whether to render logs to JSON. Defaults to JSON if not running in a
             terminal session.
+        io_read_timeout: Timeout for reading from IO streams in seconds between periodic
+            status checks.
     """
 
     model_config = SettingsConfigDict(env_prefix=_ENV_PREFIX)
@@ -60,4 +62,6 @@ class Settings(BaseSettings):
     flags: _FeatureFlags = Field(default_factory=_FeatureFlags)
     log_level: LogLevel = LogLevel.warning
     log_structured: bool = Field(default_factory=lambda: not sys.stderr.isatty())
+    io_read_timeout: float = 20.0
+
     rabbitmq: _RabbitMQSettings = Field(default_factory=_RabbitMQSettings)

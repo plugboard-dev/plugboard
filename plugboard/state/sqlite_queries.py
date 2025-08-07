@@ -132,3 +132,24 @@ GET_CONNECTORS_FOR_PROCESS: str = dedent(
     SELECT id, data FROM connector WHERE process_id = ?;
     """
 )
+
+UPDATE_PROCESS_STATUS: str = dedent(
+    """\
+    UPDATE process SET data = json_set(data, '$.status', ?) WHERE id = ?;
+    """
+)
+
+GET_PROCESS_STATUS: str = dedent(
+    """\
+    SELECT json_extract(data, '$.status') AS status FROM process WHERE id = ?;
+    """
+)
+
+GET_PROCESS_STATUS_FOR_COMPONENT: str = dedent(
+    """\
+    SELECT json_extract(p.data, '$.status') AS status
+    FROM process p
+    JOIN process_component pc ON p.id = pc.process_id
+    WHERE pc.component_id = ?;
+    """
+)
