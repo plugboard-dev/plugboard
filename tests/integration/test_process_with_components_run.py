@@ -110,20 +110,24 @@ async def test_process_with_components_run(
     connectors = [conn_ab, conn_bc]
 
     process = process_cls(components, connectors)
+    assert process.status == Status.CREATED
 
     # Running before initialisation should raise an error
     with pytest.raises(exceptions.NotInitialisedError):
         await process.run()
 
     await process.init()
+    assert process.status == Status.INIT
     for c in components:
         assert c.is_initialised
 
     await process.step()
+    assert process.status == Status.WAITING
     for c in components:
         assert c.step_count == 1
 
     await process.run()
+    assert process.status == Status.COMPLETED
     for c in components:
         assert c.is_finished
         assert c.step_count == iters
@@ -265,6 +269,7 @@ async def test_io_read_with_process_failure(
         connectors=[conn1, conn2],
         name="failing_process",
     )
+    assert process.status == Status.CREATED
 
     await process.init()
     assert process.status == Status.INIT
