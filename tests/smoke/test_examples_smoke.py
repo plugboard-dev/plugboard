@@ -41,7 +41,6 @@ def test_tutorial_file_runs(file_and_dir: Tuple[Path, Path]) -> None:
     py_file, working_dir = file_and_dir
 
     try:
-        # Use subprocess.Popen with cwd argument
         process = subprocess.Popen(  # noqa: S603
             [sys.executable, py_file.name],
             cwd=working_dir,
