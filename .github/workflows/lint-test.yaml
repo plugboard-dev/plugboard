@@ -182,6 +182,36 @@ jobs:
           include-hidden-files: true
           path: .coverage.py${{ matrix.python_version }}.integration.tuner*
 
+  test-smoke:
+    name: Tests - smoke
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    strategy:
+      matrix:
+        python_version: [3.12, 3.13]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{matrix.python_version}}
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+        with:
+          enable-cache: true
+          cache-dependency-glob: "uv.lock"
+
+      - name: Install project
+        run: uv sync --group test
+
+      - name: Run smoke tests
+        run: uv run pytest ./tests/smoke/
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+
   coverage-report:
     name: Report coverage
     needs: [test-unit, test-integration, test-integration-tuner] # Depends on tests passing
