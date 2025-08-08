@@ -1,15 +1,26 @@
 """Smoke tests for examples/tutorials Python files."""
 
+import os
 from pathlib import Path
 import subprocess
 import sys
-from typing import Tuple
+from typing import Iterator, Tuple
 
 import pytest
 
 
 SMOKE_TEST_TIMEOUT = 90
 PROJECT_ROOT = Path(__file__).parent.parent.parent
+
+
+@pytest.fixture(scope="module", autouse=True)
+def ray_disable_uv_run() -> Iterator[None]:
+    """Disable Ray's `uv run` runtime environment for smoke tests."""
+    # uv run environment will prevent tests from running outside of the project root
+    # This is necessary because the smoke tests run in a separate process
+    os.environ["RAY_ENABLE_UV_RUN_RUNTIME_ENV"] = "0"
+    yield
+    os.environ.pop("RAY_ENABLE_UV_RUN_RUNTIME_ENV", None)
 
 
 def pytest_generate_tests(metafunc: pytest.Metafunc) -> None:
