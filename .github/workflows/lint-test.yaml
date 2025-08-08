@@ -208,7 +208,7 @@ jobs:
         run: uv sync --group test
 
       - name: Run smoke tests
-        run: uv run coverage run -m pytest ./tests/smoke/
+        run: uv run pytest ./tests/smoke/ --working_dir .
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
 
