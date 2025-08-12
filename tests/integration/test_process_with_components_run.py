@@ -10,11 +10,10 @@ from aiofile import async_open
 import pytest
 import pytest_cases
 
-from plugboard import exceptions
 from plugboard.component import IOController as IO
 from plugboard.component.component import IO_READ_TIMEOUT_SECONDS
 from plugboard.connector import AsyncioConnector, Connector, RabbitMQConnector, RayConnector
-from plugboard.exceptions import ProcessStatusError
+from plugboard.exceptions import NotInitialisedError, ProcessStatusError
 from plugboard.process import LocalProcess, Process, RayProcess
 from plugboard.schemas import ConnectorSpec
 from plugboard.schemas.state import Status
@@ -113,7 +112,10 @@ async def test_process_with_components_run(
     assert process.status == Status.CREATED
 
     # Running before initialisation should raise an error
-    with pytest.raises(exceptions.NotInitialisedError):
+    with pytest.raises(NotInitialisedError):
+        await process.step()
+
+    with pytest.raises(NotInitialisedError):
         await process.run()
 
     await process.init()

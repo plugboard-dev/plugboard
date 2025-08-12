@@ -207,12 +207,14 @@ class StateBackend(ABC, ExportMixin):
     async def get_process_status(self, process_id: str) -> Status:
         """Gets the status of a process from the state."""
         process_status_key = self._process_key(process_id) + ("status",)
-        status_str = await self._get(process_status_key)
+        status_str: str | None = await self._get(process_status_key)
+        if status_str is None:
+            raise NotFoundError(f"Process with id {process_id} not found.")
         return Status(status_str)
 
     async def get_process_status_for_component(self, component_id: str) -> Status:
         """Gets the status of the process that a component belongs to."""
-        process_id = await self._get(("_comp_proc_map", component_id))
-        if not process_id:
+        process_id: str | None = await self._get(("_comp_proc_map", component_id))
+        if process_id is None:
             raise NotFoundError(f"No process found for component with ID {component_id}")
         return await self.get_process_status(process_id)

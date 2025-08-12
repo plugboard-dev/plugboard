@@ -7,6 +7,7 @@ import pytest_asyncio
 
 from plugboard.component import Component, IOController
 from plugboard.connector import AsyncioConnector, Connector
+from plugboard.exceptions import NotFoundError
 from plugboard.process import LocalProcess
 from plugboard.schemas import ConnectorSpec, Status
 from plugboard.state import StateBackend
@@ -249,3 +250,9 @@ async def test_state_backend_process_status(
     assert await state_backend.get_process_status(process.id) == Status.FAILED
 
     await process.destroy()
+
+    with pytest.raises(NotFoundError):
+        await state_backend.get_process_status("process-non-existent")
+
+    with pytest.raises(NotFoundError):
+        await state_backend.get_process_status_for_component("component-non-existent")
