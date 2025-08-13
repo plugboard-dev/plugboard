@@ -24,7 +24,9 @@
 			"extensions": [
 				"ms-python.python",
 				"ms-toolsai.jupyter",
-				"charliermarsh.ruff"
+				"charliermarsh.ruff",
+				"GitHub.copilot",
+				"GitHub.copilot-chat"
 			],
 			"settings": {
 				"[python]": {
