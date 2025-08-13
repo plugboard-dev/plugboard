@@ -9,6 +9,7 @@ import typing as _t
 from plugboard.component import Component
 from plugboard.connector import Connector
 from plugboard.exceptions import NotInitialisedError
+from plugboard.schemas.state import Status
 from plugboard.state import DictStateBackend, StateBackend
 from plugboard.utils import DI, ExportMixin, gen_rand_str
 
@@ -40,6 +41,7 @@ class Process(ExportMixin, ABC):
         self.connectors: dict[str, Connector] = {c.id: c for c in connectors}
         self.parameters: dict = parameters or {}
         self._state: StateBackend = state or self._default_state_cls()
+        self._status = Status.CREATED
         self._state_is_connected: bool = False
         # TODO: Replace when we have state tracking in StateBackend
         self._is_initialised: bool = False
@@ -58,6 +60,11 @@ class Process(ExportMixin, ABC):
     def state(self) -> StateBackend:
         """State backend for the process."""
         return self._state
+
+    @property
+    def status(self) -> Status:
+        """Returns the current status of the `Process`."""
+        return self._status
 
     @property
     def is_initialised(self) -> bool:
@@ -86,21 +93,31 @@ class Process(ExportMixin, ABC):
         """Connects the `Components` and `Connectors` to the `StateBackend`."""
         pass
 
+    async def _set_status(self, status: Status, publish: bool = True) -> None:
+        """Sets the status of the component and optionaly publishes it to the state backend."""
+        self._status = status
+        if publish and self._state and self._state_is_connected:
+            await self._state.update_process_status(self.id, status)
+
     @abstractmethod
     async def init(self) -> None:
         """Performs component initialisation actions."""
         self._is_initialised = True
+        await self._set_status(Status.INIT)
 
     @abstractmethod
     async def step(self) -> None:
         """Executes a single step for the process."""
-        pass
+        if not self._is_initialised:
+            raise NotInitialisedError("Process must be initialised before running")
+        await self._set_status(Status.RUNNING)
 
     @abstractmethod
     async def run(self) -> None:
         """Runs the process to completion."""
         if not self._is_initialised:
             raise NotInitialisedError("Process must be initialised before running")
+        await self._set_status(Status.RUNNING)
 
     async def destroy(self) -> None:
         """Performs tear-down actions for the `Process` and its `Component`s."""
@@ -133,6 +150,7 @@ class Process(ExportMixin, ABC):
         return {
             "id": self.id,
             "name": self.name,
+            "status": str(self.status),
             "components": {k: v.dict() for k, v in self.components.items()},
             "connectors": {k: v.dict() for k, v in self.connectors.items()},
             "parameters": self.parameters,

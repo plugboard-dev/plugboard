@@ -3,6 +3,7 @@
 import asyncio
 
 from plugboard.process.process import Process
+from plugboard.schemas.state import Status
 
 
 class LocalProcess(Process):
@@ -36,17 +37,30 @@ class LocalProcess(Process):
 
     async def step(self) -> None:
         """Executes a single step for the process."""
-        async with asyncio.TaskGroup() as tg:
-            for component in self.components.values():
-                tg.create_task(component.step())
+        await super().step()
+        try:
+            async with asyncio.TaskGroup() as tg:
+                for component in self.components.values():
+                    tg.create_task(component.step())
+        except Exception:
+            await self._set_status(Status.FAILED)
+            raise
+        else:
+            await self._set_status(Status.WAITING)
 
     async def run(self) -> None:
         """Runs the process to completion."""
         await super().run()
         self._logger.info("Starting process run")
-        async with asyncio.TaskGroup() as tg:
-            for component in self.components.values():
-                tg.create_task(component.run())
+        try:
+            async with asyncio.TaskGroup() as tg:
+                for component in self.components.values():
+                    tg.create_task(component.run())
+        except Exception:
+            await self._set_status(Status.FAILED)
+            raise
+        else:
+            await self._set_status(Status.COMPLETED)
         self._logger.info("Process run complete")
 
     async def destroy(self) -> None:
