@@ -226,10 +226,15 @@ class Component(ABC, ExportMixin):
         @wraps(self.init)
         async def _wrapper() -> None:
             with self._job_id_ctx():
+                await self._build_producer_graph()
                 await self._init()
                 await self._set_status(Status.INIT)
 
         return _wrapper
+
+    async def _build_producer_graph(self) -> None:
+        """Builds the producer graph for the component."""
+        pass
 
     @abstractmethod
     async def step(self) -> None:
