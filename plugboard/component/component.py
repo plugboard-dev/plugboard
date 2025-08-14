@@ -236,6 +236,10 @@ class Component(ABC, ExportMixin):
         """Builds the producer graph for the component."""
         pass
 
+    async def _update_producer_graph(self) -> None:
+        """Updates the producer graph for the component."""
+        pass
+
     @abstractmethod
     async def step(self) -> None:
         """Executes component logic for a single step."""
@@ -305,6 +309,10 @@ class Component(ABC, ExportMixin):
         while True:
             await asyncio.sleep(IO_READ_TIMEOUT_SECONDS)
             await self._status_check()
+            # TODO : Eventually producer graph update will be event driven. For now,
+            #      : the update is performed periodically, so it's called here along
+            #      : with the status check.
+            await self._update_producer_graph()
 
     async def _status_check(self) -> None:
         """Checks the status of the process and updates the component status."""
