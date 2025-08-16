@@ -97,4 +97,3 @@ plugboard:
       num_samples: 40
       mode: min
       max_concurrent: 4
-  
