@@ -172,6 +172,17 @@ class StateBackend(ABC, ExportMixin):
         """Returns a process from the state."""
         return await self._get(self._process_key(process_id))
 
+    async def _get_process_id_for_component(self, component_id: str) -> str:
+        process_id: str | None = await self._get(("_comp_proc_map", component_id))
+        if process_id is None:
+            raise NotFoundError(f"No process found for component with ID {component_id}")
+        return process_id
+
+    async def get_process_for_component(self, component_id: str) -> dict:
+        """Gets the process that a component belongs to."""
+        process_id = await self._get_process_id_for_component(component_id)
+        return await self.get_process(process_id)
+
     async def upsert_component(self, component: Component) -> None:
         """Upserts a component into the state."""
         process_id = await self._get(("_comp_proc_map", component.id))
@@ -214,7 +225,5 @@ class StateBackend(ABC, ExportMixin):
 
     async def get_process_status_for_component(self, component_id: str) -> Status:
         """Gets the status of the process that a component belongs to."""
-        process_id: str | None = await self._get(("_comp_proc_map", component_id))
-        if process_id is None:
-            raise NotFoundError(f"No process found for component with ID {component_id}")
+        process_id = await self._get_process_id_for_component(component_id)
         return await self.get_process_status(process_id)
