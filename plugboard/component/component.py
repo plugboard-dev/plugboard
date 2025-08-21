@@ -335,6 +335,7 @@ class Component(ABC, ExportMixin):
             # TODO : Eventually producer graph update will be event driven. For now,
             #      : the update is performed periodically, so it's called here along
             #      : with the status check.
+            # TODO : Gracefully handle StopIteration exception when producer graph empty.
             await self._update_producer_graph()
 
     async def _status_check(self) -> None:
