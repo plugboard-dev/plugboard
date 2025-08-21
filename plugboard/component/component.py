@@ -79,6 +79,7 @@ class Component(ABC, ExportMixin):
             namespace=self.name,
             component=self,
         )
+        self._event_producers: dict[str, set[str]] = defaultdict(set)
         self._status = Status.CREATED
         self._is_running = False
         self._field_inputs: dict[str, _t.Any] = {}
@@ -234,11 +235,33 @@ class Component(ABC, ExportMixin):
 
     async def _build_producer_graph(self) -> None:
         """Builds the producer graph for the component."""
-        pass
+        # TODO : Special handling for system events, i.e., StopEvent?
+        # TODO : How to handle the case of recursion, i.e., a component which is both a producer and
+        #      : consumer of a given event?
+        if not (self._state and self._state_is_connected):
+            raise RuntimeError("State backend not connected. Cannot build producer graph.")
+        process = await self._state.get_process_for_component(self.id)
+        input_event_set = set([evt.safe_type() for evt in self.io.input_events])
+        for comp_id, comp_data in process["components"].items():
+            for evt in input_event_set.intersection(comp_data["io"]["output_events"]):
+                self._event_producers[evt].add(comp_id)
 
     async def _update_producer_graph(self) -> None:
         """Updates the producer graph for the component."""
-        pass
+        if not (self._state and self._state_is_connected):
+            raise RuntimeError("State backend not connected. Cannot update producer graph.")
+        if not self._event_producers:
+            return  # Nothing to do
+        process = await self._state.get_process_for_component(self.id)
+        for evt in list(self._event_producers.keys()):
+            for comp_id in list(self._event_producers[evt]):
+                comp_status = process["components"][comp_id]["status"]
+                if comp_status not in (Status.RUNNING, Status.WAITING):
+                    self._event_producers[evt].remove(comp_id)
+            if not self._event_producers[evt]:
+                self._event_producers.pop(evt)
+        if not self._event_producers:
+            raise StopIteration("No more events to process.")
 
     @abstractmethod
     async def step(self) -> None:
