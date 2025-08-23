@@ -42,17 +42,17 @@ jobs:
           echo "HEAD_SHA=$(echo ${{ github.event.pull_request.head.sha }} | cut -c1-8)" >> $GITHUB_ENV
           echo "PR_COMMENT=$(mktemp)" >> $GITHUB_ENV
 
-      - name: Run benchmarks on main
-        working-directory: ./main
-        run: |
-          uv sync --group test
-          uv run pytest --benchmark-only --benchmark-save=base
-
       - name: Run benchmarks on PR
         working-directory: ./pr
         run: |
           uv sync --group test
           uv run pytest --benchmark-only --benchmark-save=pr
+
+      - name: Run benchmarks on main
+        working-directory: ./main
+        run: |
+          uv sync --group test
+          uv run pytest --benchmark-only --benchmark-save=base
 
       - name: Compare results
         run: |
