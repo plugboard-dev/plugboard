@@ -56,8 +56,9 @@ jobs:
           uv run pytest --benchmark-only --benchmark-save=base
 
       - name: Compare results
+        continue-on-error: false
         run: |
-          uv run pytest-benchmark compare **/.benchmarks/**/*.json | tee cmp_results
+          uvx pytest-benchmark compare **/.benchmarks/**/*.json | tee cmp_results
 
           echo 'Benchmark comparison for [`${{ env.BASE_SHA }}`](${{ github.event.repository.html_url }}/commit/${{ github.event.pull_request.base.sha }}) (base) vs [`${{ env.HEAD_SHA }}`](${{ github.event.repository.html_url }}/commit/${{ github.event.pull_request.head.sha }}) (PR)' >> pr_comment
           echo '```' >> pr_comment
