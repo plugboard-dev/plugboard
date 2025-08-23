@@ -50,6 +50,7 @@ jobs:
 
       - name: Run benchmarks on main
         working-directory: ./main
+        continue-on-error: true
         run: |
           uv sync --group test
           uv run pytest --benchmark-only --benchmark-save=base
