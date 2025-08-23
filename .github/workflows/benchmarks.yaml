@@ -37,10 +37,10 @@ jobs:
       - name: Run benchmarks
         run: |
           git checkout ${{ github.event.pull_request.base.sha }}
-          pytest --benchmark-only --benchmark-autosave --benchmark-save=base
+          pytest --benchmark-only --benchmark-save=base
 
           git checkout ${{ github.event.pull_request.head.sha }}
-          pytest --benchmark-only --benchmark-autosave --benchmark-save=branch
+          pytest --benchmark-only --benchmark-save=branch
 
       - name: Compare results
         run: |
