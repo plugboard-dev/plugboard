@@ -2,7 +2,6 @@
 
 import asyncio
 
-import pytest
 from pytest_benchmark.fixture import BenchmarkFixture
 
 from plugboard.connector import AsyncioConnector
@@ -31,7 +30,6 @@ def _run_process(process: Process) -> None:
     asyncio.run(process.run())
 
 
-@pytest.mark.asyncio
 def test_benchmark_process_run(benchmark: BenchmarkFixture) -> None:
     """Benchmark the running of a Plugboard Process."""
     benchmark.pedantic(_run_process, setup=_setup_process, rounds=5)
