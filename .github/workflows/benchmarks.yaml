@@ -14,10 +14,16 @@ jobs:
       matrix:
         python_version: [3.12]
     steps:
-      - name: Checkout
+      - name: Checkout branch
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0
+          path: pr
+
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          path: main
 
       - name: Install python
         uses: actions/setup-python@v5
@@ -30,26 +36,27 @@ jobs:
           enable-cache: true
           cache-dependency-glob: "uv.lock"
 
-      - name: Install project
-        run: uv sync --group test
-
       - name: Setup benchmarks
         run: |
           echo "BASE_SHA=$(echo ${{ github.event.pull_request.base.sha }} | cut -c1-8)" >> $GITHUB_ENV
           echo "HEAD_SHA=$(echo ${{ github.event.pull_request.head.sha }} | cut -c1-8)" >> $GITHUB_ENV
           echo "PR_COMMENT=$(mktemp)" >> $GITHUB_ENV
 
-      - name: Run benchmarks
+      - name: Run benchmarks on main
+        working-directory: ./main
         run: |
-          git checkout ${{ github.event.pull_request.base.sha }}
+          uv sync --group test
           uv run pytest --benchmark-only --benchmark-save=base
 
-          git checkout ${{ github.event.pull_request.head.sha }}
-          uv run pytest --benchmark-only --benchmark-save=branch
+      - name: Run benchmarks on PR
+        working-directory: ./pr
+        run: |
+          uv sync --group test
+          uv run pytest --benchmark-only --benchmark-save=pr
 
       - name: Compare results
         run: |
-          uv run pytest-benchmark compare | tee cmp_results
+          uv run pytest-benchmark compare main/.benchmarks/**/* pr/.benchmarks/**/* | tee cmp_results
 
           echo 'Benchmark comparison for [`${{ env.BASE_SHA }}`](${{ github.event.repository.html_url }}/commit/${{ github.event.pull_request.base.sha }}) (base) vs [`${{ env.HEAD_SHA }}`](${{ github.event.repository.html_url }}/commit/${{ github.event.pull_request.head.sha }}) (PR)' >> pr_comment
           echo '```' >> pr_comment
