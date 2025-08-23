@@ -53,7 +53,7 @@ jobs:
 
           echo 'Benchmark comparison for [`${{ env.BASE_SHA }}`](${{ github.event.repository.html_url }}/commit/${{ github.event.pull_request.base.sha }}) (base) vs [`${{ env.HEAD_SHA }}`](${{ github.event.repository.html_url }}/commit/${{ github.event.pull_request.head.sha }}) (PR)' >> pr_comment
           echo '```' >> pr_comment
-          echo cmp_results >> pr_comment
+          cat cmp_results >> pr_comment
           echo '```' >> pr_comment
           cat pr_comment > ${{ env.PR_COMMENT }}
       
