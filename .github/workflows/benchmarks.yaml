@@ -4,6 +4,7 @@ on:
   pull_request:
     types:
       - opened
+      - synchronize
 
 jobs:
   lint:
@@ -35,14 +36,14 @@ jobs:
       - name: Run benchmarks
         run: |
           git checkout ${{ github.event.pull_request.base.sha }}
-          pytest --benchmark-only --benchmark-save=base
+          uv run pytest --benchmark-only --benchmark-save=base
 
           git checkout ${{ github.event.pull_request.head.sha }}
-          pytest --benchmark-only --benchmark-save=branch
+          uv run pytest --benchmark-only --benchmark-save=branch
 
       - name: Compare results
         run: |
-          pytest-benchmark compare | tee cmp_results
+          uv run pytest-benchmark compare | tee cmp_results
 
           echo 'Benchmark comparison for [`${{ env.BASE_SHA }}`](${{ github.event.repository.html_url }}/commit/${{ github.event.pull_request.base.sha }}) (base) vs [`${{ env.HEAD_SHA }}`](${{ github.event.repository.html_url }}/commit/${{ github.event.pull_request.head.sha }}) (PR)' >> pr_comment
           echo '```' >> pr_comment
