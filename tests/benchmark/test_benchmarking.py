@@ -31,7 +31,6 @@ def _run_process(process: Process) -> None:
     asyncio.run(process.run())
 
 
-@pytest.mark.benchmark
 @pytest.mark.asyncio
 def test_benchmark_process_run(benchmark: BenchmarkFixture) -> None:
     """Benchmark the running of a Plugboard Process."""

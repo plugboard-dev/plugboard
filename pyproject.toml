@@ -112,8 +112,7 @@ asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "session"
 asyncio_default_test_loop_scope = "session"
 markers = [
-    "smoke: marks tests as smoke tests (deselect with '-m \"not smoke\"')",
-    "benchmark: marks tests as benchmarking tests (deselect with '-m \"not benchmark\"')"
+    "smoke: marks tests as smoke tests (deselect with '-m \"not smoke\"')"
 ]
 
 [tool.coverage.run]
