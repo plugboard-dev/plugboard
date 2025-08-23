@@ -1,0 +1,66 @@
+name: Benchmarks
+
+on:
+  pull_request:
+    types:
+      - opened
+      - synchronize
+      - reopened
+
+jobs:
+  lint:
+    name: Benchmark tests
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python_version: [3.12]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{matrix.python_version}}
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+        with:
+          enable-cache: true
+          cache-dependency-glob: "uv.lock"
+
+      - name: Install project
+        run: uv sync --group test
+
+      - name: Run benchmarks
+        run: |
+          git checkout ${{ github.event.pull_request.base.sha }}
+          pytest --benchmark-only --benchmark-autosave --benchmark-save=base
+
+          git checkout ${{ github.event.pull_request.head.sha }}
+          pytest --benchmark-only --benchmark-autosave --benchmark-save=branch
+
+      - name: Compare results
+        run: |
+          pytest-benchmark compare | tee cmp_results
+
+          echo 'Benchmark comparison for [`${{ env.BASE_SHA }}`](${{ github.event.repository.html_url }}/commit/${{ github.event.pull_request.base.sha }}) (base) vs [`${{ env.HEAD_SHA }}`](${{ github.event.repository.html_url }}/commit/${{ github.event.pull_request.head.sha }}) (PR)' >> pr_comment
+          echo '```' >> pr_comment
+          echo cmp_results >> pr_comment
+          echo '```' >> pr_comment
+          cat pr_comment > ${{ env.PR_COMMENT }}
+      
+      - name: Comment on PR
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            github.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: require('fs').readFileSync('${{ env.PR_COMMENT }}').toString()
+            });
+
