@@ -33,6 +33,12 @@ jobs:
       - name: Install project
         run: uv sync --group test
 
+      - name: Setup benchmarks
+        run: |
+          echo "BASE_SHA=$(echo ${{ github.event.pull_request.base.sha }} | cut -c1-8)" >> $GITHUB_ENV
+          echo "HEAD_SHA=$(echo ${{ github.event.pull_request.head.sha }} | cut -c1-8)" >> $GITHUB_ENV
+          echo "PR_COMMENT=$(mktemp)" >> $GITHUB_ENV
+
       - name: Run benchmarks
         run: |
           git checkout ${{ github.event.pull_request.base.sha }}
