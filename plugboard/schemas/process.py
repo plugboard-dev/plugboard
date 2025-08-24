@@ -68,8 +68,9 @@ class ProcessSpec(PlugboardBaseModel):
     @field_validator("type", mode="before")
     @classmethod
     def _validate_type(cls, value: _t.Any) -> str:
-        if value == "plugboard.process.local_process.LocalProcess":
-            return "plugboard.process.LocalProcess"
-        if value == "plugboard.process.ray_process.RayProcess":
-            return "plugboard.process.RayProcess"
+        if isinstance(value, str):
+            return {
+                "plugboard.process.local_process.LocalProcess": "plugboard.process.LocalProcess",
+                "plugboard.process.ray_process.RayProcess": "plugboard.process.RayProcess",
+            }.get(value, value)
         return value
