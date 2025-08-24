@@ -124,7 +124,7 @@ async def test_process_builder_build(process_spec: ProcessSpec) -> None:
         process.dump(f"{tmpdir}/process.yaml")
         with open(f"{tmpdir}/process.yaml", "rb") as f:
             loaded = msgspec.yaml.decode(f.read())
-    reconstructed_spec = ProcessSpec.model_validate(loaded["process"])
+    reconstructed_spec = ProcessSpec.model_validate(loaded["plugboard"]["process"])
     # Component names and types must match after export and re-import
     assert {(comp.args.name, comp.type) for comp in process_spec.args.components} == {
         (comp.args.name, comp.type) for comp in reconstructed_spec.args.components

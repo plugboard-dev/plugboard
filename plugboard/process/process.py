@@ -12,7 +12,7 @@ import msgspec
 from plugboard.component import Component
 from plugboard.connector import Connector
 from plugboard.exceptions import NotInitialisedError
-from plugboard.schemas.config import ProcessConfigSpec
+from plugboard.schemas.config import ConfigSpec
 from plugboard.schemas.state import Status
 from plugboard.state import DictStateBackend, StateBackend
 from plugboard.utils import DI, ExportMixin, gen_rand_str
@@ -161,7 +161,7 @@ class Process(ExportMixin, ABC):
             raise ValueError("Path must have a .yaml/.yml extension")
         yaml_path.parent.mkdir(parents=True, exist_ok=True)
 
-        spec = ProcessConfigSpec.model_validate({"process": self.export()})
+        spec = ConfigSpec.model_validate({"plugboard": {"process": self.export()}})
 
         with open(path, "wb") as f:
             f.write(msgspec.yaml.encode(spec.model_dump()))
