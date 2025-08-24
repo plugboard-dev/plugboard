@@ -55,6 +55,9 @@ In many cases, we want to define components once, with suitable parameters, and 
 !!! note
     Notice how we use `type` to tell Plugboard where our components are defined within Python code (within the `hello_world` module). Creating models in yaml format like this also makes it easy to track and adjust their configurable parameters: try editing the file path or `iters` parameter to change the behaviour of the model.
 
+!!! tip
+    If you have already defined a model in code, you can export it to YAML by calling the [`dump`][plugboard.process.Process.dump] method on your [`Process`][plugboard.process.Process] object.
+
 We can now run this model using the plugboard CLI with the command:
 ```shell
 plugboard process run model.yaml
