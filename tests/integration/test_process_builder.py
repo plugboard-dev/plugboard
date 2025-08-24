@@ -129,3 +129,7 @@ async def test_process_builder_build(process_spec: ProcessSpec) -> None:
     assert {(comp.args.name, comp.type) for comp in process_spec.args.components} == {
         (comp.args.name, comp.type) for comp in reconstructed_spec.args.components
     }
+    # Unsupported extensions must raise an error
+    with TemporaryDirectory() as tmpdir:
+        with pytest.raises(ValueError):
+            process.dump(f"{tmpdir}/process.txt")
