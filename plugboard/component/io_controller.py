@@ -317,7 +317,7 @@ class IOController:
         for task in self._read_tasks.values():
             task.cancel()
         # If there are events to read wait some grace period before flushing event buffer
-        if len(set(self._input_event_types) - {StopEvent.safe_type()}):
+        if self._input_event_types - {StopEvent.safe_type()}:
             await asyncio.sleep(IO_CLOSE_GRACE_PERIOD)
             await self._flush_internal_event_buffer()
         self._is_closed = True

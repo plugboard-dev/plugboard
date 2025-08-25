@@ -240,7 +240,7 @@ class Component(ABC, ExportMixin):
         if not (self._state and self._state_is_connected):
             raise RuntimeError("State backend not connected. Cannot build producer graph.")
         process = await self._state.get_process_for_component(self.id)
-        input_event_set = set([evt.safe_type() for evt in self.io.input_events])
+        input_event_set = {evt.safe_type() for evt in self.io.input_events}
         input_event_set.remove(StopEvent.safe_type())
         for comp_id, comp_data in process["components"].items():
             for evt in input_event_set.intersection(comp_data["io"]["output_events"]):
