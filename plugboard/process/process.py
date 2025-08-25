@@ -163,8 +163,7 @@ class Process(ExportMixin, ABC):
 
         spec = ConfigSpec.model_validate({"plugboard": {"process": self.export()}})
 
-        with open(path, "wb") as f:
-            f.write(msgspec.yaml.encode(spec.model_dump()))
+        yaml_path.write_bytes(msgspec.yaml.encode(spec.model_dump()))
 
     def dict(self) -> dict[str, _t.Any]:  # noqa: D102
         return {
