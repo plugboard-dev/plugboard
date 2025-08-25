@@ -84,8 +84,8 @@ class ConnectorSpec(PlugboardBaseModel):
 
     @field_validator("source", "target", mode="before")
     @classmethod
-    def _validate_source_target(cls, v: ConnectorSocket | str) -> ConnectorSocket:
-        if not isinstance(v, ConnectorSocket):
+    def _validate_source_target(cls, v: ConnectorSocket | dict | str) -> ConnectorSocket | dict:
+        if isinstance(v, str):
             return ConnectorSocket.from_ref(v)
         return v
 
