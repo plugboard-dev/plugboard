@@ -324,7 +324,9 @@ class Component(ABC, ExportMixin):
             task.cancel()
         for task in done:
             exc = task.exception()
-            if exc is not None:
+            if isinstance(exc, StopIteration) and len(self.io.inputs) == 0:
+                await self.io.close()  # Call close for final wait and flush event buffer
+            elif exc is not None:
                 raise exc
 
     async def _periodic_status_check(self) -> None:
@@ -335,8 +337,8 @@ class Component(ABC, ExportMixin):
             # TODO : Eventually producer graph update will be event driven. For now,
             #      : the update is performed periodically, so it's called here along
             #      : with the status check.
-            # TODO : Gracefully handle StopIteration exception when producer graph empty.
-            await self._update_producer_graph()
+            if len(self.io.inputs) == 0:
+                await self._update_producer_graph()
 
     async def _status_check(self) -> None:
         """Checks the status of the process and updates the component status."""
