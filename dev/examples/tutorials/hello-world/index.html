@@ -1781,6 +1781,10 @@ What's new: 🚀 we've open-sourced Plugboard - please <a href="https://github.c
 <p class="admonition-title">Note</p>
 <p>Notice how we use <code>type</code> to tell Plugboard where our components are defined within Python code (within the <code>hello_world</code> module). Creating models in yaml format like this also makes it easy to track and adjust their configurable parameters: try editing the file path or <code>iters</code> parameter to change the behaviour of the model.</p>
 </div>
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<p>If you have already defined a model in code, you can export it to YAML by calling the <a class="autorefs autorefs-internal" title="            dump" href="../../../api/process/process/#plugboard.process.Process.dump"><code>dump</code></a> method on your <a class="autorefs autorefs-internal" title="            Process" href="../../../api/process/process/#plugboard.process.Process"><code>Process</code></a> object.</p>
+</div>
 <p>We can now run this model using the plugboard CLI with the command:
 <div class="language-shell highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>plugboard<span class="w"> </span>process<span class="w"> </span>run<span class="w"> </span>model.yaml
 </span></code></pre></div></p>
