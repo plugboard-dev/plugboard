@@ -79,6 +79,7 @@ class Component(ABC, ExportMixin):
             namespace=self.name,
             component=self,
         )
+        self._event_producers: dict[str, set[str]] = defaultdict(set)
         self._status = Status.CREATED
         self._is_running = False
         self._field_inputs: dict[str, _t.Any] = {}
@@ -226,10 +227,41 @@ class Component(ABC, ExportMixin):
         @wraps(self.init)
         async def _wrapper() -> None:
             with self._job_id_ctx():
+                await self._build_producer_graph()
                 await self._init()
                 await self._set_status(Status.INIT)
 
         return _wrapper
+
+    async def _build_producer_graph(self) -> None:
+        """Builds the producer graph for the component."""
+        # TODO : How to handle the case of recursion, i.e., a component which is both a producer and
+        #      : consumer of a given event?
+        if not (self._state and self._state_is_connected):
+            raise RuntimeError("State backend not connected. Cannot build producer graph.")
+        process = await self._state.get_process_for_component(self.id)
+        input_event_set = {evt.safe_type() for evt in self.io.input_events}
+        input_event_set.remove(StopEvent.safe_type())
+        for comp_id, comp_data in process["components"].items():
+            for evt in input_event_set.intersection(comp_data["io"]["output_events"]):
+                self._event_producers[evt].add(comp_id)
+
+    async def _update_producer_graph(self) -> None:
+        """Updates the producer graph for the component."""
+        if not (self._state and self._state_is_connected):
+            raise RuntimeError("State backend not connected. Cannot update producer graph.")
+        if not self._event_producers:
+            return  # Nothing to do
+        process = await self._state.get_process_for_component(self.id)
+        for evt in list(self._event_producers.keys()):
+            for comp_id in list(self._event_producers[evt]):
+                comp_status = process["components"][comp_id]["status"]
+                if comp_status not in (Status.RUNNING, Status.WAITING):
+                    self._event_producers[evt].remove(comp_id)
+            if not self._event_producers[evt]:
+                self._event_producers.pop(evt)
+        if not self._event_producers:
+            raise StopIteration("No more events to process.")
 
     @abstractmethod
     async def step(self) -> None:
@@ -292,7 +324,9 @@ class Component(ABC, ExportMixin):
             task.cancel()
         for task in done:
             exc = task.exception()
-            if exc is not None:
+            if isinstance(exc, StopIteration) and len(self.io.inputs) == 0:
+                await self.io.close()  # Call close for final wait and flush event buffer
+            elif exc is not None:
                 raise exc
 
     async def _periodic_status_check(self) -> None:
@@ -300,6 +334,11 @@ class Component(ABC, ExportMixin):
         while True:
             await asyncio.sleep(IO_READ_TIMEOUT_SECONDS)
             await self._status_check()
+            # TODO : Eventually producer graph update will be event driven. For now,
+            #      : the update is performed periodically, so it's called here along
+            #      : with the status check.
+            if len(self.io.inputs) == 0:
+                await self._update_producer_graph()
 
     async def _status_check(self) -> None:
         """Checks the status of the process and updates the component status."""
@@ -406,6 +445,7 @@ class Component(ABC, ExportMixin):
             "status": str(self.status),
             **field_data,
             "exports": {name: getattr(self, name, None) for name in self.exports or []},
+            "io": self.io.dict(),
         }
 
 
