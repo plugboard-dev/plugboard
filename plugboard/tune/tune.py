@@ -22,9 +22,9 @@ from plugboard.utils.dependencies import depends_on_optional
 
 
 try:
+    import optuna.storages
     import ray.tune
     import ray.tune.search
-    import optuna.storages
 except ImportError:  # pragma: no cover
     pass
 
@@ -111,7 +111,7 @@ class Tuner:
             "mode": self._mode,
             "metric": self._metric,
         }
-        
+
         # Convert storage URI string to optuna storage object if needed
         if "storage" in _algo_kwargs and isinstance(_algo_kwargs["storage"], str):
             try:
@@ -119,18 +119,22 @@ class Tuner:
                 self._logger.info(
                     "Converted storage URI to Optuna storage object",
                     storage_uri=algorithm.storage,
-                    storage_type=type(_algo_kwargs["storage"]).__name__
+                    storage_type=type(_algo_kwargs["storage"]).__name__,
                 )
             except Exception as e:
-                raise ValueError(f"Failed to create Optuna storage from URI '{_algo_kwargs['storage']}': {e}")
-        
+                raise ValueError(
+                    f"Failed to create Optuna storage from URI '{_algo_kwargs['storage']}': {e}"
+                )
+
         algo_cls: _t.Optional[_t.Any] = locate(algorithm.type)
         if not algo_cls or not issubclass(algo_cls, ray.tune.search.searcher.Searcher):
             raise ValueError(f"Could not locate `Searcher` class {algorithm.type}")
         self._logger.info(
-            "Using custom search algorithm", algorithm=algorithm.type, params={
+            "Using custom search algorithm",
+            algorithm=algorithm.type,
+            params={
                 k: v if k != "storage" else f"<{type(v).__name__}>" for k, v in _algo_kwargs.items()
-            }
+            },
         )
         return algo_cls(**_algo_kwargs)
 

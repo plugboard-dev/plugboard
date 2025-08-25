@@ -6,7 +6,12 @@ import msgspec
 import pytest
 
 from plugboard.schemas import ConfigSpec, ObjectiveSpec
-from plugboard.schemas.tune import CategoricalParameterSpec, FloatParameterSpec, IntParameterSpec, OptunaSpec
+from plugboard.schemas.tune import (
+    CategoricalParameterSpec,
+    FloatParameterSpec,
+    IntParameterSpec,
+    OptunaSpec,
+)
 from plugboard.tune import Tuner
 from tests.integration.test_process_with_components_run import A, B, C  # noqa: F401
 
@@ -94,14 +99,14 @@ def test_tuner_with_optuna_storage(mock_tuner_cls: MagicMock, config: dict) -> N
 
     spec = ConfigSpec.model_validate(config)
     process_spec = spec.plugboard.process
-    
+
     # Test with storage URI
     optuna_spec = OptunaSpec(
         type="ray.tune.search.optuna.OptunaSearch",
         study_name="test-study",
-        storage="sqlite:///test.db"
+        storage="sqlite:///test.db",
     )
-    
+
     tuner = Tuner(
         objective=ObjectiveSpec(
             object_type="component",
@@ -122,7 +127,7 @@ def test_tuner_with_optuna_storage(mock_tuner_cls: MagicMock, config: dict) -> N
         num_samples=6,
         mode="max",
         max_concurrent=2,
-        algorithm=optuna_spec
+        algorithm=optuna_spec,
     )
     tuner.run(spec=process_spec)
 
@@ -148,10 +153,7 @@ def test_optuna_storage_uri_conversion() -> None:
     # Create a tuner with minimal configuration
     tuner = Tuner(
         objective=ObjectiveSpec(
-            object_type="component",
-            object_name="test",
-            field_type="field",
-            field_name="value"
+            object_type="component", object_name="test", field_type="field", field_name="value"
         ),
         parameters=[
             FloatParameterSpec(
@@ -160,25 +162,26 @@ def test_optuna_storage_uri_conversion() -> None:
                 field_type="arg",
                 field_name="param",
                 lower=0.0,
-                upper=1.0
+                upper=1.0,
             )
         ],
         num_samples=1,
-        mode="max"
+        mode="max",
     )
-    
+
     # Test the _build_algorithm method with storage URI
     optuna_spec = OptunaSpec(
         type="ray.tune.search.optuna.OptunaSearch",
         study_name="test-study",
-        storage="sqlite:///test_conversion.db"
+        storage="sqlite:///test_conversion.db",
     )
-    
+
     # This should work without raising AssertionError
     algorithm = tuner._build_algorithm(optuna_spec)
-    
+
     # Verify the algorithm was created successfully
     import ray.tune.search.optuna
+
     assert isinstance(algorithm, ray.tune.search.optuna.OptunaSearch)
 
 
@@ -187,10 +190,7 @@ def test_optuna_storage_without_storage() -> None:
     # Create a tuner with minimal configuration
     tuner = Tuner(
         objective=ObjectiveSpec(
-            object_type="component",
-            object_name="test",
-            field_type="field",
-            field_name="value"
+            object_type="component", object_name="test", field_type="field", field_name="value"
         ),
         parameters=[
             FloatParameterSpec(
@@ -199,25 +199,26 @@ def test_optuna_storage_without_storage() -> None:
                 field_type="arg",
                 field_name="param",
                 lower=0.0,
-                upper=1.0
+                upper=1.0,
             )
         ],
         num_samples=1,
-        mode="max"
+        mode="max",
     )
-    
+
     # Test the _build_algorithm method without storage
     optuna_spec = OptunaSpec(
         type="ray.tune.search.optuna.OptunaSearch",
-        study_name="test-study"
+        study_name="test-study",
         # Note: no storage specified
     )
-    
+
     # This should work (existing behavior)
     algorithm = tuner._build_algorithm(optuna_spec)
-    
+
     # Verify the algorithm was created successfully
     import ray.tune.search.optuna
+
     assert isinstance(algorithm, ray.tune.search.optuna.OptunaSearch)
 
 
@@ -226,10 +227,7 @@ def test_optuna_invalid_storage_uri() -> None:
     # Create a tuner with minimal configuration
     tuner = Tuner(
         objective=ObjectiveSpec(
-            object_type="component",
-            object_name="test",
-            field_type="field",
-            field_name="value"
+            object_type="component", object_name="test", field_type="field", field_name="value"
         ),
         parameters=[
             FloatParameterSpec(
@@ -238,20 +236,18 @@ def test_optuna_invalid_storage_uri() -> None:
                 field_type="arg",
                 field_name="param",
                 lower=0.0,
-                upper=1.0
+                upper=1.0,
             )
         ],
         num_samples=1,
-        mode="max"
+        mode="max",
     )
-    
+
     # Test the _build_algorithm method with invalid storage URI
     optuna_spec = OptunaSpec(
-        type="ray.tune.search.optuna.OptunaSearch",
-        study_name="test-study",
-        storage="invalid://uri"
+        type="ray.tune.search.optuna.OptunaSearch", study_name="test-study", storage="invalid://uri"
     )
-    
+
     # This should raise a ValueError with helpful message
     with pytest.raises(ValueError, match="Failed to create Optuna storage from URI"):
         tuner._build_algorithm(optuna_spec)
