@@ -310,8 +310,9 @@ class IOController:
 
     async def close(self) -> None:
         """Closes all input/output channels."""
-        for chan in self._output_channels.values():
-            await chan.close()
+        async with asyncio.TaskGroup() as tg:
+            for chan in self._output_channels.values():
+                tg.create_task(chan.close())
         for task in self._read_tasks.values():
             task.cancel()
         self._is_closed = True
