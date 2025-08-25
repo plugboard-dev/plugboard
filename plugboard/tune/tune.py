@@ -114,17 +114,11 @@ class Tuner:
 
         # Convert storage URI string to optuna storage object if needed
         if "storage" in _algo_kwargs and isinstance(_algo_kwargs["storage"], str):
-            try:
-                _algo_kwargs["storage"] = optuna.storages.get_storage(_algo_kwargs["storage"])
-                self._logger.info(
-                    "Converted storage URI to Optuna storage object",
-                    storage_uri=algorithm.storage,
-                    storage_type=type(_algo_kwargs["storage"]).__name__,
-                )
-            except Exception as e:
-                raise ValueError(
-                    f"Failed to create Optuna storage from URI '{_algo_kwargs['storage']}': {e}"
-                )
+            _algo_kwargs["storage"] = optuna.storages.RDBStorage(url=_algo_kwargs["storage"])
+            self._logger.info(
+                "Converted storage URI to Optuna RDBStorage object",
+                storage_uri=algorithm.storage,
+            )
 
         algo_cls: _t.Optional[_t.Any] = locate(algorithm.type)
         if not algo_cls or not issubclass(algo_cls, ray.tune.search.searcher.Searcher):
