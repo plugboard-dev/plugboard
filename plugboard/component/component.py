@@ -238,7 +238,8 @@ class Component(ABC, ExportMixin):
         # TODO : How to handle the case of recursion, i.e., a component which is both a producer and
         #      : consumer of a given event?
         if not (self._state and self._state_is_connected):
-            raise RuntimeError("State backend not connected. Cannot build producer graph.")
+            self._logger.warning("State backend not connected. Cannot build producer graph.")
+            return
         process = await self._state.get_process_for_component(self.id)
         input_event_set = {evt.safe_type() for evt in self.io.input_events}
         input_event_set.remove(StopEvent.safe_type())
@@ -249,7 +250,8 @@ class Component(ABC, ExportMixin):
     async def _update_producer_graph(self) -> None:
         """Updates the producer graph for the component."""
         if not (self._state and self._state_is_connected):
-            raise RuntimeError("State backend not connected. Cannot update producer graph.")
+            self._logger.warning("State backend not connected. Cannot update producer graph.")
+            return
         if not self._event_producers:
             return  # Nothing to do
         process = await self._state.get_process_for_component(self.id)
