@@ -1,0 +1,80 @@
+name: Benchmarks
+
+on:
+  pull_request:
+    types:
+      - opened
+      - synchronize
+
+jobs:
+  lint:
+    name: Benchmark tests
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python_version: [3.12]
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v4
+        with:
+          path: pr
+
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          path: main
+
+      - name: Install python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{matrix.python_version}}
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+        with:
+          enable-cache: true
+          cache-dependency-glob: "main/uv.lock"
+
+      - name: Setup benchmarks
+        run: |
+          echo "BASE_SHA=$(echo ${{ github.event.pull_request.base.sha }} | cut -c1-8)" >> $GITHUB_ENV
+          echo "HEAD_SHA=$(echo ${{ github.event.pull_request.head.sha }} | cut -c1-8)" >> $GITHUB_ENV
+          echo "PR_COMMENT=$(mktemp)" >> $GITHUB_ENV
+
+      - name: Run benchmarks on PR
+        working-directory: ./pr
+        run: |
+          uv sync --group test
+          uv run pytest --benchmark-only --benchmark-save=pr
+
+      - name: Run benchmarks on main
+        working-directory: ./main
+        continue-on-error: true
+        run: |
+          uv sync --group test
+          uv run pytest --benchmark-only --benchmark-save=base
+
+      - name: Compare results
+        continue-on-error: false
+        run: |
+          uvx pytest-benchmark compare **/.benchmarks/**/*.json | tee cmp_results
+
+          echo 'Benchmark comparison for [`${{ env.BASE_SHA }}`](${{ github.event.repository.html_url }}/commit/${{ github.event.pull_request.base.sha }}) (base) vs [`${{ env.HEAD_SHA }}`](${{ github.event.repository.html_url }}/commit/${{ github.event.pull_request.head.sha }}) (PR)' >> pr_comment
+          echo '```' >> pr_comment
+          cat cmp_results >> pr_comment
+          echo '```' >> pr_comment
+          cat pr_comment > ${{ env.PR_COMMENT }}
+      
+      - name: Comment on PR
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: require('fs').readFileSync('${{ env.PR_COMMENT }}').toString()
+            });
+

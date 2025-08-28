@@ -54,6 +54,9 @@ coverage.json
 .pytest_cache/
 cover/
 
+# Benchmarking
+.benchmarks/
+
 # Translations
 *.mo
 *.pot
