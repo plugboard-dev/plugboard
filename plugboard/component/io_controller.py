@@ -130,6 +130,11 @@ class IOController:
         if len(read_tasks := self._set_read_tasks()) == 0:
             return
         # If there are outputs but not field inputs, wait for a short time to receive input events
+        # FIXME : Need to differentiate between event producing components which are spontaneous
+        #       : event sources, i.e., they produce events from their `step` method, vs those
+        #       : which produce events only from event handlers in response to input events. A
+        #       : possible approach would be to detect if the `step` method is implemtented; this
+        #       : won't work however for components which are mixed field and event based.
         timeout = 1e-3 if self._has_outputs and not self._has_field_inputs else None
         try:
             try:
