@@ -402,7 +402,7 @@ class Controller(ComponentTestHelper):
 class Actuator(ComponentTestHelper):
     """Consumes ActionEvent, pure event consumer."""
 
-    io = IO(input_events=[ActionEvent])
+    io = IO(input_events=[TickEvent, ActionEvent])
 
     def __init__(self, *args: _t.Any, **kwargs: _t.Any) -> None:
         super().__init__(*args, **kwargs)
@@ -433,7 +433,8 @@ async def test_event_driven_process_shutdown(
     process_cls: type[Process], connector_cls: type[Connector], ray_ctx: None
 ) -> None:
     """Test graceful shutdown of event-driven process with multiple event producers and consumers."""
-    # Clock and Sensor both produce TickEvent, Controller consumes TickEvent and produces ActionEvent, Actuator consumes ActionEvent
+    # Clock produces TickEvent, Controller consumes TickEvent and produces ActionEvent, Actuator
+    # consumes ActionEvent
     clock = Clock(ticks=5, name="clock")
     controller = Controller(name="controller")
     actuator = Actuator(name="actuator")
