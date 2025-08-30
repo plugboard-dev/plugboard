@@ -100,7 +100,7 @@ class IOController:
 
     @cached_property
     def _has_event_outputs(self) -> bool:
-        return len(self._output_event_channels) > 0
+        return len(set(self._output_event_channels.keys()) - {StopEvent.safe_type()}) > 0
 
     @cached_property
     def _has_inputs(self) -> bool:

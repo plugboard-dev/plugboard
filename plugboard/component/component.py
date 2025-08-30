@@ -278,8 +278,10 @@ class Component(ABC, ExportMixin):
         - if a component requires inputs, it can only step if all the inputs are available;
         - otherwise, a component which has outputs but does not require inputs can always step.
         """
+        output_events = set([evt.safe_type() for evt in self.io.output_events])
+        produces_no_output_events = len(output_events - {StopEvent.safe_type()}) == 0
+        produces_no_outputs = produces_no_output_events and len(self.io.outputs) == 0
         consumes_no_inputs = len(self.io.inputs) == 0
-        produces_no_outputs = len(self.io.outputs) == 0
         if consumes_no_inputs and produces_no_outputs:
             return False
         return consumes_no_inputs or self._field_inputs_ready
