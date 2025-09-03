@@ -113,6 +113,7 @@ class Tuner:
         }
 
         # Convert storage URI string to optuna storage object if needed
+        # TODO: Make this more general to support other algorithms, e.g. use a builder class
         if "storage" in _algo_kwargs and isinstance(_algo_kwargs["storage"], str):
             _algo_kwargs["storage"] = optuna.storages.RDBStorage(url=_algo_kwargs["storage"])
             self._logger.info(
