@@ -7,6 +7,7 @@ import multiprocessing
 import typing as _t
 
 from pydantic import BaseModel, Field, ValidationError
+import uvloop
 import zmq
 import zmq.asyncio
 
@@ -162,7 +163,7 @@ class ZMQProxy:
     def _run_process(self) -> None:
         """Entry point for the child process."""
         try:
-            asyncio.run(self._run())
+            uvloop.run(self._run())
         finally:  # pragma: no cover
             self._close()
 
