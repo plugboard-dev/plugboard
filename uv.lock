@@ -1,5 +1,5 @@
 version = 1
-revision = 3
+revision = 2
 requires-python = ">=3.12, <4.0"
 resolution-markers = [
     "python_full_version >= '3.14'",
@@ -3217,7 +3217,7 @@ dependencies = [
     { name = "structlog" },
     { name = "that-depends" },
     { name = "typer" },
-    { name = "uvloop" },
+    { name = "uvloop", marker = "sys_platform != 'win32'" },
 ]
 
 [package.optional-dependencies]
@@ -3311,7 +3311,7 @@ requires-dist = [
     { name = "structlog", specifier = ">=25.1.0,<26" },
     { name = "that-depends", specifier = ">=3.4.1,<4" },
     { name = "typer", specifier = ">=0.12,<1" },
-    { name = "uvloop", specifier = ">=0.21.0" },
+    { name = "uvloop", marker = "sys_platform != 'win32'", specifier = ">=0.21.0,<1" },
     { name = "websockets", marker = "extra == 'websockets'", specifier = ">=14.2,<15" },
 ]
 provides-extras = ["aws", "azure", "gcp", "llm", "ray", "websockets"]

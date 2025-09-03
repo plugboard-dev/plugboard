@@ -34,7 +34,7 @@ dependencies = [
     "structlog>=25.1.0,<26",
     "that-depends>=3.4.1,<4",
     "typer>=0.12,<1",
-    "uvloop>=0.21.0",
+    "uvloop>=0.21.0,<1 ; platform_system != 'Windows'",
 ]
 
 [project.optional-dependencies]
