@@ -7,10 +7,14 @@ import multiprocessing
 import typing as _t
 
 from pydantic import BaseModel, Field, ValidationError
-import uvloop
 import zmq
 import zmq.asyncio
 
+
+try:
+    from uvloop import run as _asyncio_run
+except ImportError:  # pragma: no cover
+    from asyncio import run as _asyncio_run
 
 zmq_sockopts_t: _t.TypeAlias = list[tuple[int, int | bytes | str]]
 ZMQ_ADDR: str = r"tcp://127.0.0.1"
@@ -163,7 +167,7 @@ class ZMQProxy:
     def _run_process(self) -> None:
         """Entry point for the child process."""
         try:
-            uvloop.run(self._run())
+            _asyncio_run(self._run())
         finally:  # pragma: no cover
             self._close()
 
