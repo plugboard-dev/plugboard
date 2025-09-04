@@ -159,6 +159,11 @@ class SqliteStateBackend(StateBackend):
         process_data["connectors"] = process_connectors
         return process_data
 
+    async def get_process_for_component(self, component_id: str) -> dict:
+        """Gets the process that a component belongs to."""
+        process_id: str = await self._get_process_id_for_component(component_id)
+        return await self.get_process(process_id)
+
     @alru_cache(maxsize=128)
     async def _get_process_id_for_component(self, component_id: str) -> str:
         """Returns the database id of the process which a component belongs to.
