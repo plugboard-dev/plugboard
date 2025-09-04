@@ -1,6 +1,7 @@
 """Configuration for the test suite."""
 
 from abc import ABC, abstractmethod
+from asyncio.events import BaseDefaultEventLoopPolicy
 import multiprocessing
 import os
 import typing as _t
@@ -11,12 +12,19 @@ import pytest_asyncio
 import pytest_cases
 import ray
 from that_depends import ContextScopes, container_context
+import uvloop
 
 from plugboard.component import Component, IOController as IO
 from plugboard.component.io_controller import IOStreamClosedError
 from plugboard.connector import ZMQConnector
 from plugboard.utils.di import DI
 from plugboard.utils.settings import Settings
+
+
+@pytest.fixture(scope="session")
+def event_loop_policy() -> BaseDefaultEventLoopPolicy:
+    """Set uvloop as the event loop policy for the test session."""
+    return uvloop.EventLoopPolicy()
 
 
 @pytest.fixture(scope="session", autouse=True)
