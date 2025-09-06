@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from abc import ABC, abstractmethod
+from abc import ABC
 import asyncio
 from collections import defaultdict, deque
 from functools import wraps
@@ -44,6 +44,8 @@ class Component(ABC, ExportMixin):
 
     io: IO = IO(input_events=[StopEvent], output_events=[StopEvent])
     exports: _t.Optional[list[str]] = None
+
+    _implements_step: bool = False
 
     def __init__(
         self,
@@ -145,6 +147,8 @@ class Component(ABC, ExportMixin):
             raise IOSetupError(
                 f"{cls.__name__} must extend Component abstract base class io arguments"
             )
+        # Check if component implements step method
+        cls._implements_step = cls.step is not Component.step
 
     @classmethod
     def _get_component_bases(cls) -> list[_t.Type[Component]]:
@@ -265,10 +269,9 @@ class Component(ABC, ExportMixin):
         if not self._event_producers:
             raise StopIteration("No more events to process.")
 
-    @abstractmethod
     async def step(self) -> None:
         """Executes component logic for a single step."""
-        pass
+        raise NotImplementedError("Component step method not implemented")
 
     @property
     def _can_step(self) -> bool:
@@ -278,6 +281,8 @@ class Component(ABC, ExportMixin):
         - if a component requires inputs, it can only step if all the inputs are available;
         - otherwise, a component which has outputs but does not require inputs can always step.
         """
+        if not self._implements_step:
+            return False
         output_events = set([evt.safe_type() for evt in self.io.output_events])
         produces_no_output_events = len(output_events - {StopEvent.safe_type()}) == 0
         produces_no_outputs = produces_no_output_events and len(self.io.outputs) == 0
