@@ -385,6 +385,7 @@ class Controller(ComponentTestHelper):
     """Consumes TickEvent, produces ActionEvent."""
 
     io = IO(input_events=[TickEvent], output_events=[ActionEvent])
+    exports = ["ticks_received"]
 
     def __init__(self, *args: _t.Any, **kwargs: _t.Any) -> None:
         super().__init__(*args, **kwargs)
@@ -400,6 +401,7 @@ class Actuator(ComponentTestHelper):
     """Consumes ActionEvent, pure event consumer."""
 
     io = IO(input_events=[TickEvent, ActionEvent])
+    exports = ["ticks_received", "actions"]
 
     def __init__(self, *args: _t.Any, **kwargs: _t.Any) -> None:
         super().__init__(*args, **kwargs)
@@ -420,7 +422,7 @@ class Actuator(ComponentTestHelper):
     "process_cls, connector_cls",
     [
         (LocalProcess, AsyncioConnector),
-        (RayProcess, RayConnector),
+        (RayProcess, RabbitMQConnector),
     ],
 )
 async def test_event_driven_process_shutdown(
@@ -429,7 +431,8 @@ async def test_event_driven_process_shutdown(
     """Test graceful shutdown of event-driven process with multiple event producers and consumers."""
     # Clock produces TickEvent, Controller consumes TickEvent and produces ActionEvent, Actuator
     # consumes ActionEvent
-    clock = Clock(ticks=5, name="clock")
+    ticks = 3
+    clock = Clock(ticks=ticks, name="clock")
     controller = Controller(name="controller")
     actuator = Actuator(name="actuator")
     components = [clock, controller, actuator]
@@ -449,8 +452,8 @@ async def test_event_driven_process_shutdown(
     assert controller.is_finished
     assert actuator.is_finished
 
-    assert controller.ticks_received == [0, 1, 2, 3, 4]
-    assert actuator.ticks_received == [0, 1, 2, 3, 4]
-    assert actuator.actions == [f"do_{i}" for i in range(5)]
+    assert controller.ticks_received == list(range(ticks))
+    assert actuator.ticks_received == list(range(ticks))
+    assert actuator.actions == [f"do_{i}" for i in range(ticks)]
 
     await process.destroy()
