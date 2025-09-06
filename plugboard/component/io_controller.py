@@ -91,26 +91,14 @@ class IOController:
         return len(self._input_channels) > 0
 
     @cached_property
-    def _has_field_outputs(self) -> bool:
-        return len(self._output_channels) > 0
-
-    @cached_property
     def _has_event_inputs(self) -> bool:
         return len(self._input_event_channels) > 0
-
-    @cached_property
-    def _has_event_outputs(self) -> bool:
-        return len(set(self._output_event_channels.keys()) - {StopEvent.safe_type()}) > 0
 
     @cached_property
     def _has_inputs(self) -> bool:
         return self._has_field_inputs or self._has_event_inputs
 
-    @cached_property
-    def _has_outputs(self) -> bool:
-        return self._has_field_outputs or self._has_event_outputs
-
-    async def read(self) -> None:
+    async def read(self, timeout: float | None = None) -> None:
         """Reads data and/or events from input channels.
 
         Read behaviour is dependent on the specific combination of input fields, output fields,
@@ -129,13 +117,6 @@ class IOController:
             raise IOStreamClosedError("Attempted read on a closed io controller.")
         if len(read_tasks := self._set_read_tasks()) == 0:
             return
-        # If there are outputs but not field inputs, wait for a short time to receive input events
-        # FIXME : Need to differentiate between event producing components which are spontaneous
-        #       : event sources, i.e., they produce events from their `step` method, vs those
-        #       : which produce events only from event handlers in response to input events. A
-        #       : possible approach would be to detect if the `step` method is implemtented; this
-        #       : won't work however for components which are mixed field and event based.
-        timeout = 1e-3 if self._has_outputs and not self._has_field_inputs else None
         try:
             try:
                 done, _ = await asyncio.wait(

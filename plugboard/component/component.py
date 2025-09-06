@@ -5,7 +5,7 @@ from __future__ import annotations
 from abc import ABC
 import asyncio
 from collections import defaultdict, deque
-from functools import wraps
+from functools import cached_property, wraps
 import typing as _t
 
 from that_depends import ContextScopes, container_context
@@ -315,6 +315,31 @@ class Component(ABC, ExportMixin):
 
         return _wrapper
 
+    @cached_property
+    def _has_field_inputs(self) -> bool:
+        return len(self.io.inputs) > 0
+
+    @cached_property
+    def _has_event_inputs(self) -> bool:
+        return len(self.io.input_events) > 0
+
+    @cached_property
+    def _has_inputs(self) -> bool:
+        return self._has_field_inputs or self._has_event_inputs
+
+    @cached_property
+    def _has_field_outputs(self) -> bool:
+        return len(self.io.outputs) > 0
+
+    @cached_property
+    def _has_event_outputs(self) -> bool:
+        output_events = set([evt.safe_type() for evt in self.io.output_events])
+        return len(output_events - {StopEvent.safe_type()}) > 0
+
+    @cached_property
+    def _has_outputs(self) -> bool:
+        return self._has_field_outputs or self._has_event_outputs
+
     async def _io_read_with_status_check(self) -> None:
         """Reads from IO controller with concurrent periodic status checks.
 
@@ -322,10 +347,11 @@ class Component(ABC, ExportMixin):
         failed state, the component status is set to `STOPPED` and a `ProcessStatusError` is raised;
         otherwise another read attempt is made.
         """
+        read_timeout = 1e-3 if self._has_outputs and not self._has_inputs else None
         done, pending = await asyncio.wait(
             (
                 asyncio.create_task(self._periodic_status_check()),
-                asyncio.create_task(self.io.read()),
+                asyncio.create_task(self.io.read(timeout=read_timeout)),
             ),
             return_when=asyncio.FIRST_COMPLETED,
         )

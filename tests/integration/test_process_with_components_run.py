@@ -395,9 +395,6 @@ class Controller(ComponentTestHelper):
         self.ticks_received.append(evt.data.tick)
         return ActionEvent(data=ActionEventData(action=f"do_{evt.data.tick}"), source=self.name)
 
-    async def step(self) -> None:
-        await super().step()
-
 
 class Actuator(ComponentTestHelper):
     """Consumes ActionEvent, pure event consumer."""
@@ -416,9 +413,6 @@ class Actuator(ComponentTestHelper):
     @ActionEvent.handler
     async def handle_action(self, evt: ActionEvent) -> None:
         self.actions.append(evt.data.action)
-
-    async def step(self) -> None:
-        await super().step()
 
 
 @pytest.mark.asyncio
