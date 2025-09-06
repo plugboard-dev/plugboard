@@ -13,6 +13,7 @@ from that_depends import ContextScopes, container_context
 from plugboard.component.io_controller import IOController as IO, IODirection
 from plugboard.events import Event, EventHandlers, StopEvent
 from plugboard.exceptions import (
+    EventStreamClosedError,
     IOSetupError,
     IOStreamClosedError,
     ProcessStatusError,
@@ -267,7 +268,7 @@ class Component(ABC, ExportMixin):
             if not self._event_producers[evt]:
                 self._event_producers.pop(evt)
         if not self._event_producers:
-            raise StopIteration("No more events to process.")
+            raise EventStreamClosedError("No more events to process.")
 
     async def step(self) -> None:
         """Executes component logic for a single step."""
@@ -360,7 +361,7 @@ class Component(ABC, ExportMixin):
             task.cancel()
         for task in done:
             exc = task.exception()
-            if isinstance(exc, StopIteration) and len(self.io.inputs) == 0:
+            if isinstance(exc, EventStreamClosedError) and len(self.io.inputs) == 0:
                 await self.io.close()  # Call close for final wait and flush event buffer
             elif exc is not None:
                 raise exc

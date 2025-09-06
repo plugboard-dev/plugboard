@@ -43,6 +43,12 @@ class IOSetupError(IOControllerError):
     pass
 
 
+class EventStreamClosedError(Exception):
+    """Raised when there are no more event producers running."""
+
+    pass
+
+
 class NoMoreDataException(Exception):
     """Raised when there is no more data to fetch."""
 
