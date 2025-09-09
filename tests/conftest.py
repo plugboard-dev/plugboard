@@ -1,6 +1,6 @@
 """Configuration for the test suite."""
 
-from abc import ABC, abstractmethod
+from abc import ABC
 import multiprocessing
 import os
 import typing as _t
@@ -15,6 +15,7 @@ from that_depends import ContextScopes, container_context
 from plugboard.component import Component, IOController as IO
 from plugboard.component.io_controller import IOStreamClosedError
 from plugboard.connector import ZMQConnector
+from plugboard.schemas.state import Status
 from plugboard.utils.di import DI
 from plugboard.utils.settings import Settings
 
@@ -100,19 +101,25 @@ class ComponentTestHelper(Component, ABC):
         self._is_initialised = True
         await super().init()
 
-    @abstractmethod
     async def step(self) -> None:  # noqa: D102
         self._step_count += 1
 
     async def run(self) -> None:  # noqa: D102
-        while True:
-            try:
-                await self.step()
-            except IOStreamClosedError:
-                break
-            if self._max_steps > 0 and self._step_count >= self._max_steps:
-                break
-        self._is_finished = True
+        self._is_running = True
+        await self._set_status(Status.RUNNING)
+        try:
+            while True:
+                try:
+                    await self.step()
+                except IOStreamClosedError:
+                    break
+                if self._max_steps > 0 and self._step_count >= self._max_steps:
+                    break
+            if self.status not in {Status.STOPPED, Status.FAILED}:
+                await self._set_status(Status.COMPLETED)
+        finally:
+            self._is_running = False
+            self._is_finished = True
 
     def dict(self) -> dict:
         """Returns the component state as a dictionary."""

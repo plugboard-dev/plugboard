@@ -461,7 +461,8 @@ class Component(ABC, ExportMixin):
                     await self.step()
                 except IOStreamClosedError:
                     break
-            await self._set_status(Status.COMPLETED)
+            if self.status not in {Status.STOPPED, Status.FAILED}:
+                await self._set_status(Status.COMPLETED)
         finally:
             self._is_running = False
 
