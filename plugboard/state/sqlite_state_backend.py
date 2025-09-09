@@ -51,6 +51,13 @@ class SqliteStateBackend(StateBackend):
         await self._initialise_db()
         await super().init()
 
+    async def destroy(self) -> None:
+        """Destroys the `SqliteStateBackend`."""
+        await super().destroy()
+        self._get_db_id.cache_clear()
+        self._get_process_id_for_component.cache_clear()
+        self._get_process_id_for_connector.cache_clear()
+
     async def _fetchone(
         self, statement: str, params: _t.Tuple[_t.Any, ...]
     ) -> aiosqlite.Row | None:
