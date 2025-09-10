@@ -274,23 +274,29 @@ class Component(ABC, ExportMixin):
         """Executes component logic for a single step."""
         raise NotImplementedError("Component step method not implemented")
 
+    @cached_property
+    def _produces_no_output_events(self) -> bool:
+        output_events = set([evt.safe_type() for evt in self.io.output_events])
+        return len(output_events - {StopEvent.safe_type()}) == 0
+
     @property
     def _can_step(self) -> bool:
         """Checks if the component can step.
 
-        - if a component has no input or output fields, it cannot step (purely event-driven case);
+        The rules for whether a component can step are as follows:
+        - if a component does not implement the `step` method, it cannot step;
+        - if a component produces no outputs and consumes no input fields, it cannot step (purely
+          event-driven case);
         - if a component requires inputs, it can only step if all the inputs are available;
         - otherwise, a component which has outputs but does not require inputs can always step.
         """
         if not self._implements_step:
             return False
-        output_events = set([evt.safe_type() for evt in self.io.output_events])
-        produces_no_output_events = len(output_events - {StopEvent.safe_type()}) == 0
-        produces_no_outputs = produces_no_output_events and len(self.io.outputs) == 0
-        consumes_no_inputs = len(self.io.inputs) == 0
-        if consumes_no_inputs and produces_no_outputs:
+        produces_no_outputs = self._produces_no_output_events and len(self.io.outputs) == 0
+        consumes_no_input_fields = len(self.io.inputs) == 0
+        if consumes_no_input_fields and produces_no_outputs:
             return False
-        return consumes_no_inputs or self._field_inputs_ready
+        return consumes_no_input_fields or self._field_inputs_ready
 
     def _handle_step_wrapper(self) -> _t.Callable:
         self._step = self.step
