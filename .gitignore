@@ -54,6 +54,9 @@ coverage.json
 .pytest_cache/
 cover/
 
+# Benchmarking
+.benchmarks/
+
 # Translations
 *.mo
 *.pot
@@ -166,3 +169,6 @@ cython_debug/
 
 # MacOS
 .DS_Store
+
+# Optuna database files
+*.db

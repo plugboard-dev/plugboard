@@ -1,8 +1,10 @@
 """Integration tests for `ProcessBuilder`."""
 # ruff: noqa: D101,D102,D103
 
+from tempfile import TemporaryDirectory
 import typing as _t
 
+import msgspec
 import pytest
 
 from plugboard.component import IOController as IO
@@ -117,3 +119,17 @@ async def test_process_builder_build(process_spec: ProcessSpec) -> None:
             assert process.state.job_id == input_job_id
         assert EntityIdGen.is_job_id(process.state.job_id)
         assert process.state.metadata == {"hello": "world"}
+    # Must be possible to export process to YAML
+    with TemporaryDirectory() as tmpdir:
+        process.dump(f"{tmpdir}/process.yaml")
+        with open(f"{tmpdir}/process.yaml", "rb") as f:
+            loaded = msgspec.yaml.decode(f.read())
+    reconstructed_spec = ProcessSpec.model_validate(loaded["plugboard"]["process"])
+    # Component names and types must match after export and re-import
+    assert {(comp.args.name, comp.type) for comp in process_spec.args.components} == {
+        (comp.args.name, comp.type) for comp in reconstructed_spec.args.components
+    }
+    # Unsupported extensions must raise an error
+    with TemporaryDirectory() as tmpdir:
+        with pytest.raises(ValueError):
+            process.dump(f"{tmpdir}/process.txt")

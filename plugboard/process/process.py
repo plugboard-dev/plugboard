@@ -3,12 +3,16 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
+from pathlib import Path
 from types import TracebackType
 import typing as _t
+
+import msgspec
 
 from plugboard.component import Component
 from plugboard.connector import Connector
 from plugboard.exceptions import NotInitialisedError
+from plugboard.schemas.config import ConfigSpec
 from plugboard.schemas.state import Status
 from plugboard.state import DictStateBackend, StateBackend
 from plugboard.utils import DI, ExportMixin, gen_rand_str
@@ -145,6 +149,21 @@ class Process(ExportMixin, ABC):
     ) -> None:
         """Exits the context manager."""
         await self.destroy()
+
+    def dump(self, path: Path | str) -> None:
+        """Saves to `Process` configuration to a YAML file for use with the CLI.
+
+        Args:
+            path: The path to the YAML file. Will be overwritten if it exists.
+        """
+        yaml_path = Path(path)
+        if yaml_path.suffix.lower() not in {".yaml", ".yml"}:
+            raise ValueError("Path must have a .yaml/.yml extension")
+        yaml_path.parent.mkdir(parents=True, exist_ok=True)
+
+        spec = ConfigSpec.model_validate({"plugboard": {"process": self.export()}})
+
+        yaml_path.write_bytes(msgspec.yaml.encode(spec.model_dump()))
 
     def dict(self) -> dict[str, _t.Any]:  # noqa: D102
         return {

@@ -1,12 +1,20 @@
 """Provides unit tests for the Tuner class."""
 
+from tempfile import TemporaryDirectory
+import typing as _t
 from unittest.mock import MagicMock, patch
 
 import msgspec
 import pytest
+import ray.tune
 
 from plugboard.schemas import ConfigSpec, ObjectiveSpec
-from plugboard.schemas.tune import CategoricalParameterSpec, FloatParameterSpec, IntParameterSpec
+from plugboard.schemas.tune import (
+    CategoricalParameterSpec,
+    FloatParameterSpec,
+    IntParameterSpec,
+    OptunaSpec,
+)
 from plugboard.tune import Tuner
 from tests.integration.test_process_with_components_run import A, B, C  # noqa: F401
 
@@ -16,6 +24,13 @@ def config() -> dict:
     """Loads the YAML config."""
     with open("tests/data/minimal-process.yaml", "rb") as f:
         return msgspec.yaml.decode(f.read())
+
+
+@pytest.fixture
+def temp_dir() -> _t.Iterator[str]:
+    """Creates a temporary directory."""
+    with TemporaryDirectory() as tmpdir:
+        yield tmpdir
 
 
 @patch("ray.tune.Tuner")
@@ -84,3 +99,32 @@ def test_tuner(mock_tuner_cls: MagicMock, config: dict) -> None:
     assert tune_config.search_alg.searcher.__class__.__name__ == "OptunaSearch"
     # Must call fit method on the Tuner object
     mock_tuner.fit.assert_called_once()
+
+
+def test_optuna_storage_uri_conversion(temp_dir: str) -> None:
+    """Test that storage URI gets converted to Optuna storage object."""
+    # Create a tuner with minimal configuration
+    tuner = Tuner(
+        objective=ObjectiveSpec(
+            object_type="component", object_name="test", field_type="field", field_name="value"
+        ),
+        parameters=[
+            FloatParameterSpec(
+                object_type="component",
+                object_name="test",
+                field_type="arg",
+                field_name="param",
+                lower=0.0,
+                upper=1.0,
+            )
+        ],
+        num_samples=1,
+        mode="max",
+        algorithm=OptunaSpec(
+            type="ray.tune.search.optuna.OptunaSearch",
+            study_name="test-study",
+            storage=f"sqlite:///{temp_dir}/test_conversion.db",
+        ),
+    )
+    algo = tuner._config.search_alg
+    assert isinstance(algo, ray.tune.search.optuna.OptunaSearch)

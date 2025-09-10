@@ -5,6 +5,12 @@ from concurrent.futures import ThreadPoolExecutor
 import typing as _t
 
 
+try:
+    from uvloop import run as _asyncio_run
+except ImportError:  # pragma: no cover
+    from asyncio import run as _asyncio_run
+
+
 async def gather_except(*coros: _t.Coroutine) -> list[_t.Any]:
     """Attempts to gather the given coroutines, raising any exceptions."""
     results = await asyncio.gather(*coros, return_exceptions=True)
@@ -16,7 +22,7 @@ async def gather_except(*coros: _t.Coroutine) -> list[_t.Any]:
 
 def _run_coro_in_thread(coro: _t.Coroutine, timeout: _t.Optional[float] = None) -> _t.Any:
     def _target() -> _t.Any:
-        return asyncio.run(coro)
+        return _asyncio_run(coro)
 
     with ThreadPoolExecutor() as pool:
         future = pool.submit(_target)
@@ -34,7 +40,7 @@ def run_coro_sync(coro: _t.Coroutine, timeout: _t.Optional[float] = None) -> _t.
         loop = asyncio.get_running_loop()
     except RuntimeError:  # pragma: no cover
         # No loop running in current thread
-        return asyncio.run(coro)
+        return _asyncio_run(coro)
 
     if loop.is_running():
         # Run coroutine in new thread with dedicated event loop.

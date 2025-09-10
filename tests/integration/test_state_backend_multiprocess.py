@@ -1,11 +1,11 @@
 """Tests for the `StateBackend` classes that permit multiprocessing."""
 
-import asyncio
 import typing as _t
 
 import pytest
 import pytest_asyncio
 from ray.util.multiprocessing import Pool
+import uvloop
 
 from plugboard.component import Component, IOController
 from plugboard.connector import Connector, ZMQConnector
@@ -139,7 +139,7 @@ async def test_state_backend_multiprocess(
             await comp.init()
             print("Component initialised.")
 
-        asyncio.run(_inner())
+        uvloop.run(_inner())
 
     # At the end of `Component.init` the component upserts itself into the state
     # backend, so we expect the state backend to have up to date component data afterwards
@@ -161,7 +161,7 @@ async def test_state_backend_multiprocess(
         async def _inner() -> None:
             await state_backend.upsert_connector(conn)
 
-        asyncio.run(_inner())
+        uvloop.run(_inner())
 
     mp_processes = []
     with Pool(2) as pool:
