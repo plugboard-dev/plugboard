@@ -4,11 +4,11 @@ from __future__ import annotations
 
 import asyncio
 from collections import defaultdict, deque
-from functools import cached_property
+from functools import cache, cached_property
 import typing as _t
 
 from plugboard.connector import AsyncioChannel, Channel, Connector
-from plugboard.events import Event
+from plugboard.events import Event, StopEvent
 from plugboard.exceptions import ChannelClosedError, IOStreamClosedError
 from plugboard.schemas.io import IODirection
 from plugboard.utils import DI
@@ -17,7 +17,8 @@ from plugboard.utils import DI
 if _t.TYPE_CHECKING:  # pragma: no cover
     from plugboard.component import Component
 
-IO_NS_UNSET = "__UNSET__"
+IO_NS_UNSET: str = "__UNSET__"
+IO_CLOSE_GRACE_PERIOD: float = 3.0
 
 _t_field_key = tuple[str, str]
 _io_key_in: str = str(IODirection.INPUT)
@@ -90,14 +91,14 @@ class IOController:
         return len(self._input_channels) > 0
 
     @cached_property
-    def _has_field_outputs(self) -> bool:
-        return len(self._output_channels) > 0
-
-    @cached_property
     def _has_event_inputs(self) -> bool:
         return len(self._input_event_channels) > 0
 
-    async def read(self) -> None:
+    @cached_property
+    def _has_inputs(self) -> bool:
+        return self._has_field_inputs or self._has_event_inputs
+
+    async def read(self, timeout: float | None = None) -> None:
         """Reads data and/or events from input channels.
 
         Read behaviour is dependent on the specific combination of input fields, output fields,
@@ -116,8 +117,6 @@ class IOController:
             raise IOStreamClosedError("Attempted read on a closed io controller.")
         if len(read_tasks := self._set_read_tasks()) == 0:
             return
-        # If there are field outputs but not inputs, wait for a short time to receive input events
-        timeout = 1e-3 if self._has_field_outputs and not self._has_field_inputs else None
         try:
             try:
                 done, _ = await asyncio.wait(
@@ -310,10 +309,15 @@ class IOController:
 
     async def close(self) -> None:
         """Closes all input/output channels."""
-        for chan in self._output_channels.values():
-            await chan.close()
+        async with asyncio.TaskGroup() as tg:
+            for chan in self._output_channels.values():
+                tg.create_task(chan.close())
         for task in self._read_tasks.values():
             task.cancel()
+        # If there are events to read wait some grace period before flushing event buffer
+        if self._input_event_types - {StopEvent.safe_type()}:
+            await asyncio.sleep(IO_CLOSE_GRACE_PERIOD)
+            await self._flush_internal_event_buffer()
         self._is_closed = True
         self._logger.info("IOController closed")
 
@@ -397,6 +401,17 @@ class IOController:
             )
         if unconnected_outputs := set(self.outputs) - connected_outputs:
             self._logger.warning("Output fields not connected", unconnected=unconnected_outputs)
+
+    @cache
+    def dict(self) -> dict[str, _t.Any]:  # noqa: D102
+        return {
+            "namespace": self.namespace,
+            "inputs": self.inputs,
+            "outputs": self.outputs,
+            "input_events": [e.safe_type() for e in self.input_events],
+            "output_events": [e.safe_type() for e in self.output_events],
+            "initial_values": {k: list(v) for k, v in self._initial_values.items()},
+        }
 
 
 class IOBuffer(_t.Protocol):

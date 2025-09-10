@@ -51,6 +51,13 @@ class SqliteStateBackend(StateBackend):
         await self._initialise_db()
         await super().init()
 
+    async def destroy(self) -> None:
+        """Destroys the `SqliteStateBackend`."""
+        await super().destroy()
+        self._get_db_id.cache_clear()
+        self._get_process_id_for_component.cache_clear()
+        self._get_process_id_for_connector.cache_clear()
+
     async def _fetchone(
         self, statement: str, params: _t.Tuple[_t.Any, ...]
     ) -> aiosqlite.Row | None:
@@ -158,6 +165,11 @@ class SqliteStateBackend(StateBackend):
         process_data["components"] = process_components
         process_data["connectors"] = process_connectors
         return process_data
+
+    async def get_process_for_component(self, component_id: str) -> dict:
+        """Gets the process that a component belongs to."""
+        process_id: str = await self._get_process_id_for_component(component_id)
+        return await self.get_process(process_id)
 
     @alru_cache(maxsize=128)
     async def _get_process_id_for_component(self, component_id: str) -> str:
