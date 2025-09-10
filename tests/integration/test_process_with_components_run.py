@@ -428,7 +428,7 @@ class Actuator(ComponentTestHelper):
 async def test_event_driven_process_shutdown(
     process_cls: type[Process], connector_cls: type[Connector], ray_ctx: None
 ) -> None:
-    """Test graceful shutdown of event-driven process with multiple event producers and consumers."""
+    """Test graceful shutdown of process with multiple event producers and consumers."""
     # Clock produces TickEvent, Controller consumes TickEvent and produces ActionEvent, Actuator
     # consumes ActionEvent
     ticks = 3

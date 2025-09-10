@@ -1,6 +1,6 @@
 """Configuration for the test suite."""
 
-from abc import ABC, abstractmethod
+from abc import ABC
 from asyncio.events import BaseDefaultEventLoopPolicy
 import multiprocessing
 import os
