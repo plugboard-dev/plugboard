@@ -13,7 +13,11 @@ from plugboard.process import LocalProcess
 from plugboard.schemas.connector import ConnectorSpec
 from plugboard.state import DictStateBackend, StateBackend
 from tests.conftest import ComponentTestHelper
-from tests.integration.conftest import setup_RayStateBackend, setup_SqliteStateBackend
+from tests.integration.conftest import (
+    setup_PostgresStateBackend,
+    setup_RayStateBackend,
+    setup_SqliteStateBackend,
+)
 
 
 class A(ComponentTestHelper):
@@ -69,7 +73,9 @@ async def connectors() -> list[Connector]:
     ]
 
 
-@pytest_asyncio.fixture(params=[setup_SqliteStateBackend, setup_RayStateBackend])
+@pytest_asyncio.fixture(
+    params=[setup_SqliteStateBackend, setup_PostgresStateBackend, setup_RayStateBackend]
+)
 async def state_backend(request: pytest.FixtureRequest) -> _t.AsyncIterator[StateBackend]:
     """Returns a `StateBackend` instance."""
     state_backend_setup = request.param

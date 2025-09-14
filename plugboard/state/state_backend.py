@@ -96,11 +96,14 @@ class StateBackend(ABC, ExportMixin):
         try:
             # TODO : Requires indication of new or existing job to conditionally raise exception?
             job_data = await self._get_job(job_id)
+            if metadata:
+                job_data.setdefault("metadata", {}).update(metadata)
+                await self._upsert_job(job_data)
         except NotFoundError:
             job_data = {
                 "job_id": job_id,
                 "created_at": datetime.now(timezone.utc).isoformat(),
-                "metadata": metadata or dict(),
+                "metadata": metadata or {},
             }
             await self._upsert_job(job_data)
         self._local_state.update(job_data)
