@@ -133,7 +133,7 @@ class PostgresStateBackend(StateBackend):
                     await connection.execute(
                         q.UPSERT_COMPONENT,
                         component_db_id,
-                        msgspec.json.encode(component).decode(),
+                        msgspec.json.encode(component).decode() if with_components else "{}",
                         process_db_id,
                     )
                     await connection.execute(
@@ -144,7 +144,7 @@ class PostgresStateBackend(StateBackend):
                     await connection.execute(
                         q.UPSERT_CONNECTOR,
                         connector_db_id,
-                        msgspec.json.encode(connector).decode(),
+                        msgspec.json.encode(connector).decode() if with_components else "{}",
                         process_db_id,
                     )
                     await connection.execute(
