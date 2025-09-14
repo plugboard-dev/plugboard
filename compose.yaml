@@ -16,6 +16,21 @@ services:
       - RABBITMQ_DEFAULT_PASS=password
     restart: always
 
+  postgres:
+    image: postgres:18rc1-alpine  # TODO: Update to stable version when released
+    container_name: postgres
+    environment:
+      - POSTGRES_USER=plugboard
+      - POSTGRES_PASSWORD=plugboard
+      - POSTGRES_DB=plugboard
+    ports:
+      - 5432:5432
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - main
+    restart: always
+
   valkey:
     image: valkey/valkey:8.0-alpine
     container_name: valkey
@@ -34,4 +49,5 @@ networks:
 
 volumes:
   rabbitmq-data:
+  postgres-data:
   valkey-data:
