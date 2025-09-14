@@ -241,7 +241,10 @@ class Component(ABC, ExportMixin):
     async def _build_producer_graph(self) -> None:
         """Builds the producer graph for the component."""
         if not (self._state and self._state_is_connected):
-            self._logger.warning("State backend not connected. Cannot build producer graph.")
+            self._logger.warning(
+                "State backend not connected. Cannot build producer graph. "
+                "Purely event driven models may hang indefinitely."
+            )
             return
         process = await self._state.get_process_for_component(self.id)
         input_event_set = {evt.safe_type() for evt in self.io.input_events}
