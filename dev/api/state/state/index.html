@@ -20,7 +20,7 @@
       
       
       <link rel="icon" href="../../../assets/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.16">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.19">
     
     
       
@@ -1483,6 +1483,15 @@ What's new: 🚀 we've open-sourced Plugboard - please <a href="https://github.c
 </li>
         
           <li class="md-nav__item">
+  <a href="#plugboard.state.StateBackend.get_process_for_component" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;get_process_for_component
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#plugboard.state.StateBackend.get_process_status" class="md-nav__link">
     <span class="md-ellipsis">
       <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;get_process_status
@@ -1570,6 +1579,15 @@ What's new: 🚀 we've open-sourced Plugboard - please <a href="https://github.c
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#plugboard.state.SqliteStateBackend.destroy" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;destroy
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#plugboard.state.SqliteStateBackend.get_component" class="md-nav__link">
     <span class="md-ellipsis">
       <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;get_component
@@ -1591,6 +1609,15 @@ What's new: 🚀 we've open-sourced Plugboard - please <a href="https://github.c
   <a href="#plugboard.state.SqliteStateBackend.get_process" class="md-nav__link">
     <span class="md-ellipsis">
       <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;get_process
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#plugboard.state.SqliteStateBackend.get_process_for_component" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;get_process_for_component
     </span>
   </a>
   
@@ -1941,6 +1968,15 @@ What's new: 🚀 we've open-sourced Plugboard - please <a href="https://github.c
 </li>
         
           <li class="md-nav__item">
+  <a href="#plugboard.state.StateBackend.get_process_for_component" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;get_process_for_component
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#plugboard.state.StateBackend.get_process_status" class="md-nav__link">
     <span class="md-ellipsis">
       <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;get_process_status
@@ -2028,6 +2064,15 @@ What's new: 🚀 we've open-sourced Plugboard - please <a href="https://github.c
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#plugboard.state.SqliteStateBackend.destroy" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;destroy
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#plugboard.state.SqliteStateBackend.get_component" class="md-nav__link">
     <span class="md-ellipsis">
       <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;get_component
@@ -2049,6 +2094,15 @@ What's new: 🚀 we've open-sourced Plugboard - please <a href="https://github.c
   <a href="#plugboard.state.SqliteStateBackend.get_process" class="md-nav__link">
     <span class="md-ellipsis">
       <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;get_process
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#plugboard.state.SqliteStateBackend.get_process_for_component" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;get_process_for_component
     </span>
   </a>
   
@@ -2160,7 +2214,9 @@ What's new: 🚀 we've open-sourced Plugboard - please <a href="https://github.c
 
 
 
+
   <div class="doc doc-children">
+
 
 
 
@@ -2266,6 +2322,7 @@ What's new: 🚀 we've open-sourced Plugboard - please <a href="https://github.c
 
 
 
+
   <div class="doc doc-children">
 
 
@@ -2345,6 +2402,7 @@ What's new: 🚀 we've open-sourced Plugboard - please <a href="https://github.c
     </div>
 
 </div>
+
 
 
 
@@ -2490,6 +2548,30 @@ What's new: 🚀 we've open-sourced Plugboard - please <a href="https://github.c
     <div class="doc doc-contents ">
 
         <p>Returns a process from the state.</p>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="plugboard.state.StateBackend.get_process_for_component" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-method"></code>            <span class="doc doc-object-name doc-function-name">get_process_for_component</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-async"><code>async</code></small>
+  </span>
+
+</h3>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">get_process_for_component</span><span class="p">(</span><span class="n">component_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span>
+</span></code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Gets the process that a component belongs to.</p>
 
 
     </div>
@@ -2708,7 +2790,9 @@ What's new: 🚀 we've open-sourced Plugboard - please <a href="https://github.c
 
 
 
+
   <div class="doc doc-children">
+
 
 
 
@@ -2758,6 +2842,7 @@ What's new: 🚀 we've open-sourced Plugboard - please <a href="https://github.c
 
 
 
+
   <div class="doc doc-children">
 
 
@@ -2767,6 +2852,31 @@ What's new: 🚀 we've open-sourced Plugboard - please <a href="https://github.c
 
 
 
+
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="plugboard.state.SqliteStateBackend.destroy" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-method"></code>            <span class="doc doc-object-name doc-function-name">destroy</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-async"><code>async</code></small>
+  </span>
+
+</h3>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">destroy</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span>
+</span></code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Destroys the <code>SqliteStateBackend</code>.</p>
+
+
+    </div>
+
+</div>
 
 <div class="doc doc-object doc-function">
 
@@ -2834,6 +2944,30 @@ What's new: 🚀 we've open-sourced Plugboard - please <a href="https://github.c
     <div class="doc doc-contents ">
 
         <p>Returns a process from the state.</p>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="plugboard.state.SqliteStateBackend.get_process_for_component" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-method"></code>            <span class="doc doc-object-name doc-function-name">get_process_for_component</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-async"><code>async</code></small>
+  </span>
+
+</h3>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">get_process_for_component</span><span class="p">(</span><span class="n">component_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span>
+</span></code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Gets the process that a component belongs to.</p>
 
 
     </div>
@@ -3078,10 +3212,10 @@ What's new: 🚀 we've open-sourced Plugboard - please <a href="https://github.c
     
     
       
-      <script id="__config" type="application/json">{"base": "../../..", "features": ["navigation.tabs", "navigation.expand", "navigation.indexes", "content.code.annotate", "content.code.copy"], "search": "../../../assets/javascripts/workers/search.d50fe291.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
+      <script id="__config" type="application/json">{"base": "../../..", "features": ["navigation.tabs", "navigation.expand", "navigation.indexes", "content.code.annotate", "content.code.copy"], "search": "../../../assets/javascripts/workers/search.973d3a69.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
     
     
-      <script src="../../../assets/javascripts/bundle.50899def.min.js"></script>
+      <script src="../../../assets/javascripts/bundle.92b07e13.min.js"></script>
       
         <script src="https://buttons.github.io/buttons.js"></script>
       
