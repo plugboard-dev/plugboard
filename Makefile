@@ -22,15 +22,14 @@ clean:
 
 $(VENV):
 	uv venv ${VENV} --python $(PY)
-	mkdir -p $(VENV)/.stamps
 	@touch $@
 
-$(VENV)/.stamps/init: $(VENV) pyproject.toml
+$(VENV)/__makefile_stamps_init: $(VENV) pyproject.toml
 	uv sync --all-extras --all-groups
 	@touch $@
 
 .PHONY: init
-init: $(VENV)/.stamps/init
+init: $(VENV)/__makefile_stamps_init
 
 .PHONY: lint
 lint: init
