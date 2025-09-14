@@ -14,6 +14,7 @@ from plugboard.state import StateBackend
 from tests.conftest import ComponentTestHelper
 from tests.integration.conftest import (
     setup_DictStateBackend,
+    setup_PostgresStateBackend,
     setup_RayStateBackend,
     setup_SqliteStateBackend,
 )
@@ -86,6 +87,7 @@ def C_connectors() -> list[Connector]:
     params=[
         setup_DictStateBackend,
         setup_SqliteStateBackend,
+        setup_PostgresStateBackend,
         setup_RayStateBackend,
     ]
 )

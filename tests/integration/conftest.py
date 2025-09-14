@@ -6,6 +6,7 @@ import typing as _t
 
 from plugboard.state import (
     DictStateBackend,
+    PostgresStateBackend,
     RayStateBackend,
     SqliteStateBackend,
 )
@@ -22,6 +23,12 @@ def setup_SqliteStateBackend() -> _t.Iterator[SqliteStateBackend]:
     """Returns a `SqliteStateBackend` instance."""
     with NamedTemporaryFile() as file:
         yield SqliteStateBackend(file.name)
+
+
+@contextmanager
+def setup_PostgresStateBackend() -> _t.Iterator[PostgresStateBackend]:
+    """Returns a `PostgresStateBackend` instance."""
+    yield PostgresStateBackend()
 
 
 @contextmanager
