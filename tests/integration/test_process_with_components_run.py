@@ -7,12 +7,21 @@ from tempfile import NamedTemporaryFile
 import typing as _t
 
 from aiofile import async_open
+from pydantic import BaseModel
 import pytest
 import pytest_cases
 
 from plugboard.component import IOController as IO
 from plugboard.component.component import IO_READ_TIMEOUT_SECONDS
-from plugboard.connector import AsyncioConnector, Connector, RabbitMQConnector, RayConnector
+from plugboard.connector import (
+    AsyncioConnector,
+    Connector,
+    ConnectorBuilder,
+    RabbitMQConnector,
+    RayConnector,
+)
+from plugboard.events import Event
+from plugboard.events.event_connector_builder import EventConnectorBuilder
 from plugboard.exceptions import NotInitialisedError, ProcessStatusError
 from plugboard.process import LocalProcess, Process, RayProcess
 from plugboard.schemas import ConnectorSpec
@@ -330,5 +339,121 @@ async def test_io_read_with_process_failure(
     # The process status should be updated to FAILED due to the failing component
     process_status = await process.state.get_process_status(process.id)
     assert process_status == Status.FAILED
+
+    await process.destroy()
+
+
+class TickEventData(BaseModel):
+    tick: int
+
+
+class TickEvent(Event):
+    type: _t.ClassVar[str] = "tick"
+    data: TickEventData
+
+
+class ActionEventData(BaseModel):
+    action: str
+
+
+class ActionEvent(Event):
+    type: _t.ClassVar[str] = "action"
+    data: ActionEventData
+
+
+class Clock(ComponentTestHelper):
+    """Produces TickEvent for a fixed number of ticks."""
+
+    io = IO(outputs=[], output_events=[TickEvent])
+
+    def __init__(self, ticks: int, *args: _t.Any, **kwargs: _t.Any) -> None:
+        super().__init__(*args, **kwargs)
+        self._ticks = ticks
+        self._count = 0
+
+    async def step(self) -> None:
+        if self._count < self._ticks:
+            evt = TickEvent(data=TickEventData(tick=self._count), source=self.name)
+            self.io.queue_event(evt)
+            self._count += 1
+        else:
+            await self.io.close()
+        await super().step()
+
+
+class Controller(ComponentTestHelper):
+    """Consumes TickEvent, produces ActionEvent."""
+
+    io = IO(input_events=[TickEvent], output_events=[ActionEvent])
+    exports = ["ticks_received"]
+
+    def __init__(self, *args: _t.Any, **kwargs: _t.Any) -> None:
+        super().__init__(*args, **kwargs)
+        self.ticks_received: list[int] = []
+
+    @TickEvent.handler
+    async def handle_tick(self, evt: TickEvent) -> ActionEvent:
+        self.ticks_received.append(evt.data.tick)
+        return ActionEvent(data=ActionEventData(action=f"do_{evt.data.tick}"), source=self.name)
+
+
+class Actuator(ComponentTestHelper):
+    """Consumes ActionEvent, pure event consumer."""
+
+    io = IO(input_events=[TickEvent, ActionEvent])
+    exports = ["ticks_received", "actions"]
+
+    def __init__(self, *args: _t.Any, **kwargs: _t.Any) -> None:
+        super().__init__(*args, **kwargs)
+        self.ticks_received: list[int] = []
+        self.actions: list[str] = []
+
+    @TickEvent.handler
+    async def handle_tick(self, evt: TickEvent) -> None:
+        self.ticks_received.append(evt.data.tick)
+
+    @ActionEvent.handler
+    async def handle_action(self, evt: ActionEvent) -> None:
+        self.actions.append(evt.data.action)
+
+
+@pytest.mark.asyncio
+@pytest_cases.parametrize(
+    "process_cls, connector_cls",
+    [
+        (LocalProcess, AsyncioConnector),
+        (RayProcess, RabbitMQConnector),
+    ],
+)
+async def test_event_driven_process_shutdown(
+    process_cls: type[Process], connector_cls: type[Connector], ray_ctx: None
+) -> None:
+    """Test graceful shutdown of process with multiple event producers and consumers."""
+    # Clock produces TickEvent, Controller consumes TickEvent and produces ActionEvent, Actuator
+    # consumes ActionEvent
+    ticks = 3
+    clock = Clock(ticks=ticks, name="clock")
+    controller = Controller(name="controller")
+    actuator = Actuator(name="actuator")
+    components = [clock, controller, actuator]
+
+    connector_builder = ConnectorBuilder(connector_cls=connector_cls)
+    event_connector_builder = EventConnectorBuilder(connector_builder=connector_builder)
+    event_connectors = list(event_connector_builder.build(components).values())
+
+    process = process_cls(components, event_connectors)
+    await process.init()
+    assert process.status == Status.INIT
+
+    await process.run()
+    assert process.status == Status.COMPLETED
+
+    assert clock.is_finished
+    assert controller.is_finished
+    assert actuator.is_finished
+
+    assert controller.ticks_received == list(range(ticks))
+    assert actuator.ticks_received == list(range(ticks))
+    assert actuator.actions == [f"do_{i}" for i in range(ticks)]
 
     await process.destroy()

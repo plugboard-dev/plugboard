@@ -23,7 +23,7 @@ class EventConnectorBuilder:  # pragma: no cover
     def __init__(self, connector_builder: ConnectorBuilder) -> None:
         self._connector_builder = connector_builder
 
-    def build(self, components: list[Component]) -> dict[str, Connector]:
+    def build(self, components: _t.Iterable[Component]) -> dict[str, Connector]:
         """Returns mapping of connectors for events handled by components."""
         evt_conn_map: dict[str, Connector] = {}
         for component in components:

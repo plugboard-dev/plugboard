@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-from abc import ABC, abstractmethod
+from abc import ABC
 import asyncio
 from collections import defaultdict, deque
-from functools import wraps
+from functools import cached_property, wraps
 import typing as _t
 
 from that_depends import ContextScopes, container_context
@@ -13,6 +13,7 @@ from that_depends import ContextScopes, container_context
 from plugboard.component.io_controller import IOController as IO, IODirection
 from plugboard.events import Event, EventHandlers, StopEvent
 from plugboard.exceptions import (
+    EventStreamClosedError,
     IOSetupError,
     IOStreamClosedError,
     ProcessStatusError,
@@ -44,6 +45,8 @@ class Component(ABC, ExportMixin):
 
     io: IO = IO(input_events=[StopEvent], output_events=[StopEvent])
     exports: _t.Optional[list[str]] = None
+
+    _implements_step: bool = False
 
     def __init__(
         self,
@@ -79,6 +82,7 @@ class Component(ABC, ExportMixin):
             namespace=self.name,
             component=self,
         )
+        self._event_producers: dict[str, set[str]] = defaultdict(set)
         self._status = Status.CREATED
         self._is_running = False
         self._field_inputs: dict[str, _t.Any] = {}
@@ -144,6 +148,8 @@ class Component(ABC, ExportMixin):
             raise IOSetupError(
                 f"{cls.__name__} must extend Component abstract base class io arguments"
             )
+        # Check if component implements step method
+        cls._implements_step = cls.step is not Component.step
 
     @classmethod
     def _get_component_bases(cls) -> list[_t.Type[Component]]:
@@ -226,29 +232,76 @@ class Component(ABC, ExportMixin):
         @wraps(self.init)
         async def _wrapper() -> None:
             with self._job_id_ctx():
+                await self._build_producer_graph()
                 await self._init()
                 await self._set_status(Status.INIT)
 
         return _wrapper
 
-    @abstractmethod
+    async def _build_producer_graph(self) -> None:
+        """Builds the producer graph for the component."""
+        if not (self._state and self._state_is_connected):
+            self._logger.warning(
+                "State backend not connected. Cannot build producer graph. "
+                "Purely event driven models may hang indefinitely."
+            )
+            return
+        process = await self._state.get_process_for_component(self.id)
+        input_event_set = {evt.safe_type() for evt in self.io.input_events}
+        input_event_set.remove(StopEvent.safe_type())
+        for comp_id, comp_data in process["components"].items():
+            for evt in input_event_set.intersection(comp_data["io"]["output_events"]):
+                if comp_id == self.id:
+                    # TODO : How to handle the case of recursion, i.e., a component which is both
+                    #      : a producer and consumer of a given event?
+                    continue  # Skip self to avoid indefinite hanging
+                self._event_producers[evt].add(comp_id)
+
+    async def _update_producer_graph(self) -> None:
+        """Updates the producer graph for the component."""
+        if not (self._state and self._state_is_connected):
+            self._logger.warning("State backend not connected. Cannot update producer graph.")
+            return
+        if not self._event_producers:
+            return  # Nothing to do
+        process = await self._state.get_process_for_component(self.id)
+        for evt in list(self._event_producers.keys()):
+            for comp_id in list(self._event_producers[evt]):
+                comp_status = process["components"][comp_id]["status"]
+                if comp_status not in (Status.RUNNING, Status.WAITING):
+                    self._event_producers[evt].remove(comp_id)
+            if not self._event_producers[evt]:
+                self._event_producers.pop(evt)
+        if not self._event_producers:
+            raise EventStreamClosedError("No more events to process.")
+
     async def step(self) -> None:
         """Executes component logic for a single step."""
-        pass
+        raise NotImplementedError("Component step method not implemented")
+
+    @cached_property
+    def _produces_no_output_events(self) -> bool:
+        output_events = set([evt.safe_type() for evt in self.io.output_events])
+        return len(output_events - {StopEvent.safe_type()}) == 0
 
     @property
     def _can_step(self) -> bool:
         """Checks if the component can step.
 
-        - if a component has no input or output fields, it cannot step (purely event-driven case);
+        The rules for whether a component can step are as follows:
+        - if a component does not implement the `step` method, it cannot step;
+        - if a component produces no outputs and consumes no input fields, it cannot step (purely
+          event-driven case);
         - if a component requires inputs, it can only step if all the inputs are available;
         - otherwise, a component which has outputs but does not require inputs can always step.
         """
-        consumes_no_inputs = len(self.io.inputs) == 0
-        produces_no_outputs = len(self.io.outputs) == 0
-        if consumes_no_inputs and produces_no_outputs:
+        if not self._implements_step:
             return False
-        return consumes_no_inputs or self._field_inputs_ready
+        produces_no_outputs = self._produces_no_output_events and len(self.io.outputs) == 0
+        consumes_no_input_fields = len(self.io.inputs) == 0
+        if consumes_no_input_fields and produces_no_outputs:
+            return False
+        return consumes_no_input_fields or self._field_inputs_ready
 
     def _handle_step_wrapper(self) -> _t.Callable:
         self._step = self.step
@@ -274,6 +327,32 @@ class Component(ABC, ExportMixin):
 
         return _wrapper
 
+    @cached_property
+    def _has_field_inputs(self) -> bool:
+        return len(self.io.inputs) > 0
+
+    @cached_property
+    def _has_event_inputs(self) -> bool:
+        input_events = set([evt.safe_type() for evt in self.io.input_events])
+        return len(input_events - {StopEvent.safe_type()}) > 0
+
+    @cached_property
+    def _has_inputs(self) -> bool:
+        return self._has_field_inputs or self._has_event_inputs
+
+    @cached_property
+    def _has_field_outputs(self) -> bool:
+        return len(self.io.outputs) > 0
+
+    @cached_property
+    def _has_event_outputs(self) -> bool:
+        output_events = set([evt.safe_type() for evt in self.io.output_events])
+        return len(output_events - {StopEvent.safe_type()}) > 0
+
+    @cached_property
+    def _has_outputs(self) -> bool:
+        return self._has_field_outputs or self._has_event_outputs
+
     async def _io_read_with_status_check(self) -> None:
         """Reads from IO controller with concurrent periodic status checks.
 
@@ -281,10 +360,11 @@ class Component(ABC, ExportMixin):
         failed state, the component status is set to `STOPPED` and a `ProcessStatusError` is raised;
         otherwise another read attempt is made.
         """
+        read_timeout = 1e-3 if self._has_outputs and not self._has_inputs else None
         done, pending = await asyncio.wait(
             (
                 asyncio.create_task(self._periodic_status_check()),
-                asyncio.create_task(self.io.read()),
+                asyncio.create_task(self.io.read(timeout=read_timeout)),
             ),
             return_when=asyncio.FIRST_COMPLETED,
         )
@@ -292,7 +372,9 @@ class Component(ABC, ExportMixin):
             task.cancel()
         for task in done:
             exc = task.exception()
-            if exc is not None:
+            if isinstance(exc, EventStreamClosedError) and len(self.io.inputs) == 0:
+                await self.io.close()  # Call close for final wait and flush event buffer
+            elif exc is not None:
                 raise exc
 
     async def _periodic_status_check(self) -> None:
@@ -300,6 +382,11 @@ class Component(ABC, ExportMixin):
         while True:
             await asyncio.sleep(IO_READ_TIMEOUT_SECONDS)
             await self._status_check()
+            # TODO : Eventually producer graph update will be event driven. For now,
+            #      : the update is performed periodically, so it's called here along
+            #      : with the status check.
+            if len(self.io.inputs) == 0:
+                await self._update_producer_graph()
 
     async def _status_check(self) -> None:
         """Checks the status of the process and updates the component status."""
@@ -385,7 +472,8 @@ class Component(ABC, ExportMixin):
                     await self.step()
                 except IOStreamClosedError:
                     break
-            await self._set_status(Status.COMPLETED)
+            if self.status not in {Status.STOPPED, Status.FAILED}:
+                await self._set_status(Status.COMPLETED)
         finally:
             self._is_running = False
 
@@ -406,6 +494,7 @@ class Component(ABC, ExportMixin):
             "status": str(self.status),
             **field_data,
             "exports": {name: getattr(self, name, None) for name in self.exports or []},
+            "io": self.io.dict(),
         }
 
 

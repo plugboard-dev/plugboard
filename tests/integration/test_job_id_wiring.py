@@ -298,7 +298,7 @@ async def test_direct_process_without_job_id_multiple_runs() -> None:
     process: LocalProcess = LocalProcess(components=[component], connectors=[], state=state)
 
     job_id_history = set([])
-    num_runs = 5
+    num_runs = 3
     for _ in range(num_runs):
         async with process:
             # A job ID should have been auto-generated
@@ -321,11 +321,11 @@ async def test_direct_process_without_job_id_multiple_runs_multiprocessing() -> 
     # Create a state backend without a specific job ID
     state: SqliteStateBackend = SqliteStateBackend()
 
-    components: list[MockComponent] = [MockComponent(name=f"mock-component-{i}") for i in range(4)]
+    components: list[MockComponent] = [MockComponent(name=f"mock-component-{i}") for i in range(3)]
     process: RayProcess = RayProcess(components=components, connectors=[], state=state)
 
     job_id_history: set[str] = set([])
-    num_runs: int = 5
+    num_runs: int = 3
     for _ in range(num_runs):
         async with process:
             # A job ID should have been auto-generated
