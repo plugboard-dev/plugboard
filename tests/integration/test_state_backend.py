@@ -10,7 +10,7 @@ from plugboard.connector import AsyncioConnector, Connector
 from plugboard.exceptions import NotFoundError
 from plugboard.process import LocalProcess
 from plugboard.schemas import ConnectorSpec, Status
-from plugboard.state import StateBackend
+from plugboard.state import PostgresStateBackend, StateBackend
 from tests.conftest import ComponentTestHelper
 from tests.integration.conftest import (
     setup_DictStateBackend,
@@ -161,6 +161,9 @@ async def test_state_backend_upsert_process(
     with_components: bool,
 ) -> None:
     """Tests `StateBackend.upsert_process` method."""
+    if isinstance(state_backend, PostgresStateBackend) and not with_components:
+        pytest.skip("PostgresStateBackend requires components to be upserted with process.")
+
     comp_b1, comp_b2 = B_components
     conn_1, conn_2 = B_connectors
 
