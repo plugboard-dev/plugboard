@@ -3,11 +3,13 @@
 import typing as _t
 
 import pytest
+import pytest_asyncio
 
 from plugboard.component import Component, IOController
 from plugboard.connector import AsyncioConnector, Connector
+from plugboard.exceptions import NotFoundError
 from plugboard.process import LocalProcess
-from plugboard.schemas import ConnectorSpec
+from plugboard.schemas import ConnectorSpec, Status
 from plugboard.state import StateBackend
 from tests.conftest import ComponentTestHelper
 from tests.integration.conftest import (
@@ -80,7 +82,7 @@ def C_connectors() -> list[Connector]:
     ]
 
 
-@pytest.fixture(
+@pytest_asyncio.fixture(
     params=[
         setup_DictStateBackend,
         setup_SqliteStateBackend,
@@ -207,4 +209,50 @@ async def test_state_backend_process_init(
     assert await state_backend.get_connector(conn_1.id) == conn_1.dict()
     assert await state_backend.get_connector(conn_2.id) == conn_2.dict()
 
+    # All components must report their INIT status to the StateBackend
+    for c in B_components:
+        assert (await state_backend.get_component(c.id))["status"] == Status.INIT
+
     await process.destroy()
+
+
+@pytest.mark.asyncio
+async def test_state_backend_process_status(
+    state_backend: StateBackend, B_components: list[Component], B_connectors: list[Connector]
+) -> None:
+    """Tests `StateBackend` process status updates."""
+    comp_b1, comp_b2 = B_components
+    conn_1, conn_2 = B_connectors
+
+    process = LocalProcess(
+        name="P1", components=[comp_b1, comp_b2], connectors=[conn_1, conn_2], state=state_backend
+    )
+
+    await process.init()
+
+    # Check initial status
+    assert await state_backend.get_process_status(process.id) == Status.INIT
+
+    # Update process status to RUNNING
+    await state_backend.update_process_status(process.id, Status.RUNNING)
+    assert await state_backend.get_process_status(process.id) == Status.RUNNING
+
+    # Check process status by component
+    for c in [comp_b1, comp_b2]:
+        assert (await state_backend.get_process_status_for_component(c.id)) == Status.RUNNING
+
+    # Update component statuses to FAILED
+    for c in [comp_b1, comp_b2]:
+        await c._set_status(Status.FAILED, publish=True)
+        await state_backend.upsert_component(c)
+
+    # Process status should be updated to FAILED
+    assert await state_backend.get_process_status(process.id) == Status.FAILED
+
+    await process.destroy()
+
+    with pytest.raises(NotFoundError):
+        await state_backend.get_process_status("process-non-existent")
+
+    with pytest.raises(NotFoundError):
+        await state_backend.get_process_status_for_component("component-non-existent")

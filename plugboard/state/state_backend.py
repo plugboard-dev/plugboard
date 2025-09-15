@@ -3,14 +3,19 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
+from contextlib import ExitStack
 from datetime import datetime, timezone
 from types import TracebackType
 import typing as _t
 
-from plugboard.utils import DI, EntityIdGen, ExportMixin
+from that_depends import ContextScopes, Provide, container_context, inject
+
+from plugboard.exceptions import NotFoundError
+from plugboard.schemas.state import Status
+from plugboard.utils import DI, ExportMixin
 
 
-if _t.TYPE_CHECKING:
+if _t.TYPE_CHECKING:  # pragma: no cover
     from plugboard.component import Component
     from plugboard.connector import Connector
     from plugboard.process import Process
@@ -30,15 +35,35 @@ class StateBackend(ABC, ExportMixin):
             kwargs: Additional keyword arguments.
         """
         self._local_state = {"job_id": job_id, "metadata": metadata, **kwargs}
-        self._logger = DI.logger.sync_resolve().bind(cls=self.__class__.__name__, job_id=job_id)
+        self._initialised_with_job_id = False
+        self._logger = DI.logger.resolve_sync().bind(cls=self.__class__.__name__, job_id=job_id)
         self._logger.info("StateBackend created")
+        self._ctx = ExitStack()
+
+    def __getstate__(self) -> dict:
+        state = self.__dict__.copy()
+        state.pop("_ctx", None)
+        return state
+
+    def __setstate__(self, state: dict) -> None:
+        self.__dict__.update(state)
+        self._ctx = ExitStack()
+        job_id = self._local_state.get("job_id")
+        self._enter_container_context(job_id)
 
     async def init(self) -> None:
         """Initialises the `StateBackend`."""
+        job_id = self._local_state.pop("job_id", None)
+        self._initialised_with_job_id = job_id is not None
+        self._enter_container_context(job_id)
         await self._initialise_data(**self._local_state)
+        self._logger = self._logger.bind(job_id=self.job_id)
 
     async def destroy(self) -> None:
         """Destroys the `StateBackend`."""
+        self._ctx.close()
+        if not self._initialised_with_job_id:
+            self._local_state["job_id"] = None
         pass
 
     async def __aenter__(self) -> StateBackend:
@@ -55,20 +80,30 @@ class StateBackend(ABC, ExportMixin):
         """Exits the context manager."""
         await self.destroy()
 
+    def _enter_container_context(self, job_id: _t.Optional[str] = None) -> None:
+        """Enters the container context with the job_id."""
+        # Enter the container context with the job_id (same for both fresh init and reinit)
+        container_cm = container_context(
+            DI, global_context={"job_id": job_id}, scope=ContextScopes.APP
+        )
+        self._ctx.enter_context(container_cm)
+
+    @inject
     async def _initialise_data(
-        self, job_id: _t.Optional[str] = None, metadata: _t.Optional[dict] = None, **kwargs: _t.Any
+        self, job_id: str = Provide[DI.job_id], metadata: _t.Optional[dict] = None, **kwargs: _t.Any
     ) -> None:
         """Initialises the state data."""
-        if job_id is not None:
-            _job_data = await self._get_job(job_id)
-        else:
-            _job_data = {
-                "job_id": EntityIdGen.job_id(),
+        try:
+            # TODO : Requires indication of new or existing job to conditionally raise exception?
+            job_data = await self._get_job(job_id)
+        except NotFoundError:
+            job_data = {
+                "job_id": job_id,
                 "created_at": datetime.now(timezone.utc).isoformat(),
                 "metadata": metadata or dict(),
             }
-            await self._upsert_job(_job_data)
-        self._local_state.update(_job_data)
+            await self._upsert_job(job_data)
+        self._local_state.update(job_data)
 
     @abstractmethod
     async def _get(self, key: str | tuple[str, ...], value: _t.Optional[_t.Any] = None) -> _t.Any:
@@ -123,12 +158,13 @@ class StateBackend(ABC, ExportMixin):
             process_data["components"] = {}
             process_data["connectors"] = {}
         await self._set(self._process_key(process.id), process_data)
+        await self.update_process_status(process.id, process.status)
         # TODO : Need to make this transactional.
-        comp_proc_map = await self._get("_comp_proc_map")
+        comp_proc_map = await self._get("_comp_proc_map", {})
         comp_proc_map.update({c.id: process.id for c in process.components.values()})
         await self._set("_comp_proc_map", comp_proc_map)
         # TODO : Need to make this transactional.
-        conn_proc_map = await self._get("_conn_proc_map")
+        conn_proc_map = await self._get("_conn_proc_map", {})
         conn_proc_map.update({c.id: process.id for c in process.connectors.values()})
         await self._set("_conn_proc_map", conn_proc_map)
 
@@ -136,11 +172,25 @@ class StateBackend(ABC, ExportMixin):
         """Returns a process from the state."""
         return await self._get(self._process_key(process_id))
 
+    async def _get_process_id_for_component(self, component_id: str) -> str:
+        process_id: str | None = await self._get(("_comp_proc_map", component_id))
+        if process_id is None:
+            raise NotFoundError(f"No process found for component with ID {component_id}")
+        return process_id
+
+    async def get_process_for_component(self, component_id: str) -> dict:
+        """Gets the process that a component belongs to."""
+        process_id = await self._get_process_id_for_component(component_id)
+        return await self.get_process(process_id)
+
     async def upsert_component(self, component: Component) -> None:
         """Upserts a component into the state."""
         process_id = await self._get(("_comp_proc_map", component.id))
         key = self._component_key(process_id, component.id)
         await self._set(key, component.dict())
+        if component.status in {Status.FAILED}:
+            # If the component is terminal, update the process status
+            await self.update_process_status(process_id, component.status)
 
     async def get_component(self, component_id: str) -> dict:
         """Returns a component from the state."""
@@ -159,3 +209,21 @@ class StateBackend(ABC, ExportMixin):
         process_id = await self._get(("_conn_proc_map", connector_id))
         key = self._connector_key(process_id, connector_id)
         return await self._get(key)
+
+    async def update_process_status(self, process_id: str, status: Status) -> None:
+        """Updates the status of a process in the state."""
+        process_status_key = self._process_key(process_id) + ("status",)
+        await self._set(process_status_key, str(status))
+
+    async def get_process_status(self, process_id: str) -> Status:
+        """Gets the status of a process from the state."""
+        process_status_key = self._process_key(process_id) + ("status",)
+        status_str: str | None = await self._get(process_status_key)
+        if status_str is None:
+            raise NotFoundError(f"Process with id {process_id} not found.")
+        return Status(status_str)
+
+    async def get_process_status_for_component(self, component_id: str) -> Status:
+        """Gets the status of the process that a component belongs to."""
+        process_id = await self._get_process_id_for_component(component_id)
+        return await self.get_process_status(process_id)

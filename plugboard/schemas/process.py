@@ -3,7 +3,7 @@
 import typing as _t
 
 from annotated_types import Len
-from pydantic import model_validator
+from pydantic import field_validator, model_validator
 from typing_extensions import Self
 
 from plugboard.schemas._common import PlugboardBaseModel
@@ -64,3 +64,13 @@ class ProcessSpec(PlugboardBaseModel):
         ):
             raise ValueError("RayProcess requires a parallel-capable connector type.")
         return self
+
+    @field_validator("type", mode="before")
+    @classmethod
+    def _validate_type(cls, value: _t.Any) -> str:
+        if isinstance(value, str):
+            return {
+                "plugboard.process.local_process.LocalProcess": "plugboard.process.LocalProcess",
+                "plugboard.process.ray_process.RayProcess": "plugboard.process.RayProcess",
+            }.get(value, value)
+        return value

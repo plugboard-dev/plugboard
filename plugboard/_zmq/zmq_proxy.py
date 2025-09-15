@@ -6,9 +6,15 @@ import asyncio
 import multiprocessing
 import typing as _t
 
+from pydantic import BaseModel, Field, ValidationError
 import zmq
 import zmq.asyncio
 
+
+try:
+    from uvloop import run as _asyncio_run
+except ImportError:  # pragma: no cover
+    from asyncio import run as _asyncio_run
 
 zmq_sockopts_t: _t.TypeAlias = list[tuple[int, int | bytes | str]]
 ZMQ_ADDR: str = r"tcp://127.0.0.1"
@@ -56,6 +62,14 @@ def _create_sync_socket(
     for opt, value in socket_opts:
         socket.setsockopt(opt, value)
     return socket
+
+
+class _PushSocketRequest(BaseModel):
+    """Request to create a push socket."""
+
+    topic: str = Field(min_length=3)
+    maxsize: int = Field(ge=1)
+    reuse: bool = True
 
 
 class ZMQProxy:
@@ -153,7 +167,7 @@ class ZMQProxy:
     def _run_process(self) -> None:
         """Entry point for the child process."""
         try:
-            asyncio.run(self._run())
+            _asyncio_run(self._run())
         finally:  # pragma: no cover
             self._close()
 
@@ -232,13 +246,15 @@ class ZMQProxy:
     def _handle_create_push_socket_requests(self) -> None:
         """Handles requests to create sockets in the subprocess."""
         while True:
-            request = self._socket_rep_socket.recv_json()
-            if not (isinstance(request, dict) and "topic" in request and "maxsize" in request):
+            request_data = self._socket_rep_socket.recv_json()
+            try:
+                request = _PushSocketRequest.model_validate(request_data)
+            except ValidationError:
                 self._socket_rep_socket.send_json({"error": "Invalid request format."})
                 continue
             try:
                 push_address = self._create_push_socket(
-                    request["topic"], request["maxsize"], reuse=request.get("reuse", True)
+                    request.topic, request.maxsize, reuse=request.reuse
                 )
                 self._socket_rep_socket.send_json({"push_address": push_address})
             except Exception as e:

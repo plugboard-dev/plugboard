@@ -2,6 +2,7 @@
 
 from enum import Enum
 import sys
+import typing as _t
 
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -32,6 +33,18 @@ class _FeatureFlags(BaseSettings):
     multiprocessing_fork: bool = False
 
 
+class _RabbitMQSettings(BaseSettings):
+    """RabbitMQ settings.
+
+    Attributes:
+        url: The URL of the RabbitMQ server. Should contain credentials if required.
+    """
+
+    model_config = SettingsConfigDict(env_prefix="RABBITMQ_")
+
+    url: _t.Optional[str] = None
+
+
 class Settings(BaseSettings):
     """Settings for Plugboard.
 
@@ -40,10 +53,15 @@ class Settings(BaseSettings):
         log_level: The log level to use.
         log_structured: Whether to render logs to JSON. Defaults to JSON if not running in a
             terminal session.
+        io_read_timeout: Timeout for reading from IO streams in seconds between periodic
+            status checks.
     """
+
+    model_config = SettingsConfigDict(env_prefix=_ENV_PREFIX)
 
     flags: _FeatureFlags = Field(default_factory=_FeatureFlags)
     log_level: LogLevel = LogLevel.warning
     log_structured: bool = Field(default_factory=lambda: not sys.stderr.isatty())
+    io_read_timeout: float = 20.0
 
-    model_config = SettingsConfigDict(env_prefix=_ENV_PREFIX)
+    rabbitmq: _RabbitMQSettings = Field(default_factory=_RabbitMQSettings)

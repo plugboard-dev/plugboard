@@ -47,8 +47,7 @@ jobs:
           echo "PACKAGE_VERSION=$VERSION" >> $GITHUB_ENV
 
       - name: Export requirements.txt file
-        run: |
-          uv export --all-extras --format requirements-txt --no-hashes --no-editable --no-dev --no-emit-project >> requirements.txt
+        run: uv export --all-extras --format requirements-txt --no-hashes --no-editable --no-dev --no-emit-project > requirements.txt
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
@@ -67,7 +66,7 @@ jobs:
         run: |
           git_hash_short=$(git rev-parse --short "$GITHUB_SHA")
           echo "GIT_HASH_SHORT=${git_hash_short}" >> $GITHUB_ENV
-          git_branch=$(git branch -r --contains ${{ github.ref }} --format "%(refname:lstrip=3)" | grep -v HEAD)
+          git_branch=$(git branch -r --contains ${{ github.ref }} --merged ${{ github.ref }} --format "%(refname:lstrip=3)" | grep -v HEAD)
           echo "GIT_BRANCH=${git_branch}" >> $GITHUB_ENV
           git_branch_docker_safe=$(echo ${git_branch} | tr / -)
           echo "GIT_BRANCH_DOCKER_SAFE=${git_branch_docker_safe}" >> $GITHUB_ENV

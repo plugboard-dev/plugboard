@@ -19,10 +19,23 @@ from .connector import (
 from .entities import Entity
 from .io import IODirection
 from .process import ProcessArgsDict, ProcessArgsSpec, ProcessSpec
-from .state import StateBackendArgsDict, StateBackendArgsSpec, StateBackendSpec
+from .state import StateBackendArgsDict, StateBackendArgsSpec, StateBackendSpec, Status
+from .tune import (
+    CategoricalParameterSpec,
+    Direction,
+    FloatParameterSpec,
+    IntParameterSpec,
+    ObjectiveSpec,
+    OptunaSpec,
+    ParameterSpec,
+    TuneArgsDict,
+    TuneArgsSpec,
+    TuneSpec,
+)
 
 
 __all__ = [
+    "CategoricalParameterSpec",
     "ComponentSpec",
     "ComponentArgsDict",
     "ComponentArgsSpec",
@@ -33,8 +46,14 @@ __all__ = [
     "ConnectorMode",
     "ConnectorSocket",
     "ConnectorSpec",
+    "Direction",
     "Entity",
+    "FloatParameterSpec",
+    "IntParameterSpec",
     "IODirection",
+    "ObjectiveSpec",
+    "OptunaSpec",
+    "ParameterSpec",
     "ProcessConfigSpec",
     "ProcessSpec",
     "ProcessArgsDict",
@@ -42,4 +61,8 @@ __all__ = [
     "StateBackendSpec",
     "StateBackendArgsDict",
     "StateBackendArgsSpec",
+    "Status",
+    "TuneArgsDict",
+    "TuneArgsSpec",
+    "TuneSpec",
 ]

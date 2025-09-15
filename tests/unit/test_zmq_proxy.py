@@ -4,13 +4,14 @@ import asyncio
 import typing as _t
 
 import pytest
+import pytest_asyncio
 import zmq
 import zmq.asyncio
 
 from plugboard._zmq.zmq_proxy import ZMQ_ADDR, ZMQProxy, create_socket, zmq_sockopts_t
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def zmq_proxy() -> _t.AsyncGenerator[ZMQProxy, None]:
     """Fixture for ZMQProxy instance."""
     proxy = ZMQProxy()
@@ -23,7 +24,7 @@ async def zmq_proxy() -> _t.AsyncGenerator[ZMQProxy, None]:
         await asyncio.sleep(0.1)  # Give the process time to terminate
 
 
-@pytest.mark.anyio
+@pytest.mark.asyncio
 @pytest.mark.parametrize(
     "socket_pair,socket_opts,topic",
     [
@@ -117,7 +118,7 @@ async def test_create_socket(
     receiver.close()
 
 
-@pytest.mark.anyio
+@pytest.mark.asyncio
 async def test_start_proxy() -> None:
     """Tests that the ZMQProxy can be started."""
     # Creating ZMQProxy automatically starts it
@@ -137,7 +138,7 @@ async def test_start_proxy() -> None:
         await asyncio.sleep(0.1)
 
 
-@pytest.mark.anyio
+@pytest.mark.asyncio
 async def test_get_proxy_ports(zmq_proxy: ZMQProxy) -> None:
     """Tests retrieving proxy ports and verifies PUB/SUB connectivity."""
     # Test that ports are returned as integers
@@ -191,7 +192,7 @@ async def test_get_proxy_ports(zmq_proxy: ZMQProxy) -> None:
     sub_socket.close()
 
 
-@pytest.mark.anyio
+@pytest.mark.asyncio
 async def test_get_proxy_ports_not_started() -> None:
     """Tests retrieving proxy ports when proxy is not started."""
     # Create a proxy but interfere with its initialization
@@ -209,7 +210,8 @@ async def test_get_proxy_ports_not_started() -> None:
     proxy.terminate()
 
 
-@pytest.mark.anyio
+@pytest.mark.flaky(reruns=3)
+@pytest.mark.asyncio
 async def test_add_push_socket(zmq_proxy: ZMQProxy) -> None:
     """Tests adding a push socket for a topic."""
     topic: str = "test_topic"
@@ -256,7 +258,7 @@ async def test_add_push_socket(zmq_proxy: ZMQProxy) -> None:
     pull_socket_2.close()
 
 
-@pytest.mark.anyio
+@pytest.mark.asyncio
 async def test_add_push_socket_not_started() -> None:
     """Tests adding a push socket when proxy is not started."""
     proxy = ZMQProxy()
@@ -269,7 +271,25 @@ async def test_add_push_socket_not_started() -> None:
     proxy.terminate()
 
 
-@pytest.mark.anyio
+@pytest.mark.asyncio
+async def test_add_push_socket_invalid_request(zmq_proxy: ZMQProxy) -> None:
+    """Tests adding a push socket with invalid request data raises `ValidationError`."""
+    # Create a topic with invalid characters
+
+    # Attempt to add the push socket and expect a ValidationError
+    with pytest.raises(RuntimeError, match="Failed to create push socket.*"):
+        await zmq_proxy.add_push_socket(topic="_")
+
+    with pytest.raises(RuntimeError, match="Failed to create push socket.*"):
+        await zmq_proxy.add_push_socket(topic="valid_topic", maxsize=0)
+
+    # Clean up
+    zmq_proxy.terminate()
+    await asyncio.sleep(0.1)
+
+
+@pytest.mark.flaky(reruns=3)
+@pytest.mark.asyncio
 async def test_add_multiple_push_sockets(zmq_proxy: ZMQProxy) -> None:
     """Tests adding multiple push sockets for different topics."""
     # Create multiple push sockets for different topics

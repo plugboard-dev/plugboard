@@ -46,7 +46,7 @@ class D(ComponentTestHelper):
             await super().step()
 
 
-@pytest.mark.anyio
+@pytest.mark.asyncio
 async def test_circular_process_topology() -> None:
     """Tests a circular `Process` topology."""
     comp_a = A(name="comp_a", iters=10)
@@ -78,7 +78,7 @@ async def test_circular_process_topology() -> None:
     _ = markdown_diagram(process)
 
 
-@pytest.mark.anyio
+@pytest.mark.asyncio
 async def test_branching_process_topology() -> None:
     """Tests a branching `Process` topology."""
     comp_a = A(name="comp_a", iters=10)
@@ -109,7 +109,7 @@ async def test_branching_process_topology() -> None:
     _ = markdown_diagram(process)
 
 
-@pytest.mark.anyio
+@pytest.mark.asyncio
 async def test_multiple_inputs_to_one_field_process_topology() -> None:
     """Tests a `Process` topology with multiple inputs to a single field."""
     comp_d1 = D(name="comp_d1", iters=3, factor=1)

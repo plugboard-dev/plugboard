@@ -7,6 +7,8 @@
       - AsyncioConnector
       - AsyncioChannel
       - SerdeChannel
+      - RabbitMQConnector
+      - RabbitMQChannel
       - RayConnector
       - RayChannel
       - ZMQConnector

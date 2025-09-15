@@ -7,13 +7,14 @@ from plugboard.component import Component
 from plugboard.component.io_controller import IODirection
 from plugboard.connector import Connector
 from plugboard.process.process import Process
+from plugboard.schemas.state import Status
 from plugboard.state import RayStateBackend, StateBackend
-from plugboard.utils import build_actor_wrapper, depends_on_optional, gather_except
+from plugboard.utils import build_actor_wrapper, depends_on_optional, gather_except, gen_rand_str
 
 
 try:
     import ray
-except ImportError:
+except ImportError:  # pragma: no cover
     pass
 
 
@@ -40,6 +41,8 @@ class RayProcess(Process):
             parameters: Optional; Parameters for the `Process`.
             state: Optional; `StateBackend` for the `Process`.
         """
+        # TODO: Replace with a namespace based on the job ID or similar
+        self._namespace = f"plugboard-{gen_rand_str(16)}"
         self._component_actors = {
             # Recreate components on remote actors
             c.id: self._create_component_actor(c)
@@ -58,7 +61,9 @@ class RayProcess(Process):
         name = component.id
         args = component.export()["args"]
         actor_cls = build_actor_wrapper(component.__class__)
-        return ray.remote(num_cpus=0, name=name)(actor_cls).remote(**args)  # type: ignore
+        return ray.remote(num_cpus=0, name=name, namespace=self._namespace)(  # type: ignore
+            actor_cls
+        ).remote(**args)
 
     async def _update_component_attributes(self) -> None:
         """Updates attributes on local components from remote actors."""
@@ -72,6 +77,7 @@ class RayProcess(Process):
                     **state[str(IODirection.INPUT)],
                     **state[str(IODirection.OUTPUT)],
                     **state["exports"],
+                    "_status": state["status"],
                 }
             )
 
@@ -100,24 +106,41 @@ class RayProcess(Process):
         await self.connect_state()
         await self._connect_components()
         coros = [component.init.remote() for component in self._component_actors.values()]
-        await gather_except(*coros)
-        await self._update_component_attributes()
+        try:
+            await gather_except(*coros)
+        finally:
+            await self._update_component_attributes()
         await super().init()
         self._logger.info("Process initialised")
 
     async def step(self) -> None:
         """Executes a single step for the process."""
+        await super().step()
         coros = [component.step.remote() for component in self._component_actors.values()]
-        await gather_except(*coros)
-        await self._update_component_attributes()
+        try:
+            await gather_except(*coros)
+        except Exception:
+            await self._set_status(Status.FAILED)
+            raise
+        else:
+            await self._set_status(Status.WAITING)
+        finally:
+            await self._update_component_attributes()
 
     async def run(self) -> None:
         """Runs the process to completion."""
         await super().run()
         self._logger.info("Starting process run")
         coros = [component.run.remote() for component in self._component_actors.values()]
-        await gather_except(*coros)
-        await self._update_component_attributes()
+        try:
+            await gather_except(*coros)
+        except Exception:
+            await self._set_status(Status.FAILED)
+            raise
+        else:
+            await self._set_status(Status.COMPLETED)
+        finally:
+            await self._update_component_attributes()
         self._logger.info("Process run complete")
 
     async def destroy(self) -> None:

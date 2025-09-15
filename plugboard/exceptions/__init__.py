@@ -43,6 +43,12 @@ class IOSetupError(IOControllerError):
     pass
 
 
+class EventStreamClosedError(Exception):
+    """Raised when there are no more event producers running."""
+
+    pass
+
+
 class NoMoreDataException(Exception):
     """Raised when there is no more data to fetch."""
 
@@ -87,5 +93,17 @@ class UnrecognisedEventError(EventError):
 
 class ValidationError(Exception):
     """Raised when an invalid `Process` or `Component` is encountered."""
+
+    pass
+
+
+class ConstraintError(Exception):
+    """Raised when a constraint is violated."""
+
+    pass
+
+
+class ProcessStatusError(Exception):
+    """Raised when a `Process` is in an invalid state for the requested operation."""
 
     pass

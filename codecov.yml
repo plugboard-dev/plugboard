@@ -1,0 +1,12 @@
+coverage:
+  status:
+    # Overall project status: https://docs.codecov.com/docs/commit-status#project-status
+    project:
+      default:
+        target: auto
+        threshold: 1%  # Allow 1% drop in coverage
+    # Status of the PR/commit: https://docs.codecov.com/docs/commit-status#patch-status
+    patch:
+      default:
+        target: 80%
+        threshold: 0%

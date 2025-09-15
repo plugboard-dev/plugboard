@@ -39,3 +39,7 @@ The package documentation uses [Material for MkDocs](https://squidfunk.github.io
 ```sh
 uv run mkdocs serve
 ```
+
+### Building example models
+
+This repo includes a [custom LLM prompt](.github/instructions/models.instructions.md) for the [examples](examples/) folder. If you use GitHub Copilot, this can help you build a Plugboard model from a description of the process and/or the components that you would like to implement. We recommend using Copilot in agent mode and allowing it to implement the boilerplate code from your input prompt.

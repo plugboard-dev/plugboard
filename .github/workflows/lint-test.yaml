@@ -11,11 +11,12 @@ on:
       - reopened
 
 jobs:
-  lint-test:
+  lint:
+    name: Lint code
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python_version: [3.12]
+        python_version: [3.12, 3.13]
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -34,7 +35,6 @@ jobs:
       - name: Install project
         run: uv sync --group test --group docs
 
-      # Run all checks, even if some fail
       - name: Ruff linting
         run: uv run ruff check .
         if: always()
@@ -51,19 +51,6 @@ jobs:
         run: uv run xenon --max-absolute B --max-modules A --max-average A plugboard/
         if: always()
 
-      - name: Tests
-        run: |
-          uv run coverage run -m pytest .
-          uv run coverage combine
-          uv run coverage xml
-        if: always()
-
-      - name: Upload coverage reports to Codecov
-        uses: codecov/codecov-action@v5
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }}
-          slug: plugboard-dev/plugboard
-
       - name: Notebook output cleared
         run: find . -name '*.ipynb' -not -path "./.venv/*" -exec uv run nbstripout --verify {} +
         if: always()
@@ -72,11 +59,215 @@ jobs:
         run: uv run mkdocs build --site-dir /tmp/site
         if: always()
 
-  build:
+  test-unit:
+    name: Tests - unit
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    strategy:
+      matrix:
+        python_version: [3.12, 3.13]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{matrix.python_version}}
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+        with:
+          enable-cache: true
+          cache-dependency-glob: "uv.lock"
+
+      - name: Install project
+        run: uv sync --group test
+
+      - name: Run unit tests
+        run: COVERAGE_FILE=.coverage.py${{ matrix.python_version }}.unit uv run coverage run -m pytest ./tests/unit/
+        env:
+          RAY_ENABLE_UV_RUN_RUNTIME_ENV: 0
+          PLUGBOARD_IO_READ_TIMEOUT: 5.0
+
+      - name: Upload unit test coverage
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-unit-py${{ matrix.python_version }}
+          include-hidden-files: true
+          path: .coverage.py${{ matrix.python_version }}.unit*
+
+  test-integration:
+    name: Tests - integration
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    strategy:
+      matrix:
+        python_version: [3.12, 3.13]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{matrix.python_version}}
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+        with:
+          enable-cache: true
+          cache-dependency-glob: "uv.lock"
+
+      - name: Install project
+        run: uv sync --group test
+
+      - name: Run backing services
+        run: |
+          docker compose up rabbitmq -d
+          sleep 10 # Wait for services to start
+
+      - name: Run integration tests
+        run: COVERAGE_FILE=.coverage.py${{ matrix.python_version }}.integration uv run coverage run -m pytest ./tests/integration/ -m "not tuner"
+        env:
+          RABBITMQ_URL: amqp://user:password@localhost:5672/
+          RAY_ENABLE_UV_RUN_RUNTIME_ENV: 0
+          PLUGBOARD_IO_READ_TIMEOUT: 5.0
+
+      - name: Upload integration test coverage
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-integration-py${{ matrix.python_version }}
+          include-hidden-files: true
+          path: .coverage.py${{ matrix.python_version }}.integration*
+  
+  test-integration-tuner:
+    name: Tests - integration:tuner
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    strategy:
+      matrix:
+        python_version: [3.12, 3.13]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{matrix.python_version}}
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+        with:
+          enable-cache: true
+          cache-dependency-glob: "uv.lock"
+
+      - name: Install project
+        run: uv sync --group test
+
+      - name: Run backing services
+        run: |
+          docker compose up rabbitmq -d
+          sleep 10 # Wait for services to start
+
+      - name: Run integration tests
+        run: COVERAGE_FILE=.coverage.py${{ matrix.python_version }}.integration.tuner uv run coverage run -m pytest ./tests/integration/ -m "tuner"
+        env:
+          RABBITMQ_URL: amqp://user:password@localhost:5672/
+          RAY_ENABLE_UV_RUN_RUNTIME_ENV: 0
+          PLUGBOARD_IO_READ_TIMEOUT: 5.0
+
+      - name: Upload integration test coverage
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-integration-tuner-py${{ matrix.python_version }}
+          include-hidden-files: true
+          path: .coverage.py${{ matrix.python_version }}.integration.tuner*
+
+  test-smoke:
+    name: Tests - smoke
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    strategy:
+      matrix:
+        python_version: [3.12, 3.13]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{matrix.python_version}}
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+        with:
+          enable-cache: true
+          cache-dependency-glob: "uv.lock"
+
+      - name: Install project
+        run: uv sync --group test
+
+      - name: Run smoke tests
+        run: uv run pytest ./tests/smoke/
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+
+  coverage-report:
+    name: Report coverage
+    needs: [test-unit, test-integration, test-integration-tuner] # Depends on tests passing
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python_version: [3.12]
+        python_version: [3.12, 3.13]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{matrix.python_version}}
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+        with:
+          enable-cache: true
+          cache-dependency-glob: "uv.lock"
+
+      - name: Install project
+        run: uv sync --group test
+
+      - name: Download unit and integration test coverage
+        uses: actions/download-artifact@v4
+        with:
+          pattern: coverage-*-py${{matrix.python_version}}
+          path: .
+          merge-multiple: true
+
+      - name: Combine coverage reports
+        run: uv run coverage combine
+
+      - name: Generate coverage XML
+        run: uv run coverage xml
+
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          slug: plugboard-dev/plugboard
+          files: coverage.xml # Specify the combined file
+          flags: py${{ matrix.python_version }}
+
+  build:
+    name: Build package
+    needs: [lint, test-unit, test-integration] # Depends on lint and tests passing
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python_version: [3.12, 3.13]
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -94,7 +285,6 @@ jobs:
 
       - name: Build package
         run: uv build
-        if: always()
 
       - name: Install from wheel
         working-directory: ./dist
