@@ -33,13 +33,11 @@ First we need to define the events that are going to get used in the model. Each
 
 So far all of our process models have run step-by-step until completion. When a model contains event-driven components, we need a way to tell them to stop at the end of the simulation, otherwise they will stay running and listening for events forever.
 
-In this example, our `Random` component will drive the process by generating input random values. When it has completed `iters` iterations, we can use it to stop the model by sending a [`StopEvent`][plugboard.events.StopEvent], causing other event-driven components in the model to shutdown.
+In this example, our `Random` component will drive the process by generating input random values. When it has completed `iters` iterations, we call `self.io.close()` to stop the model, causing other components in the model to shutdown.
 
 ```python
 --8<-- "examples/tutorials/005_events/hello_events.py:source-component"
 ```
-
-1.  Use `self.io.queue_event` to send an event from a [`Component`][plugboard.component.Component]. Here we are sending [`StopEvent`][plugboard.events.StopEvent] to stop the process once all of the random values have been generated.
 
 Next, we will define `FindHighLowValues` to identify high and low values in the stream of random numbers and publish `HighEvent` and `LowEvent` respectively.
 
@@ -48,7 +46,7 @@ Next, we will define `FindHighLowValues` to identify high and low values in the 
 ```
 
 1.  See how we use the [`IOController`][plugboard.component.IOController] to declare that this [`Component`][plugboard.component.Component] will publish events.
-2.  Call `self.io.queue_event` to send an event of the correct type.
+2.  Use `self.io.queue_event` to send an event from a [`Component`][plugboard.component.Component]. Here we are senging the `HighEvent` or `LowEvent` depending on the input value.
 
 Finally, we need components to subscribe to these events and process them. Use the `Event.handler` decorator to identify the method on each [`Component`][plugboard.component.Component] that will do this processing.
 
@@ -61,7 +59,7 @@ Finally, we need components to subscribe to these events and process them. Use t
 3.  ...and we handle `LowEvent` here.
 
 !!! note
-    In a real model you could define whatever logic you need inside your event handler, e.g. create a file, publish another event, etc. Here we just store the event on an attribute so that its value can be output on the next call to `step()`.
+    In a real model you could define whatever logic you need inside your event handler, e.g. create a file, publish another event, etc. Here we just store the event on an attribute so that its value can be output via the `step()` method.
 
 ## Putting it all together
 

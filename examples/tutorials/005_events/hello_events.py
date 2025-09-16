@@ -53,7 +53,7 @@ class Random(Component):
         self.completed_iters += 1
         self.value = random.random()
         if self.completed_iters >= self.max_iters:
-            self.io.queue_event(StopEvent(source=self.name, data={}))  # (1)!
+            await self.io.close()
 # --8<-- [end:source-component]
 
 
