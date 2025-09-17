@@ -188,7 +188,7 @@ class StateBackend(ABC, ExportMixin):
 
     async def upsert_component(self, component: Component) -> None:
         """Upserts a component into the state."""
-        process_id = await self._get(("_comp_proc_map", component.id))
+        process_id = await self._get_process_id_for_component(component.id)
         key = self._component_key(process_id, component.id)
         await self._set(key, component.dict())
         if component.status in {Status.FAILED}:
@@ -197,19 +197,25 @@ class StateBackend(ABC, ExportMixin):
 
     async def get_component(self, component_id: str) -> dict:
         """Returns a component from the state."""
-        process_id = await self._get(("_comp_proc_map", component_id))
+        process_id = await self._get_process_id_for_component(component_id)
         key = self._component_key(process_id, component_id)
         return await self._get(key)
 
+    async def _get_process_id_for_connector(self, connector_id: str) -> str:
+        process_id: str | None = await self._get(("_conn_proc_map", connector_id))
+        if process_id is None:
+            raise NotFoundError(f"No process found for connector with ID {connector_id}")
+        return process_id
+
     async def upsert_connector(self, connector: Connector) -> None:
         """Upserts a connector into the state."""
-        process_id = await self._get(("_conn_proc_map", connector.id))
+        process_id = await self._get_process_id_for_connector(connector.id)
         key = self._connector_key(process_id, connector.id)
         await self._set(key, connector.dict())
 
     async def get_connector(self, connector_id: str) -> dict:
         """Returns a connector from the state."""
-        process_id = await self._get(("_conn_proc_map", connector_id))
+        process_id = await self._get_process_id_for_connector(connector_id)
         key = self._connector_key(process_id, connector_id)
         return await self._get(key)
 

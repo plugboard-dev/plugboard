@@ -25,7 +25,6 @@ class SqliteStateBackend(StateBackend):
     """`SqliteStateBackend` handles single host persistent state."""
 
     _id_separator: str = ":"
-    _null_process_id: str = "__null_process__"
 
     def __init__(self, db_path: str = "plugboard.db", *args: _t.Any, **kwargs: _t.Any) -> None:
         """Initializes `SqliteStateBackend` with `db_path`."""
@@ -180,7 +179,7 @@ class SqliteStateBackend(StateBackend):
         component_db_id = self._get_db_id(component_id)
         row = await self._fetchone(q.GET_PROCESS_FOR_COMPONENT, (component_db_id,))
         if row is None:
-            return self._get_db_id(self._null_process_id)
+            raise NotFoundError(f"No process found for component with ID {component_id}")
         process_id = row["process_id"]
         return process_id
 
@@ -212,7 +211,7 @@ class SqliteStateBackend(StateBackend):
         connector_db_id = self._get_db_id(connector_id)
         row = await self._fetchone(q.GET_PROCESS_FOR_CONNECTOR, (connector_db_id,))
         if row is None:
-            return self._get_db_id(self._null_process_id)
+            raise NotFoundError(f"No process found for connector with ID {connector_id}")
         process_id = row["process_id"]
         return process_id
 

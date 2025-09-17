@@ -25,7 +25,6 @@ class PostgresStateBackend(StateBackend):
     """`PostgresStateBackend` handles multi-host persistent state using PostgreSQL."""
 
     _id_separator: str = ":"
-    _null_process_id: str = "__null_process__"
 
     def __init__(
         self,
@@ -180,7 +179,7 @@ class PostgresStateBackend(StateBackend):
         component_db_id = self._get_db_id(component_id)
         row = await self._fetchone(q.GET_PROCESS_FOR_COMPONENT, (component_db_id,))
         if row is None or row["process_id"] is None:
-            return self._get_db_id(self._null_process_id)
+            raise NotFoundError(f"No process found for component with ID {component_id}")
         return row["process_id"]
 
     async def upsert_component(self, component: Component) -> None:
@@ -208,7 +207,7 @@ class PostgresStateBackend(StateBackend):
         connector_db_id = self._get_db_id(connector_id)
         row = await self._fetchone(q.GET_PROCESS_FOR_CONNECTOR, (connector_db_id,))
         if row is None or row["process_id"] is None:
-            return self._get_db_id(self._null_process_id)
+            raise NotFoundError(f"No process found for connector with ID {connector_id}")
         return row["process_id"]
 
     async def upsert_connector(self, connector: Connector) -> None:
