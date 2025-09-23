@@ -104,8 +104,7 @@ You can help users to implement event-driven models using Plugboard's event syst
 Examples of where you might want to use events include:
 * A component that monitors a data stream and emits an event when a threshold is crossed;
 * A component that listens for events and triggers actions in response, e.g. sending an alert;
-* A trading algorithm that uses events to signal buy/sell decisions;
-* A simulation of a taxi rank where events are used to signal the arrival and departure of taxis and passengers.
+* A trading algorithm that uses events to signal buy/sell decisions.
 
 Events must be defined by inheriting from the `plugboard.events.Event` class. Each event class should define the data it carries using a Pydantic `BaseModel`. For example:
 
