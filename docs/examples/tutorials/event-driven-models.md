@@ -4,7 +4,7 @@ tags:
 ---
 So far everything we have built in Plugboard has been a **discrete-time model**. This means that the whole model advances step-wise, i.e. `step` gets called on each [`Component`][plugboard.component.Component], calculating all of their outputs before advancing the simulation on.
 
-In this tutorial we're going to introduce an **event-driven model**, where data can be passed around between components based on triggers that you can define. Event-based models can be useful in a variety of scenarios, for example when modelling parts moving around a production line, or passengers arriving at a transport hub.
+In this tutorial we're going to introduce an **event-driven model**, where data can be passed around between components based on triggers that you can define. Event-based models can be useful in a variety of scenarios, for example when modelling parts moving around a production line, or to trigger expensive computation only when certain conditions are met in the model.
 
 ## Event-based model
 
