@@ -119,12 +119,14 @@ nav:
 - Demos:
   - Fundamentals:
     - Simple model: examples/demos/fundamentals/001_simple_model/simple-model.ipynb
-    - Car wash: examples/demos/fundamentals/003_car_wash_queue/car-wash.ipynb
+    - Production line: examples/demos/fundamentals/002_production_line_optimisation/production-line.ipynb
   - LLMs:
     - Data filtering: examples/demos/llm/001_data_filter/llm-filtering.ipynb
     - Websocket streaming: examples/demos/llm/002_bluesky_websocket/bluesky-websocket.ipynb
   - Physics-based models:
     - Hot water tank: examples/demos/physics-models/001-hot-water-tank/hot-water-tank.ipynb
+  - Finance:
+    - Momentum trading signal: examples/demos/finance/001_momentum_signal/momentum-signal.ipynb
 - API Reference:
   - component: api/component/component.md
   - connector: api/connector/connector.md
