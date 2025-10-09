@@ -1,0 +1,90 @@
+/* Indentation. */
+div.doc-contents:not(.first) {
+    padding-left: 25px;
+    border-left: .05rem solid var(--md-typeset-table-color);
+}
+
+/* Mark external links as such. */
+a.external::after,
+a.autorefs-external::after {
+    /* https://primer.style/octicons/arrow-up-right-24 */
+    mask-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M18.25 15.5a.75.75 0 00.75-.75v-9a.75.75 0 00-.75-.75h-9a.75.75 0 000 1.5h7.19L6.22 16.72a.75.75 0 101.06 1.06L17.5 7.56v7.19c0 .414.336.75.75.75z"></path></svg>');
+    -webkit-mask-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M18.25 15.5a.75.75 0 00.75-.75v-9a.75.75 0 00-.75-.75h-9a.75.75 0 000 1.5h7.19L6.22 16.72a.75.75 0 101.06 1.06L17.5 7.56v7.19c0 .414.336.75.75.75z"></path></svg>');
+    content: ' ';
+
+    display: inline-block;
+    vertical-align: middle;
+    position: relative;
+
+    height: 1em;
+    width: 1em;
+    background-color: currentColor;
+}
+
+/* Remove the topic from the header but leave version dropdown. */
+.md-header__topic .md-ellipsis {
+    visibility: hidden;
+    max-width: 0;
+}
+
+/* Remove CI badges. */
+.badge-section {
+    visibility: hidden;
+    max-height: 0;
+}
+
+/* Centre mermaid diagrams. */
+.mermaid {
+    text-align: center;
+}
+
+a.external:hover::after,
+a.autorefs-external:hover::after {
+    background-color: var(--md-accent-fg-color);
+}
+
+/* See: 
+    https://github.com/squidfunk/mkdocs-material/blob/master/src/templates/assets/stylesheets/main/_colors.scss
+    https://coolors.co/075d7a-1c0f13-cc9c4a-f9f9f9-d65780
+*/
+:root {
+    --pb-blue: #075D7A;
+    --pb-black: #1C0F13;
+    --pb-gray: #C2C2C2;
+    --pb-accent1: #CC9C4A;
+    --pb-accent2: #8A875A;
+    --pb-accent3: #49726A;
+    --pb-white: #F9F9F9;
+    --pb-pink: #D65780;
+}
+
+[data-md-color-scheme="default"] {
+    --md-primary-fg-color: var(--pb-blue);
+    --md-accent-fg-color: var(--pb-accent1);
+    --md-typeset-a-color: var(--pb-pink);
+
+    --md-footer-bg-color: var(--pb-blue);
+    --md-text-link-color: var(--pb-pink);
+}
+
+[data-md-color-scheme="slate"] {
+    --md-primary-fg-color: var(--pb-blue);
+    --md-accent-fg-color: var(--pb-pink);
+    --md-typeset-a-color: var(--pb-accent1);
+
+    --md-footer-bg-color: var(--pb-blue);
+    --md-text-link-color: var(--pb-accent1);
+}
+
+.md-banner {
+    background-color: var(--pb-accent1);
+    color: var(--pb-black);
+
+    a:link {
+        color: var(--pb-blue);
+    }
+
+    a:visited {
+        color: var(--pb-blue);
+    }
+}
