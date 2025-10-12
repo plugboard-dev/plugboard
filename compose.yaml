@@ -17,7 +17,7 @@ services:
     restart: always
 
   postgres:
-    image: postgres:18rc1-alpine  # TODO: Update to stable version when released
+    image: postgres:18-alpine
     container_name: postgres
     environment:
       - POSTGRES_USER=plugboard
