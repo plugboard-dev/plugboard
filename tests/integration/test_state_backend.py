@@ -267,10 +267,10 @@ async def test_state_backend_process_status(
     # Process status should be updated to FAILED
     assert await state_backend.get_process_status(process.id) == Status.FAILED
 
-    await process.destroy()
-
     with pytest.raises(NotFoundError):
         await state_backend.get_process_status("process-non-existent")
 
     with pytest.raises(NotFoundError):
         await state_backend.get_process_status_for_component("component-non-existent")
+
+    await process.destroy()

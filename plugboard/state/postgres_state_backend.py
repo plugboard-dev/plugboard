@@ -191,6 +191,9 @@ class PostgresStateBackend(StateBackend):
             q.UPSERT_COMPONENT,
             (component_db_id, msgspec.json.encode(component_data).decode(), process_db_id),
         )
+        if component.status in {Status.FAILED}:
+            # If the component is terminal, update the process status
+            await self.update_process_status(process_id, component.status)
 
     async def get_component(self, component_id: str) -> dict:
         """Returns a component from the state."""
