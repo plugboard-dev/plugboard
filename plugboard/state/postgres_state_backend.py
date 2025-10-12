@@ -34,6 +34,15 @@ class PostgresStateBackend(StateBackend):
         self._pool: asyncpg.Pool | None = None
         super().__init__(*args, **kwargs)
 
+    def __getstate__(self) -> dict:
+        state = super().__getstate__()
+        del state["_pool"]
+        return state
+
+    def __setstate__(self, state: dict) -> None:
+        super().__setstate__(state)
+        self._pool = None
+
     async def _get_pool(self) -> asyncpg.Pool:
         if self._pool is None:
             self._pool = await asyncpg.create_pool(self._db_url)
