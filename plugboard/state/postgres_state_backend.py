@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from functools import cache
 import typing as _t
 
 from async_lru import alru_cache
@@ -23,8 +22,6 @@ if _t.TYPE_CHECKING:  # pragma: no cover
 
 class PostgresStateBackend(StateBackend):
     """`PostgresStateBackend` handles multi-host persistent state using PostgreSQL."""
-
-    _id_separator: str = ":"
 
     def __init__(
         self,
@@ -92,10 +89,6 @@ class PostgresStateBackend(StateBackend):
         pool = await self._get_pool()
         async with pool.acquire() as connection:
             await connection.execute(statement, *params)
-
-    @cache
-    def _get_db_id(self, entity_id: str) -> str:
-        return entity_id
 
     async def _upsert_job(self, job_data: dict) -> None:
         """Upserts a job into the state."""

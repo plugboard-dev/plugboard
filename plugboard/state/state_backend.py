@@ -5,6 +5,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from contextlib import ExitStack
 from datetime import datetime, timezone
+from functools import cache
 from types import TracebackType
 import typing as _t
 
@@ -23,6 +24,8 @@ if _t.TYPE_CHECKING:  # pragma: no cover
 
 class StateBackend(ABC, ExportMixin):
     """`StateBackend` defines an interface for managing process state."""
+
+    _id_separator: str = ":"
 
     def __init__(
         self, job_id: _t.Optional[str] = None, metadata: _t.Optional[dict] = None, **kwargs: _t.Any
@@ -79,6 +82,23 @@ class StateBackend(ABC, ExportMixin):
     ) -> None:
         """Exits the context manager."""
         await self.destroy()
+
+    @cache
+    def _get_db_id(self, entity_id: str) -> str:
+        """Returns the database id for a given entity id.
+
+        The database id for an entity is the entity id prefixed with the job id.
+        If the provided entity id includes the job id, it is returned as is;
+        otherwise, the job id is prefixed to the entity id.
+        """
+        id_parts = entity_id.split(self._id_separator)
+        if len(id_parts) == 1:
+            return f"{self.job_id}{self._id_separator}{entity_id}"
+        if len(id_parts) != 2:
+            raise ValueError(f"Invalid entity id: {entity_id}")
+        if id_parts[0] != self.job_id:
+            raise ValueError(f"Entity id {entity_id} does not belong to job {self.job_id}")
+        return entity_id
 
     def _enter_container_context(self, job_id: _t.Optional[str] = None) -> None:
         """Enters the container context with the job_id."""

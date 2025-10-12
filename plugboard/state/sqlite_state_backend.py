@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from functools import cache
 import typing as _t
 
 import aiosqlite
@@ -23,8 +22,6 @@ if _t.TYPE_CHECKING:  # pragma: no cover
 
 class SqliteStateBackend(StateBackend):
     """`SqliteStateBackend` handles single host persistent state."""
-
-    _id_separator: str = ":"
 
     def __init__(self, db_path: str = "plugboard.db", *args: _t.Any, **kwargs: _t.Any) -> None:
         """Initializes `SqliteStateBackend` with `db_path`."""
@@ -80,23 +77,6 @@ class SqliteStateBackend(StateBackend):
         async with aiosqlite.connect(self._db_path) as db:
             await db.execute(statement, params)
             await db.commit()
-
-    @cache
-    def _get_db_id(self, entity_id: str) -> str:
-        """Returns the database id for a given entity id.
-
-        The database id for an entity is the entity id prefixed with the job id.
-        If the provided entity id includes the job id, it is returned as is;
-        otherwise, the job id is prefixed to the entity id.
-        """
-        id_parts = entity_id.split(self._id_separator)
-        if len(id_parts) == 1:
-            return f"{self.job_id}{self._id_separator}{entity_id}"
-        if len(id_parts) != 2:
-            raise ValueError(f"Invalid entity id: {entity_id}")
-        if id_parts[0] != self.job_id:
-            raise ValueError(f"Entity id {entity_id} does not belong to job {self.job_id}")
-        return entity_id
 
     async def _upsert_job(self, job_data: dict) -> None:
         """Upserts a job into the state."""
