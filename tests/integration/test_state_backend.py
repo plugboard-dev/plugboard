@@ -105,7 +105,15 @@ async def test_state_backend_upsert_component(
     """Tests `StateBackend.upsert_component` method."""
     comp_a1, comp_a2 = A_components
 
+    process = LocalProcess(name="P1", components=[comp_a1, comp_a2], connectors=[])
+
     async with state_backend:
+        # Must upsert process first to create component entries
+        await state_backend.upsert_process(process, with_components=False)
+        # Assert component data empty before further assertions for methods under test
+        retrieved_process = await state_backend.get_process(process.id)
+        assert retrieved_process["components"] == {comp_a1.id: {}, comp_a2.id: {}}
+
         await state_backend.upsert_component(comp_a1)
         await state_backend.upsert_component(comp_a2)
 
@@ -142,7 +150,15 @@ async def test_state_backend_upsert_connector(
     """Tests `StateBackend.upsert_connector` method."""
     conn_1, conn_2 = B_connectors
 
+    process = LocalProcess(name="P1", components=[], connectors=[conn_1, conn_2])
+
     async with state_backend:
+        # Must upsert process first to create connector entries
+        await state_backend.upsert_process(process, with_components=False)
+        # Assert connector data empty before further assertions for methods under test
+        retrieved_process = await state_backend.get_process(process.id)
+        assert retrieved_process["connectors"] == {conn_1.id: {}, conn_2.id: {}}
+
         await state_backend.upsert_connector(conn_1)
         await state_backend.upsert_connector(conn_2)
 
