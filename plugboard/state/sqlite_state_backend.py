@@ -96,8 +96,8 @@ class SqliteStateBackend(StateBackend):
         process_db_id = self._get_db_id(process.id)
         component_data = process_data.pop("components")
         connector_data = process_data.pop("connectors")
-        process_data["components"] = {}
-        process_data["connectors"] = {}
+        process_data["components"] = {k: {} for k in component_data.keys()}
+        process_data["connectors"] = {k: {} for k in connector_data.keys()}
         process_json = msgspec.json.encode(process_data)
         async with aiosqlite.connect(self._db_path) as db:
             await db.execute(q.UPSERT_PROCESS, (process_json, process_db_id, self.job_id))
@@ -108,12 +108,10 @@ class SqliteStateBackend(StateBackend):
                 for child_id, child in children.items():
                     child_db_id = self._get_db_id(child_id)
                     children_ids.append((process_db_id, child_db_id))
-                    if with_components:
-                        child_json = msgspec.json.encode(child)
-                        children_json.append((child_json, child_db_id, process_db_id))
+                    child_json = msgspec.json.encode(child) if with_components else "{}"
+                    children_json.append((child_json, child_db_id, process_db_id))
                 await db.executemany(q_set_id, children_ids)
-                if with_components:
-                    await db.executemany(q_upsert_child, children_json)
+                await db.executemany(q_upsert_child, children_json)
 
             await _upsert_children(component_data, q.SET_PROCESS_FOR_COMPONENT, q.UPSERT_COMPONENT)
             await _upsert_children(connector_data, q.SET_PROCESS_FOR_CONNECTOR, q.UPSERT_CONNECTOR)
@@ -136,10 +134,12 @@ class SqliteStateBackend(StateBackend):
             connector_rows = await cursor.fetchall()
         process_data = msgspec.json.decode(data_json)
         process_components = {
-            data["id"]: data for row in component_rows if (data := msgspec.json.decode(row["data"]))
+            self._strip_job_id(row["id"]): msgspec.json.decode(row["data"])
+            for row in component_rows
         }
         process_connectors = {
-            data["id"]: data for row in connector_rows if (data := msgspec.json.decode(row["data"]))
+            self._strip_job_id(row["id"]): msgspec.json.decode(row["data"])
+            for row in connector_rows
         }
         process_data["components"] = process_components
         process_data["connectors"] = process_connectors

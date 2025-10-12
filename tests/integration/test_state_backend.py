@@ -10,7 +10,7 @@ from plugboard.connector import AsyncioConnector, Connector
 from plugboard.exceptions import NotFoundError
 from plugboard.process import LocalProcess
 from plugboard.schemas import ConnectorSpec, Status
-from plugboard.state import PostgresStateBackend, StateBackend
+from plugboard.state import StateBackend
 from tests.conftest import ComponentTestHelper
 from tests.integration.conftest import (
     setup_DictStateBackend,
@@ -161,9 +161,6 @@ async def test_state_backend_upsert_process(
     with_components: bool,
 ) -> None:
     """Tests `StateBackend.upsert_process` method."""
-    if isinstance(state_backend, PostgresStateBackend) and not with_components:
-        pytest.skip("PostgresStateBackend requires components to be upserted with process.")
-
     comp_b1, comp_b2 = B_components
     conn_1, conn_2 = B_connectors
 
@@ -184,10 +181,10 @@ async def test_state_backend_upsert_process(
         process_1_dict = process_1.dict()
         process_2_dict = process_2.dict()
         if not with_components:
-            process_1_dict["components"] = {}
-            process_1_dict["connectors"] = {}
-            process_2_dict["components"] = {}
-            process_2_dict["connectors"] = {}
+            process_1_dict["components"] = {comp.id: {} for comp in B_components}
+            process_1_dict["connectors"] = {conn.id: {} for conn in B_connectors}
+            process_2_dict["components"] = {comp.id: {} for comp in C_components}
+            process_2_dict["connectors"] = {conn.id: {} for conn in C_connectors}
 
         assert await state_backend.get_process(process_1.id) == process_1_dict
         assert await state_backend.get_process(process_2.id) == process_2_dict

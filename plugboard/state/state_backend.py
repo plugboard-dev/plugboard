@@ -100,6 +100,15 @@ class StateBackend(ABC, ExportMixin):
             raise ValueError(f"Entity id {entity_id} does not belong to job {self.job_id}")
         return entity_id
 
+    def _strip_job_id(self, db_id: str) -> str:
+        """Strips the job id from a database id to return the entity id."""
+        id_parts = db_id.split(self._id_separator)
+        if len(id_parts) != 2:
+            raise ValueError(f"Invalid database id: {db_id}")
+        if id_parts[0] != self.job_id:
+            raise ValueError(f"Database id {db_id} does not belong to job {self.job_id}")
+        return id_parts[1]
+
     def _enter_container_context(self, job_id: _t.Optional[str] = None) -> None:
         """Enters the container context with the job_id."""
         # Enter the container context with the job_id (same for both fresh init and reinit)
@@ -178,8 +187,8 @@ class StateBackend(ABC, ExportMixin):
         # TODO : Book keeping for dynamic process components and connectors.
         process_data = process.dict()
         if with_components is False:
-            process_data["components"] = {}
-            process_data["connectors"] = {}
+            process_data["components"] = {k: {} for k in process_data["components"].keys()}
+            process_data["connectors"] = {k: {} for k in process_data["connectors"].keys()}
         await self._set(self._process_key(process.id), process_data)
         await self.update_process_status(process.id, process.status)
         # TODO : Need to make this transactional.

@@ -108,8 +108,8 @@ class PostgresStateBackend(StateBackend):
         process_db_id = self._get_db_id(process.id)
         component_data = process_data.pop("components")
         connector_data = process_data.pop("connectors")
-        process_data["components"] = {}
-        process_data["connectors"] = {}
+        process_data["components"] = {k: {} for k in component_data.keys()}
+        process_data["connectors"] = {k: {} for k in connector_data.keys()}
 
         pool = await self._get_pool()
         async with pool.acquire() as connection:
@@ -156,8 +156,14 @@ class PostgresStateBackend(StateBackend):
             component_rows = await connection.fetch(q.GET_COMPONENTS_FOR_PROCESS, process_db_id)
             connector_rows = await connection.fetch(q.GET_CONNECTORS_FOR_PROCESS, process_db_id)
 
-        process_components = {row["id"]: msgspec.json.decode(row["data"]) for row in component_rows}
-        process_connectors = {row["id"]: msgspec.json.decode(row["data"]) for row in connector_rows}
+        process_components = {
+            self._strip_job_id(row["id"]): msgspec.json.decode(row["data"])
+            for row in component_rows
+        }
+        process_connectors = {
+            self._strip_job_id(row["id"]): msgspec.json.decode(row["data"])
+            for row in connector_rows
+        }
         process_data["components"] = process_components
         process_data["connectors"] = process_connectors
         return process_data
