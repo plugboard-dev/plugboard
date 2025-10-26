@@ -2,7 +2,7 @@
 
 import typing as _t
 
-from plugboard.component.component import Component
+from plugboard.component.component import Component, ComponentRegistry
 from plugboard.component.io_controller import IOController
 from plugboard.utils import gen_rand_str
 
@@ -35,6 +35,8 @@ def component(inputs: _t.Optional[_t.Any] = None, outputs: _t.Optional[_t.Any] =
 
         FuncComponent.__name__ = f"FuncComponent__{func.__name__}"
         FuncComponent.__doc__ = func.__doc__
+
+        ComponentRegistry.add(FuncComponent)
 
         def _helper(name: _t.Optional[str] = None, **kwargs: _t.Any) -> _t.Any:
             _name = name or f"{func.__name__}_{gen_rand_str(6)}"
