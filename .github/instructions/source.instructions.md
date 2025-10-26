@@ -1,3 +1,6 @@
+---
+applyTo: "plugboard/**/*.py"
+---
 # GitHub Copilot Instructions for the Plugboard Repository
 
 This document provides guidelines for using AI coding agents to contribute to the Plugboard project. Following these instructions will help ensure that contributions are consistent with the project's architecture, conventions, and style.
