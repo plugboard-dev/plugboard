@@ -17,11 +17,14 @@ class OptunaSpec(PlugboardBaseModel):
 
     Attributes:
         type: The algorithm type to load.
+        space: Optional; A function defining the search space. Use this to define more complex
+            search spaces that cannot be represented using the built-in parameter types.
         study_name: Optional; The name of the study.
         storage: Optional; The storage URI to save the optimisation results to.
     """
 
     type: _t.Literal["ray.tune.search.optuna.OptunaSearch"] = "ray.tune.search.optuna.OptunaSearch"
+    space: str | None = None
     study_name: str | None = None
     storage: str | None = None
 
