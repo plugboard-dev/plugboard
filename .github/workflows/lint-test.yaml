@@ -124,7 +124,7 @@ jobs:
 
       - name: Run backing services
         run: |
-          docker compose up rabbitmq -d
+          docker compose up postgres rabbitmq -d
           sleep 10 # Wait for services to start
 
       - name: Run integration tests
@@ -166,19 +166,14 @@ jobs:
       - name: Install project
         run: uv sync --group test
 
-      - name: Run backing services
-        run: |
-          docker compose up rabbitmq -d
-          sleep 10 # Wait for services to start
-
-      - name: Run integration tests
+      - name: Run tuner tests
         run: COVERAGE_FILE=.coverage.py${{ matrix.python_version }}.integration.tuner uv run coverage run -m pytest ./tests/integration/ -m "tuner"
         env:
           RABBITMQ_URL: amqp://user:password@localhost:5672/
           RAY_ENABLE_UV_RUN_RUNTIME_ENV: 0
           PLUGBOARD_IO_READ_TIMEOUT: 5.0
 
-      - name: Upload integration test coverage
+      - name: Upload tuner test coverage
         uses: actions/upload-artifact@v4
         with:
           name: coverage-integration-tuner-py${{ matrix.python_version }}

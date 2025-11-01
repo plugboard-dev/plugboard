@@ -85,6 +85,30 @@ async def test_state_backend_init(
 
 
 @pytest.mark.asyncio
+async def test_state_backend_init_with_existing_job(
+    datetime_now: str,
+    state_backend_cls: _t.Type[StateBackend],
+    valid_job_id: str,
+) -> None:
+    """Tests `StateBackend` initialisation with an existing job_id."""
+    # Initialise once to create the job
+    state_backend1 = state_backend_cls(job_id=valid_job_id, metadata={"original": "data"})
+    with time_machine.travel(datetime_now, tick=False):
+        await state_backend1.init()
+    assert state_backend1.metadata == {"original": "data"}
+
+    # Initialise again with the same job_id and new metadata
+    state_backend2 = state_backend_cls(
+        job_id=valid_job_id, metadata={"new": "data", "original": "updated"}
+    )
+    with time_machine.travel(datetime_now, tick=False):
+        await state_backend2.init()
+
+    # The metadata should be merged
+    assert state_backend2.metadata == {"original": "updated", "new": "data"}
+
+
+@pytest.mark.asyncio
 async def test_state_backend_get(state_backend_cls: _t.Type[DictStateBackend]) -> None:
     """Tests `StateBackend` get method."""
     state_backend = state_backend_cls()
@@ -140,3 +164,26 @@ async def test_state_backend_set(state_backend_cls: _t.Type[DictStateBackend]) -
         "nested": {"key": "new_value"},
         "nonexistent": {"key": "value"},
     }
+
+
+@pytest.mark.asyncio
+async def test_state_backend_id_methods(
+    state_backend_cls: _t.Type[StateBackend], valid_job_id: str
+) -> None:
+    """Tests `_get_db_id` and `_strip_job_id` methods."""
+    state_backend = state_backend_cls(job_id=valid_job_id)
+    await state_backend.init()
+
+    # _get_db_id
+    with pytest.raises(ValueError, match="Invalid entity id:"):
+        state_backend._get_db_id("a:b:c")
+    with pytest.raises(ValueError, match="does not belong to job"):
+        state_backend._get_db_id("wrong_job:entity")
+
+    # _strip_job_id
+    with pytest.raises(ValueError, match="Invalid database id:"):
+        state_backend._strip_job_id("a")
+    with pytest.raises(ValueError, match="Invalid database id:"):
+        state_backend._strip_job_id("a:b:c")
+    with pytest.raises(ValueError, match="does not belong to job"):
+        state_backend._strip_job_id(f"wrong_job:{valid_job_id}")

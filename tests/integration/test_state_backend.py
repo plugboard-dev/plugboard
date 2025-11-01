@@ -14,6 +14,7 @@ from plugboard.state import StateBackend
 from tests.conftest import ComponentTestHelper
 from tests.integration.conftest import (
     setup_DictStateBackend,
+    setup_PostgresStateBackend,
     setup_RayStateBackend,
     setup_SqliteStateBackend,
 )
@@ -86,6 +87,7 @@ def C_connectors() -> list[Connector]:
     params=[
         setup_DictStateBackend,
         setup_SqliteStateBackend,
+        setup_PostgresStateBackend,
         setup_RayStateBackend,
     ]
 )
@@ -97,13 +99,75 @@ async def state_backend(request: pytest.FixtureRequest) -> _t.AsyncIterator[Stat
 
 
 @pytest.mark.asyncio
+@pytest.mark.parametrize("with_components", [True, False])
+async def test_state_backend_upsert_process(
+    state_backend: StateBackend,
+    B_components: list[Component],
+    B_connectors: list[Connector],
+    C_components: list[Component],
+    C_connectors: list[Connector],
+    with_components: bool,
+) -> None:
+    """Tests `StateBackend.upsert_process` method.
+
+    Two processes are created to ensure no interference between them. Each process is upserted into
+    the state backend, and then retrieved. The retrieved data is compared to the process data
+    obtained from the process.dump method.
+    """
+    comp_b1, comp_b2 = B_components
+    conn_1, conn_2 = B_connectors
+
+    comp_c1, comp_c2 = C_components
+    conn_3, conn_4 = C_connectors
+
+    async with state_backend:
+        process_1 = LocalProcess(
+            name="P1", components=[comp_b1, comp_b2], connectors=[conn_1, conn_2]
+        )
+        await state_backend.upsert_process(process_1, with_components=with_components)
+
+        process_2 = LocalProcess(
+            name="P2", components=[comp_c1, comp_c2], connectors=[conn_3, conn_4]
+        )
+        await state_backend.upsert_process(process_2, with_components=with_components)
+
+        process_1_dict = process_1.dict()
+        process_2_dict = process_2.dict()
+        if not with_components:
+            process_1_dict["components"] = {comp.id: {} for comp in B_components}
+            process_1_dict["connectors"] = {conn.id: {} for conn in B_connectors}
+            process_2_dict["components"] = {comp.id: {} for comp in C_components}
+            process_2_dict["connectors"] = {conn.id: {} for conn in C_connectors}
+
+        assert await state_backend.get_process(process_1.id) == process_1_dict
+        assert await state_backend.get_process(process_2.id) == process_2_dict
+
+
+@pytest.mark.asyncio
 async def test_state_backend_upsert_component(
     state_backend: StateBackend, A_components: list[Component]
 ) -> None:
-    """Tests `StateBackend.upsert_component` method."""
+    """Tests `StateBackend.upsert_component` method.
+
+    Two `A` components are created and upserted into the state backend. The components are stepped
+    multiple times, with assertions verifying that the state backend reflects the correct state
+    before and after each upsert.
+
+    Note that the components must be a part of a process in the state backend before they can be
+    upserted. Hence, a `LocalProcess` is created and upserted into the state backend first. Method
+    tested separately.
+    """
     comp_a1, comp_a2 = A_components
 
+    process = LocalProcess(name="P1", components=[comp_a1, comp_a2], connectors=[])
+
     async with state_backend:
+        # Must upsert process first to create component entries
+        await state_backend.upsert_process(process, with_components=False)
+        # Assert component data empty before further assertions for methods under test
+        retrieved_process = await state_backend.get_process(process.id)
+        assert retrieved_process["components"] == {comp_a1.id: {}, comp_a2.id: {}}
+
         await state_backend.upsert_component(comp_a1)
         await state_backend.upsert_component(comp_a2)
 
@@ -137,55 +201,31 @@ async def test_state_backend_upsert_component(
 async def test_state_backend_upsert_connector(
     state_backend: StateBackend, B_connectors: list[Connector]
 ) -> None:
-    """Tests `StateBackend.upsert_connector` method."""
+    """Tests `StateBackend.upsert_connector` method.
+
+    Two connectors are created and upserted into the state backend. The retrieved connector data is
+    compared to the original connector data to ensure correctness.
+
+    Note that the connectors must be a part of a process in the state backend before they can be
+    upserted. Hence, a `LocalProcess` is created and upserted into the state backend first. Method
+    tested separately.
+    """
     conn_1, conn_2 = B_connectors
 
+    process = LocalProcess(name="P1", components=[], connectors=[conn_1, conn_2])
+
     async with state_backend:
+        # Must upsert process first to create connector entries
+        await state_backend.upsert_process(process, with_components=False)
+        # Assert connector data empty before further assertions for methods under test
+        retrieved_process = await state_backend.get_process(process.id)
+        assert retrieved_process["connectors"] == {conn_1.id: {}, conn_2.id: {}}
+
         await state_backend.upsert_connector(conn_1)
         await state_backend.upsert_connector(conn_2)
 
         assert await state_backend.get_connector(conn_1.id) == conn_1.dict()
         assert await state_backend.get_connector(conn_2.id) == conn_2.dict()
-
-
-@pytest.mark.asyncio
-@pytest.mark.parametrize("with_components", [True, False])
-async def test_state_backend_upsert_process(
-    state_backend: StateBackend,
-    B_components: list[Component],
-    B_connectors: list[Connector],
-    C_components: list[Component],
-    C_connectors: list[Connector],
-    with_components: bool,
-) -> None:
-    """Tests `StateBackend.upsert_process` method."""
-    comp_b1, comp_b2 = B_components
-    conn_1, conn_2 = B_connectors
-
-    comp_c1, comp_c2 = C_components
-    conn_3, conn_4 = C_connectors
-
-    async with state_backend:
-        process_1 = LocalProcess(
-            name="P1", components=[comp_b1, comp_b2], connectors=[conn_1, conn_2]
-        )
-        await state_backend.upsert_process(process_1, with_components=with_components)
-
-        process_2 = LocalProcess(
-            name="P2", components=[comp_c1, comp_c2], connectors=[conn_3, conn_4]
-        )
-        await state_backend.upsert_process(process_2, with_components=with_components)
-
-        process_1_dict = process_1.dict()
-        process_2_dict = process_2.dict()
-        if not with_components:
-            process_1_dict["components"] = {}
-            process_1_dict["connectors"] = {}
-            process_2_dict["components"] = {}
-            process_2_dict["connectors"] = {}
-
-        assert await state_backend.get_process(process_1.id) == process_1_dict
-        assert await state_backend.get_process(process_2.id) == process_2_dict
 
 
 @pytest.mark.asyncio
@@ -249,10 +289,10 @@ async def test_state_backend_process_status(
     # Process status should be updated to FAILED
     assert await state_backend.get_process_status(process.id) == Status.FAILED
 
-    await process.destroy()
-
     with pytest.raises(NotFoundError):
         await state_backend.get_process_status("process-non-existent")
 
     with pytest.raises(NotFoundError):
         await state_backend.get_process_status_for_component("component-non-existent")
+
+    await process.destroy()
