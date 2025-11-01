@@ -13,7 +13,7 @@ async def comp_b_func(a: int) -> dict[str, int]:
 
 def test_component_decorator_creates_component_class() -> None:
     """Tests that the component decorator creates a component class correctly."""
-    comp_b = comp_b_func.create_component(name="comp_b")
+    comp_b = comp_b_func.component(name="comp_b")
     assert isinstance(comp_b, Component)
     assert comp_b.name == "comp_b"
 

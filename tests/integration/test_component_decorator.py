@@ -83,9 +83,9 @@ async def test_process_with_decorated_components(
     """Tests a process using components created with the component decorator executes correctly."""
     iters = 10
     comp_a = A(iters=iters, name="comp_a")
-    comp_b = comp_b_func.create_component(name="comp_b")
-    comp_c = comp_c_func.create_component(name="comp_c")
-    comp_d = comp_d_func.create_component(name="comp_d")
+    comp_b = comp_b_func.component(name="comp_b")
+    comp_c = comp_c_func.component(name="comp_c")
+    comp_d = comp_d_func.component(name="comp_d")
     comp_e = E(name="comp_e")
     components = [comp_a, comp_b, comp_c, comp_d, comp_e]
 

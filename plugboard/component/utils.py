@@ -34,16 +34,17 @@ def _make_component_class(
 class ComponentDecoratorHelper:
     """Stores wrapped function and dynamically created component class."""
 
-    def __init__(self, func: _t.Callable, component_cls: _t.Type[Component]) -> None:
+    def __init__(self, func: _t.Callable, component_cls: _t.Type[Component]) -> None:  # noqa: D107
         self._func = func
         self._component_cls = component_cls
 
-    def create_component(self, name: _t.Optional[str] = None, **kwargs: _t.Any) -> Component:
+    def component(self, name: _t.Optional[str] = None, **kwargs: _t.Any) -> Component:
         """Creates an instance of the component class for the wrapped function."""
         _name = name or f"{self._func.__name__}_{gen_rand_str(6)}"
         return self._component_cls(name=_name, **kwargs)
 
-    def __call__(self, *args: _t.Any, **kwargs: _t.Any) -> _t.Any:  # noqa: D102
+    def __call__(self, *args: _t.Any, **kwargs: _t.Any) -> _t.Any:
+        """Calls the wrapped function directly."""
         return self._func(*args, **kwargs)
 
 
