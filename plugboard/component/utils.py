@@ -10,9 +10,15 @@ from plugboard.component.io_controller import IOController
 from plugboard.utils import gen_rand_str
 
 
+_FuncT = _t.TypeVar(
+    "_FuncT",
+    bound=_t.Callable[..., _t.Union[dict[str, _t.Any], _t.Awaitable[dict[str, _t.Any]]]],
+)
+
+
 def component(
     inputs: _t.Optional[_t.Any] = None, outputs: _t.Optional[_t.Any] = None
-) -> ComponentDecoratorHelper:
+) -> _t.Callable[[_FuncT], "ComponentDecoratorHelper"]:
     """A decorator to auto generate a Plugboard component from a function.
 
     The wrapped function will be added to a dynamically created component class
@@ -29,7 +35,7 @@ def component(
         an instance of the component class.
     """
 
-    def decorator(func: _t.Callable) -> _t.Any:
+    def decorator(func: _FuncT) -> "ComponentDecoratorHelper":
         comp_cls = _make_component_class(func, inputs, outputs)
         return ComponentDecoratorHelper(func, comp_cls)
 
@@ -39,9 +45,9 @@ def component(
 class ComponentDecoratorHelper:
     """Stores wrapped function and dynamically created component class."""
 
-    def __init__(self, func: _t.Callable, component_cls: _t.Type[Component]) -> None:  # noqa: D107
-        self._func = func
-        self._component_cls = component_cls
+    def __init__(self, func: _FuncT, component_cls: _t.Type[Component]) -> None:  # noqa: D107
+        self._func: _FuncT = func
+        self._component_cls: _t.Type[Component] = component_cls
 
     def component(self, name: _t.Optional[str] = None, **kwargs: _t.Any) -> Component:
         """Creates an instance of the component class for the wrapped function."""
@@ -54,10 +60,10 @@ class ComponentDecoratorHelper:
 
 
 def _make_component_class(
-    func: _t.Callable, inputs: _t.Optional[_t.Any], outputs: _t.Optional[_t.Any]
+    func: _FuncT, inputs: _t.Optional[_t.Any], outputs: _t.Optional[_t.Any]
 ) -> _t.Type[Component]:
     """Creates a Plugboard component class from a function."""
-    _async_func = _ensure_async_callable(func)
+    _async_func: _t.Callable[..., _t.Awaitable[dict[str, _t.Any]]] = _ensure_async_callable(func)
 
     class FuncComponent(Component):
         io = IOController(inputs=inputs, outputs=outputs)
@@ -78,11 +84,11 @@ def _make_component_class(
     return FuncComponent
 
 
-def _ensure_async_callable(func: _t.Callable) -> _t.Callable:
+def _ensure_async_callable(func: _FuncT) -> _t.Callable[..., _t.Awaitable[dict[str, _t.Any]]]:
     if inspect.iscoroutinefunction(func):
         return func
 
-    async def _async_func(*args: _t.Any, **kwargs: _t.Any) -> _t.Any:
-        return func(*args, **kwargs)
+    async def _async_func(*args: _t.Any, **kwargs: _t.Any) -> dict[str, _t.Any]:
+        return func(*args, **kwargs)  # type: ignore[return-value]
 
     return _async_func
