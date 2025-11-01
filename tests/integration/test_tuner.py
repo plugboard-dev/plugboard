@@ -1,13 +1,20 @@
 """Integration tests for the `Tuner` class."""
 
 import math
+import typing as _t
 
 import msgspec
+from optuna import Trial
 import pytest
 
 from plugboard.exceptions import ConstraintError
 from plugboard.schemas import ConfigSpec, ConnectorBuilderSpec, ObjectiveSpec
-from plugboard.schemas.tune import CategoricalParameterSpec, IntParameterSpec, OptunaSpec
+from plugboard.schemas.tune import (
+    CategoricalParameterSpec,
+    FloatParameterSpec,
+    IntParameterSpec,
+    OptunaSpec,
+)
 from plugboard.tune import Tuner
 from tests.integration.test_process_with_components_run import A, B, C  # noqa: F401
 
@@ -27,6 +34,15 @@ def config() -> dict:
     """Loads the YAML config."""
     with open("tests/data/minimal-process.yaml", "rb") as f:
         return msgspec.yaml.decode(f.read())
+
+
+def custom_space(trial: Trial) -> dict[str, _t.Any] | None:
+    """Returns a custom search space function as a string."""
+    a_iters = trial.suggest_int("a.iters", 1, 10)
+    if a_iters < 5:
+        trial.suggest_float("b.factor", 0, 2.0)
+    else:
+        trial.suggest_float("b.factor", -2.0, 0.0)
 
 
 @pytest.mark.tuner
@@ -178,3 +194,53 @@ async def test_tune_with_constraint(config: dict, ray_ctx: None) -> None:
     assert best_result.metrics["c.in_1"] <= 10
     # If a.iters is greater than 11, the constraint will be violated
     assert all(t.metrics["c.in_1"] == -math.inf for t in result if t.config["a.iters"] > 11)
+
+
+@pytest.mark.tuner
+@pytest.mark.asyncio
+async def test_custom_space_tune(config: dict, ray_ctx: None) -> None:
+    """Tests multi-objective optimisation."""
+    spec = ConfigSpec.model_validate(config)
+    process_spec = spec.plugboard.process
+    tuner = Tuner(
+        objective=ObjectiveSpec(
+            object_type="component",
+            object_name="c",
+            field_type="field",
+            field_name="in_1",
+        ),
+        parameters=[
+            IntParameterSpec(
+                object_type="component",
+                object_name="a",
+                field_type="arg",
+                field_name="iters",
+                lower=1,
+                upper=3,
+            ),
+            FloatParameterSpec(
+                object_type="component",
+                object_name="b",
+                field_type="arg",
+                field_name="factor",
+                lower=1,
+                upper=3,
+            ),
+        ],
+        num_samples=10,
+        mode="max",
+        max_concurrent=2,
+        algorithm=OptunaSpec(space="tests.integration.test_tuner.custom_space"),
+    )
+    tuner.run(
+        spec=process_spec,
+    )
+    result = tuner.result_grid
+    # There must be no failed trials
+    assert not [t for t in result if t.error]
+    # The custom space must have been used
+    for r in result:
+        if r.config["a.iters"] < 5:
+            assert 0.0 <= r.config["b.factor"] <= 2.0
+        else:
+            assert -2.0 <= r.config["b.factor"] <= 0.0

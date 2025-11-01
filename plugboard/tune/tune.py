@@ -59,6 +59,7 @@ class Tuner:
         self._check_objective(objective, mode)
         self._objective = objective if isinstance(objective, list) else [objective]
         self._mode = [str(m) for m in mode] if isinstance(mode, list) else str(mode)
+        self._custom_space = True if algorithm and algorithm.space else False
         self._metric = (
             [obj.full_name for obj in self._objective]
             if len(self._objective) > 1
@@ -212,12 +213,19 @@ class Tuner:
             ),
         )
 
-        self._logger.info("Setting Tuner with parameters", params=list(self._parameters.keys()))
-        _tune = ray.tune.Tuner(
-            trainable_with_resources,
-            param_space=self._parameters,
-            tune_config=self._config,
-        )
+        if not self._custom_space:
+            self._logger.info("Setting Tuner with parameters", params=list(self._parameters.keys()))
+            _tune = ray.tune.Tuner(
+                trainable_with_resources,
+                param_space=self._parameters,
+                tune_config=self._config,
+            )
+        else:
+            self._logger.info("Setting Tuner with custom search space")
+            _tune = ray.tune.Tuner(
+                trainable_with_resources,
+                tune_config=self._config,
+            )
         self._logger.info("Starting Tuner")
         self._result_grid = _tune.fit()
         self._logger.info("Tuner finished")
