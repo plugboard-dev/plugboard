@@ -152,7 +152,7 @@ class TuneArgsSpec(PlugboardBaseModel):
     """
 
     objective: ObjectiveSpec | list[ObjectiveSpec]
-    parameters: list[ParameterSpec] = []
+    parameters: list[ParameterSpec] = Field(min_length=1)
     num_samples: PositiveInt
     mode: Direction | list[Direction] = "max"
     max_concurrent: PositiveInt | None = None
@@ -167,18 +167,6 @@ class TuneArgsSpec(PlugboardBaseModel):
                 )
             if len(self.mode) != len(self.objective):
                 raise ValueError("The length of `mode` must match the length of `objective`.")
-        if self.algorithm.space is None:
-            if len(self.parameters) == 0:
-                raise ValueError(
-                    "Either `parameters` must be specified or a custom `space` function must "
-                    "be provided in the `algorithm` configuration."
-                )
-        else:
-            if len(self.parameters) > 0:
-                raise ValueError(
-                    "When a custom `space` function is provided in the `algorithm` "
-                    "configuration, `parameters` must be empty."
-                )
         return self
 
 
