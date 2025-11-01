@@ -1,5 +1,8 @@
 """Provides utility functions for working with Plugboard components."""
 
+from __future__ import annotations
+
+import inspect
 import typing as _t
 
 from plugboard.component.component import Component, ComponentRegistry
@@ -7,28 +10,30 @@ from plugboard.component.io_controller import IOController
 from plugboard.utils import gen_rand_str
 
 
-def _make_component_class(
-    func: _t.Callable, inputs: _t.Optional[_t.Any], outputs: _t.Optional[_t.Any]
-) -> _t.Type[Component]:
-    """Creates a Plugboard component class from a function."""
+def component(
+    inputs: _t.Optional[_t.Any] = None, outputs: _t.Optional[_t.Any] = None
+) -> ComponentDecoratorHelper:
+    """A decorator to auto generate a Plugboard component from a function.
 
-    class FuncComponent(Component):
-        io = IOController(inputs=inputs, outputs=outputs)
+    The wrapped function will be added to a dynamically created component class
+    as the step method. The returned helper class can either be called directly,
+    retaining the original behaviour of the wrapped function; or can be used to
+    create a component instance.
 
-        async def step(self) -> _t.Any:
-            fn_in = {field: getattr(self, field) for field in self.io.inputs}
-            fn_out = await func(**fn_in)
-            if not isinstance(fn_out, dict):
-                raise ValueError(f"Wrapped function must return a dict, got {type(fn_out)}")
-            for k, v in fn_out.items():
-                setattr(self, k, v)
+    Args:
+        inputs: The input schema or schema factory for the component.
+        outputs: The output schema or schema factory for the component.
 
-    FuncComponent.__name__ = f"FuncComponent__{func.__name__}"
-    FuncComponent.__doc__ = func.__doc__
+    Returns:
+        A helper class which can be used to both call the original function and create
+        an instance of the component class.
+    """
 
-    ComponentRegistry.add(FuncComponent)
+    def decorator(func: _t.Callable) -> _t.Any:
+        comp_cls = _make_component_class(func, inputs, outputs)
+        return ComponentDecoratorHelper(func, comp_cls)
 
-    return FuncComponent
+    return decorator
 
 
 class ComponentDecoratorHelper:
@@ -48,24 +53,36 @@ class ComponentDecoratorHelper:
         return self._func(*args, **kwargs)
 
 
-def component(
-    inputs: _t.Optional[_t.Any] = None, outputs: _t.Optional[_t.Any] = None
-) -> ComponentDecoratorHelper:
-    """A decorator to auto generate a Plugboard component from a function.
+def _make_component_class(
+    func: _t.Callable, inputs: _t.Optional[_t.Any], outputs: _t.Optional[_t.Any]
+) -> _t.Type[Component]:
+    """Creates a Plugboard component class from a function."""
+    _async_func = _ensure_async_callable(func)
 
-    The wrapped function will be added to a dynamically created component class
-    as the step method.
+    class FuncComponent(Component):
+        io = IOController(inputs=inputs, outputs=outputs)
 
-    Args:
-        inputs: The input schema or schema factory for the component.
-        outputs: The output schema or schema factory for the component.
+        async def step(self) -> _t.Any:
+            fn_in = {field: getattr(self, field) for field in self.io.inputs}
+            fn_out = await _async_func(**fn_in)
+            if not isinstance(fn_out, dict):
+                raise ValueError(f"Wrapped function must return a dict, got {type(fn_out)}")
+            for k, v in fn_out.items():
+                setattr(self, k, v)
 
-    Returns:
-        The dynamically created component class.
-    """
+    FuncComponent.__name__ = f"FuncComponent__{func.__name__}"
+    FuncComponent.__doc__ = func.__doc__
 
-    def decorator(func: _t.Callable) -> _t.Any:
-        comp_cls = _make_component_class(func, inputs, outputs)
-        return ComponentDecoratorHelper(func, comp_cls)
+    ComponentRegistry.add(FuncComponent)
 
-    return decorator
+    return FuncComponent
+
+
+def _ensure_async_callable(func: _t.Callable) -> _t.Callable:
+    if inspect.iscoroutinefunction(func):
+        return func
+
+    async def _async_func(*args: _t.Any, **kwargs: _t.Any) -> _t.Any:
+        return func(*args, **kwargs)
+
+    return _async_func

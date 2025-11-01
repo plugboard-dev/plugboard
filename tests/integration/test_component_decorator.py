@@ -1,6 +1,7 @@
 """Integration tests for the component decorator."""
 # ruff: noqa: D101,D102,D103
 
+import asyncio
 import typing as _t
 
 import pytest
@@ -41,11 +42,12 @@ class A(ComponentTestHelper):
 
 @component(inputs=["a"], outputs=["b"])
 async def comp_b_func(a: int) -> dict[str, int]:
+    await asyncio.sleep(0.01)
     return {"b": 2 * a}
 
 
 @component(inputs=["a"], outputs=["c"])
-async def comp_c_func(a: int) -> dict[str, int]:
+def comp_c_func(a: int) -> dict[str, int]:
     return {"c": 3 * a}
 
 
