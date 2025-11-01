@@ -106,29 +106,38 @@ class Tuner:
         if algorithm is None:
             self._logger.info("Using default Optuna search algorithm")
             return ray.tune.search.optuna.OptunaSearch(metric=self._metric, mode=self._mode)
-        _algo_kwargs = {
-            **algorithm.model_dump(exclude={"type"}),
-            "mode": self._mode,
-            "metric": self._metric,
-        }
+
+        _algo_kwargs = algorithm.model_dump(exclude={"type"})
+        _algo_kwargs["mode"] = self._mode
+        _algo_kwargs["metric"] = self._metric
 
         # Convert storage URI string to optuna storage object if needed
-        # TODO: Make this more general to support other algorithms, e.g. use a builder class
-        if "storage" in _algo_kwargs and isinstance(_algo_kwargs["storage"], str):
-            _algo_kwargs["storage"] = optuna.storages.RDBStorage(url=_algo_kwargs["storage"])
+        storage = _algo_kwargs.get("storage")
+        if isinstance(storage, str):
+            _algo_kwargs["storage"] = optuna.storages.RDBStorage(url=storage)
             self._logger.info(
                 "Converted storage URI to Optuna RDBStorage object",
-                storage_uri=algorithm.storage,
+                storage_uri=storage,
             )
+
+        # Convert space string to function if provided
+        space = _algo_kwargs.get("space")
+        if space is not None:
+            space_fn = locate(space)
+            if not space_fn or not isfunction(space_fn):
+                raise ValueError(f"Could not locate search space function {space}")
+            _algo_kwargs["space"] = space_fn
 
         algo_cls: _t.Optional[_t.Any] = locate(algorithm.type)
         if not algo_cls or not issubclass(algo_cls, ray.tune.search.searcher.Searcher):
             raise ValueError(f"Could not locate `Searcher` class {algorithm.type}")
+
         self._logger.info(
             "Using custom search algorithm",
             algorithm=algorithm.type,
             params={
-                k: v if k != "storage" else f"<{type(v).__name__}>" for k, v in _algo_kwargs.items()
+                k: (f"<{type(v).__name__}>" if k == "storage" else v)
+                for k, v in _algo_kwargs.items()
             },
         )
         return algo_cls(**_algo_kwargs)
