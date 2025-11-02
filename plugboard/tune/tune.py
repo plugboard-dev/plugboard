@@ -55,26 +55,19 @@ class Tuner:
             algorithm: Configuration for the underlying Optuna algorithm used for optimisation.
         """
         self._logger = DI.logger.resolve_sync().bind(cls=self.__class__.__name__)
-        # Check that objective and mode are lists of the same length if multiple objectives are used
+        # Validate and normalize objective/mode
         self._check_objective(objective, mode)
-        self._objective = objective if isinstance(objective, list) else [objective]
-        self._mode = [str(m) for m in mode] if isinstance(mode, list) else str(mode)
-        self._custom_space = True if algorithm and algorithm.space else False
-        self._metric = (
-            [obj.full_name for obj in self._objective]
-            if len(self._objective) > 1
-            else self._objective[0].full_name
+        self._objective, self._mode, self._metric = self._normalize_objective_and_mode(
+            objective, mode
         )
+        self._custom_space = bool(algorithm and algorithm.space)
 
-        self._parameters_dict = {p.full_name: p for p in parameters}
-        self._parameters = dict(self._build_parameter(p) for p in parameters)
-        _algo = self._build_algorithm(algorithm)
-        if max_concurrent is not None:
-            _algo = ray.tune.search.ConcurrencyLimiter(_algo, max_concurrent)
-        self._config = ray.tune.TuneConfig(
-            num_samples=num_samples,
-            search_alg=_algo,
-        )
+        # Prepare parameters and search algorithm
+        self._parameters_dict, self._parameters = self._prepare_parameters(parameters)
+        searcher = self._init_search_algorithm(algorithm, max_concurrent)
+
+        # Configure Ray Tune
+        self._config = ray.tune.TuneConfig(num_samples=num_samples, search_alg=searcher)
         self._result_grid: _t.Optional[ray.tune.ResultGrid] = None
         self._logger.info("Tuner created")
 
@@ -274,3 +267,35 @@ class Tuner:
             return result
 
         return fn
+
+    def _normalize_objective_and_mode(
+        self,
+        objective: ObjectiveSpec | list[ObjectiveSpec],
+        mode: Direction | list[Direction],
+    ) -> tuple[list[ObjectiveSpec], str | list[str], str | list[str]]:
+        """Return normalized objectives, modes and metric name(s)."""
+        objectives = objective if isinstance(objective, list) else [objective]
+        modes = [str(m) for m in mode] if isinstance(mode, list) else str(mode)
+        metric = (
+            [obj.full_name for obj in objectives]
+            if len(objectives) > 1
+            else objectives[0].full_name
+        )
+        return objectives, modes, metric
+
+    def _prepare_parameters(
+        self, parameters: list[ParameterSpec]
+    ) -> tuple[dict[str, ParameterSpec], dict[str, "ray.tune.search.sample.Sampler"]]:
+        """Build parameter lookup dict and Ray Tune parameter space."""
+        params_dict = {p.full_name: p for p in parameters}
+        params_space = dict(self._build_parameter(p) for p in parameters)
+        return params_dict, params_space
+
+    def _init_search_algorithm(
+        self, algorithm: _t.Optional[OptunaSpec], max_concurrent: _t.Optional[int]
+    ) -> "ray.tune.search.Searcher":
+        """Create the search algorithm and apply concurrency limits if requested."""
+        algo = self._build_algorithm(algorithm)
+        if max_concurrent is not None:
+            algo = ray.tune.search.ConcurrencyLimiter(algo, max_concurrent)
+        return algo
