@@ -135,13 +135,15 @@ class Tuner:
 
     def _resolve_space_fn(self, space: str) -> _t.Callable:
         space_fn = locate(space)
-        if not space_fn or not isfunction(space_fn):
+        if not space_fn or not isfunction(space_fn):  # pragma: no cover
             raise ValueError(f"Could not locate search space function {space}")
         return space_fn
 
     def _get_algo_class(self, type_path: str) -> _t.Type[ray.tune.search.searcher.Searcher]:
         algo_cls: _t.Optional[_t.Any] = locate(type_path)
-        if not algo_cls or not issubclass(algo_cls, ray.tune.search.searcher.Searcher):
+        if not algo_cls or not issubclass(
+            algo_cls, ray.tune.search.searcher.Searcher
+        ):  # pragma: no cover
             raise ValueError(f"Could not locate `Searcher` class {type_path}")
         return algo_cls
 
