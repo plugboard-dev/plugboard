@@ -210,7 +210,7 @@ class Tuner:
             ),
         )
 
-        tuner_kwargs = {
+        tuner_kwargs: dict[str, _t.Any] = {
             "tune_config": self._config,
         }
         if not self._custom_space:
