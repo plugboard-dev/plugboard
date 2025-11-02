@@ -59,7 +59,7 @@ def dynamic_param_config() -> dict:
 
 
 def custom_space(trial: Trial) -> dict[str, _t.Any] | None:
-    """Returns a custom search space function as a string."""
+    """Defines a custom search space for Optuna."""
     n_list = trial.suggest_int("n_list", 1, 10)
     list_param = [
         trial.suggest_float(f"list_param_{i}", -5.0, -5.0 + float(i)) for i in range(n_list)
@@ -110,7 +110,7 @@ async def test_tune(config: dict, mode: str, process_type: str, ray_ctx: None) -
     )
     result = tuner.result_grid
     # There must be no failed trials
-    assert not [t for t in result if t.error]
+    assert not any(t.error for t in result)
     # Correct optimimum must be found (within tolerance)
     if mode == "min":
         assert best_result.config["a.iters"] <= tuner._parameters["a.iters"].lower + 2
@@ -212,7 +212,7 @@ async def test_tune_with_constraint(config: dict, ray_ctx: None) -> None:
     )
     result = tuner.result_grid
     # There must be no failed trials
-    assert not [t for t in result if t.error]
+    assert not any(t.error for t in result)
     # Constraint must be respected
     assert all(t.metrics["c.in_1"] <= 10 for t in result)
     # Optimum must be less than or equal to 10
@@ -224,7 +224,7 @@ async def test_tune_with_constraint(config: dict, ray_ctx: None) -> None:
 @pytest.mark.tuner
 @pytest.mark.asyncio
 async def test_custom_space_tune(dynamic_param_config: dict, ray_ctx: None) -> None:
-    """Tests multi-objective optimisation."""
+    """Tests tuning with a custom search space."""
     spec = ConfigSpec.model_validate(dynamic_param_config)
     process_spec = spec.plugboard.process
     tuner = Tuner(
@@ -261,7 +261,7 @@ async def test_custom_space_tune(dynamic_param_config: dict, ray_ctx: None) -> N
     )
     result = tuner.result_grid
     # There must be no failed trials
-    assert not [t for t in result if t.error]
+    assert not any(t.error for t in result)
     # The custom space must have been used
     for r in result:
         # Set the length of the list parameter based on n_list
