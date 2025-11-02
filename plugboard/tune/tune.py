@@ -130,7 +130,11 @@ class Tuner:
             "Using custom search algorithm",
             algorithm=algorithm.type,
             params={
-                k: (f"<{type(v).__name__}>" if k == "storage" else v)
+                k: (
+                    f"<{type(v).__name__}>"
+                    if k == "storage" or (k == "space" and isfunction(v))
+                    else v
+                )
                 for k, v in _algo_kwargs.items()
             },
         )
@@ -206,19 +210,16 @@ class Tuner:
             ),
         )
 
+        tuner_kwargs = {
+            "tune_config": self._config,
+        }
         if not self._custom_space:
             self._logger.info("Setting Tuner with parameters", params=list(self._parameters.keys()))
-            _tune = ray.tune.Tuner(
-                trainable_with_resources,
-                param_space=self._parameters,
-                tune_config=self._config,
-            )
+            tuner_kwargs["param_space"] = self._parameters
         else:
             self._logger.info("Setting Tuner with custom search space")
-            _tune = ray.tune.Tuner(
-                trainable_with_resources,
-                tune_config=self._config,
-            )
+
+        _tune = ray.tune.Tuner(trainable_with_resources, **tuner_kwargs)
         self._logger.info("Starting Tuner")
         self._result_grid = _tune.fit()
         self._logger.info("Tuner finished")
