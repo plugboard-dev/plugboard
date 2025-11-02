@@ -1,0 +1,21 @@
+plugboard:
+  process:
+    args:
+      components:
+      - type: tests.integration.test_process_with_components_run.A
+        args:
+          name: "a"
+          iters: 10
+      - type: tests.integration.test_tuner.DynamicListComponent
+        args:
+          name: "d"
+          list_param: [1.0, 2.0, 3.0]
+      - type: tests.integration.test_process_with_components_run.C
+        args:
+          name: "c"
+          path: "./c.txt"
+      connectors:
+      - source: "a.out_1"
+        target: "d.in_1"
+      - source: "d.out_1"
+        target: "c.in_1"
