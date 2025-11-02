@@ -247,6 +247,10 @@ class Tuner:
                 ComponentRegistry.add(cls, key=key)
 
             for name, value in config.items():
+                if name not in self._parameters_dict:
+                    # Custom search spaces may include intermediate parameters not in the Tuner
+                    self._logger.warning("Parameter from config not found in Tuner", param=name)
+                    continue
                 self._override_parameter(spec, self._parameters_dict[name], value)
 
             process = ProcessBuilder.build(spec)
