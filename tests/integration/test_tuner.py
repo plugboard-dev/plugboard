@@ -7,15 +7,16 @@ import msgspec
 from optuna import Trial
 import pytest
 
+from plugboard.component import IOController as IO
 from plugboard.exceptions import ConstraintError
 from plugboard.schemas import ConfigSpec, ConnectorBuilderSpec, ObjectiveSpec
 from plugboard.schemas.tune import (
     CategoricalParameterSpec,
-    FloatParameterSpec,
     IntParameterSpec,
     OptunaSpec,
 )
 from plugboard.tune import Tuner
+from tests.conftest import ComponentTestHelper
 from tests.integration.test_process_with_components_run import A, B, C  # noqa: F401
 
 
@@ -29,6 +30,20 @@ class ConstrainedB(B):
         await super().step()
 
 
+class DynamicListComponent(ComponentTestHelper):
+    """Component with a dynamic list parameter for tuning."""
+
+    io = IO(inputs=["in_1"], outputs=["out_1"])
+
+    def __init__(self, list_param: list[float], *args: _t.Any, **kwargs: _t.Any) -> None:
+        super().__init__(*args, **kwargs)
+        self._list_param = list_param
+
+    async def step(self) -> None:
+        """Compute output based on dynamic list parameter."""
+        self.out_1 = sum(self._list_param) * self.in_1
+
+
 @pytest.fixture
 def config() -> dict:
     """Loads the YAML config."""
@@ -36,13 +51,23 @@ def config() -> dict:
         return msgspec.yaml.decode(f.read())
 
 
+@pytest.fixture
+def dynamic_param_config() -> dict:
+    """Loads the YAML config with dynamic list included."""
+    with open("tests/data/dynamic-param-process.yaml", "rb") as f:
+        return msgspec.yaml.decode(f.read())
+
+
 def custom_space(trial: Trial) -> dict[str, _t.Any] | None:
     """Returns a custom search space function as a string."""
-    a_iters = trial.suggest_int("a.iters", 1, 10)
-    if a_iters < 5:
-        trial.suggest_float("b.factor", 0, 2.0)
-    else:
-        trial.suggest_float("b.factor", -2.0, 0.0)
+    n_list = trial.suggest_int("n_list", 1, 10)
+    list_param = [
+        trial.suggest_float(f"list_param_{i}", -5.0, -5.0 + float(i)) for i in range(n_list)
+    ]
+    # Set existing parameter
+    trial.suggest_int("a.iters", 1, 10)
+    # Use the return value to set the list parameter
+    return {"d.list_param": list_param}
 
 
 @pytest.mark.tuner
@@ -198,9 +223,9 @@ async def test_tune_with_constraint(config: dict, ray_ctx: None) -> None:
 
 @pytest.mark.tuner
 @pytest.mark.asyncio
-async def test_custom_space_tune(config: dict, ray_ctx: None) -> None:
+async def test_custom_space_tune(dynamic_param_config: dict, ray_ctx: None) -> None:
     """Tests multi-objective optimisation."""
-    spec = ConfigSpec.model_validate(config)
+    spec = ConfigSpec.model_validate(dynamic_param_config)
     process_spec = spec.plugboard.process
     tuner = Tuner(
         objective=ObjectiveSpec(
@@ -218,13 +243,12 @@ async def test_custom_space_tune(config: dict, ray_ctx: None) -> None:
                 lower=1,
                 upper=3,
             ),
-            FloatParameterSpec(
+            CategoricalParameterSpec(
                 object_type="component",
-                object_name="b",
+                object_name="d",
                 field_type="arg",
-                field_name="factor",
-                lower=1,
-                upper=3,
+                field_name="list_param",
+                categories=[],  # Will be set by custom space
             ),
         ],
         num_samples=10,
@@ -240,7 +264,8 @@ async def test_custom_space_tune(config: dict, ray_ctx: None) -> None:
     assert not [t for t in result if t.error]
     # The custom space must have been used
     for r in result:
-        if r.config["a.iters"] < 5:
-            assert 0.0 <= r.config["b.factor"] <= 2.0
-        else:
-            assert -2.0 <= r.config["b.factor"] <= 0.0
+        # Set the length of the list parameter based on n_list
+        assert len(r.config["d.list_param"]) == r.config["n_list"]
+        if r.config["n_list"] < 5:
+            # When n_list < 5, all list_param values are negative
+            assert all(v < 0.0 for v in r.config["d.list_param"])
