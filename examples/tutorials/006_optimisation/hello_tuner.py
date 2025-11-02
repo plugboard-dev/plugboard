@@ -2,7 +2,7 @@
 
 # fmt: off
 import typing as _t
-
+from optuna import Trial
 from plugboard.component import Component, IOController as IO
 from plugboard.process import ProcessBuilder
 from plugboard.schemas import ComponentArgsDict, ProcessSpec, ProcessArgsSpec, ObjectiveSpec
@@ -62,6 +62,15 @@ class MaxHeight(Component):
     async def step(self) -> None:
         self.max_y = max(self.y, self.max_y)
 # --8<-- [end:components]
+
+
+# --8<-- [start:custom_search_space]
+def custom_space(trial: Trial) -> dict[str, _t.Any] | None:
+    """Defines a custom search space for Optuna."""
+    angle = trial.suggest_int("trajectory.angle", 0, 90)
+    # Make velocity depend on angle
+    trial.suggest_int("trajectory.velocity", angle, 100)
+# --8<-- [end:custom_search_space]
 
 
 if __name__ == "__main__":

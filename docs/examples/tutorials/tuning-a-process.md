@@ -73,3 +73,31 @@ Plugboard's YAML config supports an optional `tune` section, allowing you to def
 3.  Parameters need to reference a type, so that Plugboard knows the type of parameter to build.
 
 Now run `plugboard process tune model-with-tuner.yaml` to execute the optimisation job from the CLI.
+
+## Advanced usage: complex search spaces
+
+Occasionally you may need to define more complex search spaces, which go beyond what can be defined with a simple parameter configuration. For example:
+
+*  Conditional parameters, e.g. where parameter `a` must be greater than parameter `b`; or
+*  Looping, e.g. building up a list of tunable parameters that is of variable length.
+
+These conditional search space functions are supported by Ray Tune and can be defined as described in the [Ray documentation](https://docs.ray.io/en/latest/tune/examples/optuna_example.html#conditional-search-spaces). To use such a function you will need to:
+
+1. Setup the [`Tuner`][plugboard.tune.Tuner], defining your parameters as usual;
+2. Write a custom function to define the search space, where each tunable parameter has a name of the form `"{component_name.field_or_arg_name}"`; then
+3. Supply your custom function to the `OptunaSpec` algorithm configuration.
+
+For example, the following search space makes the velocity depend on the angle:
+```python
+--8<-- "examples/tutorials/006_optimisation/hello_tuner.py:custom_search_space"
+```
+
+Then use this configuration to point the  tuner to the `custom_space` function.
+```yaml
+--8<-- "examples/tutorials/006_optimisation/model-with-tuner-custom.yaml"
+```
+
+1. We can reference a [`Process`][plugboard.process.Process] from another YAML file here to avoid repetition.
+2. Add the algorithm configuration here.
+
+Then run using `plugboard process tune model-with-tuner-custom.yaml`.
