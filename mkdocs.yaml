@@ -7,6 +7,9 @@ repo_url: https://github.com/plugboard-dev/plugboard
 extra:
   version:
     provider: mike
+  analytics:
+    provider: google
+    property: G-99NL59QL5D
 
 validation:
   omitted_files: warn
