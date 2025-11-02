@@ -129,7 +129,8 @@ def tune(
 ) -> None:
     """Optimise a Plugboard process by adjusting its tunable parameters."""
     config_spec = _read_yaml(config)
-    tuner = _build_tuner(config_spec)
+    with add_sys_path(config.parent):
+        tuner = _build_tuner(config_spec)
 
     with Progress(
         SpinnerColumn("arrow3"),
