@@ -11,6 +11,7 @@ on:
 
 env:
   PYTHON_VERSION: '3.12'
+  GOOGLE_ANALYTICS_KEY: ${{ vars.GOOGLE_ANALYTICS_KEY }}
 
 jobs:
   publish:

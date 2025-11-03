@@ -9,7 +9,7 @@ extra:
     provider: mike
   analytics:
     provider: google
-    property: G-99NL59QL5D
+    property: !ENV GOOGLE_ANALYTICS_KEY
   consent:
     title: Cookie consent
     description: >- 
