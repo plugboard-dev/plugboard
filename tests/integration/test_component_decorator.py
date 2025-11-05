@@ -14,8 +14,15 @@ from plugboard.connector import (
     Connector,
     RayConnector,
 )
-from plugboard.process import LocalProcess, Process, RayProcess
-from plugboard.schemas import ConnectorSpec
+from plugboard.process import LocalProcess, Process, ProcessBuilder, RayProcess
+from plugboard.schemas import (
+    ComponentSpec,
+    ConnectorBuilderArgsSpec,
+    ConnectorBuilderSpec,
+    ConnectorSpec,
+    ProcessArgsSpec,
+    ProcessSpec,
+)
 from plugboard.schemas.state import Status
 from tests.conftest import ComponentTestHelper
 
@@ -107,6 +114,74 @@ async def test_process_with_decorated_components(
     for c in components:
         assert c.status == Status.COMPLETED
 
+    expected_results = [5 * i for i in range(iters)]
+    assert comp_e.results == expected_results
+
+    await process.destroy()
+
+
+@pytest.mark.asyncio
+@pytest_cases.parametrize(
+    "process_cls, connector_cls",
+    [
+        (LocalProcess, AsyncioConnector),
+        (RayProcess, RayConnector),
+    ],
+)
+async def test_process_builder_with_decorated_components(
+    process_cls: type[Process],
+    connector_cls: type[Connector],
+    ray_ctx: None,
+) -> None:
+    """Tests a process using components created with the component decorator executes correctly."""
+    iters = 10
+    process_spec = ProcessSpec(
+        args=ProcessArgsSpec(
+            components=[
+                ComponentSpec(
+                    type="tests.integration.test_component_decorator.A",
+                    args={"name": "comp_a", "iters": iters},
+                ),
+                ComponentSpec(
+                    type="tests.integration.test_component_decorator.FnComp__comp_b_func",
+                    args={"name": "comp_b"},
+                ),
+                ComponentSpec(
+                    type="tests.integration.test_component_decorator.FnComp__comp_c_func",
+                    args={"name": "comp_c"},
+                ),
+                ComponentSpec(
+                    type="tests.integration.test_component_decorator.FnComp__comp_d_func",
+                    args={"name": "comp_d"},
+                ),
+                ComponentSpec(
+                    type="tests.integration.test_component_decorator.E",
+                    args={"name": "comp_e"},
+                ),
+            ],
+            connectors=[
+                ConnectorSpec(source="comp_a.a", target="comp_b.a"),
+                ConnectorSpec(source="comp_a.a", target="comp_c.a"),
+                ConnectorSpec(source="comp_b.b", target="comp_d.b"),
+                ConnectorSpec(source="comp_c.c", target="comp_d.c"),
+                ConnectorSpec(source="comp_d.d", target="comp_e.d"),
+            ],
+        ),
+        connector_builder=ConnectorBuilderSpec(
+            type=f"{connector_cls.__module__}.{connector_cls.__name__}",
+            args=ConnectorBuilderArgsSpec(),
+        ),
+    )
+
+    process = ProcessBuilder.build(process_spec)
+    await process.init()
+    await process.run()
+
+    assert process.status == Status.COMPLETED
+    for c in process.components.values():
+        assert c.status == Status.COMPLETED
+
+    comp_e = process.components["comp_e"]
     expected_results = [5 * i for i in range(iters)]
     assert comp_e.results == expected_results
 
