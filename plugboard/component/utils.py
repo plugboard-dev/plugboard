@@ -76,8 +76,8 @@ def _make_component_class(
             for k, v in fn_out.items():
                 setattr(self, k, v)
 
-    FuncComponent.__name__ = f"FuncComponent__{func.__name__}"
-    FuncComponent.__doc__ = f"FuncComponent for wrapped function {func.__name__}:\n\n{func.__doc__}"
+    FuncComponent.__name__ = f"FnComp__{func.__name__}"
+    FuncComponent.__doc__ = f"Component for wrapped function {func.__name__}:\n\n{func.__doc__}"
 
     ComponentRegistry.add(FuncComponent)
 
