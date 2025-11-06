@@ -10,13 +10,13 @@
       
       
       
-        <link rel="canonical" href="https://docs.plugboard.dev/latest/examples/demos/fundamentals/002_production_line_optimisation/production-line/">
+        <link rel="canonical" href="https://docs.plugboard.dev/latest/examples/demos/llm/003_rock_paper_scissors/rock-paper-scissors/">
       
       
-        <link rel="prev" href="../../001_simple_model/simple-model/">
+        <link rel="prev" href="../../002_bluesky_websocket/bluesky-websocket/">
       
       
-        <link rel="next" href="../../../llm/001_data_filter/llm-filtering/">
+        <link rel="next" href="../../../physics-models/001-hot-water-tank/hot-water-tank/">
       
       
       <link rel="icon" href="../../../../../assets/favicon.png">
@@ -24,7 +24,7 @@
     
     
       
-        <title>Production process optimisation - Plugboard</title>
+        <title>Rock Paper Scissors - Plugboard</title>
       
     
     
@@ -90,7 +90,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#production-process-optimisation" class="md-skip">
+        <a href="#rock-paper-scissors" class="md-skip">
           Skip to content
         </a>
       
@@ -140,7 +140,7 @@ What's new: 🚀 we've open-sourced Plugboard - please <a href="https://github.c
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Production process optimisation
+              Rock Paper Scissors
             
           </span>
         </div>
@@ -315,7 +315,7 @@ What's new: 🚀 we've open-sourced Plugboard - please <a href="https://github.c
     
     
       <li class="md-tabs__item md-tabs__item--active">
-        <a href="../../001_simple_model/simple-model/" class="md-tabs__link">
+        <a href="../../../fundamentals/001_simple_model/simple-model/" class="md-tabs__link">
           
   
   
@@ -831,12 +831,117 @@ What's new: 🚀 we've open-sourced Plugboard - please <a href="https://github.c
                 
   
   
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3_1" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_1" id="__nav_3_1_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    Fundamentals
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_1">
+            <span class="md-nav__icon md-icon"></span>
+            Fundamentals
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../fundamentals/001_simple_model/simple-model/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Simple 3-node model
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../fundamentals/002_production_line_optimisation/production-line/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Production process optimisation
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
     
   
   
   
     
     
+      
+        
       
         
       
@@ -853,15 +958,15 @@ What's new: 🚀 we've open-sourced Plugboard - please <a href="https://github.c
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_1" checked>
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_2" checked>
         
           
-          <label class="md-nav__link" for="__nav_3_1" id="__nav_3_1_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_3_2" id="__nav_3_2_label" tabindex="0">
             
   
   
   <span class="md-ellipsis">
-    Fundamentals
+    LLMs
     
   </span>
   
@@ -869,10 +974,10 @@ What's new: 🚀 we've open-sourced Plugboard - please <a href="https://github.c
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_1_label" aria-expanded="true">
-          <label class="md-nav__title" for="__nav_3_1">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_2_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_3_2">
             <span class="md-nav__icon md-icon"></span>
-            Fundamentals
+            LLMs
           </label>
           <ul class="md-nav__list" data-md-scrollfix>
             
@@ -883,12 +988,35 @@ What's new: 🚀 we've open-sourced Plugboard - please <a href="https://github.c
   
   
     <li class="md-nav__item">
-      <a href="../../001_simple_model/simple-model/" class="md-nav__link">
+      <a href="../../001_data_filter/llm-filtering/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
-    Simple 3-node model
+    LLM for data filtering
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../002_bluesky_websocket/bluesky-websocket/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Streaming data: processing a websocket feed
     
   </span>
   
@@ -915,186 +1043,7 @@ What's new: 🚀 we've open-sourced Plugboard - please <a href="https://github.c
         
       
       
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-  <span class="md-ellipsis">
-    Production process optimisation
-    
-  </span>
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
       <a href="./" class="md-nav__link md-nav__link--active">
-        
-  
-  
-  <span class="md-ellipsis">
-    Production process optimisation
-    
-  </span>
-  
-
-      </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#components" class="md-nav__link">
-    <span class="md-ellipsis">
-      Components:
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#key-metrics" class="md-nav__link">
-    <span class="md-ellipsis">
-      Key Metrics:
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
-    </li>
-  
-
-              
-            
-          </ul>
-        </nav>
-      
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    
-    
-      
-        
-      
-        
-      
-        
-      
-    
-    
-    
-      
-      
-    
-    
-    <li class="md-nav__item md-nav__item--nested">
-      
-        
-        
-          
-        
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3_2" >
-        
-          
-          <label class="md-nav__link" for="__nav_3_2" id="__nav_3_2_label" tabindex="0">
-            
-  
-  
-  <span class="md-ellipsis">
-    LLMs
-    
-  </span>
-  
-
-            <span class="md-nav__icon md-icon"></span>
-          </label>
-        
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_2_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_3_2">
-            <span class="md-nav__icon md-icon"></span>
-            LLMs
-          </label>
-          <ul class="md-nav__list" data-md-scrollfix>
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../../llm/001_data_filter/llm-filtering/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    LLM for data filtering
-    
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../../llm/002_bluesky_websocket/bluesky-websocket/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    Streaming data: processing a websocket feed
-    
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../../llm/003_rock_paper_scissors/rock-paper-scissors/" class="md-nav__link">
         
   
   
@@ -1105,6 +1054,7 @@ What's new: 🚀 we've open-sourced Plugboard - please <a href="https://github.c
   
 
       </a>
+      
     </li>
   
 
@@ -1718,32 +1668,6 @@ What's new: 🚀 we've open-sourced Plugboard - please <a href="https://github.c
     
   
   
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#components" class="md-nav__link">
-    <span class="md-ellipsis">
-      Components:
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#key-metrics" class="md-nav__link">
-    <span class="md-ellipsis">
-      Key Metrics:
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
 </nav>
                   </div>
                 </div>
@@ -1761,7 +1685,7 @@ What's new: 🚀 we've open-sourced Plugboard - please <a href="https://github.c
       
       
       
-        <a href="../../../../../usage/topics/#tag:optimisation" class="md-tag">optimisation</a>
+        <a href="../../../../../usage/topics/#tag:llm" class="md-tag">llm</a>
       
     
   </nav>
@@ -2213,36 +2137,11 @@ span.linenos.special { color: #000000; background-color: #ffffc0; padding-left: 
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h1 id="production-process-optimisation">Production process optimisation<a class="anchor-link" href="#production-process-optimisation">¶</a></h1><p><a href="https://codespaces.new/plugboard-dev/plugboard"><img alt="Open in GitHub Codespaces" src="https://github.com/codespaces/badge.svg"/></a></p>
-<p>This production line simulation models the unit cost of a small manufacturing operation with the following components:</p>
-<h3 id="components">Components:<a class="anchor-link" href="#components">¶</a></h3><ol>
-<li><strong>Input</strong>: Provides a fixed number of input items (10) per simulation step</li>
-<li><strong>InputStockpile</strong>:<ul>
-<li>Tracks inventory levels</li>
-<li>Decrements based on machine operations (Machine 1: 5 items/step, Machine 2: 8 items/step)</li>
-<li>Calculates storage costs ($10 per item above 50)</li>
-</ul>
-</li>
-<li><strong>Controller</strong> (2 instances):<ul>
-<li>Controller 1: Activates Machine 1 when stockpile &gt;= 30 items</li>
-<li>Controller 2: Activates Machine 2 when stockpile &gt;= 50 items</li>
-</ul>
-</li>
-<li><strong>MachineCost</strong> (2 instances):<ul>
-<li>Machine 1: $100 per step when running</li>
-<li>Machine 2: $200 per step when running</li>
-</ul>
-</li>
-<li><strong>OutputStock</strong>: Tracks total items processed by both machines</li>
-<li><strong>TotalCost</strong>: Maintains running total of all costs (storage + machine operations)</li>
-<li><strong>CostPerUnit</strong>: Calculates the cost per unit produced (total cost ÷ total output)</li>
-</ol>
-<h3 id="key-metrics">Key Metrics:<a class="anchor-link" href="#key-metrics">¶</a></h3><ul>
-<li><strong>Production Efficiency</strong>: Percentage of input items successfully processed</li>
-<li><strong>Cost Per Unit</strong>: Total operational cost divided by units produced</li>
-<li><strong>Storage Utilization</strong>: How well the system manages inventory levels</li>
-</ul>
-<p>The simulation runs for 1000 steps to provide stable long-term cost metrics. We can then use the model to find optimal values for the threshold levels on the two controllers.</p>
+<h1 id="rock-paper-scissors">Rock Paper Scissors<a class="anchor-link" href="#rock-paper-scissors">¶</a></h1><p><a href="https://codespaces.new/plugboard-dev/plugboard"><img alt="Open in GitHub Codespaces" src="https://github.com/codespaces/badge.svg"/></a></p>
+<p>This model contains two LLM components (one OpenAI, one Gemini), which will play rock-paper-scissors against each other. A separate <code>Judge</code> component will compute the winner and keep track of the running total across rounds.</p>
+<p>To run this model you will need to set the <code>OPENAI_API_KEY</code> and <code>GOOGLE_API_KEY</code> environment variables, and install the <code>llama-index-llms-gemini</code> package from PyPI.</p>
+<p>The overall model looks like this:</p>
+<p><img alt="" src="https://mermaid.ink/img/pako:eNqtlN0KgjAUx1_lsEvRFxghUVeFQXgdxOaOzdicrEkX4ruHMyUCg9TLsf_H74zDGpIZgYSSXJlnJpl1kKSXEqBwaJkzdtvAQ7IKKVhTlwJFCIpxVBTS7nx4yzbcxkEwmIIAWoiiGHhdKIH2yqZjztboyu16YR8zurqc9WH4LBg-wKwwk8dRSv_KSJLTXjLXu732G2DBHCMA_wNgfIFZ5L7yXosbTjuP3XXv88rPwr9JlxTOsK2570vrF2wGCYlGq1khCG2Ik6i730FgzmrlSNu-AN2Mbgg="/></p>
 </div>
 </div>
 </div>
@@ -2265,39 +2164,34 @@ span.linenos.special { color: #000000; background-color: #ffffc0; padding-left: 
 </div>
 </clipboard-copy>
 </div>
-<div class="highlight-ipynb hl-python"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">_t</span>
-
+<div class="highlight-ipynb hl-python"><pre><span></span><span class="c1"># Setup and imports</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">_t</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">enum</span><span class="w"> </span><span class="kn">import</span> <span class="n">Enum</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pydantic</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseModel</span><span class="p">,</span> <span class="n">Field</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">plugboard.component</span><span class="w"> </span><span class="kn">import</span> <span class="n">Component</span><span class="p">,</span> <span class="n">IOController</span> <span class="k">as</span> <span class="n">IO</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">plugboard.schemas</span><span class="w"> </span><span class="kn">import</span> <span class="n">ComponentArgsDict</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">plugboard.schemas</span><span class="w"> </span><span class="kn">import</span> <span class="n">ComponentArgsDict</span><span class="p">,</span> <span class="n">ConnectorSpec</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">plugboard.connector</span><span class="w"> </span><span class="kn">import</span> <span class="n">AsyncioConnector</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">plugboard.process</span><span class="w"> </span><span class="kn">import</span> <span class="n">LocalProcess</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">plugboard.schemas</span><span class="w"> </span><span class="kn">import</span> <span class="n">ConnectorSpec</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">plugboard.library</span><span class="w"> </span><span class="kn">import</span> <span class="n">LLMChat</span>
 </pre></div>
-<div class="clipboard-copy-txt" id="cell-1">import typing as _t
-
+<div class="clipboard-copy-txt" id="cell-1"># Setup and imports
+import os
+import typing as _t
+from enum import Enum
+from pydantic import BaseModel, Field
 from plugboard.component import Component, IOController as IO
-from plugboard.schemas import ComponentArgsDict
+from plugboard.schemas import ComponentArgsDict, ConnectorSpec
 from plugboard.connector import AsyncioConnector
 from plugboard.process import LocalProcess
-from plugboard.schemas import ConnectorSpec</div>
+from plugboard.library import LLMChat</div>
 </div>
 </div>
-</div>
-</div>
-</div>
-</div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=2">
-<div class="jp-Cell-inputWrapper" tabindex="0">
-<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
-</div>
-<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
-</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<p>Define the components for the model.</p>
 </div>
 </div>
 </div>
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
-<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=3">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=2">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -2315,271 +2209,57 @@ from plugboard.schemas import ConnectorSpec</div>
 </div>
 </clipboard-copy>
 </div>
-<div class="highlight-ipynb hl-python"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">Input</span><span class="p">(</span><span class="n">Component</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">"""Provides a fixed number of input items per step."""</span>
-
-    <span class="n">io</span> <span class="o">=</span> <span class="n">IO</span><span class="p">(</span><span class="n">outputs</span><span class="o">=</span><span class="p">[</span><span class="s2">"items"</span><span class="p">])</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span>
-        <span class="n">items_per_step</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">10</span><span class="p">,</span>
-        <span class="n">total_steps</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1000</span><span class="p">,</span>
-        <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">_t</span><span class="o">.</span><span class="n">Unpack</span><span class="p">[</span><span class="n">ComponentArgsDict</span><span class="p">],</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_items_per_step</span> <span class="o">=</span> <span class="n">items_per_step</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_total_steps</span> <span class="o">=</span> <span class="n">total_steps</span>
-
-    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">step</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">items</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_items_per_step</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_total_steps</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_total_steps</span> <span class="o">-=</span> <span class="mi">1</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">items</span> <span class="o">=</span> <span class="mi">0</span>
-            <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+<div class="highlight-ipynb hl-python"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">getpass</span><span class="w"> </span><span class="kn">import</span> <span class="n">getpass</span>
 
 
-<span class="k">class</span><span class="w"> </span><span class="nc">InputStockpile</span><span class="p">(</span><span class="n">Component</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">"""Tracks input stockpile, decrements based on machine operations, and calculates storage costs."""</span>
-
-    <span class="n">io</span> <span class="o">=</span> <span class="n">IO</span><span class="p">(</span>
-        <span class="n">inputs</span><span class="o">=</span><span class="p">[</span><span class="s2">"incoming_items"</span><span class="p">,</span> <span class="s2">"machine1_running"</span><span class="p">,</span> <span class="s2">"machine2_running"</span><span class="p">],</span>
-        <span class="n">outputs</span><span class="o">=</span><span class="p">[</span><span class="s2">"size"</span><span class="p">,</span> <span class="s2">"storage_cost"</span><span class="p">],</span>
-    <span class="p">)</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">_t</span><span class="o">.</span><span class="n">Unpack</span><span class="p">[</span><span class="n">ComponentArgsDict</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_size</span> <span class="o">=</span> <span class="mi">0</span>
-
-    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">step</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="c1"># Add incoming items</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_size</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">incoming_items</span>
-
-        <span class="c1"># Remove items processed by machines</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">machine1_running</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_size</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_size</span> <span class="o">-</span> <span class="mi">5</span><span class="p">)</span>  <span class="c1"># Machine 1 processes 5 items</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">machine2_running</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_size</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_size</span> <span class="o">-</span> <span class="mi">8</span><span class="p">)</span>  <span class="c1"># Machine 2 processes 8 items</span>
-
-        <span class="c1"># Calculate storage cost: $10 per item above 50</span>
-        <span class="n">storage_cost</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_size</span> <span class="o">-</span> <span class="mi">50</span><span class="p">)</span> <span class="o">*</span> <span class="mi">10</span>
-
-        <span class="bp">self</span><span class="o">.</span><span class="n">size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_size</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">storage_cost</span> <span class="o">=</span> <span class="n">storage_cost</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">set_api_key_from_user</span><span class="p">(</span><span class="n">env_var</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">service_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Prompt user for an API key if not set in the environment."""</span>
+    <span class="k">if</span> <span class="n">env_var</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="n">env_var</span><span class="p">]:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">key</span> <span class="o">=</span> <span class="n">getpass</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Enter your </span><span class="si">{</span><span class="n">service_name</span><span class="si">}</span><span class="s2"> API key (or press Enter to skip): "</span><span class="p">)</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="n">env_var</span><span class="p">]</span> <span class="o">=</span> <span class="n">key</span> <span class="ow">or</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">env_var</span><span class="p">,</span> <span class="s2">""</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">EOFError</span><span class="p">:</span>
+            <span class="c1"># Can happen in non-interactive environments</span>
+            <span class="k">pass</span>
 
 
-<span class="k">class</span><span class="w"> </span><span class="nc">Controller</span><span class="p">(</span><span class="n">Component</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">"""Controls machine operation based on stockpile size."""</span>
-
-    <span class="n">io</span> <span class="o">=</span> <span class="n">IO</span><span class="p">(</span><span class="n">inputs</span><span class="o">=</span><span class="p">[</span><span class="s2">"stockpile_size"</span><span class="p">],</span> <span class="n">outputs</span><span class="o">=</span><span class="p">[</span><span class="s2">"should_run"</span><span class="p">])</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">threshold</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">30</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">_t</span><span class="o">.</span><span class="n">Unpack</span><span class="p">[</span><span class="n">ComponentArgsDict</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_threshold</span> <span class="o">=</span> <span class="n">threshold</span>
-
-    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">step</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">should_run</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">stockpile_size</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_threshold</span>
-
-
-<span class="k">class</span><span class="w"> </span><span class="nc">MachineCost</span><span class="p">(</span><span class="n">Component</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">"""Calculates machine running costs."""</span>
-
-    <span class="n">io</span> <span class="o">=</span> <span class="n">IO</span><span class="p">(</span><span class="n">inputs</span><span class="o">=</span><span class="p">[</span><span class="s2">"is_running"</span><span class="p">],</span> <span class="n">outputs</span><span class="o">=</span><span class="p">[</span><span class="s2">"cost"</span><span class="p">])</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">cost_per_step</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">100.0</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">_t</span><span class="o">.</span><span class="n">Unpack</span><span class="p">[</span><span class="n">ComponentArgsDict</span><span class="p">]</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_cost_per_step</span> <span class="o">=</span> <span class="n">cost_per_step</span>
-
-    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">step</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">cost</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cost_per_step</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_running</span> <span class="k">else</span> <span class="mf">0.0</span>
-
-
-<span class="k">class</span><span class="w"> </span><span class="nc">OutputStock</span><span class="p">(</span><span class="n">Component</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">"""Tracks total items processed by both machines."""</span>
-
-    <span class="n">io</span> <span class="o">=</span> <span class="n">IO</span><span class="p">(</span><span class="n">inputs</span><span class="o">=</span><span class="p">[</span><span class="s2">"machine1_running"</span><span class="p">,</span> <span class="s2">"machine2_running"</span><span class="p">],</span> <span class="n">outputs</span><span class="o">=</span><span class="p">[</span><span class="s2">"total_output"</span><span class="p">])</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">_t</span><span class="o">.</span><span class="n">Unpack</span><span class="p">[</span><span class="n">ComponentArgsDict</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_total</span> <span class="o">=</span> <span class="mi">0</span>
-
-    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">step</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">machine1_running</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_total</span> <span class="o">+=</span> <span class="mi">5</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">machine2_running</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_total</span> <span class="o">+=</span> <span class="mi">8</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">total_output</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_total</span>
-
-
-<span class="k">class</span><span class="w"> </span><span class="nc">TotalCost</span><span class="p">(</span><span class="n">Component</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">"""Keeps running total of all costs."""</span>
-
-    <span class="n">io</span> <span class="o">=</span> <span class="n">IO</span><span class="p">(</span><span class="n">inputs</span><span class="o">=</span><span class="p">[</span><span class="s2">"storage_cost"</span><span class="p">,</span> <span class="s2">"machine1_cost"</span><span class="p">,</span> <span class="s2">"machine2_cost"</span><span class="p">],</span> <span class="n">outputs</span><span class="o">=</span><span class="p">[</span><span class="s2">"total_cost"</span><span class="p">])</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">_t</span><span class="o">.</span><span class="n">Unpack</span><span class="p">[</span><span class="n">ComponentArgsDict</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_total</span> <span class="o">=</span> <span class="mf">0.0</span>
-
-    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">step</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">step_cost</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">storage_cost</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">machine1_cost</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">machine2_cost</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_total</span> <span class="o">+=</span> <span class="n">step_cost</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">total_cost</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_total</span>
-
-
-<span class="k">class</span><span class="w"> </span><span class="nc">CostPerUnit</span><span class="p">(</span><span class="n">Component</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">"""Calculates cost per unit produced."""</span>
-
-    <span class="n">io</span> <span class="o">=</span> <span class="n">IO</span><span class="p">(</span><span class="n">inputs</span><span class="o">=</span><span class="p">[</span><span class="s2">"total_cost"</span><span class="p">,</span> <span class="s2">"total_output"</span><span class="p">],</span> <span class="n">outputs</span><span class="o">=</span><span class="p">[</span><span class="s2">"cost_per_unit"</span><span class="p">])</span>
-
-    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">step</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">total_output</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">cost_per_unit</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">total_cost</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">total_output</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">cost_per_unit</span> <span class="o">=</span> <span class="mf">0.0</span>
+<span class="n">set_api_key_from_user</span><span class="p">(</span><span class="s2">"OPENAI_API_KEY"</span><span class="p">,</span> <span class="s2">"OpenAI"</span><span class="p">)</span>
+<span class="n">set_api_key_from_user</span><span class="p">(</span><span class="s2">"GOOGLE_API_KEY"</span><span class="p">,</span> <span class="s2">"Google"</span><span class="p">)</span>
 </pre></div>
-<div class="clipboard-copy-txt" id="cell-2">class Input(Component):
-    """Provides a fixed number of input items per step."""
-
-    io = IO(outputs=["items"])
-
-    def __init__(
-        self,
-        items_per_step: int = 10,
-        total_steps: int = 1000,
-        **kwargs: _t.Unpack[ComponentArgsDict],
-    ) -&gt; None:
-        super().__init__(**kwargs)
-        self._items_per_step = items_per_step
-        self._total_steps = total_steps
-
-    async def step(self) -&gt; None:
-        self.items = self._items_per_step
-        if self._total_steps &gt; 0:
-            self._total_steps -= 1
-        else:
-            self.items = 0
-            await self.io.close()
+<div class="clipboard-copy-txt" id="cell-2">from getpass import getpass
 
 
-class InputStockpile(Component):
-    """Tracks input stockpile, decrements based on machine operations, and calculates storage costs."""
-
-    io = IO(
-        inputs=["incoming_items", "machine1_running", "machine2_running"],
-        outputs=["size", "storage_cost"],
-    )
-
-    def __init__(self, **kwargs: _t.Unpack[ComponentArgsDict]) -&gt; None:
-        super().__init__(**kwargs)
-        self._size = 0
-
-    async def step(self) -&gt; None:
-        # Add incoming items
-        self._size += self.incoming_items
-
-        # Remove items processed by machines
-        if self.machine1_running:
-            self._size = max(0, self._size - 5)  # Machine 1 processes 5 items
-        if self.machine2_running:
-            self._size = max(0, self._size - 8)  # Machine 2 processes 8 items
-
-        # Calculate storage cost: $10 per item above 50
-        storage_cost = max(0, self._size - 50) * 10
-
-        self.size = self._size
-        self.storage_cost = storage_cost
+def set_api_key_from_user(env_var: str, service_name: str) -&gt; None:
+    """Prompt user for an API key if not set in the environment."""
+    if env_var not in os.environ or not os.environ[env_var]:
+        try:
+            key = getpass(f"Enter your {service_name} API key (or press Enter to skip): ")
+            os.environ[env_var] = key or os.environ.get(env_var, "")
+        except EOFError:
+            # Can happen in non-interactive environments
+            pass
 
 
-class Controller(Component):
-    """Controls machine operation based on stockpile size."""
-
-    io = IO(inputs=["stockpile_size"], outputs=["should_run"])
-
-    def __init__(self, threshold: int = 30, **kwargs: _t.Unpack[ComponentArgsDict]) -&gt; None:
-        super().__init__(**kwargs)
-        self._threshold = threshold
-
-    async def step(self) -&gt; None:
-        self.should_run = self.stockpile_size &gt;= self._threshold
-
-
-class MachineCost(Component):
-    """Calculates machine running costs."""
-
-    io = IO(inputs=["is_running"], outputs=["cost"])
-
-    def __init__(
-        self, cost_per_step: float = 100.0, **kwargs: _t.Unpack[ComponentArgsDict]
-    ) -&gt; None:
-        super().__init__(**kwargs)
-        self._cost_per_step = cost_per_step
-
-    async def step(self) -&gt; None:
-        self.cost = self._cost_per_step if self.is_running else 0.0
-
-
-class OutputStock(Component):
-    """Tracks total items processed by both machines."""
-
-    io = IO(inputs=["machine1_running", "machine2_running"], outputs=["total_output"])
-
-    def __init__(self, **kwargs: _t.Unpack[ComponentArgsDict]) -&gt; None:
-        super().__init__(**kwargs)
-        self._total = 0
-
-    async def step(self) -&gt; None:
-        if self.machine1_running:
-            self._total += 5
-        if self.machine2_running:
-            self._total += 8
-        self.total_output = self._total
-
-
-class TotalCost(Component):
-    """Keeps running total of all costs."""
-
-    io = IO(inputs=["storage_cost", "machine1_cost", "machine2_cost"], outputs=["total_cost"])
-
-    def __init__(self, **kwargs: _t.Unpack[ComponentArgsDict]) -&gt; None:
-        super().__init__(**kwargs)
-        self._total = 0.0
-
-    async def step(self) -&gt; None:
-        step_cost = self.storage_cost + self.machine1_cost + self.machine2_cost
-        self._total += step_cost
-        self.total_cost = self._total
-
-
-class CostPerUnit(Component):
-    """Calculates cost per unit produced."""
-
-    io = IO(inputs=["total_cost", "total_output"], outputs=["cost_per_unit"])
-
-    async def step(self) -&gt; None:
-        if self.total_output &gt; 0:
-            self.cost_per_unit = self.total_cost / self.total_output
-        else:
-            self.cost_per_unit = 0.0</div>
+set_api_key_from_user("OPENAI_API_KEY", "OpenAI")
+set_api_key_from_user("GOOGLE_API_KEY", "Google")</div>
 </div>
 </div>
 </div>
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=4">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=3">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<p>Now assemble into a <code>Process</code> and make connections between the components.</p>
+<p>Setup some Pydantic models to structure the output from the LLMs</p>
 </div>
 </div>
 </div>
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
-<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=5">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=4">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -2597,128 +2277,72 @@ class CostPerUnit(Component):
 </div>
 </clipboard-copy>
 </div>
-<div class="highlight-ipynb hl-python"><pre><span></span><span class="n">connect</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">in_</span><span class="p">,</span> <span class="n">out_</span><span class="p">:</span> <span class="n">AsyncioConnector</span><span class="p">(</span><span class="n">spec</span><span class="o">=</span><span class="n">ConnectorSpec</span><span class="p">(</span><span class="n">source</span><span class="o">=</span><span class="n">in_</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="n">out_</span><span class="p">))</span>
+<div class="highlight-ipynb hl-python"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">Result</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">Enum</span><span class="p">):</span>
+    <span class="n">win</span> <span class="o">=</span> <span class="s2">"win"</span>
+    <span class="n">lose</span> <span class="o">=</span> <span class="s2">"lose"</span>
+    <span class="n">draw</span> <span class="o">=</span> <span class="s2">"draw"</span>
 
-<span class="n">process</span> <span class="o">=</span> <span class="n">LocalProcess</span><span class="p">(</span>
-    <span class="n">components</span><span class="o">=</span><span class="p">[</span>
-        <span class="c1"># Input component provides items</span>
-        <span class="n">Input</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">"input"</span><span class="p">,</span> <span class="n">items_per_step</span><span class="o">=</span><span class="mi">10</span><span class="p">),</span>
-        <span class="c1"># Stockpile manages inventory and storage costs</span>
-        <span class="c1"># We need to include initial values here to resolve a circular graph</span>
-        <span class="n">InputStockpile</span><span class="p">(</span>
-            <span class="n">name</span><span class="o">=</span><span class="s2">"stockpile"</span><span class="p">,</span>
-            <span class="n">initial_values</span><span class="o">=</span><span class="p">{</span><span class="s2">"machine1_running"</span><span class="p">:</span> <span class="p">[</span><span class="kc">False</span><span class="p">],</span> <span class="s2">"machine2_running"</span><span class="p">:</span> <span class="p">[</span><span class="kc">False</span><span class="p">]},</span>
-        <span class="p">),</span>
-        <span class="c1"># Controllers decide when machines should run</span>
-        <span class="n">Controller</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">"controller1"</span><span class="p">,</span> <span class="n">threshold</span><span class="o">=</span><span class="mi">30</span><span class="p">),</span>  <span class="c1"># Machine 1 threshold</span>
-        <span class="n">Controller</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">"controller2"</span><span class="p">,</span> <span class="n">threshold</span><span class="o">=</span><span class="mi">50</span><span class="p">),</span>  <span class="c1"># Machine 2 threshold</span>
-        <span class="c1"># Machine cost components</span>
-        <span class="n">MachineCost</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">"machine1_cost"</span><span class="p">,</span> <span class="n">cost_per_step</span><span class="o">=</span><span class="mf">100.0</span><span class="p">),</span>
-        <span class="n">MachineCost</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">"machine2_cost"</span><span class="p">,</span> <span class="n">cost_per_step</span><span class="o">=</span><span class="mf">200.0</span><span class="p">),</span>
-        <span class="c1"># Output tracking</span>
-        <span class="n">OutputStock</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">"output_stock"</span><span class="p">),</span>
-        <span class="c1"># Cost tracking and calculation</span>
-        <span class="n">TotalCost</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">"total_cost"</span><span class="p">),</span>
-        <span class="n">CostPerUnit</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">"cost_per_unit"</span><span class="p">),</span>
-    <span class="p">],</span>
-    <span class="n">connectors</span><span class="o">=</span><span class="p">[</span>
-        <span class="c1"># Input flow</span>
-        <span class="n">connect</span><span class="p">(</span><span class="s2">"input.items"</span><span class="p">,</span> <span class="s2">"stockpile.incoming_items"</span><span class="p">),</span>
-        <span class="c1"># Stockpile to controllers</span>
-        <span class="n">connect</span><span class="p">(</span><span class="s2">"stockpile.size"</span><span class="p">,</span> <span class="s2">"controller1.stockpile_size"</span><span class="p">),</span>
-        <span class="n">connect</span><span class="p">(</span><span class="s2">"stockpile.size"</span><span class="p">,</span> <span class="s2">"controller2.stockpile_size"</span><span class="p">),</span>
-        <span class="c1"># Controllers to machine costs</span>
-        <span class="n">connect</span><span class="p">(</span><span class="s2">"controller1.should_run"</span><span class="p">,</span> <span class="s2">"machine1_cost.is_running"</span><span class="p">),</span>
-        <span class="n">connect</span><span class="p">(</span><span class="s2">"controller2.should_run"</span><span class="p">,</span> <span class="s2">"machine2_cost.is_running"</span><span class="p">),</span>
-        <span class="c1"># Controllers to stockpile (for processing)</span>
-        <span class="n">connect</span><span class="p">(</span><span class="s2">"controller1.should_run"</span><span class="p">,</span> <span class="s2">"stockpile.machine1_running"</span><span class="p">),</span>
-        <span class="n">connect</span><span class="p">(</span><span class="s2">"controller2.should_run"</span><span class="p">,</span> <span class="s2">"stockpile.machine2_running"</span><span class="p">),</span>
-        <span class="c1"># Controllers to output stock</span>
-        <span class="n">connect</span><span class="p">(</span><span class="s2">"controller1.should_run"</span><span class="p">,</span> <span class="s2">"output_stock.machine1_running"</span><span class="p">),</span>
-        <span class="n">connect</span><span class="p">(</span><span class="s2">"controller2.should_run"</span><span class="p">,</span> <span class="s2">"output_stock.machine2_running"</span><span class="p">),</span>
-        <span class="c1"># All costs to total cost</span>
-        <span class="n">connect</span><span class="p">(</span><span class="s2">"stockpile.storage_cost"</span><span class="p">,</span> <span class="s2">"total_cost.storage_cost"</span><span class="p">),</span>
-        <span class="n">connect</span><span class="p">(</span><span class="s2">"machine1_cost.cost"</span><span class="p">,</span> <span class="s2">"total_cost.machine1_cost"</span><span class="p">),</span>
-        <span class="n">connect</span><span class="p">(</span><span class="s2">"machine2_cost.cost"</span><span class="p">,</span> <span class="s2">"total_cost.machine2_cost"</span><span class="p">),</span>
-        <span class="c1"># Total cost and output to cost per unit</span>
-        <span class="n">connect</span><span class="p">(</span><span class="s2">"total_cost.total_cost"</span><span class="p">,</span> <span class="s2">"cost_per_unit.total_cost"</span><span class="p">),</span>
-        <span class="n">connect</span><span class="p">(</span><span class="s2">"output_stock.total_output"</span><span class="p">,</span> <span class="s2">"cost_per_unit.total_output"</span><span class="p">),</span>
-    <span class="p">],</span>
-<span class="p">)</span>
 
-<span class="nb">print</span><span class="p">(</span><span class="s2">"Production line process created successfully!"</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Process has </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">process</span><span class="o">.</span><span class="n">components</span><span class="p">)</span><span class="si">}</span><span class="s2"> components and </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">process</span><span class="o">.</span><span class="n">connectors</span><span class="p">)</span><span class="si">}</span><span class="s2"> connectors"</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">Move</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">Enum</span><span class="p">):</span>
+    <span class="n">rock</span> <span class="o">=</span> <span class="s2">"rock"</span>
+    <span class="n">paper</span> <span class="o">=</span> <span class="s2">"paper"</span>
+    <span class="n">scissors</span> <span class="o">=</span> <span class="s2">"scissors"</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">result_against</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="s2">"Move"</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Result</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span> <span class="o">==</span> <span class="n">other</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">Result</span><span class="o">.</span><span class="n">draw</span>
+
+        <span class="n">outcomes</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="p">(</span><span class="n">Move</span><span class="o">.</span><span class="n">rock</span><span class="p">,</span> <span class="n">Move</span><span class="o">.</span><span class="n">paper</span><span class="p">):</span> <span class="n">Result</span><span class="o">.</span><span class="n">lose</span><span class="p">,</span>
+            <span class="p">(</span><span class="n">Move</span><span class="o">.</span><span class="n">rock</span><span class="p">,</span> <span class="n">Move</span><span class="o">.</span><span class="n">scissors</span><span class="p">):</span> <span class="n">Result</span><span class="o">.</span><span class="n">win</span><span class="p">,</span>
+            <span class="p">(</span><span class="n">Move</span><span class="o">.</span><span class="n">paper</span><span class="p">,</span> <span class="n">Move</span><span class="o">.</span><span class="n">rock</span><span class="p">):</span> <span class="n">Result</span><span class="o">.</span><span class="n">win</span><span class="p">,</span>
+            <span class="p">(</span><span class="n">Move</span><span class="o">.</span><span class="n">paper</span><span class="p">,</span> <span class="n">Move</span><span class="o">.</span><span class="n">scissors</span><span class="p">):</span> <span class="n">Result</span><span class="o">.</span><span class="n">lose</span><span class="p">,</span>
+            <span class="p">(</span><span class="n">Move</span><span class="o">.</span><span class="n">scissors</span><span class="p">,</span> <span class="n">Move</span><span class="o">.</span><span class="n">paper</span><span class="p">):</span> <span class="n">Result</span><span class="o">.</span><span class="n">win</span><span class="p">,</span>
+            <span class="p">(</span><span class="n">Move</span><span class="o">.</span><span class="n">scissors</span><span class="p">,</span> <span class="n">Move</span><span class="o">.</span><span class="n">rock</span><span class="p">):</span> <span class="n">Result</span><span class="o">.</span><span class="n">lose</span><span class="p">,</span>
+        <span class="p">}</span>
+        <span class="k">return</span> <span class="n">outcomes</span><span class="p">[(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">)]</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">PlayerDecision</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+    <span class="n">choice</span><span class="p">:</span> <span class="n">Move</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="o">...</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">"One of rock, paper, or scissors"</span><span class="p">)</span>
+    <span class="n">rationale</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="o">...</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">"Brief reason for the choice"</span><span class="p">)</span>
 </pre></div>
-<div class="clipboard-copy-txt" id="cell-3">connect = lambda in_, out_: AsyncioConnector(spec=ConnectorSpec(source=in_, target=out_))
+<div class="clipboard-copy-txt" id="cell-3">class Result(str, Enum):
+    win = "win"
+    lose = "lose"
+    draw = "draw"
 
-process = LocalProcess(
-    components=[
-        # Input component provides items
-        Input(name="input", items_per_step=10),
-        # Stockpile manages inventory and storage costs
-        # We need to include initial values here to resolve a circular graph
-        InputStockpile(
-            name="stockpile",
-            initial_values={"machine1_running": [False], "machine2_running": [False]},
-        ),
-        # Controllers decide when machines should run
-        Controller(name="controller1", threshold=30),  # Machine 1 threshold
-        Controller(name="controller2", threshold=50),  # Machine 2 threshold
-        # Machine cost components
-        MachineCost(name="machine1_cost", cost_per_step=100.0),
-        MachineCost(name="machine2_cost", cost_per_step=200.0),
-        # Output tracking
-        OutputStock(name="output_stock"),
-        # Cost tracking and calculation
-        TotalCost(name="total_cost"),
-        CostPerUnit(name="cost_per_unit"),
-    ],
-    connectors=[
-        # Input flow
-        connect("input.items", "stockpile.incoming_items"),
-        # Stockpile to controllers
-        connect("stockpile.size", "controller1.stockpile_size"),
-        connect("stockpile.size", "controller2.stockpile_size"),
-        # Controllers to machine costs
-        connect("controller1.should_run", "machine1_cost.is_running"),
-        connect("controller2.should_run", "machine2_cost.is_running"),
-        # Controllers to stockpile (for processing)
-        connect("controller1.should_run", "stockpile.machine1_running"),
-        connect("controller2.should_run", "stockpile.machine2_running"),
-        # Controllers to output stock
-        connect("controller1.should_run", "output_stock.machine1_running"),
-        connect("controller2.should_run", "output_stock.machine2_running"),
-        # All costs to total cost
-        connect("stockpile.storage_cost", "total_cost.storage_cost"),
-        connect("machine1_cost.cost", "total_cost.machine1_cost"),
-        connect("machine2_cost.cost", "total_cost.machine2_cost"),
-        # Total cost and output to cost per unit
-        connect("total_cost.total_cost", "cost_per_unit.total_cost"),
-        connect("output_stock.total_output", "cost_per_unit.total_output"),
-    ],
-)
 
-print("Production line process created successfully!")
-print(f"Process has {len(process.components)} components and {len(process.connectors)} connectors")</div>
+class Move(str, Enum):
+    rock = "rock"
+    paper = "paper"
+    scissors = "scissors"
+
+    def result_against(self, other: "Move") -&gt; Result:
+        if self == other:
+            return Result.draw
+
+        outcomes = {
+            (Move.rock, Move.paper): Result.lose,
+            (Move.rock, Move.scissors): Result.win,
+            (Move.paper, Move.rock): Result.win,
+            (Move.paper, Move.scissors): Result.lose,
+            (Move.scissors, Move.paper): Result.win,
+            (Move.scissors, Move.rock): Result.lose,
+        }
+        return outcomes[(self, other)]
+
+
+class PlayerDecision(BaseModel):
+    choice: Move = Field(..., description="One of rock, paper, or scissors")
+    rationale: str = Field(..., description="Brief reason for the choice")</div>
 </div>
 </div>
-</div>
-</div>
-</div>
-</div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=6">
-<div class="jp-Cell-inputWrapper" tabindex="0">
-<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
-</div>
-<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
-</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<p>We can create a diagram of the process to make a visual check.</p>
-<p><img alt="Process Diagram" src="https://mermaid.ink/img/pako:eNq1llFrgzAUhf9KyKO0D_VRShn0abCxsXVvA0njLYbGROKVPYj_fSbO1jFsQe-ePefky81JsOHSZsATftL2S-bCIXt6-zSMKVPW-NCwKhclJMzZ2mSQrZgWR9AJe_Sft0e3i6KgjCLWsvV6xyq08lwqDXe874OuD7nYfJBfnyInAElr0FmtwW2mo_YXUR8zMv0jUDwHKB6AKDYWgAohc2Vgk0pb3Tjy516270R91i_fX6r5uxtTxTOp4gmqhbOiqjfZmOiBFk7I1tgtl4YFppNegipA9VFjG_mQCJnIngG0KPSdch-85lrtq2WgIbu65EjL7y0d0uKQn3e7wrQEl9ZG4a0-VvgK7qMTDYUc-QYkokbSgvEVL8AVQmU8aTjmUPg_gwxOotbI2_YbJkviBg=="/></p>
 </div>
 </div>
 </div>
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
-<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=7">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=5">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -2736,24 +2360,112 @@ print(f"Process has {len(process.components)} components and {len(process.connec
 </div>
 </clipboard-copy>
 </div>
-<div class="highlight-ipynb hl-python"><pre><span></span><span class="c1"># Visualize the process flow</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">plugboard.diagram</span><span class="w"> </span><span class="kn">import</span> <span class="n">MermaidDiagram</span>
+<div class="highlight-ipynb hl-python"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">RoundIterator</span><span class="p">(</span><span class="n">Component</span><span class="p">):</span>
+    <span class="n">io</span> <span class="o">=</span> <span class="n">IO</span><span class="p">(</span><span class="n">outputs</span><span class="o">=</span><span class="p">[</span><span class="s2">"round"</span><span class="p">])</span>
 
-<span class="n">diagram_url</span> <span class="o">=</span> <span class="n">MermaidDiagram</span><span class="o">.</span><span class="n">from_process</span><span class="p">(</span><span class="n">process</span><span class="p">)</span><span class="o">.</span><span class="n">url</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">diagram_url</span><span class="p">)</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rounds</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">5</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">_t</span><span class="o">.</span><span class="n">Unpack</span><span class="p">[</span><span class="n">ComponentArgsDict</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_rounds</span> <span class="o">=</span> <span class="n">rounds</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_i</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">step</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_i</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rounds</span><span class="p">:</span>
+            <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+            <span class="k">return</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">round</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_i</span> <span class="o">+</span> <span class="mi">1</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_i</span> <span class="o">+=</span> <span class="mi">1</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">Judge</span><span class="p">(</span><span class="n">Component</span><span class="p">):</span>
+    <span class="n">io</span> <span class="o">=</span> <span class="n">IO</span><span class="p">(</span><span class="n">inputs</span><span class="o">=</span><span class="p">[</span><span class="s2">"a_choice"</span><span class="p">,</span> <span class="s2">"b_choice"</span><span class="p">],</span> <span class="n">outputs</span><span class="o">=</span><span class="p">[</span><span class="s2">"score_a"</span><span class="p">,</span> <span class="s2">"score_b"</span><span class="p">,</span> <span class="s2">"last_winner"</span><span class="p">])</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">_t</span><span class="o">.</span><span class="n">Unpack</span><span class="p">[</span><span class="n">ComponentArgsDict</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">score_a</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">score_b</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">step</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">a_choice</span><span class="o">.</span><span class="n">result_against</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">b_choice</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">result</span> <span class="o">==</span> <span class="n">Result</span><span class="o">.</span><span class="n">lose</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">score_b</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">last_winner</span> <span class="o">=</span> <span class="s2">"Player B"</span>
+        <span class="k">elif</span> <span class="n">result</span> <span class="o">==</span> <span class="n">Result</span><span class="o">.</span><span class="n">win</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">score_a</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">last_winner</span> <span class="o">=</span> <span class="s2">"Player A"</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">last_winner</span> <span class="o">=</span> <span class="s2">"Draw"</span>
+
+
+<span class="c1"># Prompt builder to feed LLMChat</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">PromptBuilder</span><span class="p">(</span><span class="n">Component</span><span class="p">):</span>
+    <span class="n">io</span> <span class="o">=</span> <span class="n">IO</span><span class="p">(</span><span class="n">inputs</span><span class="o">=</span><span class="p">[</span><span class="s2">"round"</span><span class="p">,</span> <span class="s2">"last_winner"</span><span class="p">],</span> <span class="n">outputs</span><span class="o">=</span><span class="p">[</span><span class="s2">"prompt"</span><span class="p">])</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">player_label</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">_t</span><span class="o">.</span><span class="n">Unpack</span><span class="p">[</span><span class="n">ComponentArgsDict</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_label</span> <span class="o">=</span> <span class="n">player_label</span>
+
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">step</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">prompt</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"Round </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">round</span><span class="si">}</span><span class="s2">. You are player </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_label</span><span class="si">}</span><span class="s2">. The last winner was: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">last_winner</span><span class="si">}</span><span class="s2">. "</span>
+            <span class="s2">"Choose your move now."</span>
+        <span class="p">)</span>
 </pre></div>
-<div class="clipboard-copy-txt" id="cell-4"># Visualize the process flow
-from plugboard.diagram import MermaidDiagram
+<div class="clipboard-copy-txt" id="cell-4">class RoundIterator(Component):
+    io = IO(outputs=["round"])
 
-diagram_url = MermaidDiagram.from_process(process).url
-print(diagram_url)</div>
+    def __init__(self, rounds: int = 5, **kwargs: _t.Unpack[ComponentArgsDict]) -&gt; None:
+        super().__init__(**kwargs)
+        self._rounds = rounds
+        self._i = 0
+
+    async def step(self) -&gt; None:
+        if self._i &gt;= self._rounds:
+            await self.io.close()
+            return
+        self.round = self._i + 1
+        self._i += 1
+
+
+class Judge(Component):
+    io = IO(inputs=["a_choice", "b_choice"], outputs=["score_a", "score_b", "last_winner"])
+
+    def __init__(self, **kwargs: _t.Unpack[ComponentArgsDict]) -&gt; None:
+        super().__init__(**kwargs)
+        self.score_a = 0
+        self.score_b = 0
+
+    async def step(self) -&gt; None:
+        result = self.a_choice.result_against(self.b_choice)
+        if result == Result.lose:
+            self.score_b += 1
+            self.last_winner = "Player B"
+        elif result == Result.win:
+            self.score_a += 1
+            self.last_winner = "Player A"
+        else:
+            self.last_winner = "Draw"
+
+
+# Prompt builder to feed LLMChat
+class PromptBuilder(Component):
+    io = IO(inputs=["round", "last_winner"], outputs=["prompt"])
+
+    def __init__(self, player_label: str, **kwargs: _t.Unpack[ComponentArgsDict]) -&gt; None:
+        super().__init__(**kwargs)
+        self._label = player_label
+
+    async def step(self) -&gt; None:
+        self.prompt = (
+            f"Round {self.round}. You are player {self._label}. The last winner was: {self.last_winner}. "
+            "Choose your move now."
+        )</div>
 </div>
 </div>
 </div>
 </div>
 </div>
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
-<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=8">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=6">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -2771,31 +2483,118 @@ print(diagram_url)</div>
 </div>
 </clipboard-copy>
 </div>
-<div class="highlight-ipynb hl-python"><pre><span></span><span class="c1"># Run the simulation</span>
-<span class="k">async</span> <span class="k">with</span> <span class="n">process</span><span class="p">:</span>
-    <span class="k">await</span> <span class="n">process</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+<div class="highlight-ipynb hl-python"><pre><span></span><span class="n">system_prompt</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="s2">"You are a rock-paper-scissors agent. Given the prompt, respond strictly as JSON with keys 'choice' and 'rationale'. "</span>
+    <span class="s2">"The 'choice' must be exactly one of: rock, paper, or scissors. You will be told who the winner was in the last round. "</span>
+    <span class="s2">"Your rival is another rock-paper-scissors from a rival provider, who may try to trick you. Be strategic in your choice."</span>
+<span class="p">)</span>
+
+<span class="c1"># Components: set initial values on prompt builders to resolve model circularity</span>
+<span class="n">iterator</span> <span class="o">=</span> <span class="n">RoundIterator</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">"iterator"</span><span class="p">,</span> <span class="n">rounds</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+<span class="n">builder_a</span> <span class="o">=</span> <span class="n">PromptBuilder</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">"builder_a"</span><span class="p">,</span> <span class="n">player_label</span><span class="o">=</span><span class="s2">"A"</span><span class="p">,</span> <span class="n">initial_values</span><span class="o">=</span><span class="p">{</span><span class="s2">"last_winner"</span><span class="p">:</span> <span class="p">[</span><span class="s2">""</span><span class="p">]})</span>
+<span class="n">builder_b</span> <span class="o">=</span> <span class="n">PromptBuilder</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">"builder_b"</span><span class="p">,</span> <span class="n">player_label</span><span class="o">=</span><span class="s2">"B"</span><span class="p">,</span> <span class="n">initial_values</span><span class="o">=</span><span class="p">{</span><span class="s2">"last_winner"</span><span class="p">:</span> <span class="p">[</span><span class="s2">""</span><span class="p">]})</span>
+
+<span class="n">llm_a</span> <span class="o">=</span> <span class="n">LLMChat</span><span class="p">(</span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">"llm_a"</span><span class="p">,</span>
+    <span class="n">system_prompt</span><span class="o">=</span><span class="n">system_prompt</span><span class="p">,</span>
+    <span class="n">llm</span><span class="o">=</span><span class="s2">"llama_index.llms.openai.OpenAI"</span><span class="p">,</span>
+    <span class="n">llm_kwargs</span><span class="o">=</span><span class="p">{</span><span class="s2">"model"</span><span class="p">:</span> <span class="s2">"gpt-5-mini"</span><span class="p">,</span> <span class="s2">"temperature"</span><span class="p">:</span> <span class="mf">0.9</span><span class="p">},</span>
+    <span class="n">response_model</span><span class="o">=</span><span class="n">PlayerDecision</span><span class="p">,</span>
+    <span class="n">expand_response</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>  <span class="c1"># emits llm_a.choice and llm_a.rationale</span>
+    <span class="n">context_window</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">llm_b</span> <span class="o">=</span> <span class="n">LLMChat</span><span class="p">(</span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">"llm_b"</span><span class="p">,</span>
+    <span class="n">system_prompt</span><span class="o">=</span><span class="n">system_prompt</span><span class="p">,</span>
+    <span class="n">llm</span><span class="o">=</span><span class="s2">"llama_index.llms.gemini.Gemini"</span><span class="p">,</span>
+    <span class="n">llm_kwargs</span><span class="o">=</span><span class="p">{</span><span class="s2">"model"</span><span class="p">:</span> <span class="s2">"models/gemini-2.5-flash"</span><span class="p">,</span> <span class="s2">"temperature"</span><span class="p">:</span> <span class="mf">0.9</span><span class="p">},</span>
+    <span class="n">response_model</span><span class="o">=</span><span class="n">PlayerDecision</span><span class="p">,</span>
+    <span class="n">expand_response</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">context_window</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">judge</span> <span class="o">=</span> <span class="n">Judge</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">"judge"</span><span class="p">)</span>
+
+<span class="n">connect</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">src</span><span class="p">,</span> <span class="n">dst</span><span class="p">:</span> <span class="n">AsyncioConnector</span><span class="p">(</span><span class="n">spec</span><span class="o">=</span><span class="n">ConnectorSpec</span><span class="p">(</span><span class="n">source</span><span class="o">=</span><span class="n">src</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="n">dst</span><span class="p">))</span>
+
+<span class="n">process</span> <span class="o">=</span> <span class="n">LocalProcess</span><span class="p">(</span>
+    <span class="n">components</span><span class="o">=</span><span class="p">[</span><span class="n">iterator</span><span class="p">,</span> <span class="n">builder_a</span><span class="p">,</span> <span class="n">builder_b</span><span class="p">,</span> <span class="n">llm_a</span><span class="p">,</span> <span class="n">llm_b</span><span class="p">,</span> <span class="n">judge</span><span class="p">],</span>
+    <span class="n">connectors</span><span class="o">=</span><span class="p">[</span>
+        <span class="c1"># Broadcast tick/round</span>
+        <span class="n">connect</span><span class="p">(</span><span class="s2">"iterator.round"</span><span class="p">,</span> <span class="s2">"builder_a.round"</span><span class="p">),</span>
+        <span class="n">connect</span><span class="p">(</span><span class="s2">"iterator.round"</span><span class="p">,</span> <span class="s2">"builder_b.round"</span><span class="p">),</span>
+        <span class="c1"># Feed prompts into LLMs</span>
+        <span class="n">connect</span><span class="p">(</span><span class="s2">"builder_a.prompt"</span><span class="p">,</span> <span class="s2">"llm_a.prompt"</span><span class="p">),</span>
+        <span class="n">connect</span><span class="p">(</span><span class="s2">"builder_b.prompt"</span><span class="p">,</span> <span class="s2">"llm_b.prompt"</span><span class="p">),</span>
+        <span class="c1"># Send choices to judge</span>
+        <span class="n">connect</span><span class="p">(</span><span class="s2">"llm_a.choice"</span><span class="p">,</span> <span class="s2">"judge.a_choice"</span><span class="p">),</span>
+        <span class="n">connect</span><span class="p">(</span><span class="s2">"llm_b.choice"</span><span class="p">,</span> <span class="s2">"judge.b_choice"</span><span class="p">),</span>
+        <span class="c1"># Feed the last winner information back into the prompt builders</span>
+        <span class="n">connect</span><span class="p">(</span><span class="s2">"judge.last_winner"</span><span class="p">,</span> <span class="s2">"builder_a.last_winner"</span><span class="p">),</span>
+        <span class="n">connect</span><span class="p">(</span><span class="s2">"judge.last_winner"</span><span class="p">,</span> <span class="s2">"builder_b.last_winner"</span><span class="p">),</span>
+    <span class="p">],</span>
+<span class="p">)</span>
 </pre></div>
-<div class="clipboard-copy-txt" id="cell-5"># Run the simulation
-async with process:
-    await process.run()</div>
+<div class="clipboard-copy-txt" id="cell-5">system_prompt = (
+    "You are a rock-paper-scissors agent. Given the prompt, respond strictly as JSON with keys 'choice' and 'rationale'. "
+    "The 'choice' must be exactly one of: rock, paper, or scissors. You will be told who the winner was in the last round. "
+    "Your rival is another rock-paper-scissors from a rival provider, who may try to trick you. Be strategic in your choice."
+)
+
+# Components: set initial values on prompt builders to resolve model circularity
+iterator = RoundIterator(name="iterator", rounds=10)
+builder_a = PromptBuilder(name="builder_a", player_label="A", initial_values={"last_winner": [""]})
+builder_b = PromptBuilder(name="builder_b", player_label="B", initial_values={"last_winner": [""]})
+
+llm_a = LLMChat(
+    name="llm_a",
+    system_prompt=system_prompt,
+    llm="llama_index.llms.openai.OpenAI",
+    llm_kwargs={"model": "gpt-5-mini", "temperature": 0.9},
+    response_model=PlayerDecision,
+    expand_response=True,  # emits llm_a.choice and llm_a.rationale
+    context_window=3,
+)
+
+llm_b = LLMChat(
+    name="llm_b",
+    system_prompt=system_prompt,
+    llm="llama_index.llms.gemini.Gemini",
+    llm_kwargs={"model": "models/gemini-2.5-flash", "temperature": 0.9},
+    response_model=PlayerDecision,
+    expand_response=True,
+    context_window=3,
+)
+
+judge = Judge(name="judge")
+
+connect = lambda src, dst: AsyncioConnector(spec=ConnectorSpec(source=src, target=dst))
+
+process = LocalProcess(
+    components=[iterator, builder_a, builder_b, llm_a, llm_b, judge],
+    connectors=[
+        # Broadcast tick/round
+        connect("iterator.round", "builder_a.round"),
+        connect("iterator.round", "builder_b.round"),
+        # Feed prompts into LLMs
+        connect("builder_a.prompt", "llm_a.prompt"),
+        connect("builder_b.prompt", "llm_b.prompt"),
+        # Send choices to judge
+        connect("llm_a.choice", "judge.a_choice"),
+        connect("llm_b.choice", "judge.b_choice"),
+        # Feed the last winner information back into the prompt builders
+        connect("judge.last_winner", "builder_a.last_winner"),
+        connect("judge.last_winner", "builder_b.last_winner"),
+    ],
+)</div>
 </div>
 </div>
-</div>
-</div>
-</div>
-</div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=9">
-<div class="jp-Cell-inputWrapper" tabindex="0">
-<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
-</div>
-<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
-</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<p>At the end of the simulation, the final cost per unit is available on the <code>CostPerUnit</code> component output.</p>
 </div>
 </div>
 </div>
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
-<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=10">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=7">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -2813,39 +2612,42 @@ async with process:
 </div>
 </clipboard-copy>
 </div>
-<div class="highlight-ipynb hl-python"><pre><span></span><span class="n">final_cost</span> <span class="o">=</span> <span class="n">process</span><span class="o">.</span><span class="n">components</span><span class="p">[</span><span class="s2">"cost_per_unit"</span><span class="p">]</span><span class="o">.</span><span class="n">cost_per_unit</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Final cost per unit: $</span><span class="si">{</span><span class="n">final_cost</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+<div class="highlight-ipynb hl-python"><pre><span></span><span class="c1"># Run the process</span>
+<span class="k">async</span> <span class="k">with</span> <span class="n">process</span><span class="p">:</span>
+    <span class="k">await</span> <span class="n">process</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
 </pre></div>
-<div class="clipboard-copy-txt" id="cell-6">final_cost = process.components["cost_per_unit"].cost_per_unit
-print(f"Final cost per unit: ${final_cost:.2f}")</div>
+<div class="clipboard-copy-txt" id="cell-6"># Run the process
+async with process:
+    await process.run()</div>
 </div>
 </div>
 </div>
 </div>
 </div>
-</div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=11">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=8">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
-<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
-</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<p>Now suppose we want to build an optimisation to find the best values of the threshold settings on <code>controller1</code> and <code>controller2</code>. Specifically we want to minimise <code>cost_per_unit</code> by choosing the settings on the two controllers. The easiest way to do this is to convert our model to Python code with an associated YAML config file. See:</p>
-<ul>
-<li><code>production_line.py</code>; and</li>
-<li><code>production-line.yaml</code>.</li>
-</ul>
-<p>The easiest way to launch an optimisation job is via the CLI by running:</p>
-<div class="highlight"><pre><span></span>plugboard<span class="w"> </span>process<span class="w"> </span>tune<span class="w"> </span>production-line.yaml
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="CodeMirror cm-s-jupyter">
+<div class="zeroclipboard-container">
+<clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-7">
+<div>
+<span class="notice" hidden="">Copied!</span>
+<svg aria-hidden="true" class="clipboard-copy-icon" data-view-component="true" height="20" version="1.1" viewbox="0 0 16 16" width="20">
+<path d="M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 010 1.5h-1.5a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-1.5a.75.75 0 011.5 0v1.5A1.75 1.75 0 019.25 16h-7.5A1.75 1.75 0 010 14.25v-7.5z" fill="currentColor" fill-rule="evenodd"></path>
+<path d="M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0114.25 11h-7.5A1.75 1.75 0 015 9.25v-7.5zm1.75-.25a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-7.5a.25.25 0 00-.25-.25h-7.5z" fill="currentColor" fill-rule="evenodd"></path>
+</svg>
+</div>
+</clipboard-copy>
+</div>
+<div class="highlight-ipynb hl-python"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Final scores — A: </span><span class="si">{</span><span class="n">judge</span><span class="o">.</span><span class="n">score_a</span><span class="si">}</span><span class="s2">, B: </span><span class="si">{</span><span class="n">judge</span><span class="o">.</span><span class="n">score_b</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 </pre></div>
-<p>This will use Optuna to explore the parameter space and report the controller thresholds that minimise cost per unit at the end of the run, for example:</p>
-<pre><code>Best parameters found:
-Config: {'controller1.threshold': 10, 'controller2.threshold': 38} - Metrics: {'cost_per_unit.cost_per_unit': 22.491974317817014, 'timestamp': 1755022664, 
-'checkpoint_dir_name': None, 'done': True, 'training_iteration': 1, 'trial_id': '287aff0b', 'date': '2025-08-12_19-17-44', 'time_this_iter_s': 2.224583864212036, 
-'time_total_s': 2.224583864212036, 'pid': 94765, 'hostname': 'hostname.local', 'node_ip': '127.0.0.1', 'config': {'controller1.threshold': 10, 
-'controller2.threshold': 38}, 'time_since_restore': 2.224583864212036, 'iterations_since_restore': 1, 'experiment_tag': 
-'14_controller1_threshold=10,controller2_threshold=38'}
-</code></pre>
+<div class="clipboard-copy-txt" id="cell-7">print(f"Final scores — A: {judge.score_a}, B: {judge.score_b}")</div>
+</div>
+</div>
 </div>
 </div>
 </div>
