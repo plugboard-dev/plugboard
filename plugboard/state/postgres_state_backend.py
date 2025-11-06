@@ -1,16 +1,16 @@
-"""Provides `SqliteStateBackend` for single host persistent state handling."""
+"""Provides `PostgresStateBackend` for multi-host persistent state handling."""
 
 from __future__ import annotations
 
 import typing as _t
 
-import aiosqlite
 from async_lru import alru_cache
+import asyncpg
 import msgspec
 
 from plugboard.exceptions import NotFoundError
 from plugboard.schemas.state import Status
-from plugboard.state import sqlite_queries as q
+from plugboard.state import postgres_queries as q
 from plugboard.state.state_backend import StateBackend
 
 
@@ -20,13 +20,35 @@ if _t.TYPE_CHECKING:  # pragma: no cover
     from plugboard.process import Process
 
 
-class SqliteStateBackend(StateBackend):
-    """`SqliteStateBackend` handles single host persistent state."""
+class PostgresStateBackend(StateBackend):
+    """`PostgresStateBackend` handles multi-host persistent state using PostgreSQL."""
 
-    def __init__(self, db_path: str = "plugboard.db", *args: _t.Any, **kwargs: _t.Any) -> None:
-        """Initializes `SqliteStateBackend` with `db_path`."""
-        self._db_path: str = db_path
+    def __init__(
+        self,
+        db_url: str = "postgresql://plugboard:plugboard@localhost:5432/plugboard",
+        *args: _t.Any,
+        **kwargs: _t.Any,
+    ) -> None:
+        """Initializes `PostgresStateBackend` with `db_url`."""
+        self._db_url: str = db_url
+        self._pool: asyncpg.Pool | None = None
         super().__init__(*args, **kwargs)
+
+    def __getstate__(self) -> dict:
+        state = super().__getstate__()
+        del state["_pool"]
+        return state
+
+    def __setstate__(self, state: dict) -> None:
+        super().__setstate__(state)
+        self._pool = None
+
+    async def _get_pool(self) -> asyncpg.Pool:
+        if self._pool is None:
+            self._pool = await asyncpg.create_pool(self._db_url)
+        if self._pool is None:
+            raise ConnectionError("Could not create connection pool")
+        return self._pool
 
     async def _get(self, key: str | tuple[str, ...], value: _t.Optional[_t.Any] = None) -> _t.Any:
         """Returns a value from the state."""
@@ -38,50 +60,49 @@ class SqliteStateBackend(StateBackend):
 
     async def _initialise_db(self) -> None:
         """Initializes the database."""
-        async with aiosqlite.connect(self._db_path) as db:
-            await db.executescript(q.CREATE_TABLE)
-            await db.commit()
+        pool = await self._get_pool()
+        async with pool.acquire() as connection:
+            await connection.execute(q.CREATE_TABLE)
 
     async def init(self) -> None:
-        """Initializes the `SqliteStateBackend`."""
+        """Initializes the `PostgresStateBackend`."""
         await self._initialise_db()
         await super().init()
 
     async def destroy(self) -> None:
-        """Destroys the `SqliteStateBackend`."""
+        """Destroys the `PostgresStateBackend`."""
         await super().destroy()
+        if self._pool:
+            await self._pool.close()
         self._get_db_id.cache_clear()
         self._get_process_id_for_component.cache_clear()
         self._get_process_id_for_connector.cache_clear()
 
     async def _fetchone(
         self, statement: str, params: _t.Tuple[_t.Any, ...]
-    ) -> aiosqlite.Row | None:
-        async with aiosqlite.connect(self._db_path) as db:
-            db.row_factory = aiosqlite.Row
-            cursor = await db.execute(statement, params)
-            row = await cursor.fetchone()
-            return row
+    ) -> asyncpg.Record | None:
+        pool = await self._get_pool()
+        async with pool.acquire() as connection:
+            return await connection.fetchrow(statement, *params)
 
     async def _get_object(self, statement: str, params: _t.Tuple[_t.Any, ...]) -> dict | None:
         """Returns an object from the state."""
         row = await self._fetchone(statement, params)
         if row is None:
             return None
-        data_json = row["data"]
-        object_data = msgspec.json.decode(data_json)
+        object_data = msgspec.json.decode(row["data"])
         return object_data
 
     async def _execute(self, statement: str, params: _t.Tuple[_t.Any, ...]) -> None:
         """Executes a statement in the state."""
-        async with aiosqlite.connect(self._db_path) as db:
-            await db.execute(statement, params)
-            await db.commit()
+        pool = await self._get_pool()
+        async with pool.acquire() as connection:
+            await connection.execute(statement, *params)
 
     async def _upsert_job(self, job_data: dict) -> None:
         """Upserts a job into the state."""
-        job_json = msgspec.json.encode(job_data)
-        await self._execute(q.UPSERT_JOB, (job_json,))
+        job_id = job_data["job_id"]
+        await self._execute(q.UPSERT_JOB, (job_id, msgspec.json.encode(job_data).decode()))
 
     async def _get_job(self, job_id: str) -> dict:
         """Returns a job from the state."""
@@ -98,41 +119,52 @@ class SqliteStateBackend(StateBackend):
         connector_data = process_data.pop("connectors")
         process_data["components"] = {k: {} for k in component_data.keys()}
         process_data["connectors"] = {k: {} for k in connector_data.keys()}
-        process_json = msgspec.json.encode(process_data)
-        async with aiosqlite.connect(self._db_path) as db:
-            await db.execute(q.UPSERT_PROCESS, (process_json, process_db_id, self.job_id))
 
-            async def _upsert_children(children: dict, q_set_id: str, q_upsert_child: str) -> None:
-                children_ids = []
-                children_json = []
-                for child_id, child in children.items():
-                    child_db_id = self._get_db_id(child_id)
-                    children_ids.append((process_db_id, child_db_id))
-                    child_json = msgspec.json.encode(child) if with_components else "{}"
-                    children_json.append((child_json, child_db_id, process_db_id))
-                await db.executemany(q_set_id, children_ids)
-                await db.executemany(q_upsert_child, children_json)
-
-            await _upsert_children(component_data, q.SET_PROCESS_FOR_COMPONENT, q.UPSERT_COMPONENT)
-            await _upsert_children(connector_data, q.SET_PROCESS_FOR_CONNECTOR, q.UPSERT_CONNECTOR)
-
-            await db.commit()
+        pool = await self._get_pool()
+        async with pool.acquire() as connection:
+            async with connection.transaction():
+                await connection.execute(
+                    q.UPSERT_PROCESS,
+                    process_db_id,
+                    msgspec.json.encode(process_data).decode(),
+                    self.job_id,
+                )
+                for component in component_data.values():
+                    component_db_id = self._get_db_id(component["id"])
+                    await connection.execute(
+                        q.UPSERT_COMPONENT,
+                        component_db_id,
+                        msgspec.json.encode(component).decode() if with_components else "{}",
+                        process_db_id,
+                    )
+                    await connection.execute(
+                        q.SET_PROCESS_FOR_COMPONENT, process_db_id, component_db_id
+                    )
+                for connector in connector_data.values():
+                    connector_db_id = self._get_db_id(connector["id"])
+                    await connection.execute(
+                        q.UPSERT_CONNECTOR,
+                        connector_db_id,
+                        msgspec.json.encode(connector).decode() if with_components else "{}",
+                        process_db_id,
+                    )
+                    await connection.execute(
+                        q.SET_PROCESS_FOR_CONNECTOR, process_db_id, connector_db_id
+                    )
 
     async def get_process(self, process_id: str) -> dict:
         """Returns a process from the state."""
         process_db_id = self._get_db_id(process_id)
-        async with aiosqlite.connect(self._db_path) as db:
-            db.row_factory = aiosqlite.Row
-            cursor = await db.execute(q.GET_PROCESS, (process_db_id,))
-            row = await cursor.fetchone()
-            if row is None:
-                raise NotFoundError(f"Process with id {process_db_id} not found.")
-            data_json = row["data"]
-            cursor = await db.execute(q.GET_COMPONENTS_FOR_PROCESS, (process_db_id,))
-            component_rows = await cursor.fetchall()
-            cursor = await db.execute(q.GET_CONNECTORS_FOR_PROCESS, (process_db_id,))
-            connector_rows = await cursor.fetchall()
-        process_data = msgspec.json.decode(data_json)
+        pool = await self._get_pool()
+        async with pool.acquire() as connection:
+            process_row = await connection.fetchrow(q.GET_PROCESS, process_db_id)
+            if not process_row:
+                raise NotFoundError(f"Process with id {process_id} not found.")
+            process_data = msgspec.json.decode(process_row["data"])
+
+            component_rows = await connection.fetch(q.GET_COMPONENTS_FOR_PROCESS, process_db_id)
+            connector_rows = await connection.fetch(q.GET_CONNECTORS_FOR_PROCESS, process_db_id)
+
         process_components = {
             self._strip_job_id(row["id"]): msgspec.json.decode(row["data"])
             for row in component_rows
@@ -152,27 +184,25 @@ class SqliteStateBackend(StateBackend):
 
     @alru_cache(maxsize=128)
     async def _get_process_id_for_component(self, component_id: str) -> str:
-        """Returns the database id of the process which a component belongs to.
-
-        If a component does not belong to any process, it is associated with a null process.
-        """
         component_db_id = self._get_db_id(component_id)
         row = await self._fetchone(q.GET_PROCESS_FOR_COMPONENT, (component_db_id,))
-        if row is None:
+        if row is None or row["process_id"] is None:
             raise NotFoundError(f"No process found for component with ID {component_id}")
-        process_id = row["process_id"]
-        return process_id
+        return row["process_id"]
 
     async def upsert_component(self, component: Component) -> None:
         """Upserts a component into the state."""
-        process_db_id = await self._get_process_id_for_component(component.id)
+        process_id = await self._get_process_id_for_component(component.id)
+        process_db_id = self._get_db_id(process_id)
         component_db_id = self._get_db_id(component.id)
         component_data = component.dict()
-        component_json = msgspec.json.encode(component_data)
-        await self._execute(q.UPSERT_COMPONENT, (component_json, component_db_id, process_db_id))
+        await self._execute(
+            q.UPSERT_COMPONENT,
+            (component_db_id, msgspec.json.encode(component_data).decode(), process_db_id),
+        )
         if component.status in {Status.FAILED}:
             # If the component is terminal, update the process status
-            await self._update_process_status(process_db_id, component.status)
+            await self.update_process_status(process_id, component.status)
 
     async def get_component(self, component_id: str) -> dict:
         """Returns a component from the state."""
@@ -184,24 +214,23 @@ class SqliteStateBackend(StateBackend):
 
     @alru_cache(maxsize=128)
     async def _get_process_id_for_connector(self, connector_id: str) -> str:
-        """Returns the database id of the process which a connector belongs to.
-
-        If a connector does not belong to any process, it is associated with a null process.
-        """
+        """Returns the process id for a connector."""
         connector_db_id = self._get_db_id(connector_id)
         row = await self._fetchone(q.GET_PROCESS_FOR_CONNECTOR, (connector_db_id,))
-        if row is None:
+        if row is None or row["process_id"] is None:
             raise NotFoundError(f"No process found for connector with ID {connector_id}")
-        process_id = row["process_id"]
-        return process_id
+        return row["process_id"]
 
     async def upsert_connector(self, connector: Connector) -> None:
         """Upserts a connector into the state."""
-        process_db_id = await self._get_process_id_for_connector(connector.id)
+        process_id = await self._get_process_id_for_connector(connector.id)
+        process_db_id = self._get_db_id(process_id)
         connector_db_id = self._get_db_id(connector.id)
         connector_data = connector.dict()
-        connector_json = msgspec.json.encode(connector_data)
-        await self._execute(q.UPSERT_CONNECTOR, (connector_json, connector_db_id, process_db_id))
+        await self._execute(
+            q.UPSERT_CONNECTOR,
+            (connector_db_id, msgspec.json.encode(connector_data).decode(), process_db_id),
+        )
 
     async def get_connector(self, connector_id: str) -> dict:
         """Returns a connector from the state."""
@@ -212,28 +241,25 @@ class SqliteStateBackend(StateBackend):
         return connector
 
     async def _update_process_status(self, process_db_id: str, status: Status) -> None:
-        """Updates the status of a process in the state."""
-        await self._execute(q.UPDATE_PROCESS_STATUS, (str(status), process_db_id))
+        await self._execute(q.UPDATE_PROCESS_STATUS, (f'"{status.value}"', process_db_id))
 
     async def update_process_status(self, process_id: str, status: Status) -> None:
-        """Updates the status of a process in the state."""
+        """Updates the status of a process."""
         process_db_id = self._get_db_id(process_id)
         await self._update_process_status(process_db_id, status)
 
     async def get_process_status(self, process_id: str) -> Status:
-        """Gets the status of a process from the state."""
+        """Returns the status of a process."""
         process_db_id = self._get_db_id(process_id)
         row = await self._fetchone(q.GET_PROCESS_STATUS, (process_db_id,))
-        if row is None:
-            raise NotFoundError(f"Process with id {process_id} not found.")
-        status_str = row["status"]
-        return Status(status_str)
+        if row is None or row["status"] is None:
+            raise NotFoundError(f"Status for process {process_id} not found.")
+        return Status(row["status"])
 
     async def get_process_status_for_component(self, component_id: str) -> Status:
-        """Gets the status of the process that a component belongs to."""
+        """Returns the status of a process for a given component."""
         component_db_id = self._get_db_id(component_id)
         row = await self._fetchone(q.GET_PROCESS_STATUS_FOR_COMPONENT, (component_db_id,))
-        if row is None:
-            raise NotFoundError(f"No process found for component with ID {component_id}")
-        status_str = row["status"]
-        return Status(status_str)
+        if row is None or row["status"] is None:
+            raise NotFoundError(f"Status for component {component_id} not found.")
+        return Status(row["status"])

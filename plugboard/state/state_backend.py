@@ -5,6 +5,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from contextlib import ExitStack
 from datetime import datetime, timezone
+from functools import cache
 from types import TracebackType
 import typing as _t
 
@@ -23,6 +24,8 @@ if _t.TYPE_CHECKING:  # pragma: no cover
 
 class StateBackend(ABC, ExportMixin):
     """`StateBackend` defines an interface for managing process state."""
+
+    _id_separator: str = ":"
 
     def __init__(
         self, job_id: _t.Optional[str] = None, metadata: _t.Optional[dict] = None, **kwargs: _t.Any
@@ -80,6 +83,32 @@ class StateBackend(ABC, ExportMixin):
         """Exits the context manager."""
         await self.destroy()
 
+    @cache
+    def _get_db_id(self, entity_id: str) -> str:
+        """Returns the database id for a given entity id.
+
+        The database id for an entity is the entity id prefixed with the job id.
+        If the provided entity id includes the job id, it is returned as is;
+        otherwise, the job id is prefixed to the entity id.
+        """
+        id_parts = entity_id.split(self._id_separator)
+        if len(id_parts) == 1:
+            return f"{self.job_id}{self._id_separator}{entity_id}"
+        if len(id_parts) != 2:
+            raise ValueError(f"Invalid entity id: {entity_id}")
+        if id_parts[0] != self.job_id:
+            raise ValueError(f"Entity id {entity_id} does not belong to job {self.job_id}")
+        return entity_id
+
+    def _strip_job_id(self, db_id: str) -> str:
+        """Strips the job id from a database id to return the entity id."""
+        id_parts = db_id.split(self._id_separator)
+        if len(id_parts) != 2:
+            raise ValueError(f"Invalid database id: {db_id}")
+        if id_parts[0] != self.job_id:
+            raise ValueError(f"Database id {db_id} does not belong to job {self.job_id}")
+        return id_parts[1]
+
     def _enter_container_context(self, job_id: _t.Optional[str] = None) -> None:
         """Enters the container context with the job_id."""
         # Enter the container context with the job_id (same for both fresh init and reinit)
@@ -96,11 +125,14 @@ class StateBackend(ABC, ExportMixin):
         try:
             # TODO : Requires indication of new or existing job to conditionally raise exception?
             job_data = await self._get_job(job_id)
+            if metadata:
+                job_data.setdefault("metadata", {}).update(metadata)
+                await self._upsert_job(job_data)
         except NotFoundError:
             job_data = {
                 "job_id": job_id,
                 "created_at": datetime.now(timezone.utc).isoformat(),
-                "metadata": metadata or dict(),
+                "metadata": metadata or {},
             }
             await self._upsert_job(job_data)
         self._local_state.update(job_data)
@@ -155,8 +187,8 @@ class StateBackend(ABC, ExportMixin):
         # TODO : Book keeping for dynamic process components and connectors.
         process_data = process.dict()
         if with_components is False:
-            process_data["components"] = {}
-            process_data["connectors"] = {}
+            process_data["components"] = {k: {} for k in process_data["components"].keys()}
+            process_data["connectors"] = {k: {} for k in process_data["connectors"].keys()}
         await self._set(self._process_key(process.id), process_data)
         await self.update_process_status(process.id, process.status)
         # TODO : Need to make this transactional.
@@ -185,7 +217,7 @@ class StateBackend(ABC, ExportMixin):
 
     async def upsert_component(self, component: Component) -> None:
         """Upserts a component into the state."""
-        process_id = await self._get(("_comp_proc_map", component.id))
+        process_id = await self._get_process_id_for_component(component.id)
         key = self._component_key(process_id, component.id)
         await self._set(key, component.dict())
         if component.status in {Status.FAILED}:
@@ -194,19 +226,25 @@ class StateBackend(ABC, ExportMixin):
 
     async def get_component(self, component_id: str) -> dict:
         """Returns a component from the state."""
-        process_id = await self._get(("_comp_proc_map", component_id))
+        process_id = await self._get_process_id_for_component(component_id)
         key = self._component_key(process_id, component_id)
         return await self._get(key)
 
+    async def _get_process_id_for_connector(self, connector_id: str) -> str:
+        process_id: str | None = await self._get(("_conn_proc_map", connector_id))
+        if process_id is None:
+            raise NotFoundError(f"No process found for connector with ID {connector_id}")
+        return process_id
+
     async def upsert_connector(self, connector: Connector) -> None:
         """Upserts a connector into the state."""
-        process_id = await self._get(("_conn_proc_map", connector.id))
+        process_id = await self._get_process_id_for_connector(connector.id)
         key = self._connector_key(process_id, connector.id)
         await self._set(key, connector.dict())
 
     async def get_connector(self, connector_id: str) -> dict:
         """Returns a connector from the state."""
-        process_id = await self._get(("_conn_proc_map", connector_id))
+        process_id = await self._get_process_id_for_connector(connector_id)
         key = self._connector_key(process_id, connector_id)
         return await self._get(key)
 

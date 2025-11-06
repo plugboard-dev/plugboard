@@ -42,6 +42,7 @@ async def test_tune(config: dict, mode: str, process_type: str, ray_ctx: None) -
             type="plugboard.connector.RayConnector"
         )
         process_spec.type = "plugboard.process.RayProcess"
+        process_spec.args.state.type = "plugboard.state.RayStateBackend"
     tuner = Tuner(
         objective=ObjectiveSpec(
             object_type="component",

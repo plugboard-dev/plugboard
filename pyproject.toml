@@ -22,6 +22,7 @@ dependencies = [
     "aiosqlite>=0.20,<1",
     "annotated-types>=0.7,<1",
     "async-lru>=2.0,<3",
+    "asyncpg>=0.29.0,<1",
     "fsspec>=2024.9.0",
     "msgspec[yaml]>=0.18,<1",
     "pandas>=1.0,<3",
