@@ -65,8 +65,10 @@ def _make_component_class(
     """Creates a Plugboard component class from a function."""
     _async_func: _t.Callable[..., _t.Awaitable[dict[str, _t.Any]]] = _ensure_async_callable(func)
 
-    class FuncComponent(Component):
+    class _FuncComponent(Component):
         io = IOController(inputs=inputs, outputs=outputs)
+
+        __doc__ = f"Component for wrapped function {func.__name__}:\n\n{func.__doc__}"
 
         async def step(self) -> _t.Any:
             fn_in = {field: getattr(self, field) for field in self.io.inputs}
@@ -76,12 +78,12 @@ def _make_component_class(
             for k, v in fn_out.items():
                 setattr(self, k, v)
 
-    FuncComponent.__name__ = f"FnComp__{func.__name__}"
-    FuncComponent.__doc__ = f"Component for wrapped function {func.__name__}:\n\n{func.__doc__}"
+    fn_comp_name = f"FnComp__{func.__name__}"
+    registry_keys = [fn_comp_name, f"{func.__module__}.{fn_comp_name}"]
+    for key in registry_keys:
+        ComponentRegistry.add(_FuncComponent, key=key)
 
-    ComponentRegistry.add(FuncComponent)
-
-    return FuncComponent
+    return _FuncComponent
 
 
 def _ensure_async_callable(func: _FuncT) -> _t.Callable[..., _t.Awaitable[dict[str, _t.Any]]]:
