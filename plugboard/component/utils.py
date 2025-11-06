@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import inspect
+from string import Template
 import typing as _t
 
 from plugboard.component.component import Component, ComponentRegistry
@@ -13,6 +14,17 @@ from plugboard.utils import gen_rand_str
 _FuncT = _t.TypeVar(
     "_FuncT",
     bound=_t.Callable[..., _t.Union[dict[str, _t.Any], _t.Awaitable[dict[str, _t.Any]]]],
+)
+
+_FUNC_COMPONENT_DOC_TEMPLATE = Template(
+    """Component for wrapped function $name.
+
+    This component calls the wrapped function in the step method.
+
+    Documentation for wrapped function follows:
+
+    $doc
+    """
 )
 
 
@@ -66,9 +78,12 @@ def _make_component_class(
     _async_func: _t.Callable[..., _t.Awaitable[dict[str, _t.Any]]] = _ensure_async_callable(func)
 
     class _FuncComponent(Component):
-        io = IOController(inputs=inputs, outputs=outputs)
+        __doc__ = _FUNC_COMPONENT_DOC_TEMPLATE.substitute(
+            name=func.__name__, doc=func.__doc__ or "Undocumented..."
+        )
 
-        __doc__ = f"Component for wrapped function {func.__name__}:\n\n{func.__doc__}"
+        io = IOController(inputs=inputs, outputs=outputs)
+        wrapped_function: _FuncT = func
 
         async def step(self) -> _t.Any:
             fn_in = {field: getattr(self, field) for field in self.io.inputs}
