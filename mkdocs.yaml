@@ -136,6 +136,7 @@ nav:
   - LLMs:
     - Data filtering: examples/demos/llm/001_data_filter/llm-filtering.ipynb
     - Websocket streaming: examples/demos/llm/002_bluesky_websocket/bluesky-websocket.ipynb
+    - Rock paper scissors: examples/demos/llm/003_rock_paper_scissors/rock-paper-scissors.ipynb
   - Physics-based models:
     - Hot water tank: examples/demos/physics-models/001-hot-water-tank/hot-water-tank.ipynb
   - Finance:
