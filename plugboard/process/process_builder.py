@@ -53,6 +53,9 @@ class ProcessBuilder:
     def _build_components(cls, spec: ProcessSpec) -> list[Component]:
         for c in spec.args.components:
             component_class: _t.Optional[_t.Any] = locate(c.type)
+            if not component_class:
+                # Try to locate from registry (required for decorated functions)
+                component_class = locate(ComponentRegistry.get(c.type))
             if not component_class or not issubclass(component_class, Component):
                 raise ValueError(f"Component class {c.type} not found.")
         return [ComponentRegistry.build(c.type, **dict(c.args)) for c in spec.args.components]
