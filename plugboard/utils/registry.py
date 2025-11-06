@@ -12,7 +12,7 @@ T = _t.TypeVar("T")
 class ClassRegistry(ABC, _t.Generic[T]):
     """A registry of Plugboard classes."""
 
-    _classes: _t.Dict[_t.Hashable, type[T]]
+    _classes: dict[_t.Hashable, type[T]]
     _duplicate_aliases: set[str] = set()
 
     @classmethod
