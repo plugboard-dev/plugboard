@@ -35,7 +35,7 @@ def component(
         an instance of the component class.
     """
 
-    def decorator(func: _FuncT) -> "ComponentDecoratorHelper":
+    def decorator(func: _FuncT) -> ComponentDecoratorHelper:
         comp_cls = _make_component_class(func, inputs, outputs)
         return ComponentDecoratorHelper(func, comp_cls)
 
