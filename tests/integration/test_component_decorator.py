@@ -20,11 +20,13 @@ from plugboard.schemas import (
     ComponentSpec,
     ConnectorBuilderArgsSpec,
     ConnectorBuilderSpec,
+    ConnectorMode,
     ConnectorSpec,
     ProcessArgsSpec,
     ProcessSpec,
+    StateBackendSpec,
+    Status,
 )
-from plugboard.schemas.state import StateBackendSpec, Status
 from tests.conftest import ComponentTestHelper
 
 
@@ -42,6 +44,7 @@ class A(ComponentTestHelper):
     async def step(self) -> None:
         try:
             self.a = next(self._seq)
+            print(f"{self.name} output: {self.a}")
         except StopIteration:
             await self.io.close()
         else:
@@ -51,16 +54,19 @@ class A(ComponentTestHelper):
 @component(inputs=["a"], outputs=["b"])
 async def comp_b_func(a: int) -> dict[str, int]:
     await asyncio.sleep(0.01)
+    print(f"comp_b_func received: a={a}, outputting: {2 * a}")
     return {"b": 2 * a}
 
 
 @component(inputs=["a"], outputs=["c"])
 def comp_c_func(a: int) -> dict[str, int]:
+    print(f"comp_c_func received: a={a}, outputting: {3 * a}")
     return {"c": 3 * a}
 
 
 @component(inputs=["b", "c"], outputs=["d"])
 async def comp_d_func(b: int, c: int) -> dict[str, int]:
+    print(f"comp_d_func received: b={b}, c={c}, outputting: {b + c}")
     return {"d": b + c}
 
 
@@ -163,8 +169,9 @@ async def test_process_builder_with_decorated_components(
                 ),
             ],
             connectors=[
-                ConnectorSpec(source="comp_a.a", target="comp_b.a"),
-                ConnectorSpec(source="comp_a.a", target="comp_c.a"),
+                # FIXME : Unexpected results with RayProcess and RabbitMQConnector in PUBSUB mode.
+                ConnectorSpec(source="comp_a.a", target="comp_b.a", mode=ConnectorMode.PUBSUB),
+                ConnectorSpec(source="comp_a.a", target="comp_c.a", mode=ConnectorMode.PUBSUB),
                 ConnectorSpec(source="comp_b.b", target="comp_d.b"),
                 ConnectorSpec(source="comp_c.c", target="comp_d.c"),
                 ConnectorSpec(source="comp_d.d", target="comp_e.d"),
