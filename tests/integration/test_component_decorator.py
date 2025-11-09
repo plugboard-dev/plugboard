@@ -143,15 +143,15 @@ async def test_process_builder_with_decorated_components(
                     args={"name": "comp_a", "iters": iters},
                 ),
                 ComponentSpec(
-                    type="tests.integration.test_component_decorator.FnComp__comp_b_func",
+                    type="tests.integration.test_component_decorator.comp_b_func",
                     args={"name": "comp_b"},
                 ),
                 ComponentSpec(
-                    type="tests.integration.test_component_decorator.FnComp__comp_c_func",
+                    type="tests.integration.test_component_decorator.comp_c_func",
                     args={"name": "comp_c"},
                 ),
                 ComponentSpec(
-                    type="tests.integration.test_component_decorator.FnComp__comp_d_func",
+                    type="tests.integration.test_component_decorator.comp_d_func",
                     args={"name": "comp_d"},
                 ),
                 ComponentSpec(
