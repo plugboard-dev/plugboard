@@ -155,7 +155,7 @@ flowchart LR
 
 ### Executing pre-defined models on the CLI
 
-In many cases, we want to define components once, with suitable parameters, and then use them repeatedly in different simulations. Plugboard enables this workflow with model specification files in yaml format. Once the components have been defined, the simple model above can be represented as follows. Components auto-generated with the `@component` decorator can be referenced by the type name `FnComp__<func_name>` where `<func_name>` should be replaced with the name of the wrapped function.
+In many cases, we want to define components once, with suitable parameters, and then use them repeatedly in different simulations. Plugboard enables this workflow with model specification files in yaml format. Once the components have been defined, the simple model above can be represented as follows. Components auto-generated with the `@component` decorator can be referenced by the name of the wrapped function.
 ```yaml
 # my-model.yaml
 plugboard:
@@ -170,7 +170,7 @@ plugboard:
         args:
           name: "component-b"
           path: "./b.txt"
-      - type: hello_world.FnComp__pow2
+      - type: hello_world.pow2
         args:
           name: "component-pow2"
       connectors:

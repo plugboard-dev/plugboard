@@ -93,10 +93,8 @@ def _make_component_class(
             for k, v in fn_out.items():
                 setattr(self, k, v)
 
-    fn_comp_name = f"FnComp__{func.__name__}"
-    registry_keys = [fn_comp_name, f"{func.__module__}.{fn_comp_name}"]
-    for key in registry_keys:
-        ComponentRegistry.add(_FuncComponent, key=key)
+    ComponentRegistry.add(_FuncComponent, key=func.__name__)
+    ComponentRegistry.add(_FuncComponent, key=f"{func.__module__}.{func.__name__}")
 
     return _FuncComponent
 
