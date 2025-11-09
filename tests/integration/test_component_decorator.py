@@ -24,7 +24,7 @@ from plugboard.schemas import (
     ProcessArgsSpec,
     ProcessSpec,
 )
-from plugboard.schemas.state import Status
+from plugboard.schemas.state import StateBackendSpec, Status
 from tests.conftest import ComponentTestHelper
 
 
@@ -138,6 +138,7 @@ async def test_process_builder_with_decorated_components(
     """Tests a process using components created with the component decorator executes correctly."""
     iters = 10
     process_spec = ProcessSpec(
+        type=f"{process_cls.__module__}.{process_cls.__name__}",
         args=ProcessArgsSpec(
             components=[
                 ComponentSpec(
@@ -168,6 +169,9 @@ async def test_process_builder_with_decorated_components(
                 ConnectorSpec(source="comp_c.c", target="comp_d.c"),
                 ConnectorSpec(source="comp_d.d", target="comp_e.d"),
             ],
+            state=StateBackendSpec(type="plugboard.state.RayStateBackend")
+            if process_cls is RayProcess
+            else StateBackendSpec(type="plugboard.state.DictStateBackend"),
         ),
         connector_builder=ConnectorBuilderSpec(
             type=f"{connector_cls.__module__}.{connector_cls.__name__}",
