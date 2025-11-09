@@ -14,6 +14,7 @@ from plugboard.connector import (
     Connector,
     RayConnector,
 )
+from plugboard.connector.rabbitmq_channel import RabbitMQConnector
 from plugboard.process import LocalProcess, Process, ProcessBuilder, RayProcess
 from plugboard.schemas import (
     ComponentSpec,
@@ -125,7 +126,8 @@ async def test_process_with_decorated_components(
     "process_cls, connector_cls",
     [
         (LocalProcess, AsyncioConnector),
-        (RayProcess, RayConnector),
+        # (RayProcess, RayConnector),  # TODO : Pubsub/StopEvent unsupported. See https://github.com/plugboard-dev/plugboard/issues/101.
+        (RayProcess, RabbitMQConnector),
     ],
 )
 async def test_process_builder_with_decorated_components(
