@@ -1,9 +1,11 @@
 """Provides `ProcessBuilder` to build `Process` objects."""
 
+import inspect
 from pydoc import locate
 import typing as _t
 
 from plugboard.component.component import Component, ComponentRegistry
+from plugboard.component.utils import ComponentDecoratorHelper
 from plugboard.connector.connector import Connector
 from plugboard.connector.connector_builder import ConnectorBuilder
 from plugboard.events.event_connector_builder import EventConnectorBuilder
@@ -53,7 +55,10 @@ class ProcessBuilder:
     def _build_components(cls, spec: ProcessSpec) -> list[Component]:
         for c in spec.args.components:
             component_class: _t.Optional[_t.Any] = locate(c.type)
-            if not component_class or not issubclass(component_class, Component):
+            if not component_class or not (
+                isinstance(component_class, ComponentDecoratorHelper)
+                or (inspect.isclass(component_class) and issubclass(component_class, Component))
+            ):
                 raise ValueError(f"Component class {c.type} not found.")
         return [ComponentRegistry.build(c.type, **dict(c.args)) for c in spec.args.components]
 

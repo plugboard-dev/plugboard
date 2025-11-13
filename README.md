@@ -109,6 +109,16 @@ class B(Component):
         self._f.close()
 ```
 
+There is also a `@component` decorator which simplifies creating `Component`s for small stateless transform type functions. A component instance can be created by calling the `.component` method of the object returned by the decorator. The wrapped function can be sync or async and will be called as the step method with the named inputs being passed in. Inputs must be specified matching function args. Outputs must be specified and the function must return a dictionary where the keys match the outputs.
+```python
+@component(inputs=["in_1"], outputs=["out_1"])
+def pow2(in_1: int) -> int:
+  return {"out_1": in_1 ** 2}
+
+result = pow2(2)  # Preserves original function call -> result = {"out_1": 4}
+comp_pow2 = pow2.component(name="component-pow2")
+```
+
 Now we take these components, connect them up as a `Process`, and fire off the model. Using the `Process` context handler takes care of calling `init` at the beginning and `destroy` at the end for all `Component`s. Calling `Process.run` triggers all the components to start iterating through all their inputs until a termination condition is reached. Simulations proceed in an event-driven manner: when inputs arrive, the components are triggered to step forward in time. The framework handles the details of the inter-component communication, you just need to specify the logic of your components, and the connections between them.
 ```python
 from plugboard.connector import AsyncioConnector
@@ -116,10 +126,13 @@ from plugboard.process import LocalProcess
 from plugboard.schemas import ConnectorSpec
 
 process = LocalProcess(
-    components=[A(name="component-a", iters=5), B(name="component-b", path="b.txt")],
+    components=[A(name="component-a", iters=5), B(name="component-b", path="b.txt"), comp_pow2],
     connectors=[
         AsyncioConnector(
             spec=ConnectorSpec(source="component-a.out_1", target="component-b.in_1"),
+        ),
+        AsyncioConnector(
+            spec=ConnectorSpec(source="component-a.out_1", target=f"{comp_pow2.name}.in_1"),
         )
     ],
 )
@@ -127,15 +140,22 @@ async with process:
     await process.run()
 ```
 
-Visually, we've created the model below, with Plugboard automatically handling the flow of data between the two components.
+Visually, we've created the model below, with Plugboard automatically handling the flow of data between the components.
 ```mermaid
 flowchart LR
-  component-a@{ shape: rounded, label: A<br>**component-a** } --> component-b@{ shape: rounded, label: B<br>**component-b** }
+  subgraph Process
+    direction LR
+    comp_a(A<br>**component-a**)
+    comp_b(B<br>**component-b**)
+    comp_pow2(pow2<br>**component-pow2**)
+  end
+  comp_a -- out_1 --> comp_b
+  comp_a -- out_1 --> comp_pow2
 ```
 
 ### Executing pre-defined models on the CLI
 
-In many cases, we want to define components once, with suitable parameters, and then use them repeatedly in different simulations. Plugboard enables this workflow with model specification files in yaml format. Once the components have been defined, the simple model above can be represented as follows.
+In many cases, we want to define components once, with suitable parameters, and then use them repeatedly in different simulations. Plugboard enables this workflow with model specification files in yaml format. Once the components have been defined, the simple model above can be represented as follows. Components auto-generated with the `@component` decorator can be referenced by the name of the wrapped function.
 ```yaml
 # my-model.yaml
 plugboard:
@@ -150,9 +170,14 @@ plugboard:
         args:
           name: "component-b"
           path: "./b.txt"
+      - type: hello_world.pow2
+        args:
+          name: "component-pow2"
       connectors:
       - source: "component-a.out_1"
         target: "component-b.in_1"
+      - source: "component-a.out_1"
+        target: "component-pow2.in_1"
 ```
 
 We can now run this model using the plugboard CLI with the command:
