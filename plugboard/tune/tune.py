@@ -55,25 +55,19 @@ class Tuner:
             algorithm: Configuration for the underlying Optuna algorithm used for optimisation.
         """
         self._logger = DI.logger.resolve_sync().bind(cls=self.__class__.__name__)
-        # Check that objective and mode are lists of the same length if multiple objectives are used
+        # Validate and normalize objective/mode
         self._check_objective(objective, mode)
-        self._objective = objective if isinstance(objective, list) else [objective]
-        self._mode = [str(m) for m in mode] if isinstance(mode, list) else str(mode)
-        self._metric = (
-            [obj.full_name for obj in self._objective]
-            if len(self._objective) > 1
-            else self._objective[0].full_name
+        self._objective, self._mode, self._metric = self._normalize_objective_and_mode(
+            objective, mode
         )
+        self._custom_space = bool(algorithm and algorithm.space)
 
-        self._parameters_dict = {p.full_name: p for p in parameters}
-        self._parameters = dict(self._build_parameter(p) for p in parameters)
-        _algo = self._build_algorithm(algorithm)
-        if max_concurrent is not None:
-            _algo = ray.tune.search.ConcurrencyLimiter(_algo, max_concurrent)
-        self._config = ray.tune.TuneConfig(
-            num_samples=num_samples,
-            search_alg=_algo,
-        )
+        # Prepare parameters and search algorithm
+        self._parameters_dict, self._parameters = self._prepare_parameters(parameters)
+        searcher = self._init_search_algorithm(algorithm, max_concurrent)
+
+        # Configure Ray Tune
+        self._config = ray.tune.TuneConfig(num_samples=num_samples, search_alg=searcher)
         self._result_grid: _t.Optional[ray.tune.ResultGrid] = None
         self._logger.info("Tuner created")
 
@@ -105,33 +99,58 @@ class Tuner:
     ) -> ray.tune.search.Searcher:
         if algorithm is None:
             self._logger.info("Using default Optuna search algorithm")
-            return ray.tune.search.optuna.OptunaSearch(metric=self._metric, mode=self._mode)
-        _algo_kwargs = {
-            **algorithm.model_dump(exclude={"type"}),
-            "mode": self._mode,
-            "metric": self._metric,
-        }
+            return self._default_searcher()
 
-        # Convert storage URI string to optuna storage object if needed
-        # TODO: Make this more general to support other algorithms, e.g. use a builder class
-        if "storage" in _algo_kwargs and isinstance(_algo_kwargs["storage"], str):
-            _algo_kwargs["storage"] = optuna.storages.RDBStorage(url=_algo_kwargs["storage"])
-            self._logger.info(
-                "Converted storage URI to Optuna RDBStorage object",
-                storage_uri=algorithm.storage,
-            )
-
-        algo_cls: _t.Optional[_t.Any] = locate(algorithm.type)
-        if not algo_cls or not issubclass(algo_cls, ray.tune.search.searcher.Searcher):
-            raise ValueError(f"Could not locate `Searcher` class {algorithm.type}")
+        algo_kwargs = self._build_algo_kwargs(algorithm)
+        algo_cls = self._get_algo_class(algorithm.type)
         self._logger.info(
             "Using custom search algorithm",
             algorithm=algorithm.type,
-            params={
-                k: v if k != "storage" else f"<{type(v).__name__}>" for k, v in _algo_kwargs.items()
-            },
+            params={k: self._mask_param_value(k, v) for k, v in algo_kwargs.items()},
         )
-        return algo_cls(**_algo_kwargs)
+        return algo_cls(**algo_kwargs)
+
+    def _default_searcher(self) -> "ray.tune.search.Searcher":
+        return ray.tune.search.optuna.OptunaSearch(metric=self._metric, mode=self._mode)
+
+    def _build_algo_kwargs(self, algorithm: OptunaSpec) -> dict[str, _t.Any]:
+        """Prepare keyword args for the searcher, normalising storage/space."""
+        kwargs = algorithm.model_dump(exclude={"type"})
+        kwargs["mode"] = self._mode
+        kwargs["metric"] = self._metric
+
+        storage = kwargs.get("storage")
+        if isinstance(storage, str):
+            kwargs["storage"] = optuna.storages.RDBStorage(url=storage)
+            self._logger.info(
+                "Converted storage URI to Optuna RDBStorage object",
+                storage_uri=storage,
+            )
+
+        space = kwargs.get("space")
+        if space is not None:
+            kwargs["space"] = self._resolve_space_fn(space)
+
+        return kwargs
+
+    def _resolve_space_fn(self, space: str) -> _t.Callable:
+        space_fn = locate(space)
+        if not space_fn or not isfunction(space_fn):  # pragma: no cover
+            raise ValueError(f"Could not locate search space function {space}")
+        return space_fn
+
+    def _get_algo_class(self, type_path: str) -> _t.Type[ray.tune.search.searcher.Searcher]:
+        algo_cls: _t.Optional[_t.Any] = locate(type_path)
+        if not algo_cls or not issubclass(
+            algo_cls, ray.tune.search.searcher.Searcher
+        ):  # pragma: no cover
+            raise ValueError(f"Could not locate `Searcher` class {type_path}")
+        return algo_cls
+
+    def _mask_param_value(self, k: str, v: _t.Any) -> _t.Any:
+        if k == "storage" or (k == "space" and isfunction(v)):
+            return f"<{type(v).__name__}>"
+        return v
 
     def _build_parameter(
         self, parameter: ParameterSpec
@@ -203,12 +222,16 @@ class Tuner:
             ),
         )
 
-        self._logger.info("Setting Tuner with parameters", params=list(self._parameters.keys()))
-        _tune = ray.tune.Tuner(
-            trainable_with_resources,
-            param_space=self._parameters,
-            tune_config=self._config,
-        )
+        tuner_kwargs: dict[str, _t.Any] = {
+            "tune_config": self._config,
+        }
+        if not self._custom_space:
+            self._logger.info("Setting Tuner with parameters", params=list(self._parameters.keys()))
+            tuner_kwargs["param_space"] = self._parameters
+        else:
+            self._logger.info("Setting Tuner with custom search space")
+
+        _tune = ray.tune.Tuner(trainable_with_resources, **tuner_kwargs)
         self._logger.info("Starting Tuner")
         self._result_grid = _tune.fit()
         self._logger.info("Tuner finished")
@@ -230,6 +253,10 @@ class Tuner:
                 ComponentRegistry.add(cls, key=key)
 
             for name, value in config.items():
+                if name not in self._parameters_dict:
+                    # Custom search spaces may include intermediate parameters not in the Tuner
+                    self._logger.warning("Parameter from config not found in Tuner", param=name)
+                    continue
                 self._override_parameter(spec, self._parameters_dict[name], value)
 
             process = ProcessBuilder.build(spec)
@@ -253,3 +280,35 @@ class Tuner:
             return result
 
         return fn
+
+    def _normalize_objective_and_mode(
+        self,
+        objective: ObjectiveSpec | list[ObjectiveSpec],
+        mode: Direction | list[Direction],
+    ) -> tuple[list[ObjectiveSpec], str | list[str], str | list[str]]:
+        """Return normalized objectives, modes and metric name(s)."""
+        objectives = objective if isinstance(objective, list) else [objective]
+        modes = [str(m) for m in mode] if isinstance(mode, list) else str(mode)
+        metric = (
+            [obj.full_name for obj in objectives]
+            if len(objectives) > 1
+            else objectives[0].full_name
+        )
+        return objectives, modes, metric
+
+    def _prepare_parameters(
+        self, parameters: list[ParameterSpec]
+    ) -> tuple[dict[str, ParameterSpec], dict[str, "ray.tune.search.sample.Sampler"]]:
+        """Build parameter lookup dict and Ray Tune parameter space."""
+        params_dict = {p.full_name: p for p in parameters}
+        params_space = dict(self._build_parameter(p) for p in parameters)
+        return params_dict, params_space
+
+    def _init_search_algorithm(
+        self, algorithm: _t.Optional[OptunaSpec], max_concurrent: _t.Optional[int]
+    ) -> "ray.tune.search.Searcher":
+        """Create the search algorithm and apply concurrency limits if requested."""
+        algo = self._build_algorithm(algorithm)
+        if max_concurrent is not None:
+            algo = ray.tune.search.ConcurrencyLimiter(algo, max_concurrent)
+        return algo

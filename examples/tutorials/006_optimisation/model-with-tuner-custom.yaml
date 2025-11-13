@@ -1,0 +1,30 @@
+plugboard:
+  process: model-with-tuner.yaml  # (1)!
+  tune:
+    args:
+      objective:
+        object_name: max-height
+        field_type: field
+        field_name: max_y
+      parameters:
+      - type: ray.tune.uniform
+        object_type: component
+        object_name: trajectory
+        field_type: arg
+        field_name: angle
+        lower: 0
+        upper: 90
+      - type: ray.tune.uniform
+        object_type: component
+        object_name: trajectory
+        field_type: arg
+        field_name: velocity
+        lower: 0
+        upper: 100
+      num_samples: 40
+      mode: max
+      max_concurrent: 4
+      algorithm:  # (2)!
+        type: ray.tune.search.optuna.OptunaSearch
+        space: hello_tuner.custom_space
+  
