@@ -107,7 +107,9 @@ class RabbitMQConnector(Connector):
 
     def __init__(self, *args: _t.Any, **kwargs: _t.Any) -> None:
         super().__init__(*args, **kwargs)
-        self._topic: str = str(self.spec.source)
+        self._topic: str = (
+            str(self.spec.source) if self.spec.mode == ConnectorMode.PUBSUB else self.spec.id
+        )
         self._exchange_type: ExchangeType = (
             ExchangeType.FANOUT if self.spec.mode == ConnectorMode.PUBSUB else ExchangeType.DIRECT
         )
