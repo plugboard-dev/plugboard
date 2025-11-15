@@ -12,7 +12,6 @@ from components import Offset, Random, Save, Scale, Sum
 
 
 async def main() -> None:
-    # --8<-- [start:main]
     connect = lambda in_, out_: AsyncioConnector(  # (1)!
         spec=ConnectorSpec(source=in_, target=out_)
     )
