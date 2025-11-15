@@ -111,6 +111,11 @@ class Component(ABC, ExportMixin):
         """Gets the status of the component."""
         return self._status
 
+    @property
+    def parameters(self) -> dict:
+        """Gets the parameters of the component."""
+        return self._parameters
+
     @classmethod
     def _configure_io(cls) -> None:
         # Get all parent classes that are Component subclasses
@@ -221,6 +226,9 @@ class Component(ABC, ExportMixin):
         with self._job_id_ctx():
             await self._state.upsert_component(self)
             self._state_is_connected = True
+        # Merge this component's parameter values from those in the process
+        process = await self._state.get_process_for_component(self.id)
+        self._parameters = {**process["parameters"], **self._parameters}
 
     async def init(self) -> None:
         """Performs component initialisation actions."""
