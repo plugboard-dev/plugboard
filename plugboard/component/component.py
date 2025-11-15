@@ -53,7 +53,7 @@ class Component(ABC, ExportMixin):
         *,
         name: str,
         initial_values: _t.Optional[dict[str, _t.Iterable]] = None,
-        parameters: _t.Optional[dict] = None,
+        parameters: _t.Optional[dict[str, _t.Any]] = None,
         state: _t.Optional[StateBackend] = None,
         constraints: _t.Optional[dict] = None,
     ) -> None:
@@ -112,7 +112,7 @@ class Component(ABC, ExportMixin):
         return self._status
 
     @property
-    def parameters(self) -> dict:
+    def parameters(self) -> dict[str, _t.Any]:
         """Gets the parameters of the component."""
         return self._parameters
 

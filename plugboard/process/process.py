@@ -43,7 +43,7 @@ class Process(ExportMixin, ABC):
         self.name = name or f"{self.__class__.__name__}_{gen_rand_str(8)}"
         self.components: dict[str, Component] = {c.id: c for c in components}
         self.connectors: dict[str, Connector] = {c.id: c for c in connectors}
-        self.parameters: dict = parameters or {}
+        self.parameters: dict[str, _t.Any] = parameters or {}
         self._state: StateBackend = state or self._default_state_cls()
         self._status = Status.CREATED
         self._state_is_connected: bool = False
