@@ -37,7 +37,8 @@ class Process(ExportMixin, ABC):
             components: The components in the `Process`.
             connectors: The connectors between the components.
             name: Optional; Name for this `Process`.
-            parameters: Optional; Parameters for the `Process`.
+            parameters: Optional; Parameters for the `Process`. These will be shared across all
+                `Component` objects within the `Process`.
             state: Optional; `StateBackend` for the `Process`.
         """
         self.name = name or f"{self.__class__.__name__}_{gen_rand_str(8)}"
