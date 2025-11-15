@@ -1,0 +1,73 @@
+plugboard:
+  process:
+    args:
+      components:
+      - type: components.Random
+        args:
+          name: random
+          iters: 5
+          low: 0
+          high: 10
+      - type: components.ScaleFromParameter
+        args:
+          name: scale_a
+      - type: components.ScaleFromParameter
+        args:
+          name: scale_b
+      - type: components.Sum
+        args:
+          name: sum
+      - type: components.Save
+        args:
+          name: save-input
+          path: input.txt
+      - type: components.Save
+        args:
+          name: save-output
+          path: output.txt
+      connectors:
+      - source:
+          entity: random
+          descriptor: x
+        target:
+          entity: save-input
+          descriptor: value_to_save
+        mode: pipeline
+      - source:
+          entity: random
+          descriptor: x
+        target:
+          entity: scale_a
+          descriptor: a
+        mode: pipeline
+      - source:
+          entity: random
+          descriptor: x
+        target:
+          entity: scale_b
+          descriptor: a
+        mode: pipeline
+      - source:
+          entity: scale_a
+          descriptor: x
+        target:
+          entity: sum
+          descriptor: a
+        mode: pipeline
+      - source:
+          entity: scale_b
+          descriptor: x
+        target:
+          entity: sum
+          descriptor: b
+        mode: pipeline
+      - source:
+          entity: sum
+          descriptor: x
+        target:
+          entity: save-output
+          descriptor: value_to_save
+        mode: pipeline
+      parameters:
+        scale: 0.5
+    type: plugboard.process.LocalProcess
