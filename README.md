@@ -64,6 +64,8 @@ Support for parallelisation can be installed using `plugboard[ray]`.
 
 ## 🚀 Usage
 
+[![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/plugboard-dev/plugboard/blob/main/examples/demos/)
+
 Plugboard is built to help you with two things: defining process models, and executing those models. There are two main ways to interact with plugboard: via the Python API; or, via the CLI using model definitions saved in yaml format.
 
 ### Building models with the Python API
