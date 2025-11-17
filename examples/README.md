@@ -6,7 +6,7 @@ The Jupyter notebooks can be run locally, in [Github codespaces](https://codespa
 
 <div align="center">
 
-[![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/plugboard-dev/plugboard/blob/main/examples/demos/)
+<a href="https://colab.research.google.com/github/plugboard-dev/plugboard/blob/main/"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
 [![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/plugboard-dev/plugboard)
 
 </div>
