@@ -67,7 +67,7 @@ def custom_space(trial: Trial) -> dict[str, _t.Any] | None:
     # Set existing parameter
     trial.suggest_int("a.iters", 1, 10)
     # Use the return value to set the list parameter
-    return {"d.list_param": list_param}
+    return {"component.d.arg.list_param": list_param}
 
 
 @pytest.mark.tuner
@@ -114,11 +114,23 @@ async def test_tune(config: dict, mode: str, process_type: str, ray_ctx: None) -
     assert not any(t.error for t in result)
     # Correct optimimum must be found (within tolerance)
     if mode == "min":
-        assert best_result.config["a.iters"] <= tuner._parameters["a.iters"].lower + 2
-        assert best_result.metrics["c.in_1"] == best_result.config["a.iters"] - 1
+        assert (
+            best_result.config["component.a.arg.iters"]
+            <= tuner._parameters["component.a.arg.iters"].lower + 2
+        )
+        assert (
+            best_result.metrics["component.c.field.in_1"]
+            == best_result.config["component.a.arg.iters"] - 1
+        )
     else:
-        assert best_result.config["a.iters"] >= tuner._parameters["a.iters"].upper - 2
-        assert best_result.metrics["c.in_1"] == best_result.config["a.iters"] - 1
+        assert (
+            best_result.config["component.a.arg.iters"]
+            >= tuner._parameters["component.a.arg.iters"].upper - 2
+        )
+        assert (
+            best_result.metrics["component.c.field.in_1"]
+            == best_result.config["component.a.arg.iters"] - 1
+        )
 
 
 @pytest.mark.tuner
@@ -172,10 +184,10 @@ async def test_multi_objective_tune(config: dict, ray_ctx: None) -> None:
     # Results must contain two objectives and correct optimimum must be found
     # The best result must be a list of two results
     assert len(best_result) == 2
-    assert all(r.config["a.iters"] == 2 for r in best_result)
-    assert -1 in set(r.config["b.factor"] for r in best_result)
-    assert -1 in set(r.metrics["b.out_1"] for r in best_result)
-    assert 1 in set(r.metrics["c.in_1"] for r in best_result)
+    assert all(r.config["component.a.arg.iters"] == 2 for r in best_result)
+    assert -1 in set(r.config["component.b.arg.factor"] for r in best_result)
+    assert -1 in set(r.metrics["component.b.field.out_1"] for r in best_result)
+    assert 1 in set(r.metrics["component.c.field.in_1"] for r in best_result)
 
 
 @pytest.mark.tuner
@@ -215,11 +227,15 @@ async def test_tune_with_constraint(config: dict, ray_ctx: None) -> None:
     # There must be no failed trials
     assert not any(t.error for t in result)
     # Constraint must be respected
-    assert all(t.metrics["c.in_1"] <= 10 for t in result)
+    assert all(t.metrics["component.c.field.in_1"] <= 10 for t in result)
     # Optimum must be less than or equal to 10
-    assert best_result.metrics["c.in_1"] <= 10
+    assert best_result.metrics["component.c.field.in_1"] <= 10
     # If a.iters is greater than 11, the constraint will be violated
-    assert all(t.metrics["c.in_1"] == -math.inf for t in result if t.config["a.iters"] > 11)
+    assert all(
+        t.metrics["component.c.field.in_1"] == -math.inf
+        for t in result
+        if t.config["component.a.arg.iters"] > 11
+    )
 
 
 @pytest.mark.tuner
@@ -266,7 +282,7 @@ async def test_custom_space_tune(dynamic_param_config: dict, ray_ctx: None) -> N
     # The custom space must have been used
     for r in result:
         # Set the length of the list parameter based on n_list
-        assert len(r.config["d.list_param"]) == r.config["n_list"]
+        assert len(r.config["component.d.arg.list_param"]) == r.config["n_list"]
         if r.config["n_list"] < 5:
             # When n_list < 5, all list_param values are negative
-            assert all(v < 0.0 for v in r.config["d.list_param"])
+            assert all(v < 0.0 for v in r.config["component.d.arg.list_param"])
