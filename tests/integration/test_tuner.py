@@ -12,6 +12,7 @@ from plugboard.exceptions import ConstraintError
 from plugboard.schemas import ConfigSpec, ConnectorBuilderSpec, ObjectiveSpec
 from plugboard.schemas.tune import (
     CategoricalParameterSpec,
+    FloatParameterSpec,
     IntParameterSpec,
     OptunaSpec,
 )
@@ -188,6 +189,42 @@ async def test_multi_objective_tune(config: dict, ray_ctx: None) -> None:
     assert -1 in set(r.config["component.b.arg.factor"] for r in best_result)
     assert -1 in set(r.metrics["component.b.field.out_1"] for r in best_result)
     assert 1 in set(r.metrics["component.c.field.in_1"] for r in best_result)
+
+
+@pytest.mark.tuner
+@pytest.mark.asyncio
+async def test_process_parameter_tuning(config: dict, ray_ctx: None) -> None:
+    """Tests tuning of process-level parameters."""
+    spec = ConfigSpec.model_validate(config)
+    process_spec = spec.plugboard.process
+    tuner = Tuner(
+        objective=ObjectiveSpec(
+            object_type="component",
+            object_name="b",
+            field_type="field",
+            field_name="out_2",  # out_2 is set by parameter
+        ),
+        parameters=[
+            FloatParameterSpec(
+                object_type="process",
+                field_type="parameter",
+                field_name="factor",
+                lower=-2.0,
+                upper=2.0,
+            ),
+        ],
+        num_samples=10,
+        mode="min",
+        max_concurrent=2,
+    )
+    best_result = tuner.run(
+        spec=process_spec,
+    )
+    result = tuner.result_grid
+    # There must be no failed trials
+    assert not [t for t in result if t.error]
+    # Correct optimimum must be found, i.e. a strong negative factor
+    assert best_result.config["process.default.parameter.factor"] < -1
 
 
 @pytest.mark.tuner

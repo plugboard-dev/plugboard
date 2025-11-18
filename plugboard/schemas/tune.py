@@ -42,7 +42,7 @@ class BaseFieldSpec(PlugboardBaseModel, ABC):
     """
 
     object_type: _t.Literal["component", "process"] = Field("component", exclude=True)
-    object_name: str | None = Field(..., exclude=True)
+    object_name: str | None = Field(default=None, exclude=True)
     field_type: _t.Literal["arg", "initial_value", "field", "parameter"] = Field(..., exclude=True)
     field_name: str = Field(..., exclude=True)
 
@@ -58,13 +58,9 @@ class BaseFieldSpec(PlugboardBaseModel, ABC):
     def full_name(self) -> str:
         """Returns the full name of the field, including the object name and field name."""
         return (
-            (
-                f"{self.object_type}."
-                f"{self.object_name if self.object_name else 'default'}."
-                f"{self.field_type}.{self.field_name}"
-            )
-            if self.object_name
-            else self.field_name
+            f"{self.object_type}."
+            f"{self.object_name if self.object_name else 'default'}."
+            f"{self.field_type}.{self.field_name}"
         )
 
 
