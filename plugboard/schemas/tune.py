@@ -46,6 +46,13 @@ class BaseFieldSpec(PlugboardBaseModel, ABC):
     field_type: _t.Literal["arg", "initial_value", "field", "parameter"] = Field(..., exclude=True)
     field_name: str = Field(..., exclude=True)
 
+    @field_validator("object_name")
+    @classmethod
+    def _validate_object_name(cls, v: str | None, info: ValidationInfo) -> str | None:
+        if info.data.get("object_type") == "component" and v is None:  # pragma: no cover
+            raise ValueError("Component name must be specified.")
+        return v
+
     @field_validator("field_type")
     @classmethod
     def _validate_field_type(cls, v: str, info: ValidationInfo) -> str:

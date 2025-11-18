@@ -190,6 +190,8 @@ class Tuner:
     def _get_objective(process: Process, objective: ObjectiveSpec) -> _t.Any:  # pragma: no cover
         if objective.object_type != "component":
             raise NotImplementedError("Only component objectives are currently supported.")
+        if objective.object_name is None:
+            raise ValueError("Objective component name must be specified.")
         component = process.components[objective.object_name]
         return getattr(component, objective.field_name)
 
