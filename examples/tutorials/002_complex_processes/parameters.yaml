@@ -14,6 +14,8 @@ plugboard:
       - type: components.ScaleFromParameter
         args:
           name: scale_b
+          parameters:
+            scale: 2.0
       - type: components.Sum
         args:
           name: sum

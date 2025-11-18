@@ -19,7 +19,7 @@ async def main() -> None:
         components=[
             Random(name="random", iters=5, low=0, high=10),
             ScaleFromParameter(name="scale_a"),
-            ScaleFromParameter(name="scale_b"),  # (2)!
+            ScaleFromParameter(name="scale_b", parameters={"scale": 2.0}),  # (2)!
             Sum(name="sum"),
             Save(name="save-input", path="input.txt"),
             Save(name="save-output", path="output.txt"),
