@@ -127,7 +127,9 @@ if __name__ == "__main__":
     )
     result = tuner.run(spec=process_spec)
     print(
-        f"Best parameters: angle={result.config['trajectory.angle']}, velocity={result.config['trajectory.velocity']}"
+        "Best parameters: "
+        f"angle={result.config['component.trajectory.arg.angle']}, "
+        f"velocity={result.config['component.trajectory.arg.velocity']}"
     )
-    print(f"Best max height: {result.metrics['max-height.max_y']}")
+    print(f"Best max height: {result.metrics['component.max-height.field.max_y']}")
     # --8<-- [end:run_tuner]

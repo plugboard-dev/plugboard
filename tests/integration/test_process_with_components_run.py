@@ -50,14 +50,16 @@ class A(ComponentTestHelper):
 
 
 class B(ComponentTestHelper):
-    io = IO(inputs=["in_1"], outputs=["out_1"])
+    io = IO(inputs=["in_1"], outputs=["out_1", "out_2"])
 
     def __init__(self, *args: _t.Any, factor: float = 1.0, **kwargs: _t.Any) -> None:
         super().__init__(*args, **kwargs)
         self._factor = factor
 
     async def step(self) -> None:
+        # Compute out_1 using factor argument, and out_2 using parameter 'factor'
         self.out_1 = self._factor * self.in_1
+        self.out_2 = self.parameters.get("factor", 1.0) * self.in_1
         await super().step()
 
 

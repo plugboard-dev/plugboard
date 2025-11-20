@@ -296,3 +296,25 @@ async def test_state_backend_process_status(
         await state_backend.get_process_status_for_component("component-non-existent")
 
     await process.destroy()
+
+
+@pytest.mark.asyncio
+async def test_state_backend_process_parameters(state_backend: StateBackend) -> None:
+    """Tests `StateBackend` process parameters storage and retrieval."""
+    parameters = {"param_1": 10, "param_2": "value"}
+    component_a = A(name="ComponentA")
+    component_b = B(name="ComponentB", parameters={"param_1": 5})
+
+    process = LocalProcess(
+        name="P1",
+        components=[component_a, component_b],
+        connectors=[],
+        state=state_backend,
+        parameters=parameters,
+    )
+    await process.init()
+
+    # Component A must inherit parameters from the process
+    assert component_a.parameters == parameters
+    # Component B must override process parameter with its own
+    assert component_b.parameters == {"param_1": 5, "param_2": "value"}

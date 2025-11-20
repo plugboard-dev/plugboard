@@ -53,7 +53,7 @@ class Component(ABC, ExportMixin):
         *,
         name: str,
         initial_values: _t.Optional[dict[str, _t.Iterable]] = None,
-        parameters: _t.Optional[dict] = None,
+        parameters: _t.Optional[dict[str, _t.Any]] = None,
         state: _t.Optional[StateBackend] = None,
         constraints: _t.Optional[dict] = None,
     ) -> None:
@@ -110,6 +110,11 @@ class Component(ABC, ExportMixin):
     def status(self) -> Status:
         """Gets the status of the component."""
         return self._status
+
+    @property
+    def parameters(self) -> dict[str, _t.Any]:
+        """Gets the parameters of the component."""
+        return self._parameters
 
     @classmethod
     def _configure_io(cls) -> None:
@@ -221,6 +226,9 @@ class Component(ABC, ExportMixin):
         with self._job_id_ctx():
             await self._state.upsert_component(self)
             self._state_is_connected = True
+        # Merge this component's parameter values from those in the process
+        process = await self._state.get_process_for_component(self.id)
+        self._parameters = {**process["parameters"], **self._parameters}
 
     async def init(self) -> None:
         """Performs component initialisation actions."""

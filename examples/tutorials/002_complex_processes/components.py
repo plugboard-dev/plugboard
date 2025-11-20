@@ -76,3 +76,12 @@ class Save(Component):
     async def destroy(self) -> None:
         self._f.close()
 # --8<-- [end:components]
+
+# ---8<-- [start:parameters]
+class ScaleFromParameter(Component):
+    """Implements `x = a * scale` using parameters."""
+    io = IO(inputs=["a"], outputs=["x"])
+
+    async def step(self) -> None:
+        self.x = self.a * self.parameters.get("scale", 1)
+# ---8<-- [end:parameters]

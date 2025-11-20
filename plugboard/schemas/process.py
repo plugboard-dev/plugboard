@@ -29,7 +29,8 @@ class ProcessArgsSpec(PlugboardBaseModel, extra="allow"):
         components: Specifies each `Component` in the `Process`.
         connectors: Specifies the connections between each `Component`.
         name: Unique identifier for `Process`.
-        parameters: Parameters for the `Process`.
+        parameters: Parameters for the `Process`. These will be shared across all `Component`
+            objects within the `Process`.
         state: Optional; Specifies the `StateBackend` used for the `Process`.
     """
 

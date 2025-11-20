@@ -84,14 +84,14 @@ def test_tuner(mock_tuner_cls: MagicMock, config: dict) -> None:
     # Must call the Tuner class with parameter space
     kwargs = mock_tuner_cls.call_args.kwargs
     param_space = kwargs["param_space"]
-    assert param_space["a.x"].__class__.__name__ == "Integer"
-    assert param_space["a.x"].lower == 6
-    assert param_space["a.x"].upper == 8
-    assert param_space["a.y"].__class__.__name__ == "Float"
-    assert param_space["a.y"].lower == 0.1
-    assert param_space["a.y"].upper == 0.5
-    assert param_space["b.z"].__class__.__name__ == "Categorical"
-    assert param_space["b.z"].categories == ["a", "b", "c"]
+    assert param_space["component.a.arg.x"].__class__.__name__ == "Integer"
+    assert param_space["component.a.arg.x"].lower == 6
+    assert param_space["component.a.arg.x"].upper == 8
+    assert param_space["component.a.arg.y"].__class__.__name__ == "Float"
+    assert param_space["component.a.arg.y"].lower == 0.1
+    assert param_space["component.a.arg.y"].upper == 0.5
+    assert param_space["component.b.arg.z"].__class__.__name__ == "Categorical"
+    assert param_space["component.b.arg.z"].categories == ["a", "b", "c"]
     # Must call the Tuner class with configuration and correct algorithm
     tune_config = kwargs["tune_config"]
     assert tune_config.num_samples == 6

@@ -3,7 +3,7 @@
 from abc import ABC
 import typing as _t
 
-from pydantic import Field, PositiveInt, model_validator
+from pydantic import Field, PositiveInt, ValidationInfo, field_validator, model_validator
 
 from plugboard.schemas._common import PlugboardBaseModel
 
@@ -36,20 +36,39 @@ class BaseFieldSpec(PlugboardBaseModel, ABC):
 
     Attributes:
         object_type: The type of object on which the field is defined. Defaults to "component".
-        object_name: The name of the object on which the field is defined.
+        object_name: Optional; The name of the object on which the field is defined.
         field_type: The type of field. This can be "arg", "initial_value", or "field".
         field_name: The name of the field.
     """
 
-    object_type: _t.Literal["component"] = Field("component", exclude=True)
-    object_name: str = Field(..., exclude=True)
-    field_type: _t.Literal["arg", "initial_value", "field"] = Field(..., exclude=True)
+    object_type: _t.Literal["component", "process"] = Field("component", exclude=True)
+    object_name: str | None = Field(default=None, exclude=True)
+    field_type: _t.Literal["arg", "initial_value", "field", "parameter"] = Field(..., exclude=True)
     field_name: str = Field(..., exclude=True)
+
+    @field_validator("object_name")
+    @classmethod
+    def _validate_object_name(cls, v: str | None, info: ValidationInfo) -> str | None:
+        if info.data.get("object_type") == "component" and v is None:  # pragma: no cover
+            raise ValueError("Component name must be specified.")
+        return v
+
+    @field_validator("field_type")
+    @classmethod
+    def _validate_field_type(cls, v: str, info: ValidationInfo) -> str:
+        if info.data.get("object_type") == "process":  # pragma: no cover
+            if v != "parameter":
+                raise ValueError("If object_type is 'process', field_type must be 'parameter'.")
+        return v
 
     @property
     def full_name(self) -> str:
         """Returns the full name of the field, including the object name and field name."""
-        return f"{self.object_name}.{self.field_name}"
+        return (
+            f"{self.object_type}."
+            f"{self.object_name if self.object_name else 'default'}."
+            f"{self.field_type}.{self.field_name}"
+        )
 
 
 class ObjectiveSpec(BaseFieldSpec):
