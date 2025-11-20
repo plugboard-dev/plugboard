@@ -2213,7 +2213,8 @@ span.linenos.special { color: #000000; background-color: #ffffc0; padding-left: 
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h1 id="production-process-optimisation">Production process optimisation<a class="anchor-link" href="#production-process-optimisation">¶</a></h1><p><a href="https://codespaces.new/plugboard-dev/plugboard"><img alt="Open in GitHub Codespaces" src="https://github.com/codespaces/badge.svg"/></a></p>
+<h1 id="production-process-optimisation">Production process optimisation<a class="anchor-link" href="#production-process-optimisation">¶</a></h1><p><a href="https://colab.research.google.com/github/plugboard-dev/plugboard/blob/main/examples/demos/fundamentals/002_production_line_optimisation/production-line.ipynb"><img alt="Open in Colab" src="https://colab.research.google.com/assets/colab-badge.svg"/></a></p>
+<p><a href="https://codespaces.new/plugboard-dev/plugboard"><img alt="Open in GitHub Codespaces" src="https://github.com/codespaces/badge.svg"/></a></p>
 <p>This production line simulation models the unit cost of a small manufacturing operation with the following components:</p>
 <h3 id="components">Components:<a class="anchor-link" href="#components">¶</a></h3><ol>
 <li><strong>Input</strong>: Provides a fixed number of input items (10) per simulation step</li>
@@ -2265,6 +2266,35 @@ span.linenos.special { color: #000000; background-color: #ffffc0; padding-left: 
 </div>
 </clipboard-copy>
 </div>
+<div class="highlight-ipynb hl-python"><pre><span></span><span class="c1"># Install plugboard and dependencies for Google Colab</span>
+<span class="err">!</span><span class="n">pip</span> <span class="n">install</span> <span class="o">-</span><span class="n">q</span> <span class="n">plugboard</span><span class="p">[</span><span class="n">ray</span><span class="p">]</span>
+</pre></div>
+<div class="clipboard-copy-txt" id="cell-1"># Install plugboard and dependencies for Google Colab
+!pip install -q plugboard[ray]</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=2">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="CodeMirror cm-s-jupyter">
+<div class="zeroclipboard-container">
+<clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-2">
+<div>
+<span class="notice" hidden="">Copied!</span>
+<svg aria-hidden="true" class="clipboard-copy-icon" data-view-component="true" height="20" version="1.1" viewbox="0 0 16 16" width="20">
+<path d="M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 010 1.5h-1.5a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-1.5a.75.75 0 011.5 0v1.5A1.75 1.75 0 019.25 16h-7.5A1.75 1.75 0 010 14.25v-7.5z" fill="currentColor" fill-rule="evenodd"></path>
+<path d="M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0114.25 11h-7.5A1.75 1.75 0 015 9.25v-7.5zm1.75-.25a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-7.5a.25.25 0 00-.25-.25h-7.5z" fill="currentColor" fill-rule="evenodd"></path>
+</svg>
+</div>
+</clipboard-copy>
+</div>
 <div class="highlight-ipynb hl-python"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">_t</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">plugboard.component</span><span class="w"> </span><span class="kn">import</span> <span class="n">Component</span><span class="p">,</span> <span class="n">IOController</span> <span class="k">as</span> <span class="n">IO</span>
@@ -2273,7 +2303,7 @@ span.linenos.special { color: #000000; background-color: #ffffc0; padding-left: 
 <span class="kn">from</span><span class="w"> </span><span class="nn">plugboard.process</span><span class="w"> </span><span class="kn">import</span> <span class="n">LocalProcess</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">plugboard.schemas</span><span class="w"> </span><span class="kn">import</span> <span class="n">ConnectorSpec</span>
 </pre></div>
-<div class="clipboard-copy-txt" id="cell-1">import typing as _t
+<div class="clipboard-copy-txt" id="cell-2">import typing as _t
 
 from plugboard.component import Component, IOController as IO
 from plugboard.schemas import ComponentArgsDict
@@ -2286,7 +2316,7 @@ from plugboard.schemas import ConnectorSpec</div>
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=2">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=3">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -2297,7 +2327,7 @@ from plugboard.schemas import ConnectorSpec</div>
 </div>
 </div>
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
-<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=3">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=4">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -2305,7 +2335,7 @@ from plugboard.schemas import ConnectorSpec</div>
 <div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="CodeMirror cm-s-jupyter">
 <div class="zeroclipboard-container">
-<clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-2">
+<clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-3">
 <div>
 <span class="notice" hidden="">Copied!</span>
 <svg aria-hidden="true" class="clipboard-copy-icon" data-view-component="true" height="20" version="1.1" viewbox="0 0 16 16" width="20">
@@ -2439,7 +2469,7 @@ from plugboard.schemas import ConnectorSpec</div>
         <span class="k">else</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">cost_per_unit</span> <span class="o">=</span> <span class="mf">0.0</span>
 </pre></div>
-<div class="clipboard-copy-txt" id="cell-2">class Input(Component):
+<div class="clipboard-copy-txt" id="cell-3">class Input(Component):
     """Provides a fixed number of input items per step."""
 
     io = IO(outputs=["items"])
@@ -2568,7 +2598,7 @@ class CostPerUnit(Component):
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=4">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=5">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -2579,7 +2609,7 @@ class CostPerUnit(Component):
 </div>
 </div>
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
-<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=5">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=6">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -2587,7 +2617,7 @@ class CostPerUnit(Component):
 <div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="CodeMirror cm-s-jupyter">
 <div class="zeroclipboard-container">
-<clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-3">
+<clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-4">
 <div>
 <span class="notice" hidden="">Copied!</span>
 <svg aria-hidden="true" class="clipboard-copy-icon" data-view-component="true" height="20" version="1.1" viewbox="0 0 16 16" width="20">
@@ -2649,7 +2679,7 @@ class CostPerUnit(Component):
 <span class="nb">print</span><span class="p">(</span><span class="s2">"Production line process created successfully!"</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Process has </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">process</span><span class="o">.</span><span class="n">components</span><span class="p">)</span><span class="si">}</span><span class="s2"> components and </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">process</span><span class="o">.</span><span class="n">connectors</span><span class="p">)</span><span class="si">}</span><span class="s2"> connectors"</span><span class="p">)</span>
 </pre></div>
-<div class="clipboard-copy-txt" id="cell-3">connect = lambda in_, out_: AsyncioConnector(spec=ConnectorSpec(source=in_, target=out_))
+<div class="clipboard-copy-txt" id="cell-4">connect = lambda in_, out_: AsyncioConnector(spec=ConnectorSpec(source=in_, target=out_))
 
 process = LocalProcess(
     components=[
@@ -2706,7 +2736,7 @@ print(f"Process has {len(process.components)} components and {len(process.connec
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=6">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=7">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -2714,41 +2744,6 @@ print(f"Process has {len(process.components)} components and {len(process.connec
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
 <p>We can create a diagram of the process to make a visual check.</p>
 <p><img alt="Process Diagram" src="https://mermaid.ink/img/pako:eNq1llFrgzAUhf9KyKO0D_VRShn0abCxsXVvA0njLYbGROKVPYj_fSbO1jFsQe-ePefky81JsOHSZsATftL2S-bCIXt6-zSMKVPW-NCwKhclJMzZ2mSQrZgWR9AJe_Sft0e3i6KgjCLWsvV6xyq08lwqDXe874OuD7nYfJBfnyInAElr0FmtwW2mo_YXUR8zMv0jUDwHKB6AKDYWgAohc2Vgk0pb3Tjy516270R91i_fX6r5uxtTxTOp4gmqhbOiqjfZmOiBFk7I1tgtl4YFppNegipA9VFjG_mQCJnIngG0KPSdch-85lrtq2WgIbu65EjL7y0d0uKQn3e7wrQEl9ZG4a0-VvgK7qMTDYUc-QYkokbSgvEVL8AVQmU8aTjmUPg_gwxOotbI2_YbJkviBg=="/></p>
-</div>
-</div>
-</div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
-<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=7">
-<div class="jp-Cell-inputWrapper" tabindex="0">
-<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
-</div>
-<div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
-<div class="CodeMirror cm-s-jupyter">
-<div class="zeroclipboard-container">
-<clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-4">
-<div>
-<span class="notice" hidden="">Copied!</span>
-<svg aria-hidden="true" class="clipboard-copy-icon" data-view-component="true" height="20" version="1.1" viewbox="0 0 16 16" width="20">
-<path d="M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 010 1.5h-1.5a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-1.5a.75.75 0 011.5 0v1.5A1.75 1.75 0 019.25 16h-7.5A1.75 1.75 0 010 14.25v-7.5z" fill="currentColor" fill-rule="evenodd"></path>
-<path d="M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0114.25 11h-7.5A1.75 1.75 0 015 9.25v-7.5zm1.75-.25a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-7.5a.25.25 0 00-.25-.25h-7.5z" fill="currentColor" fill-rule="evenodd"></path>
-</svg>
-</div>
-</clipboard-copy>
-</div>
-<div class="highlight-ipynb hl-python"><pre><span></span><span class="c1"># Visualize the process flow</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">plugboard.diagram</span><span class="w"> </span><span class="kn">import</span> <span class="n">MermaidDiagram</span>
-
-<span class="n">diagram_url</span> <span class="o">=</span> <span class="n">MermaidDiagram</span><span class="o">.</span><span class="n">from_process</span><span class="p">(</span><span class="n">process</span><span class="p">)</span><span class="o">.</span><span class="n">url</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">diagram_url</span><span class="p">)</span>
-</pre></div>
-<div class="clipboard-copy-txt" id="cell-4"># Visualize the process flow
-from plugboard.diagram import MermaidDiagram
-
-diagram_url = MermaidDiagram.from_process(process).url
-print(diagram_url)</div>
-</div>
-</div>
 </div>
 </div>
 </div>
@@ -2771,31 +2766,24 @@ print(diagram_url)</div>
 </div>
 </clipboard-copy>
 </div>
-<div class="highlight-ipynb hl-python"><pre><span></span><span class="c1"># Run the simulation</span>
-<span class="k">async</span> <span class="k">with</span> <span class="n">process</span><span class="p">:</span>
-    <span class="k">await</span> <span class="n">process</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+<div class="highlight-ipynb hl-python"><pre><span></span><span class="c1"># Visualize the process flow</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">plugboard.diagram</span><span class="w"> </span><span class="kn">import</span> <span class="n">MermaidDiagram</span>
+
+<span class="n">diagram_url</span> <span class="o">=</span> <span class="n">MermaidDiagram</span><span class="o">.</span><span class="n">from_process</span><span class="p">(</span><span class="n">process</span><span class="p">)</span><span class="o">.</span><span class="n">url</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">diagram_url</span><span class="p">)</span>
 </pre></div>
-<div class="clipboard-copy-txt" id="cell-5"># Run the simulation
-async with process:
-    await process.run()</div>
+<div class="clipboard-copy-txt" id="cell-5"># Visualize the process flow
+from plugboard.diagram import MermaidDiagram
+
+diagram_url = MermaidDiagram.from_process(process).url
+print(diagram_url)</div>
 </div>
 </div>
-</div>
-</div>
-</div>
-</div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=9">
-<div class="jp-Cell-inputWrapper" tabindex="0">
-<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
-</div>
-<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
-</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<p>At the end of the simulation, the final cost per unit is available on the <code>CostPerUnit</code> component output.</p>
 </div>
 </div>
 </div>
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
-<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=10">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=9">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -2813,10 +2801,52 @@ async with process:
 </div>
 </clipboard-copy>
 </div>
+<div class="highlight-ipynb hl-python"><pre><span></span><span class="c1"># Run the simulation</span>
+<span class="k">async</span> <span class="k">with</span> <span class="n">process</span><span class="p">:</span>
+    <span class="k">await</span> <span class="n">process</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+</pre></div>
+<div class="clipboard-copy-txt" id="cell-6"># Run the simulation
+async with process:
+    await process.run()</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=10">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<p>At the end of the simulation, the final cost per unit is available on the <code>CostPerUnit</code> component output.</p>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=11">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="CodeMirror cm-s-jupyter">
+<div class="zeroclipboard-container">
+<clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-7">
+<div>
+<span class="notice" hidden="">Copied!</span>
+<svg aria-hidden="true" class="clipboard-copy-icon" data-view-component="true" height="20" version="1.1" viewbox="0 0 16 16" width="20">
+<path d="M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 010 1.5h-1.5a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-1.5a.75.75 0 011.5 0v1.5A1.75 1.75 0 019.25 16h-7.5A1.75 1.75 0 010 14.25v-7.5z" fill="currentColor" fill-rule="evenodd"></path>
+<path d="M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0114.25 11h-7.5A1.75 1.75 0 015 9.25v-7.5zm1.75-.25a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-7.5a.25.25 0 00-.25-.25h-7.5z" fill="currentColor" fill-rule="evenodd"></path>
+</svg>
+</div>
+</clipboard-copy>
+</div>
 <div class="highlight-ipynb hl-python"><pre><span></span><span class="n">final_cost</span> <span class="o">=</span> <span class="n">process</span><span class="o">.</span><span class="n">components</span><span class="p">[</span><span class="s2">"cost_per_unit"</span><span class="p">]</span><span class="o">.</span><span class="n">cost_per_unit</span>
 <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Final cost per unit: $</span><span class="si">{</span><span class="n">final_cost</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 </pre></div>
-<div class="clipboard-copy-txt" id="cell-6">final_cost = process.components["cost_per_unit"].cost_per_unit
+<div class="clipboard-copy-txt" id="cell-7">final_cost = process.components["cost_per_unit"].cost_per_unit
 print(f"Final cost per unit: ${final_cost:.2f}")</div>
 </div>
 </div>
@@ -2824,7 +2854,7 @@ print(f"Final cost per unit: ${final_cost:.2f}")</div>
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=11">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=12">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>

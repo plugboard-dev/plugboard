@@ -1963,6 +1963,7 @@ What's new: 🚀 we've open-sourced Plugboard - please <a href="https://github.c
 <p>Optional integrations for different cloud providers can be installed using <code>plugboard[aws]</code>, <code>plugboard[azure]</code> or <code>plugboard[gcp]</code>.</p>
 <p>Support for parallelisation can be installed using <code>plugboard[ray]</code>.</p>
 <h2 id="usage">🚀 Usage</h2>
+<p><a href="https://colab.research.google.com/github/plugboard-dev/plugboard/blob/main/"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a></p>
 <p>Plugboard is built to help you with two things: defining process models, and executing those models. There are two main ways to interact with plugboard: via the Python API; or, via the CLI using model definitions saved in yaml format.</p>
 <h3 id="building-models-with-the-python-api">Building models with the Python API</h3>
 <p>A model is made up of one or more components, though Plugboard really shines when you have many! First we start by defining the <code>Component</code>s within our model. Components can have only inputs, only outputs, or both. To keep it simple we just have two components here, showing the most basic functionality. Each component has several methods which are called at different stages during model execution: <code>init</code> for optional initialisation actions; <code>step</code> to take a single step forward through time; <code>run</code> to execute all steps; and <code>destroy</code> for optional teardown actions.

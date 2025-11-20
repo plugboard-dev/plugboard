@@ -2127,7 +2127,8 @@ span.linenos.special { color: #000000; background-color: #ffffc0; padding-left: 
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h1 id="simple-3-node-model">Simple 3-node model<a class="anchor-link" href="#simple-3-node-model">¶</a></h1><p><a href="https://codespaces.new/plugboard-dev/plugboard"><img alt="Open in GitHub Codespaces" src="https://github.com/codespaces/badge.svg"/></a></p>
+<h1 id="simple-3-node-model">Simple 3-node model<a class="anchor-link" href="#simple-3-node-model">¶</a></h1><p><a href="https://colab.research.google.com/github/plugboard-dev/plugboard/blob/main/examples/demos/fundamentals/001_simple_model/simple-model.ipynb"><img alt="Open in Colab" src="https://colab.research.google.com/assets/colab-badge.svg"/></a></p>
+<p><a href="https://codespaces.new/plugboard-dev/plugboard"><img alt="Open in GitHub Codespaces" src="https://github.com/codespaces/badge.svg"/></a></p>
 <p>This model demonstrates how to create different types of component and link them together. We use a built-in plugboard component to load timeseries data from a CSV file. A second node computes a rolling sum of these values. Finally another built-in component saves the output to a different CSV.</p>
 </div>
 </div>
@@ -2151,6 +2152,35 @@ span.linenos.special { color: #000000; background-color: #ffffc0; padding-left: 
 </div>
 </clipboard-copy>
 </div>
+<div class="highlight-ipynb hl-python"><pre><span></span><span class="c1"># Install plugboard and dependencies for Google Colab</span>
+<span class="err">!</span><span class="n">pip</span> <span class="n">install</span> <span class="o">-</span><span class="n">q</span> <span class="n">plugboard</span>
+</pre></div>
+<div class="clipboard-copy-txt" id="cell-1"># Install plugboard and dependencies for Google Colab
+!pip install -q plugboard</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="CodeMirror cm-s-jupyter">
+<div class="zeroclipboard-container">
+<clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-2">
+<div>
+<span class="notice" hidden="">Copied!</span>
+<svg aria-hidden="true" class="clipboard-copy-icon" data-view-component="true" height="20" version="1.1" viewbox="0 0 16 16" width="20">
+<path d="M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 010 1.5h-1.5a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-1.5a.75.75 0 011.5 0v1.5A1.75 1.75 0 019.25 16h-7.5A1.75 1.75 0 010 14.25v-7.5z" fill="currentColor" fill-rule="evenodd"></path>
+<path d="M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0114.25 11h-7.5A1.75 1.75 0 015 9.25v-7.5zm1.75-.25a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-7.5a.25.25 0 00-.25-.25h-7.5z" fill="currentColor" fill-rule="evenodd"></path>
+</svg>
+</div>
+</clipboard-copy>
+</div>
 <div class="highlight-ipynb hl-python"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">_t</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">plugboard.connector</span><span class="w"> </span><span class="kn">import</span> <span class="n">AsyncioConnector</span>
@@ -2160,7 +2190,7 @@ span.linenos.special { color: #000000; background-color: #ffffc0; padding-left: 
 <span class="kn">from</span><span class="w"> </span><span class="nn">plugboard.process</span><span class="w"> </span><span class="kn">import</span> <span class="n">LocalProcess</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">plugboard.library</span><span class="w"> </span><span class="kn">import</span> <span class="n">FileReader</span><span class="p">,</span> <span class="n">FileWriter</span>
 </pre></div>
-<div class="clipboard-copy-txt" id="cell-1">import typing as _t
+<div class="clipboard-copy-txt" id="cell-2">import typing as _t
 
 from plugboard.connector import AsyncioConnector
 from plugboard.component import Component
@@ -2193,7 +2223,7 @@ from plugboard.library import FileReader, FileWriter</div>
 <div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="CodeMirror cm-s-jupyter">
 <div class="zeroclipboard-container">
-<clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-2">
+<clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-3">
 <div>
 <span class="notice" hidden="">Copied!</span>
 <svg aria-hidden="true" class="clipboard-copy-icon" data-view-component="true" height="20" version="1.1" viewbox="0 0 16 16" width="20">
@@ -2205,7 +2235,7 @@ from plugboard.library import FileReader, FileWriter</div>
 </div>
 <div class="highlight-ipynb hl-python"><pre><span></span><span class="n">input_data</span> <span class="o">=</span> <span class="n">FileReader</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">"input_data"</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="s2">"input.csv"</span><span class="p">,</span> <span class="n">field_names</span><span class="o">=</span><span class="p">[</span><span class="s2">"value"</span><span class="p">])</span>
 </pre></div>
-<div class="clipboard-copy-txt" id="cell-2">input_data = FileReader(name="input_data", path="input.csv", field_names=["value"])</div>
+<div class="clipboard-copy-txt" id="cell-3">input_data = FileReader(name="input_data", path="input.csv", field_names=["value"])</div>
 </div>
 </div>
 </div>
@@ -2231,7 +2261,7 @@ from plugboard.library import FileReader, FileWriter</div>
 <div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="CodeMirror cm-s-jupyter">
 <div class="zeroclipboard-container">
-<clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-3">
+<clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-4">
 <div>
 <span class="notice" hidden="">Copied!</span>
 <svg aria-hidden="true" class="clipboard-copy-icon" data-view-component="true" height="20" version="1.1" viewbox="0 0 16 16" width="20">
@@ -2254,9 +2284,8 @@ from plugboard.library import FileReader, FileWriter</div>
         <span class="c1"># The main logic of the component</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_running_total</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">total_value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_running_total</span>
-        <span class="k">await</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">step</span><span class="p">()</span>
 </pre></div>
-<div class="clipboard-copy-txt" id="cell-3">class RunningTotal(Component):
+<div class="clipboard-copy-txt" id="cell-4">class RunningTotal(Component):
     # Define the inputs and outputs of the component
     io = IO(inputs=["value"], outputs=["total_value"])
 
@@ -2268,8 +2297,7 @@ from plugboard.library import FileReader, FileWriter</div>
     async def step(self) -&gt; None:
         # The main logic of the component
         self._running_total += self.value
-        self.total_value = self._running_total
-        await super().step()</div>
+        self.total_value = self._running_total</div>
 </div>
 </div>
 </div>
@@ -2284,7 +2312,7 @@ from plugboard.library import FileReader, FileWriter</div>
 <div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="CodeMirror cm-s-jupyter">
 <div class="zeroclipboard-container">
-<clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-4">
+<clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-5">
 <div>
 <span class="notice" hidden="">Copied!</span>
 <svg aria-hidden="true" class="clipboard-copy-icon" data-view-component="true" height="20" version="1.1" viewbox="0 0 16 16" width="20">
@@ -2296,7 +2324,7 @@ from plugboard.library import FileReader, FileWriter</div>
 </div>
 <div class="highlight-ipynb hl-python"><pre><span></span><span class="n">total</span> <span class="o">=</span> <span class="n">RunningTotal</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">"total"</span><span class="p">)</span>
 </pre></div>
-<div class="clipboard-copy-txt" id="cell-4">total = RunningTotal(name="total")</div>
+<div class="clipboard-copy-txt" id="cell-5">total = RunningTotal(name="total")</div>
 </div>
 </div>
 </div>
@@ -2322,7 +2350,7 @@ from plugboard.library import FileReader, FileWriter</div>
 <div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="CodeMirror cm-s-jupyter">
 <div class="zeroclipboard-container">
-<clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-5">
+<clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-6">
 <div>
 <span class="notice" hidden="">Copied!</span>
 <svg aria-hidden="true" class="clipboard-copy-icon" data-view-component="true" height="20" version="1.1" viewbox="0 0 16 16" width="20">
@@ -2340,7 +2368,7 @@ from plugboard.library import FileReader, FileWriter</div>
 <span class="k">await</span> <span class="n">total</span><span class="o">.</span><span class="n">step</span><span class="p">()</span>  <span class="c1"># Run the component</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">total</span><span class="o">.</span><span class="n">total_value</span><span class="p">)</span>  <span class="c1"># Print the total value output</span>
 </pre></div>
-<div class="clipboard-copy-txt" id="cell-5">await total.init()
+<div class="clipboard-copy-txt" id="cell-6">await total.init()
 total.value = 10  # Set the value input to 10
 await total.step()  # Run the component
 print(total.total_value)  # Print the total value output
@@ -2372,7 +2400,7 @@ print(total.total_value)  # Print the total value output</div>
 <div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="CodeMirror cm-s-jupyter">
 <div class="zeroclipboard-container">
-<clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-6">
+<clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-7">
 <div>
 <span class="notice" hidden="">Copied!</span>
 <svg aria-hidden="true" class="clipboard-copy-icon" data-view-component="true" height="20" version="1.1" viewbox="0 0 16 16" width="20">
@@ -2384,7 +2412,7 @@ print(total.total_value)  # Print the total value output</div>
 </div>
 <div class="highlight-ipynb hl-python"><pre><span></span><span class="n">total</span> <span class="o">=</span> <span class="n">RunningTotal</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">"total"</span><span class="p">)</span>
 </pre></div>
-<div class="clipboard-copy-txt" id="cell-6">total = RunningTotal(name="total")</div>
+<div class="clipboard-copy-txt" id="cell-7">total = RunningTotal(name="total")</div>
 </div>
 </div>
 </div>
@@ -2410,7 +2438,7 @@ print(total.total_value)  # Print the total value output</div>
 <div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="CodeMirror cm-s-jupyter">
 <div class="zeroclipboard-container">
-<clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-7">
+<clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-8">
 <div>
 <span class="notice" hidden="">Copied!</span>
 <svg aria-hidden="true" class="clipboard-copy-icon" data-view-component="true" height="20" version="1.1" viewbox="0 0 16 16" width="20">
@@ -2422,7 +2450,7 @@ print(total.total_value)  # Print the total value output</div>
 </div>
 <div class="highlight-ipynb hl-python"><pre><span></span><span class="n">output_data</span> <span class="o">=</span> <span class="n">FileWriter</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">"output_data"</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="s2">"output.csv"</span><span class="p">,</span> <span class="n">field_names</span><span class="o">=</span><span class="p">[</span><span class="s2">"value_to_save"</span><span class="p">])</span>
 </pre></div>
-<div class="clipboard-copy-txt" id="cell-7">output_data = FileWriter(name="output_data", path="output.csv", field_names=["value_to_save"])</div>
+<div class="clipboard-copy-txt" id="cell-8">output_data = FileWriter(name="output_data", path="output.csv", field_names=["value_to_save"])</div>
 </div>
 </div>
 </div>
@@ -2448,7 +2476,7 @@ print(total.total_value)  # Print the total value output</div>
 <div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="CodeMirror cm-s-jupyter">
 <div class="zeroclipboard-container">
-<clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-8">
+<clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-9">
 <div>
 <span class="notice" hidden="">Copied!</span>
 <svg aria-hidden="true" class="clipboard-copy-icon" data-view-component="true" height="20" version="1.1" viewbox="0 0 16 16" width="20">
@@ -2472,7 +2500,7 @@ print(total.total_value)  # Print the total value output</div>
     <span class="p">],</span>
 <span class="p">)</span>
 </pre></div>
-<div class="clipboard-copy-txt" id="cell-8">process = LocalProcess(
+<div class="clipboard-copy-txt" id="cell-9">process = LocalProcess(
     components=[input_data, total, output_data],
     connectors=[
         # Connect input_data to total
@@ -2510,7 +2538,7 @@ print(total.total_value)  # Print the total value output</div>
 <div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="CodeMirror cm-s-jupyter">
 <div class="zeroclipboard-container">
-<clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-9">
+<clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-10">
 <div>
 <span class="notice" hidden="">Copied!</span>
 <svg aria-hidden="true" class="clipboard-copy-icon" data-view-component="true" height="20" version="1.1" viewbox="0 0 16 16" width="20">
@@ -2523,7 +2551,7 @@ print(total.total_value)  # Print the total value output</div>
 <div class="highlight-ipynb hl-python"><pre><span></span><span class="k">async</span> <span class="k">with</span> <span class="n">process</span><span class="p">:</span>
     <span class="k">await</span> <span class="n">process</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
 </pre></div>
-<div class="clipboard-copy-txt" id="cell-9">async with process:
+<div class="clipboard-copy-txt" id="cell-10">async with process:
     await process.run()</div>
 </div>
 </div>
@@ -2550,7 +2578,7 @@ print(total.total_value)  # Print the total value output</div>
 <div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="CodeMirror cm-s-jupyter">
 <div class="zeroclipboard-container">
-<clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-10">
+<clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-11">
 <div>
 <span class="notice" hidden="">Copied!</span>
 <svg aria-hidden="true" class="clipboard-copy-icon" data-view-component="true" height="20" version="1.1" viewbox="0 0 16 16" width="20">
@@ -2562,7 +2590,7 @@ print(total.total_value)  # Print the total value output</div>
 </div>
 <div class="highlight-ipynb hl-python"><pre><span></span><span class="err">!</span><span class="n">cat</span> <span class="n">output</span><span class="o">.</span><span class="n">csv</span>
 </pre></div>
-<div class="clipboard-copy-txt" id="cell-10">!cat output.csv</div>
+<div class="clipboard-copy-txt" id="cell-11">!cat output.csv</div>
 </div>
 </div>
 </div>
