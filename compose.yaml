@@ -2,7 +2,7 @@ name: plugboard
 
 services:
   rabbitmq:
-    image: rabbitmq:4.0-rc-management-alpine
+    image: rabbitmq:4-rc-management-alpine
     container_name: rabbitmq
     ports:
       - 5672:5672
