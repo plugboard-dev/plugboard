@@ -12,6 +12,7 @@ from plugboard.connector import (
     RabbitMQConnector,
     ZMQConnector,
 )
+from plugboard.connector.redis_channel import RedisConnector
 from plugboard.utils.di import DI
 from plugboard.utils.settings import Settings
 from tests.unit.test_connector_pubsub import (  # noqa: F401
@@ -41,7 +42,7 @@ def zmq_connector_cls(zmq_pubsub_proxy: bool) -> _t.Iterator[_t.Type[ZMQConnecto
 
 
 @pytest_cases.fixture
-@pytest_cases.parametrize(_connector_cls=[RabbitMQConnector, zmq_connector_cls])
+@pytest_cases.parametrize(_connector_cls=[RabbitMQConnector, zmq_connector_cls, RedisConnector])
 def connector_cls(_connector_cls: type[Connector]) -> type[Connector]:
     """Fixture for `Connector` of various types."""
     return _connector_cls
