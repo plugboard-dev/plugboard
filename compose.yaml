@@ -32,7 +32,7 @@ services:
     restart: always
 
   valkey:
-    image: valkey/valkey:8.0-alpine
+    image: valkey/valkey:9-alpine
     container_name: valkey
     command: valkey-server --dir /var/lib/valkey --bind 0.0.0.0 -::1 --protected-mode no
     ports:
