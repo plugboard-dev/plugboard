@@ -5,6 +5,7 @@ import os
 import typing as _t
 
 import aio_pika
+import redis.asyncio as redis
 import structlog
 from that_depends import BaseContainer, ContextScopes, fetch_context_item
 from that_depends.providers import ContextResource, Resource, Singleton
@@ -62,6 +63,22 @@ async def _rabbitmq_conn(
             pass
 
 
+async def _redis_client(
+    logger: Singleton[structlog.BoundLogger], url: _t.Optional[str] = None
+) -> _t.AsyncIterator[redis.Redis]:
+    url = url or "redis://localhost:6379"
+    try:
+        client = redis.from_url(url)
+        yield client
+    except (redis.ConnectionError, ValueError) as e:  # pragma: no cover
+        logger.error(f"Failed to connect to Redis: {e}")
+    finally:  # pragma: no cover
+        try:
+            await client.aclose()
+        except UnboundLocalError:
+            pass
+
+
 def _job_id() -> _t.Iterator[str]:
     """Returns a job ID which uniquely identifies the current plugboard run.
 
@@ -103,4 +120,5 @@ class DI(BaseContainer):
     rabbitmq_conn: Resource[aio_pika.abc.AbstractRobustConnection] = Resource(
         _rabbitmq_conn, logger, url=settings.rabbitmq.url
     )
+    redis_client: Resource[redis.Redis] = Resource(_redis_client, logger, url=settings.redis.url)
     job_id: ContextResource[str] = ContextResource(_job_id)
