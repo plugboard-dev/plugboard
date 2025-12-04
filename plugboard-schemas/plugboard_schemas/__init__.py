@@ -6,6 +6,7 @@ This includes:
 * `TypeDict` definitions for constructor `**kwargs`.
 """
 
+from ._common import PlugboardBaseModel
 from .component import ComponentArgsDict, ComponentArgsSpec, ComponentSpec
 from .config import ConfigSpec, ProcessConfigSpec
 from .connector import (
@@ -57,6 +58,7 @@ __all__ = [
     "ObjectiveSpec",
     "OptunaSpec",
     "ParameterSpec",
+    "PlugboardBaseModel",
     "ProcessConfigSpec",
     "ProcessSpec",
     "ProcessArgsDict",

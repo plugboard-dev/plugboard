@@ -11,6 +11,7 @@ This includes:
 
 from plugboard_schemas import (
     DEFAULT_CONNECTOR_CLS_PATH,
+    ENTITY_ID_REGEX,
     CategoricalParameterSpec,
     ComponentArgsDict,
     ComponentArgsSpec,
@@ -30,6 +31,7 @@ from plugboard_schemas import (
     ObjectiveSpec,
     OptunaSpec,
     ParameterSpec,
+    PlugboardBaseModel,
     ProcessArgsDict,
     ProcessArgsSpec,
     ProcessConfigSpec,
@@ -42,7 +44,6 @@ from plugboard_schemas import (
     TuneArgsSpec,
     TuneSpec,
 )
-from plugboard_schemas.entities import ENTITY_ID_REGEX
 
 
 __all__ = [
@@ -67,6 +68,7 @@ __all__ = [
     "ObjectiveSpec",
     "OptunaSpec",
     "ParameterSpec",
+    "PlugboardBaseModel",
     "ProcessConfigSpec",
     "ProcessSpec",
     "ProcessArgsDict",

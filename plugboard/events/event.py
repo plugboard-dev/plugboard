@@ -8,11 +8,11 @@ import re
 import typing as _t
 from uuid import UUID, uuid4
 
-from plugboard_schemas._common import PlugboardBaseModel
 from pydantic import UUID4, BaseModel, Field
 from pydantic.functional_validators import AfterValidator
 
 from plugboard.events.event_handlers import EventHandlers
+from plugboard.schemas import PlugboardBaseModel
 from plugboard.utils.types import AsyncCallable
 
 
