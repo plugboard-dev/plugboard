@@ -4,9 +4,9 @@
 import msgspec
 import pytest
 
-from plugboard.schemas import ConfigSpec
 from plugboard.schemas import (
     DEFAULT_CONNECTOR_CLS_PATH,
+    ConfigSpec,
 )
 
 

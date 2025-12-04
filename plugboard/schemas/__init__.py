@@ -10,6 +10,7 @@ This includes:
 """
 
 from plugboard_schemas import (
+    DEFAULT_CONNECTOR_CLS_PATH,
     CategoricalParameterSpec,
     ComponentArgsDict,
     ComponentArgsSpec,
@@ -21,7 +22,6 @@ from plugboard_schemas import (
     ConnectorMode,
     ConnectorSocket,
     ConnectorSpec,
-    DEFAULT_CONNECTOR_CLS_PATH,
     Direction,
     Entity,
     FloatParameterSpec,

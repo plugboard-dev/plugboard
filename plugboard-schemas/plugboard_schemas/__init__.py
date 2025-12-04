@@ -9,13 +9,13 @@ This includes:
 from .component import ComponentArgsDict, ComponentArgsSpec, ComponentSpec
 from .config import ConfigSpec, ProcessConfigSpec
 from .connector import (
+    DEFAULT_CONNECTOR_CLS_PATH,
     ConnectorBuilderArgsDict,
     ConnectorBuilderArgsSpec,
     ConnectorBuilderSpec,
     ConnectorMode,
     ConnectorSocket,
     ConnectorSpec,
-    DEFAULT_CONNECTOR_CLS_PATH,
 )
 from .entities import ENTITY_ID_REGEX, Entity
 from .io import IODirection
