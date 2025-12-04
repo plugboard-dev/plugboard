@@ -6,7 +6,7 @@ import typing as _t
 import msgspec
 from pydantic import field_validator
 
-from plugboard.schemas._common import PlugboardBaseModel
+from ._common import PlugboardBaseModel
 from .process import ProcessSpec
 from .tune import TuneSpec
 

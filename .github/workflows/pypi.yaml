@@ -40,7 +40,10 @@ jobs:
         id: wheel
         run: |
           VERSION=$(uv run hatch version)
+          # Build plugboard package
           uv build
+          # Build plugboard-schemas package
+          uv build --package plugboard-schemas
           echo "version=$VERSION" >> $GITHUB_OUTPUT
 
       - name: Store the distribution packages

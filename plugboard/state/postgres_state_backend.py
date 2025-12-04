@@ -9,7 +9,7 @@ import asyncpg
 import msgspec
 
 from plugboard.exceptions import NotFoundError
-from plugboard.schemas.state import Status
+from plugboard.schemas import Status
 from plugboard.state import postgres_queries as q
 from plugboard.state.state_backend import StateBackend
 

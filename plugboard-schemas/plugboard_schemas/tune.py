@@ -5,7 +5,7 @@ import typing as _t
 
 from pydantic import Field, PositiveInt, ValidationInfo, field_validator, model_validator
 
-from plugboard.schemas._common import PlugboardBaseModel
+from ._common import PlugboardBaseModel
 
 
 class OptunaSpec(PlugboardBaseModel):

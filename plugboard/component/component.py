@@ -20,7 +20,7 @@ from plugboard.exceptions import (
     UnrecognisedEventError,
     ValidationError,
 )
-from plugboard.schemas.state import Status
+from plugboard.schemas import Status
 from plugboard.state import StateBackend
 from plugboard.utils import DI, ClassRegistry, ExportMixin, is_on_ray_worker
 

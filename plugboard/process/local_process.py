@@ -3,7 +3,7 @@
 import asyncio
 
 from plugboard.process.process import Process
-from plugboard.schemas.state import Status
+from plugboard.schemas import Status
 
 
 class LocalProcess(Process):

@@ -14,7 +14,7 @@ from plugboard._zmq.zmq_proxy import ZMQ_ADDR, ZMQProxy, create_socket, zmq_sock
 from plugboard.connector.connector import Connector
 from plugboard.connector.serde_channel import SerdeChannel
 from plugboard.exceptions import ChannelSetupError
-from plugboard.schemas.connector import ConnectorMode
+from plugboard.schemas import ConnectorMode
 from plugboard.utils import DI, Settings
 
 

@@ -25,7 +25,7 @@ $(VENV):
 	@touch $@
 
 $(VENV)/__makefile_stamps_init: $(VENV) pyproject.toml
-	uv sync --all-extras --all-groups
+	uv sync --all-extras
 	@touch $@
 
 .PHONY: init

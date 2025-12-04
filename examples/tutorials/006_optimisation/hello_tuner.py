@@ -1,14 +1,21 @@
 """Optimisation demonstration."""
 
 # fmt: off
+import math
 import typing as _t
+
 from optuna import Trial
+
 from plugboard.component import Component, IOController as IO
 from plugboard.process import ProcessBuilder
-from plugboard.schemas import ComponentArgsDict, ProcessSpec, ProcessArgsSpec, ObjectiveSpec
-from plugboard.schemas.tune import FloatParameterSpec
+from plugboard.schemas import (
+    ComponentArgsDict,
+    FloatParameterSpec,
+    ObjectiveSpec,
+    ProcessArgsSpec,
+    ProcessSpec,
+)
 from plugboard.tune import Tuner
-import math
 
 
 # --8<-- [start:components]

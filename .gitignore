@@ -172,3 +172,6 @@ cython_debug/
 
 # Optuna database files
 *.db
+
+# Generated version files
+*/_version.py

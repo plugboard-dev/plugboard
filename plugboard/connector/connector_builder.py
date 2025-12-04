@@ -3,7 +3,7 @@
 import typing as _t
 
 from plugboard.connector.connector import Connector
-from plugboard.schemas.connector import ConnectorSpec
+from plugboard.schemas import ConnectorSpec
 
 
 class ConnectorBuilder:

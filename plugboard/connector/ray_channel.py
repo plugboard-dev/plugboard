@@ -5,7 +5,7 @@ import typing as _t
 from plugboard.connector.asyncio_channel import AsyncioChannel
 from plugboard.connector.channel import Channel
 from plugboard.connector.connector import Connector
-from plugboard.schemas.connector import ConnectorMode
+from plugboard.schemas import ConnectorMode
 from plugboard.utils import build_actor_wrapper, depends_on_optional
 
 

@@ -22,7 +22,7 @@ from that_depends import Provide, inject
 
 from plugboard.connector.connector import Connector
 from plugboard.connector.serde_channel import SerdeChannel
-from plugboard.schemas.connector import ConnectorMode
+from plugboard.schemas import ConnectorMode
 from plugboard.utils import DI, gen_rand_str
 
 

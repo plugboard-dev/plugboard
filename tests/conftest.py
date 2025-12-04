@@ -17,7 +17,7 @@ import uvloop
 from plugboard.component import Component, IOController as IO
 from plugboard.component.io_controller import IOStreamClosedError
 from plugboard.connector import ZMQConnector
-from plugboard.schemas.state import Status
+from plugboard.schemas import Status
 from plugboard.utils.di import DI
 from plugboard.utils.settings import Settings
 

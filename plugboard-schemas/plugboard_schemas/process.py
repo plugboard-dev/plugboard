@@ -6,7 +6,7 @@ from annotated_types import Len
 from pydantic import field_validator, model_validator
 from typing_extensions import Self
 
-from plugboard.schemas._common import PlugboardBaseModel
+from ._common import PlugboardBaseModel
 from .component import ComponentSpec
 from .connector import DEFAULT_CONNECTOR_CLS_PATH, ConnectorBuilderSpec, ConnectorSpec
 from .state import StateBackendSpec
