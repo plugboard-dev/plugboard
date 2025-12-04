@@ -50,6 +50,7 @@ llm = [
 # https://github.com/python-jsonschema/jsonschema/issues/1392
 ray = ["ray[default,tune]>=2.47.1,<3", "jsonschema<4.25.0", "optuna>=3.0,<4"]
 redis = ["redis>=7.1,<8"]
+server = ["fastapi>=0.100,<1", "uvicorn>=0.20,<1"]
 websockets = ["websockets>=14.2,<15"]
 
 [dependency-groups]

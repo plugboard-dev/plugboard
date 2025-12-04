@@ -1,0 +1,384 @@
+openapi: 3.0.0
+info:
+  title: Plugboard API
+  version: "0.1.0"
+  description: API for building and observing Plugboard models.
+servers:
+  - url: http://localhost:8000
+
+paths:
+  /component-types:
+    get:
+      summary: List component types
+      operationId: listComponentTypes
+      responses:
+        '200':
+          description: A list of available component types
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ComponentType"
+
+  /component-types/{id}:
+    get:
+      summary: Get component type details
+      operationId: getComponentType
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Component type details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ComponentType"
+
+  /connector-types:
+    get:
+      summary: List connector types
+      operationId: listConnectorTypes
+      responses:
+        '200':
+          description: A list of available connector types
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ConnectorType"
+
+  /connector-types/{id}:
+    get:
+      summary: Get connector type details
+      operationId: getConnectorType
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Connector type details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ConnectorType"
+
+  /event-types:
+    get:
+      summary: List event types
+      operationId: listEventTypes
+      responses:
+        '200':
+          description: A list of available event types
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/EventType"
+
+  /event-types/{id}:
+    get:
+      summary: Get event type details
+      operationId: getEventType
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Event type details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EventType"
+
+  /process-types/{id}:
+    get:
+      summary: Get process type details
+      operationId: getProcessType
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Process type details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProcessType"
+
+  /process-configs:
+    get:
+      summary: List process configs
+      operationId: listProcessConfigs
+      responses:
+        '200':
+          description: A list of process configurations
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ProcessConfigSummary"
+    post:
+      summary: Create process config
+      operationId: createProcessConfig
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProcessConfig"
+      responses:
+        '201':
+          description: Process config created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProcessConfig"
+
+  /process-configs/{id}:
+    get:
+      summary: Get process config
+      operationId: getProcessConfig
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Process configuration
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProcessConfig"
+
+components:
+  schemas:
+    # --- Meta Types ---
+    ComponentType:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Unique identifier for the component type (e.g. python class path)
+        name:
+          type: string
+          description: Human readable name
+        description:
+          type: string
+        args_schema:
+          type: object
+          description: JSON Schema describing the arguments this component accepts
+
+    ConnectorType:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        parameters_schema:
+          type: object
+
+    EventType:
+      type: object
+      properties:
+        type:
+          type: string
+          description: The event type string (e.g. system.stop)
+        description:
+          type: string
+        schema:
+          type: object
+          description: JSON Schema describing the event data
+
+    ProcessType:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        args_schema:
+          type: object
+
+    # --- Configuration Models ---
+
+    ProcessConfigSummary:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        # Summary might contain less info than full config
+
+    ProcessConfig:
+      type: object
+      required:
+        - cli_config
+        - ui_config
+      properties:
+        id:
+          type: string
+        cli_config:
+          $ref: "#/components/schemas/ProcessSpec"
+        ui_config:
+          $ref: "#/components/schemas/UIConfig"
+
+    UIConfig:
+      type: object
+      properties:
+        layout:
+          type: object
+          description: Layout configuration for the UI
+        styles:
+          type: object
+          description: Style configuration for the UI
+
+    # --- Plugboard Specs (from Python schemas) ---
+
+    ProcessSpec:
+      type: object
+      required:
+        - args
+      properties:
+        type:
+          type: string
+          enum:
+            - plugboard.process.LocalProcess
+            - plugboard.process.RayProcess
+          default: plugboard.process.LocalProcess
+        args:
+          $ref: "#/components/schemas/ProcessArgsSpec"
+        connector_builder:
+          $ref: "#/components/schemas/ConnectorBuilderSpec"
+
+    ProcessArgsSpec:
+      type: object
+      required:
+        - components
+      properties:
+        components:
+          type: array
+          items:
+            $ref: "#/components/schemas/ComponentSpec"
+          minItems: 1
+        connectors:
+          type: array
+          items:
+            $ref: "#/components/schemas/ConnectorSpec"
+        name:
+          type: string
+        parameters:
+          type: object
+        state:
+          $ref: "#/components/schemas/StateBackendSpec"
+
+    ComponentSpec:
+      type: object
+      required:
+        - type
+        - args
+      properties:
+        type:
+          type: string
+        args:
+          $ref: "#/components/schemas/ComponentArgsSpec"
+
+    ComponentArgsSpec:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          pattern: "^([a-zA-Z_][a-zA-Z0-9_-]*)$"
+        initial_values:
+          type: object
+        parameters:
+          type: object
+        constraints:
+          type: object
+
+    ConnectorSpec:
+      type: object
+      required:
+        - source
+        - target
+      properties:
+        source:
+          $ref: "#/components/schemas/ConnectorSocket"
+        target:
+          $ref: "#/components/schemas/ConnectorSocket"
+        mode:
+          type: string
+          enum:
+            - pipeline
+            - pubsub
+          default: pipeline
+
+    ConnectorSocket:
+      type: object
+      required:
+        - entity
+        - descriptor
+      properties:
+        entity:
+          type: string
+        descriptor:
+          type: string
+
+    ConnectorBuilderSpec:
+      type: object
+      properties:
+        type:
+          type: string
+          default: plugboard.connector.AsyncioConnector
+        args:
+          $ref: "#/components/schemas/ConnectorBuilderArgsSpec"
+
+    ConnectorBuilderArgsSpec:
+      type: object
+      properties:
+        parameters:
+          type: object
+
+    StateBackendSpec:
+      type: object
+      properties:
+        type:
+          type: string
+          default: plugboard.state.DictStateBackend
+        args:
+          $ref: "#/components/schemas/StateBackendArgsSpec"
+
+    StateBackendArgsSpec:
+      type: object
+      properties:
+        job_id:
+          type: string
+          pattern: "^Job_[a-zA-Z0-9]{8,}$"
+        metadata:
+          type: object
