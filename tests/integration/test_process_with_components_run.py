@@ -25,7 +25,7 @@ from plugboard.events.event_connector_builder import EventConnectorBuilder
 from plugboard.exceptions import NotInitialisedError, ProcessStatusError
 from plugboard.process import LocalProcess, Process, RayProcess
 from plugboard.schemas import ConnectorSpec
-from plugboard.schemas.state import Status
+from plugboard.schemas import Status
 from tests.conftest import ComponentTestHelper, zmq_connector_cls
 
 

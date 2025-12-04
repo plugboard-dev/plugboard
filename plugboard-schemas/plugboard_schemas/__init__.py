@@ -1,20 +1,14 @@
 """Provides schemas used in Plugboard.
 
-This module re-exports schemas from the plugboard_schemas package for backward compatibility.
-All new code should import from plugboard_schemas directly.
-
 This includes:
 
 * Pydantic models for specifying Plugboard objects;
 * `TypeDict` definitions for constructor `**kwargs`.
 """
 
-from plugboard_schemas import (
-    CategoricalParameterSpec,
-    ComponentArgsDict,
-    ComponentArgsSpec,
-    ComponentSpec,
-    ConfigSpec,
+from .component import ComponentArgsDict, ComponentArgsSpec, ComponentSpec
+from .config import ConfigSpec, ProcessConfigSpec
+from .connector import (
     ConnectorBuilderArgsDict,
     ConnectorBuilderArgsSpec,
     ConnectorBuilderSpec,
@@ -22,27 +16,23 @@ from plugboard_schemas import (
     ConnectorSocket,
     ConnectorSpec,
     DEFAULT_CONNECTOR_CLS_PATH,
+)
+from .entities import ENTITY_ID_REGEX, Entity
+from .io import IODirection
+from .process import ProcessArgsDict, ProcessArgsSpec, ProcessSpec
+from .state import StateBackendArgsDict, StateBackendArgsSpec, StateBackendSpec, Status
+from .tune import (
+    CategoricalParameterSpec,
     Direction,
-    Entity,
     FloatParameterSpec,
     IntParameterSpec,
-    IODirection,
     ObjectiveSpec,
     OptunaSpec,
     ParameterSpec,
-    ProcessArgsDict,
-    ProcessArgsSpec,
-    ProcessConfigSpec,
-    ProcessSpec,
-    StateBackendArgsDict,
-    StateBackendArgsSpec,
-    StateBackendSpec,
-    Status,
     TuneArgsDict,
     TuneArgsSpec,
     TuneSpec,
 )
-from plugboard_schemas.entities import ENTITY_ID_REGEX
 
 
 __all__ = [

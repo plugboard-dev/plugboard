@@ -10,7 +10,7 @@ import pytest
 from plugboard.component import IOController as IO
 from plugboard.exceptions import ConstraintError
 from plugboard.schemas import ConfigSpec, ConnectorBuilderSpec, ObjectiveSpec
-from plugboard.schemas.tune import (
+from plugboard.schemas import (
     CategoricalParameterSpec,
     FloatParameterSpec,
     IntParameterSpec,

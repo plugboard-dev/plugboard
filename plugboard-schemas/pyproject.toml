@@ -1,0 +1,30 @@
+[project]
+name = "plugboard-schemas"
+version = "0.1.0"
+description = "Schemas for the Plugboard framework"
+readme = "README.md"
+license = "Apache-2.0"
+authors = [
+    {name = "Chris Knight", email = "plugboard@csknight.uk"},
+    {name = "Toby Coleman", email = "plugboard@tobycoleman.com"}
+]
+requires-python = ">=3.12,<4.0"
+classifiers = [
+  "Intended Audience :: Developers",
+  "Intended Audience :: Science/Research",
+  "Topic :: Scientific/Engineering",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Typing :: Typed",
+]
+dependencies = [
+    "msgspec[yaml]>=0.18,<1",
+    "pydantic>=2.8,<3",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.uv]
+package = true

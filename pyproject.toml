@@ -26,6 +26,7 @@ dependencies = [
     "fsspec>=2024.9.0",
     "msgspec[yaml]>=0.18,<1",
     "pandas>=1.0,<3",
+    "plugboard-schemas",
     "pyarrow>=17.0,<21",
     "pydantic>=2.8,<3",
     "pydantic-settings>=2.7.1,<3",
@@ -92,6 +93,11 @@ docs = [
     "mkdocs-material>=9.5,<10",
     "mkdocstrings[python]>=0.25,<1",
 ]
+all = [
+    { include-group = "dev" },
+    { include-group = "test" },
+    { include-group = "docs" },
+]
 
 [build-system]
 requires = ["hatchling", "hatch-vcs"]
@@ -102,6 +108,13 @@ source = "vcs"
 
 [tool.uv]
 package = true
+default-groups = ["all"]
+
+[tool.uv.workspace]
+members = ["plugboard-schemas"]
+
+[tool.uv.sources]
+plugboard-schemas = { workspace = true }
 
 [project.scripts]
 plugboard = "plugboard.cli:app"

@@ -9,7 +9,7 @@ import pytest
 import ray.tune
 
 from plugboard.schemas import ConfigSpec, ObjectiveSpec
-from plugboard.schemas.tune import (
+from plugboard.schemas import (
     CategoricalParameterSpec,
     FloatParameterSpec,
     IntParameterSpec,

@@ -6,8 +6,8 @@ import typing as _t
 
 from pydantic import Field
 
-from plugboard.schemas._common import PlugboardBaseModel
-from plugboard.schemas.entities import Entity
+from ._common import PlugboardBaseModel
+from .entities import Entity
 
 
 DEFAULT_STATE_BACKEND_CLS_PATH: str = "plugboard.state.DictStateBackend"

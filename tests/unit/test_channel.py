@@ -18,7 +18,7 @@ from plugboard.connector import (
     ZMQConnector,
 )
 from plugboard.exceptions import ChannelClosedError
-from plugboard.schemas.connector import ConnectorMode, ConnectorSpec
+from plugboard.schemas import ConnectorMode, ConnectorSpec
 from plugboard.utils.di import DI
 from plugboard.utils.settings import Settings
 

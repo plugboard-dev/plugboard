@@ -4,7 +4,7 @@ import typing as _t
 
 from pydantic import Field
 
-from plugboard.schemas._common import PlugboardBaseModel
+from ._common import PlugboardBaseModel
 
 
 class ComponentArgsDict(_t.TypedDict):

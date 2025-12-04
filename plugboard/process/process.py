@@ -12,8 +12,8 @@ import msgspec
 from plugboard.component import Component
 from plugboard.connector import Connector
 from plugboard.exceptions import NotInitialisedError
-from plugboard.schemas.config import ConfigSpec
-from plugboard.schemas.state import Status
+from plugboard.schemas import ConfigSpec
+from plugboard.schemas import Status
 from plugboard.state import DictStateBackend, StateBackend
 from plugboard.utils import DI, ExportMixin, gen_rand_str
 

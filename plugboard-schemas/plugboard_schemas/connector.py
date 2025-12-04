@@ -7,7 +7,7 @@ import typing as _t
 
 from pydantic import Field, field_validator
 
-from plugboard.schemas._common import PlugboardBaseModel
+from ._common import PlugboardBaseModel
 
 
 DEFAULT_CONNECTOR_CLS_PATH: str = "plugboard.connector.AsyncioConnector"

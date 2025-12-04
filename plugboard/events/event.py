@@ -12,7 +12,7 @@ from pydantic import UUID4, BaseModel, Field
 from pydantic.functional_validators import AfterValidator
 
 from plugboard.events.event_handlers import EventHandlers
-from plugboard.schemas._common import PlugboardBaseModel
+from plugboard_schemas._common import PlugboardBaseModel
 from plugboard.utils.types import AsyncCallable
 
 
