@@ -44,7 +44,10 @@ jobs:
         if: always()
 
       - name: Type checking
-        run: uv run mypy .
+        run: |
+          uv run mypy plugboard/ --explicit-package-bases
+          uv run mypy plugboard-schemas/plugboard_schemas/ --explicit-package-bases
+          uv run mypy tests/
         if: always()
 
       - name: Code complexity

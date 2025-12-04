@@ -1,6 +1,6 @@
 [project]
 name = "plugboard-schemas"
-version = "0.1.0"
+dynamic = ["version"]
 description = "Schemas for the Plugboard framework"
 readme = "README.md"
 license = "Apache-2.0"
@@ -23,8 +23,56 @@ dependencies = [
 ]
 
 [build-system]
-requires = ["hatchling"]
+requires = ["hatchling", "hatch-vcs"]
 build-backend = "hatchling.build"
+
+[tool.hatch.version]
+source = "vcs"
+root = ".."
+
+[tool.hatch.build.hooks.vcs]
+version-file = "plugboard_schemas/_version.py"
+
+[tool.hatch.version.raw-options]
+root = ".."
 
 [tool.uv]
 package = true
+
+[tool.mypy]  # Static type checking
+exclude = [".git", "__pycache__", ".venv", "venv", "_version.py"]
+ignore_missing_imports = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+no_implicit_optional = true
+plugins = "pydantic.mypy"
+
+[tool.ruff]  # Code formatting and linting
+line-length = 100
+src = ["plugboard_schemas"]
+extend-exclude = ["__pycache__", "_version.py"]
+output-format = "grouped"
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"
+
+[tool.ruff.lint]
+select = ["D", "E", "F", "I", "W", "S"]
+ignore = ["D105", "D107", "D401", "E203", "E226", "E24", "E731", "E741", "F541", "F821", "W605"]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+ignore-var-parameters = true
+
+[tool.ruff.lint.isort]
+known-first-party = ["plugboard_schemas"]
+section-order = ["future", "standard-library", "third-party", "first-party", "local-folder"]
+no-lines-before = ["local-folder"]
+force-sort-within-sections = true
+combine-as-imports = true
+split-on-trailing-comma = true
+relative-imports-order = "furthest-to-closest"
+lines-after-imports = 2

@@ -147,7 +147,7 @@ plugins = "pydantic.mypy"
 
 [tool.ruff]  # Code formatting and linting
 line-length = 100
-src = ["plugboard", "tests"]
+src = ["plugboard", "plugboard-schemas/plugboard_schemas", "tests"]
 extend-exclude = ["__pycache__"]
 output-format = "grouped"
 
