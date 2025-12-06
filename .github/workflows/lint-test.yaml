@@ -282,7 +282,7 @@ jobs:
           cache-dependency-glob: "uv.lock"
 
       - name: Build package
-        run: uv build
+        run: uv build --all-packages
 
       - name: Install from wheel
         working-directory: ./dist
