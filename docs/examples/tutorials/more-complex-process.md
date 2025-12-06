@@ -83,6 +83,24 @@ We'll provide an initial input value of `a = 0` to the `Scale` component, allowi
     
     Setting `initial_values = {"a": [0]}` means that we want the `a` input to be set to `0` on the first step and then revert to reading its input as usual.
 
+## Using parameters
+
+Sometimes you might need to use a parameter value repeatedly across many [`Component`][plugboard.component.Component] objects. The [`Process`][plugboard.process.Process] object allows you to supply a single dictionary of parameter values that are then supplied to all the components before they start running.
+For example, we can rewrite the `Scale` component like this:
+
+```python
+--8<-- "examples/tutorials/002_complex_processes/components.py:parameters"
+```
+
+Now we can supply the `scale` value when we create the [`Process`][plugboard.process.Process], and use it many places within the model.
+
+```python
+--8<-- "examples/tutorials/002_complex_processes/parameters.py:main"
+```
+
+1.  Supply a dictionary of common parameter values to the `Process` here. They are accessible from within all components.
+2.  If you need to override a parameter on a specific component, you can supply it via the component-level `parameters` argument.
+
 ## Next steps
 
 You've now learned how to build up complex model layouts in Plugboard. In the next tutorial we'll show how powerful a Plugboard model can be as we start to include different types of [`Component`][plugboard.component.Component].

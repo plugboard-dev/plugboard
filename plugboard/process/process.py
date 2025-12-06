@@ -28,7 +28,7 @@ class Process(ExportMixin, ABC):
         components: _t.Iterable[Component],
         connectors: _t.Iterable[Connector],
         name: _t.Optional[str] = None,
-        parameters: _t.Optional[dict] = None,
+        parameters: _t.Optional[dict[str, _t.Any]] = None,
         state: _t.Optional[StateBackend] = None,
     ) -> None:
         """Instantiates a `Process`.
@@ -37,13 +37,14 @@ class Process(ExportMixin, ABC):
             components: The components in the `Process`.
             connectors: The connectors between the components.
             name: Optional; Name for this `Process`.
-            parameters: Optional; Parameters for the `Process`.
+            parameters: Optional; Parameters for the `Process`. These will be shared across all
+                `Component` objects within the `Process`.
             state: Optional; `StateBackend` for the `Process`.
         """
         self.name = name or f"{self.__class__.__name__}_{gen_rand_str(8)}"
         self.components: dict[str, Component] = {c.id: c for c in components}
         self.connectors: dict[str, Connector] = {c.id: c for c in connectors}
-        self.parameters: dict = parameters or {}
+        self.parameters: dict[str, _t.Any] = parameters or {}
         self._state: StateBackend = state or self._default_state_cls()
         self._status = Status.CREATED
         self._state_is_connected: bool = False
