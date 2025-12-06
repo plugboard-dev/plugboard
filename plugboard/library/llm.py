@@ -198,7 +198,7 @@ class LLMImageProcessor(_LLMBase):
             image_block = ImageBlock(image=image_value)
         elif isinstance(image_value, str):
             # treat as URL/data URI/path; llama-index will fetch/handle accordingly if supported
-            image_block = ImageBlock(image_url=image_value)
+            image_block = ImageBlock(url=image_value)
         else:  # pragma: no cover
             raise TypeError("`image` must be either bytes or str (URL/path)")
 
