@@ -30,9 +30,6 @@ build-backend = "hatchling.build"
 source = "vcs"
 root = ".."
 
-[tool.hatch.build.hooks.vcs]
-version-file = "plugboard_schemas/_version.py"
-
 [tool.hatch.version.raw-options]
 root = ".."
 
@@ -40,7 +37,7 @@ root = ".."
 package = true
 
 [tool.mypy]  # Static type checking
-exclude = [".git", "__pycache__", ".venv", "venv", "_version.py"]
+exclude = [".git", "__pycache__", ".venv", "venv"]
 ignore_missing_imports = true
 disallow_untyped_defs = true
 disallow_incomplete_defs = true
@@ -50,7 +47,7 @@ plugins = "pydantic.mypy"
 [tool.ruff]  # Code formatting and linting
 line-length = 100
 src = ["plugboard_schemas"]
-extend-exclude = ["__pycache__", "_version.py"]
+extend-exclude = ["__pycache__"]
 output-format = "grouped"
 
 [tool.ruff.format]
