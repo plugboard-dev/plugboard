@@ -6,6 +6,8 @@ This includes:
 * `TypeDict` definitions for constructor `**kwargs`.
 """
 
+from importlib.metadata import version
+
 from ._common import PlugboardBaseModel
 from .component import ComponentArgsDict, ComponentArgsSpec, ComponentSpec
 from .config import ConfigSpec, ProcessConfigSpec
@@ -34,6 +36,9 @@ from .tune import (
     TuneArgsSpec,
     TuneSpec,
 )
+
+
+__version__ = version(__package__)
 
 
 __all__ = [
