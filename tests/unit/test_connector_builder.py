@@ -8,7 +8,7 @@ import pytest
 from plugboard.connector.channel import Channel
 from plugboard.connector.connector import Connector
 from plugboard.connector.connector_builder import ConnectorBuilder
-from plugboard.schemas.connector import ConnectorMode, ConnectorSpec
+from plugboard.schemas import ConnectorMode, ConnectorSpec
 
 
 class MyChannel(Channel):

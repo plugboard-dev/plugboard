@@ -2,7 +2,7 @@
 
 import re
 
-from plugboard.schemas.entities import ENTITY_ID_REGEX, Entity
+from plugboard.schemas import ENTITY_ID_REGEX, Entity
 from plugboard.utils.random import gen_rand_str
 
 

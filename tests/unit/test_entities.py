@@ -4,7 +4,7 @@ import re
 
 import pytest
 
-from plugboard.schemas.entities import Entity
+from plugboard.schemas import Entity
 from plugboard.utils.entities import EntityIdGen
 
 

@@ -1,0 +1,75 @@
+[project]
+name = "plugboard-schemas"
+dynamic = ["version"]
+description = "Schemas for the Plugboard framework"
+readme = "README.md"
+license = "Apache-2.0"
+authors = [
+    {name = "Chris Knight", email = "plugboard@csknight.uk"},
+    {name = "Toby Coleman", email = "plugboard@tobycoleman.com"}
+]
+requires-python = ">=3.12,<4.0"
+classifiers = [
+  "Intended Audience :: Developers",
+  "Intended Audience :: Science/Research",
+  "Topic :: Scientific/Engineering",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Typing :: Typed",
+]
+dependencies = [
+    "msgspec[yaml]>=0.18,<1",
+    "pydantic>=2.8,<3",
+]
+
+[build-system]
+requires = ["hatchling", "hatch-vcs"]
+build-backend = "hatchling.build"
+
+[tool.hatch.version]
+source = "vcs"
+root = ".."
+
+[tool.hatch.version.raw-options]
+root = ".."
+
+[tool.uv]
+package = true
+
+[tool.mypy]  # Static type checking
+exclude = [".git", "__pycache__", ".venv", "venv"]
+ignore_missing_imports = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+no_implicit_optional = true
+plugins = "pydantic.mypy"
+
+[tool.ruff]  # Code formatting and linting
+line-length = 100
+src = ["plugboard_schemas"]
+extend-exclude = ["__pycache__"]
+output-format = "grouped"
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"
+
+[tool.ruff.lint]
+select = ["D", "E", "F", "I", "W", "S"]
+ignore = ["D105", "D107", "D401", "E203", "E226", "E24", "E731", "E741", "F541", "F821", "W605"]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+ignore-var-parameters = true
+
+[tool.ruff.lint.isort]
+known-first-party = ["plugboard_schemas"]
+section-order = ["future", "standard-library", "third-party", "first-party", "local-folder"]
+no-lines-before = ["local-folder"]
+force-sort-within-sections = true
+combine-as-imports = true
+split-on-trailing-comma = true
+relative-imports-order = "furthest-to-closest"
+lines-after-imports = 2
