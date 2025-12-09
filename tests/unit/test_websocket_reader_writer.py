@@ -35,7 +35,7 @@ async def connected_client() -> _t.AsyncGenerator[ClientConnection, None]:
             yield client
 
 
-@pytest.mark.flaky(reruns=6)
+@pytest.mark.flaky(reruns=6)  # Flaky on Github Actions
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
     "parse_json,initial_message,n_skip_messages",
