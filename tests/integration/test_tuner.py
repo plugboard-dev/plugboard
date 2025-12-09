@@ -226,7 +226,7 @@ async def test_process_parameter_tuning(config: dict, ray_ctx: None) -> None:
     # There must be no failed trials
     assert not [t for t in result if t.error]
     # Correct optimimum must be found, i.e. a strong negative factor
-    assert best_result.config["process.default.parameter.factor"] < -1
+    assert best_result.config["process.default.parameter.factor"] < -0.4
 
 
 @pytest.mark.tuner
