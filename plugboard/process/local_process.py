@@ -1,13 +1,35 @@
 """Provides the `LocalProcess` class for managing components on a single processor."""
 
 import asyncio
+import typing as _t
 
+from plugboard.component import Component
+from plugboard.connector import Connector
 from plugboard.process.process import Process
 from plugboard.schemas import Status
 
 
 class LocalProcess(Process):
     """`LocalProcess` manages components in a process model on a single processor."""
+
+    def __init__(
+        self,
+        components: list[Component],
+        connectors: list[Connector],
+        name: _t.Optional[str] = None,
+        parameters: _t.Optional[dict] = None,
+    ) -> None:
+        """Instantiates a `LocalProcess`.
+
+        Args:
+            components: The components in the `Process`.
+            connectors: The connectors between the components.
+            name: Optional; Name for this `Process`.
+            parameters: Optional; Parameters for the `Process`.
+            state: Optional; `StateBackend` for the `Process`.
+        """
+        super().__init__(components, connectors, name, parameters)
+        self._tasks: dict[str, asyncio.Task[None]] = {}
 
     async def _connect_components(self) -> None:
         connectors = list(self.connectors.values())
@@ -41,7 +63,7 @@ class LocalProcess(Process):
         try:
             async with asyncio.TaskGroup() as tg:
                 for component in self.components.values():
-                    tg.create_task(component.step())
+                    self._tasks[component.id] = tg.create_task(component.step())
         except Exception:
             await self._set_status(Status.FAILED)
             raise
@@ -55,13 +77,23 @@ class LocalProcess(Process):
         try:
             async with asyncio.TaskGroup() as tg:
                 for component in self.components.values():
-                    tg.create_task(component.run())
+                    self._tasks[component.id] = tg.create_task(component.run())
         except Exception:
             await self._set_status(Status.FAILED)
+            self._remove_signal_handlers()
             raise
         else:
-            await self._set_status(Status.COMPLETED)
+            if self.status == Status.RUNNING:
+                await self._set_status(Status.COMPLETED)
+        finally:
+            self._remove_signal_handlers()
         self._logger.info("Process run complete")
+
+    def cancel(self) -> None:
+        """Cancels the process run."""
+        for task in self._tasks.values():
+            task.cancel()
+        super().cancel()
 
     async def destroy(self) -> None:
         """Performs tear-down actions for the `LocalProcess` and its `Component`s."""

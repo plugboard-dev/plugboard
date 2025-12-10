@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
+import asyncio
 from pathlib import Path
+import signal
 from types import TracebackType
 import typing as _t
 
@@ -15,6 +17,7 @@ from plugboard.exceptions import NotInitialisedError
 from plugboard.schemas import ConfigSpec, Status
 from plugboard.state import DictStateBackend, StateBackend
 from plugboard.utils import DI, ExportMixin, gen_rand_str
+from plugboard.utils.async_utils import run_coro_sync
 
 
 class Process(ExportMixin, ABC):
@@ -122,6 +125,28 @@ class Process(ExportMixin, ABC):
         if not self._is_initialised:
             raise NotInitialisedError("Process must be initialised before running")
         await self._set_status(Status.RUNNING)
+        loop = asyncio.get_running_loop()
+        try:
+            loop.add_signal_handler(signal.SIGINT, self.cancel)
+        except NotImplementedError:  # pragma: no cover
+            # Signal handlers are not implemented on Windows for asyncio
+            pass
+
+    @abstractmethod
+    def cancel(self) -> None:
+        """Cancels the process run."""
+        run_coro_sync(self._set_status(Status.STOPPED))
+        for c in self.components.values():
+            run_coro_sync(c.cancel())
+        self._logger.info("Process run cancelled")
+
+    def _remove_signal_handlers(self) -> None:
+        loop = asyncio.get_running_loop()
+        try:
+            loop.remove_signal_handler(signal.SIGINT)
+        except NotImplementedError:  # pragma: no cover
+            # Signal handlers are not implemented on Windows for asyncio
+            pass
 
     async def destroy(self) -> None:
         """Performs tear-down actions for the `Process` and its `Component`s."""
