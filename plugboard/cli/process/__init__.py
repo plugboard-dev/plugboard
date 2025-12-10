@@ -56,7 +56,8 @@ def _override_process_type(config: ConfigSpec, process_type: str) -> None:
             == "plugboard.connector.AsyncioConnector"
         ):
             ray_updates["connector_builder"] = ConnectorBuilderSpec(
-                type="plugboard.connector.RayConnector"
+                type="plugboard.connector.RayConnector",
+                args=config.plugboard.process.connector_builder.args,
             )
         # Override state backend to RayStateBackend if it's the default DictStateBackend
         if config.plugboard.process.args.state.type == "plugboard.state.DictStateBackend":
@@ -79,7 +80,8 @@ def _override_process_type(config: ConfigSpec, process_type: str) -> None:
         # Override connector builder to AsyncioConnector if it's RayConnector
         if config.plugboard.process.connector_builder.type == "plugboard.connector.RayConnector":
             local_updates["connector_builder"] = ConnectorBuilderSpec(
-                type="plugboard.connector.AsyncioConnector"
+                type="plugboard.connector.AsyncioConnector",
+                args=config.plugboard.process.connector_builder.args,
             )
         # Override state backend to DictStateBackend if it's RayStateBackend
         if config.plugboard.process.args.state.type == "plugboard.state.RayStateBackend":
