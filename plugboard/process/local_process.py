@@ -18,6 +18,7 @@ class LocalProcess(Process):
         connectors: list[Connector],
         name: _t.Optional[str] = None,
         parameters: _t.Optional[dict] = None,
+        state: _t.Optional[object] = None,
     ) -> None:
         """Instantiates a `LocalProcess`.
 
@@ -28,7 +29,13 @@ class LocalProcess(Process):
             parameters: Optional; Parameters for the `Process`.
             state: Optional; `StateBackend` for the `Process`.
         """
-        super().__init__(components, connectors, name, parameters)
+        super().__init__(
+            components=components,
+            connectors=connectors,
+            name=name,
+            parameters=parameters,
+            state=state,
+        )
         self._tasks: dict[str, asyncio.Task[None]] = {}
 
     async def _connect_components(self) -> None:
