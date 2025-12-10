@@ -7,6 +7,7 @@ from plugboard.component import Component
 from plugboard.connector import Connector
 from plugboard.process.process import Process
 from plugboard.schemas import Status
+from plugboard.state.state_backend import StateBackend
 
 
 class LocalProcess(Process):
@@ -18,7 +19,7 @@ class LocalProcess(Process):
         connectors: list[Connector],
         name: _t.Optional[str] = None,
         parameters: _t.Optional[dict] = None,
-        state: _t.Optional[object] = None,
+        state: _t.Optional[StateBackend] = None,
     ) -> None:
         """Instantiates a `LocalProcess`.
 
