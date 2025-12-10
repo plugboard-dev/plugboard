@@ -128,8 +128,9 @@ class Process(ExportMixin, ABC):
         loop = asyncio.get_running_loop()
         try:
             loop.add_signal_handler(signal.SIGINT, self.cancel)
-        except NotImplementedError:  # pragma: no cover
+        except (NotImplementedError, ValueError):
             # Signal handlers are not implemented on Windows for asyncio
+            # ValueError can be raised if loop is not running in main thread in Ray Tune
             pass
 
     @abstractmethod
@@ -147,8 +148,9 @@ class Process(ExportMixin, ABC):
         loop = asyncio.get_running_loop()
         try:
             loop.remove_signal_handler(signal.SIGINT)
-        except NotImplementedError:  # pragma: no cover
+        except (NotImplementedError, ValueError):
             # Signal handlers are not implemented on Windows for asyncio
+            # ValueError can be raised if loop is not running in main thread in Ray Tune
             pass
 
     async def destroy(self) -> None:
