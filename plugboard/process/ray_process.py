@@ -136,7 +136,7 @@ class RayProcess(Process):
         try:
             self._tasks = {comp.id: ref for comp, ref in zip(self.components.values(), coros)}
             await gather_except(*coros)
-        except* ray.exceptions.TaskCancelledError as e:
+        except* ray.exceptions.TaskCancelledError:
             # Ray tasks were cancelled
             pass
         except* Exception:
