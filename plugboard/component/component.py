@@ -111,6 +111,10 @@ class Component(ABC, ExportMixin):
         """Gets the status of the component."""
         return self._status
 
+    async def cancel(self) -> None:
+        """Called from the `Process` to set correct status."""
+        await self._set_status(Status.STOPPED)
+
     @property
     def parameters(self) -> dict[str, _t.Any]:
         """Gets the parameters of the component."""
