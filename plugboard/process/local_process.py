@@ -15,10 +15,10 @@ class LocalProcess(Process):
 
     def __init__(
         self,
-        components: list[Component],
-        connectors: list[Connector],
+        components: _t.Iterable[Component],
+        connectors: _t.Iterable[Connector],
         name: _t.Optional[str] = None,
-        parameters: _t.Optional[dict] = None,
+        parameters: _t.Optional[dict[str, _t.Any]] = None,
         state: _t.Optional[StateBackend] = None,
     ) -> None:
         """Instantiates a `LocalProcess`.
