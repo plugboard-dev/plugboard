@@ -136,8 +136,7 @@ class Process(ExportMixin, ABC):
     def cancel(self) -> None:
         """Cancels the process run."""
         run_coro_sync(self._set_status(Status.STOPPED))
-        for c in self.components.values():
-            run_coro_sync(c.cancel())
+        run_coro_sync(asyncio.gather(*(c.cancel() for c in self.components.values())))
         self._logger.info("Process run cancelled")
 
     def _remove_signal_handlers(self) -> None:
