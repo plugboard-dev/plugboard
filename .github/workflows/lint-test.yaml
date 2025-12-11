@@ -58,6 +58,9 @@ jobs:
         run: find . -name '*.ipynb' -not -path "./.venv/*" -exec uv run nbstripout --verify {} +
         if: always()
 
+      - name: Check open source licenses
+        run: uv run licensecheck --zero --skip-dependencies plugboard-schemas
+
       - name: Build docs
         run: uv run mkdocs build --site-dir /tmp/site
         if: always()
