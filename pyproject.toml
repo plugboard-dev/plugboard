@@ -107,6 +107,10 @@ build-backend = "hatchling.build"
 [tool.hatch.version]
 source = "vcs"
 
+[tool.hatch.version.raw-options]
+# Use fallback to all dependabot to run https://github.com/dependabot/dependabot-core/issues/12340
+fallback_version = "0.0.0"
+
 [tool.uv]
 package = true
 default-groups = ["all"]
