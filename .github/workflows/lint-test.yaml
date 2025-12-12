@@ -59,7 +59,7 @@ jobs:
         if: always()
 
       - name: Check open source licenses
-        run: uv run licensecheck --zero --skip-dependencies plugboard-schemas
+        run: uv run licensecheck --requirements-paths ./pyproject.toml --zero --skip-dependencies plugboard-schemas
 
       - name: Build docs
         run: uv run mkdocs build --site-dir /tmp/site
