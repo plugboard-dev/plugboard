@@ -19,10 +19,13 @@
   <br>
   <a href="https://github.com/plugboard-dev/plugboard/actions/workflows/lint-test.yaml", alt="Lint and test">
     <img alt="Lint and Test" src="https://github.com/plugboard-dev/plugboard/actions/workflows/lint-test.yaml/badge.svg"></a>
-  <a href="https://github.com/plugboard-dev/plugboard/actions/workflows/docs.yaml", alt="Documentation">
-    <img alt="Docs" src="https://github.com/plugboard-dev/plugboard/actions/workflows/docs.yaml/badge.svg"></a>
+  <a href="https://github.com/plugboard-dev/plugboard/actions/workflows/github-code-scanning/codeql", alt="CodeQL">
+    <img alt="CodeQL" src="https://github.com/plugboard-dev/plugboard/actions/workflows/github-code-scanning/codeql/badge.svg"></a>
   <a href="https://codecov.io/gh/plugboard-dev/plugboard" >
     <img src="https://codecov.io/gh/plugboard-dev/plugboard/graph/badge.svg?token=4LU4K6TOLQ"/></a>
+  <br>
+  <a href="https://docs.plugboard.dev", alt="Documentation">
+    <img alt="Docs" src="https://github.com/plugboard-dev/plugboard/actions/workflows/docs.yaml/badge.svg"></a>
 </div>
 
 <hr>
