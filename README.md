@@ -17,7 +17,7 @@
   <a href="https://github.com/plugboard-dev/plugboard" alt="Typed">
     <img alt="Typed" src="https://img.shields.io/pypi/types/plugboard?labelColor=075D7A&color=CC9C4A"></a>
   <br>
-  <a href="https://github.com/plugboard-dev/plugboard/actions/workflows/lint-test.yaml", alt="Lint and test">
+  <a href="https://github.com/plugboard-dev/plugboard/actions/workflows/lint-test.yaml" alt="Lint and test">
     <img alt="Lint and Test" src="https://github.com/plugboard-dev/plugboard/actions/workflows/lint-test.yaml/badge.svg"></a>
   <a href="https://github.com/plugboard-dev/plugboard/actions/workflows/github-code-scanning/codeql" alt="CodeQL">
     <img alt="CodeQL" src="https://github.com/plugboard-dev/plugboard/actions/workflows/github-code-scanning/codeql/badge.svg"></a>
