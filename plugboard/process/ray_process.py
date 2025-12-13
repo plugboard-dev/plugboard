@@ -66,21 +66,21 @@ class RayProcess(Process):
             actor_cls
         ).remote(**args)
 
-    async def _update_component_attributes(self, include_status: bool = True) -> None:
+    async def _update_component_attributes(self) -> None:
         """Updates attributes on local components from remote actors."""
         component_ids = [c.id for c in self.components.values()]
         remote_states = await gather_except(
             *[self._component_actors[id].dict.remote() for id in component_ids]
         )
         for id, state in zip(component_ids, remote_states):
-            attrs = {
-                **state[str(IODirection.INPUT)],
-                **state[str(IODirection.OUTPUT)],
-                **state["exports"],
-            }
-            if include_status:
-                attrs["_status"] = state["status"]
-            self.components[id].__dict__.update(attrs)
+            self.components[id].__dict__.update(
+                {
+                    **state[str(IODirection.INPUT)],
+                    **state[str(IODirection.OUTPUT)],
+                    **state["exports"],
+                    "_status": state["status"],
+                }
+            )
 
     async def _connect_components(self) -> None:
         connectors = list(self.connectors.values())
@@ -137,8 +137,8 @@ class RayProcess(Process):
             self._tasks = {comp.id: ref for comp, ref in zip(self.components.values(), coros)}
             await gather_except(*coros)
         except* ray.exceptions.TaskCancelledError:
-            # Ray tasks were cancelled
-            pass
+            # Ray tasks were cancelled, now call cancel on components to update status
+            ray.get([component.cancel.remote() for component in self._component_actors.values()])
         except* Exception:
             await self._set_status(Status.FAILED)
             raise
@@ -147,8 +147,7 @@ class RayProcess(Process):
                 await self._set_status(Status.COMPLETED)
         finally:
             self._remove_signal_handlers()
-            # Don't change component status if process was stopped
-            await self._update_component_attributes(include_status=self.status != Status.STOPPED)
+            await self._update_component_attributes()
         self._logger.info("Process run complete")
 
     def cancel(self) -> None:
