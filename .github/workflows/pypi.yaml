@@ -9,6 +9,9 @@ on:
 env:
   PYTHON_VERSION: '3.12'
 
+permissions:
+  contents: read
+
 # See https://packaging.python.org/en/latest/guides/publishing-package-distribution-releases-using-github-actions-ci-cd-workflows/
 # Uses https://github.com/astral-sh/uv/issues/6298#issuecomment-2335034247 to set version equivalent to poetry-dynamic-versioning
 jobs:

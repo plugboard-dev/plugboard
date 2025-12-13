@@ -10,6 +10,9 @@ on:
       - synchronize
       - reopened
 
+permissions:
+  contents: read
+
 jobs:
   lint:
     name: Lint code
@@ -57,6 +60,9 @@ jobs:
       - name: Notebook output cleared
         run: find . -name '*.ipynb' -not -path "./.venv/*" -exec uv run nbstripout --verify {} +
         if: always()
+
+      - name: Check open source licenses
+        run: uv run licensecheck --requirements-paths ./pyproject.toml --zero --skip-dependencies plugboard-schemas
 
       - name: Build docs
         run: uv run mkdocs build --site-dir /tmp/site

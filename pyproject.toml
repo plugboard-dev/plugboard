@@ -59,6 +59,7 @@ dev = [
     "ipython>=8.26,<9",
     "ipywidgets>=8.1.5,<9",
     "jupyterlab>=4.2,<5",
+    "licensecheck>=2025.1.0",
     "mypy>=1.11,<2",
     "nbstripout>=0.8,<1",
     "pre-commit>=3.8,<4",
@@ -105,6 +106,10 @@ build-backend = "hatchling.build"
 
 [tool.hatch.version]
 source = "vcs"
+
+[tool.hatch.version.raw-options]
+# Use fallback to all dependabot to run https://github.com/dependabot/dependabot-core/issues/12340
+fallback_version = "0.0.0"
 
 [tool.uv]
 package = true
