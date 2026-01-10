@@ -1765,6 +1765,17 @@ What's new: 🚀 we've open-sourced Plugboard - please <a href="https://github.c
 </li>
         
           <li class="md-nav__item">
+  <a href="#plugboard.process.Process.cancel" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;cancel
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#plugboard.process.Process.connect_state" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1848,6 +1859,17 @@ What's new: 🚀 we've open-sourced Plugboard - please <a href="https://github.c
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#plugboard.process.LocalProcess.cancel" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;cancel
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#plugboard.process.LocalProcess.destroy" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1907,6 +1929,17 @@ What's new: 🚀 we've open-sourced Plugboard - please <a href="https://github.c
   
     <nav class="md-nav" aria-label=" RayProcess">
       <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#plugboard.process.RayProcess.cancel" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;cancel
+      
+    </span>
+  </a>
+  
+</li>
         
           <li class="md-nav__item">
   <a href="#plugboard.process.RayProcess.destroy" class="md-nav__link">
@@ -2303,6 +2336,17 @@ What's new: 🚀 we've open-sourced Plugboard - please <a href="https://github.c
 </li>
         
           <li class="md-nav__item">
+  <a href="#plugboard.process.Process.cancel" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;cancel
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#plugboard.process.Process.connect_state" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2386,6 +2430,17 @@ What's new: 🚀 we've open-sourced Plugboard - please <a href="https://github.c
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#plugboard.process.LocalProcess.cancel" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;cancel
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#plugboard.process.LocalProcess.destroy" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2445,6 +2500,17 @@ What's new: 🚀 we've open-sourced Plugboard - please <a href="https://github.c
   
     <nav class="md-nav" aria-label=" RayProcess">
       <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#plugboard.process.RayProcess.cancel" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;cancel
+      
+    </span>
+  </a>
+  
+</li>
         
           <li class="md-nav__item">
   <a href="#plugboard.process.RayProcess.destroy" class="md-nav__link">
@@ -2841,6 +2907,30 @@ What's new: 🚀 we've open-sourced Plugboard - please <a href="https://github.c
 <div class="doc doc-object doc-function">
 
 
+<h3 id="plugboard.process.Process.cancel" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-method"></code>            <span class="doc doc-object-name doc-function-name">cancel</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-abstractmethod"><code>abstractmethod</code></small>
+  </span>
+
+</h3>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">cancel</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span>
+</span></code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Cancels the process run.</p>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
 <h3 id="plugboard.process.Process.connect_state" class="doc doc-heading">
 <code class="doc-symbol doc-symbol-heading doc-symbol-method"></code>            <span class="doc doc-object-name doc-function-name">connect_state</span>
 
@@ -3046,6 +3136,103 @@ What's new: 🚀 we've open-sourced Plugboard - please <a href="https://github.c
 
         <p><code>LocalProcess</code> manages components in a process model on a single processor.</p>
 
+        <p>Instantiates a <code>LocalProcess</code>.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>components</code>
+            </td>
+            <td>
+                  <code><span title="typing.Iterable">Iterable</span>[<a class="autorefs autorefs-internal" title="            Component (plugboard.component.Component)" href="../../component/component/#plugboard.component.Component">Component</a>]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>The components in the <code>Process</code>.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>connectors</code>
+            </td>
+            <td>
+                  <code><span title="typing.Iterable">Iterable</span>[<a class="autorefs autorefs-internal" title="            Connector (plugboard.connector.Connector)" href="../../connector/connector/#plugboard.connector.Connector">Connector</a>]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>The connectors between the components.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>name</code>
+            </td>
+            <td>
+                  <code><span title="typing.Optional">Optional</span>[<span title="str">str</span>]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Optional; Name for this <code>Process</code>.</p>
+              </div>
+            </td>
+            <td>
+                  <code>None</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>parameters</code>
+            </td>
+            <td>
+                  <code><span title="typing.Optional">Optional</span>[<span title="dict">dict</span>[<span title="str">str</span>, <span title="typing.Any">Any</span>]]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Optional; Parameters for the <code>Process</code>.</p>
+              </div>
+            </td>
+            <td>
+                  <code>None</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>state</code>
+            </td>
+            <td>
+                  <code><span title="typing.Optional">Optional</span>[<a class="autorefs autorefs-internal" title="            StateBackend (plugboard.state.state_backend.StateBackend)" href="../../state/state/#plugboard.state.StateBackend">StateBackend</a>]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Optional; <code>StateBackend</code> for the <code>Process</code>.</p>
+              </div>
+            </td>
+            <td>
+                  <code>None</code>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
 
 
 
@@ -3066,6 +3253,26 @@ What's new: 🚀 we've open-sourced Plugboard - please <a href="https://github.c
 
 
 
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="plugboard.process.LocalProcess.cancel" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-method"></code>            <span class="doc doc-object-name doc-function-name">cancel</span>
+
+
+</h3>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">cancel</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span>
+</span></code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Cancels the process run.</p>
+
+
+    </div>
+
+</div>
 
 <div class="doc doc-object doc-function">
 
@@ -3314,6 +3521,26 @@ What's new: 🚀 we've open-sourced Plugboard - please <a href="https://github.c
 
 
 
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="plugboard.process.RayProcess.cancel" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-method"></code>            <span class="doc doc-object-name doc-function-name">cancel</span>
+
+
+</h3>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">cancel</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span>
+</span></code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Cancels the process run.</p>
+
+
+    </div>
+
+</div>
 
 <div class="doc doc-object doc-function">
 
