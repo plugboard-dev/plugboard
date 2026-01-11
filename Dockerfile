@@ -32,7 +32,7 @@ ENV UV_CACHE_DIR=/root/.cache/uv
 
 # Ensure PATH with venv is set in user's bash profile for login shells (required for running in kuberay)
 RUN echo "export PATH=${UV_PROJECT_ENVIRONMENT}/bin:\$PATH" >> /home/appuser/.profile && \
-    chown appuser:appuser /home/appuser/.profile
+  chown appuser:appuser /home/appuser/.profile
 
 # Install required system dependencies for running in kuberay
 RUN --mount=type=cache,id=apt,target=/var/cache/apt \
@@ -47,7 +47,7 @@ RUN --mount=from=ghcr.io/astral-sh/uv,source=/uv,target=/bin/uv \
   --mount=type=bind,target=/app,rw \
   --mount=type=tmpfs,target=/tmp/build \
   --mount=type=cache,target=/root/.cache/uv \
-  uv run hatch build -t wheel /tmp/build/dist && \
+  uv build --all-packages -o /tmp/build/dist && \
   uv pip install --no-deps /tmp/build/dist/*.whl
 
 # Get security updates. Relies on cache bust from previous steps.

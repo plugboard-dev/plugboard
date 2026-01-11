@@ -7,7 +7,7 @@ import typing as _t
 
 from plugboard.connector.channel import CHAN_MAXSIZE, Channel
 from plugboard.connector.connector import Connector
-from plugboard.schemas.connector import ConnectorMode
+from plugboard.schemas import ConnectorMode
 
 
 class AsyncioChannel(Channel):

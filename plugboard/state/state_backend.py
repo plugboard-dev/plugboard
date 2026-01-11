@@ -12,7 +12,7 @@ import typing as _t
 from that_depends import ContextScopes, Provide, container_context, inject
 
 from plugboard.exceptions import NotFoundError
-from plugboard.schemas.state import Status
+from plugboard.schemas import Status
 from plugboard.utils import DI, ExportMixin
 
 

@@ -10,7 +10,7 @@ import typing as _t
 from plugboard.connector import AsyncioChannel, Channel, Connector
 from plugboard.events import Event, StopEvent
 from plugboard.exceptions import ChannelClosedError, IOStreamClosedError
-from plugboard.schemas.io import IODirection
+from plugboard.schemas import IODirection
 from plugboard.utils import DI
 
 

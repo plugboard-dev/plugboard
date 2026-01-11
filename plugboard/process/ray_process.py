@@ -7,7 +7,7 @@ from plugboard.component import Component
 from plugboard.component.io_controller import IODirection
 from plugboard.connector import Connector
 from plugboard.process.process import Process
-from plugboard.schemas.state import Status
+from plugboard.schemas import Status
 from plugboard.state import RayStateBackend, StateBackend
 from plugboard.utils import build_actor_wrapper, depends_on_optional, gather_except, gen_rand_str
 
@@ -48,6 +48,7 @@ class RayProcess(Process):
             c.id: self._create_component_actor(c)
             for c in components
         }
+        self._tasks: dict[str, ray.ObjectRef] = {}
 
         super().__init__(
             components=components,
@@ -133,15 +134,27 @@ class RayProcess(Process):
         self._logger.info("Starting process run")
         coros = [component.run.remote() for component in self._component_actors.values()]
         try:
+            self._tasks = {comp.id: ref for comp, ref in zip(self.components.values(), coros)}
             await gather_except(*coros)
-        except Exception:
+        except* ray.exceptions.TaskCancelledError:
+            # Ray tasks were cancelled, now call cancel on components to update status
+            ray.get([component.cancel.remote() for component in self._component_actors.values()])
+        except* Exception:
             await self._set_status(Status.FAILED)
             raise
         else:
-            await self._set_status(Status.COMPLETED)
+            if self.status == Status.RUNNING:
+                await self._set_status(Status.COMPLETED)
         finally:
+            self._remove_signal_handlers()
             await self._update_component_attributes()
         self._logger.info("Process run complete")
+
+    def cancel(self) -> None:
+        """Cancels the process run."""
+        for task in self._tasks.values():
+            ray.cancel(task)
+        super().cancel()
 
     async def destroy(self) -> None:
         """Performs tear-down actions for the `RayProcess` and its `Component`s."""

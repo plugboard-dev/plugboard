@@ -6,7 +6,7 @@ from abc import ABC, abstractmethod
 import typing as _t
 
 from plugboard.connector.channel import Channel
-from plugboard.schemas.connector import ConnectorSpec
+from plugboard.schemas import ConnectorSpec
 from plugboard.utils import ExportMixin
 
 

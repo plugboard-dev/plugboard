@@ -10,7 +10,7 @@ import uvloop
 from plugboard.component import Component, IOController
 from plugboard.connector import Connector, ZMQConnector
 from plugboard.process import LocalProcess
-from plugboard.schemas.connector import ConnectorSpec
+from plugboard.schemas import ConnectorSpec
 from plugboard.state import DictStateBackend, StateBackend
 from tests.conftest import ComponentTestHelper
 from tests.integration.conftest import (

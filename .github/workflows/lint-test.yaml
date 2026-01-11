@@ -10,6 +10,9 @@ on:
       - synchronize
       - reopened
 
+permissions:
+  contents: read
+
 jobs:
   lint:
     name: Lint code
@@ -44,7 +47,10 @@ jobs:
         if: always()
 
       - name: Type checking
-        run: uv run mypy .
+        run: |
+          uv run mypy plugboard/ --explicit-package-bases
+          uv run mypy plugboard-schemas/plugboard_schemas/ --explicit-package-bases
+          uv run mypy tests/
         if: always()
 
       - name: Code complexity
@@ -54,6 +60,9 @@ jobs:
       - name: Notebook output cleared
         run: find . -name '*.ipynb' -not -path "./.venv/*" -exec uv run nbstripout --verify {} +
         if: always()
+
+      - name: Check open source licenses
+        run: uv run licensecheck --requirements-paths ./pyproject.toml --zero --skip-dependencies plugboard-schemas
 
       - name: Build docs
         run: uv run mkdocs build --site-dir /tmp/site
@@ -279,7 +288,7 @@ jobs:
           cache-dependency-glob: "uv.lock"
 
       - name: Build package
-        run: uv build
+        run: uv build --all-packages
 
       - name: Install from wheel
         working-directory: ./dist

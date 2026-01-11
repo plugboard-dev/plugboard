@@ -20,7 +20,7 @@ from plugboard.exceptions import (
     UnrecognisedEventError,
     ValidationError,
 )
-from plugboard.schemas.state import Status
+from plugboard.schemas import Status
 from plugboard.state import StateBackend
 from plugboard.utils import DI, ClassRegistry, ExportMixin, is_on_ray_worker
 
@@ -110,6 +110,10 @@ class Component(ABC, ExportMixin):
     def status(self) -> Status:
         """Gets the status of the component."""
         return self._status
+
+    async def cancel(self) -> None:
+        """Called from the `Process` to set correct status."""
+        await self._set_status(Status.STOPPED)
 
     @property
     def parameters(self) -> dict[str, _t.Any]:
