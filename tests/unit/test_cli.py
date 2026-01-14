@@ -4,8 +4,8 @@ Note: Tests which run async code synchronously from CLI entrypoints must be
 marked async so that they do not interfere with pytest-asyncio's event loop.
 """
 
-import tempfile
 from pathlib import Path
+import tempfile
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -85,9 +85,7 @@ def test_cli_server_discover(test_project_dir: Path) -> None:
             json={"status": "ok"}
         )
         event_route = respx.post("http://test:8000/types/event").respond(json={"status": "ok"})
-        process_route = respx.post("http://test:8000/types/process").respond(
-            json={"status": "ok"}
-        )
+        process_route = respx.post("http://test:8000/types/process").respond(json={"status": "ok"})
 
         result = runner.invoke(
             app,
