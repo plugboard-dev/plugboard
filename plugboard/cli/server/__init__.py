@@ -4,7 +4,6 @@ import importlib
 import inspect
 import os
 from pathlib import Path
-import sys
 import typing as _t
 
 import httpx
@@ -13,6 +12,11 @@ from rich.progress import Progress, SpinnerColumn, TextColumn
 import typer
 from typing_extensions import Annotated
 
+from plugboard.component import Component
+from plugboard.connector import Connector
+from plugboard.events import Event
+from plugboard.process import Process
+from plugboard.utils import add_sys_path
 from plugboard.utils.di import DI
 
 
@@ -192,35 +196,29 @@ def discover(
 
         # Check if project_dir is a package
         base_package = None
+        path_to_add = project_dir
         if (project_dir / "__init__.py").exists():
             # It's a package, add parent to path
-            sys.path.insert(0, str(project_dir.parent))
+            path_to_add = project_dir.parent
             base_package = project_dir.name
             logger.info(f"Detected package '{base_package}', adding parent directory to path")
-        else:
-            # Not a package, add dir directly
-            sys.path.insert(0, str(project_dir))
 
-        # Import plugboard types - we're already in plugboard so just import directly
-        from plugboard.component import Component
-        from plugboard.connector import Connector
-        from plugboard.events import Event
-        from plugboard.process import Process
+        # Temporarily add path to sys.path for module imports
+        with add_sys_path(path_to_add):
+            # Import everything in the project
+            progress.update(task, description="Importing modules...")
+            _import_recursive(project_dir, base_package)
 
-        # Import everything in the project
-        progress.update(task, description="Importing modules...")
-        _import_recursive(project_dir, base_package)
+            progress.update(task, description="Discovering components...")
+            _discover_components(api_url, Component)
 
-        progress.update(task, description="Discovering components...")
-        _discover_components(api_url, Component)
+            progress.update(task, description="Discovering connectors...")
+            _discover_connectors(api_url, Connector)
 
-        progress.update(task, description="Discovering connectors...")
-        _discover_connectors(api_url, Connector)
+            progress.update(task, description="Discovering events...")
+            _discover_events(api_url, Event)
 
-        progress.update(task, description="Discovering events...")
-        _discover_events(api_url, Event)
-
-        progress.update(task, description="Discovering processes...")
-        _discover_processes(api_url, Process)
+            progress.update(task, description="Discovering processes...")
+            _discover_processes(api_url, Process)
 
         progress.update(task, description="[green]Discovery complete[/green]")
