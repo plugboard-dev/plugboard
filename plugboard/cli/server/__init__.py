@@ -8,6 +8,7 @@ import os
 from pathlib import Path
 import sys
 import typing as _t
+import urllib.error
 import urllib.request
 
 from rich.console import Console
@@ -57,7 +58,7 @@ def _import_recursive(path: Path, base_package: _t.Optional[str] = None) -> None
 
                 try:
                     importlib.import_module(module_name)
-                except Exception as e:
+                except (ModuleNotFoundError, ImportError, SyntaxError) as e:
                     logger.warning(f"Failed to import module {module_name}: {e}")
 
 
