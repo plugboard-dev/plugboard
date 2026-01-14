@@ -39,7 +39,7 @@ def _post_to_api(url: str, data: dict) -> None:
                 )
             else:
                 logger.debug(f"Successfully posted to {url}")
-    except Exception as e:
+    except (urllib.error.HTTPError, urllib.error.URLError) as e:
         logger.error(f"Error posting to {url}: {e}")
 
 
@@ -172,7 +172,7 @@ def discover(
         ),
     ],
     api_url: Annotated[
-        _t.Optional[str],
+        str,
         typer.Option(
             "--api-url",
             envvar="PLUGBOARD_API_URL",
@@ -185,9 +185,6 @@ def discover(
 ) -> None:
     """Discover Plugboard types in a project and push them to the Plugboard API."""
     logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
-
-    if api_url is None:
-        api_url = "http://localhost:8000"
 
     api_url = api_url.rstrip("/")
 
