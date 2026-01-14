@@ -2,50 +2,42 @@
 
 import importlib
 import inspect
-import json
-import logging
 import os
 from pathlib import Path
 import sys
 import typing as _t
-import urllib.error
-import urllib.request
 
+import httpx
 from rich.console import Console
 from rich.progress import Progress, SpinnerColumn, TextColumn
 import typer
 from typing_extensions import Annotated
+
+from plugboard.utils.di import DI
 
 
 app = typer.Typer(
     rich_markup_mode="rich", no_args_is_help=True, pretty_exceptions_show_locals=False
 )
 stderr = Console(stderr=True)
-logger = logging.getLogger(__name__)
 
 
 def _post_to_api(url: str, data: dict) -> None:
     """Post data to the given API URL."""
-    req = urllib.request.Request(  # noqa: S310
-        url,
-        data=json.dumps(data).encode("utf-8"),
-        headers={"Content-Type": "application/json"},
-        method="POST",
-    )
+    logger = DI.logger.resolve_sync()
     try:
-        with urllib.request.urlopen(req) as response:  # noqa: S310
-            if response.status not in (200, 201):
-                logger.error(
-                    f"Failed to post to {url}: {response.status} {response.read().decode()}"
-                )
-            else:
-                logger.debug(f"Successfully posted to {url}")
-    except (urllib.error.HTTPError, urllib.error.URLError) as e:
+        response = httpx.post(url, json=data, timeout=30.0)
+        if response.status_code not in (200, 201):
+            logger.error(f"Failed to post to {url}: {response.status_code} {response.text}")
+        else:
+            logger.debug(f"Successfully posted to {url}")
+    except (httpx.HTTPStatusError, httpx.RequestError) as e:
         logger.error(f"Error posting to {url}: {e}")
 
 
 def _import_recursive(path: Path, base_package: _t.Optional[str] = None) -> None:
     """Import all modules recursively from the given path."""
+    logger = DI.logger.resolve_sync()
     for root, _dirs, files in os.walk(path):
         for file in files:
             if file.endswith(".py") and not file.startswith("__"):
@@ -76,6 +68,7 @@ def _get_docstring(cls: type) -> _t.Optional[str]:
 
 def _discover_components(api_url: str, base_cls: type) -> None:
     """Discover and register all Component subclasses."""
+    logger = DI.logger.resolve_sync()
     components = [c for c in _get_all_subclasses(base_cls) if not inspect.isabstract(c)]
     logger.info(f"Found {len(components)} components")
     for c in components:
@@ -108,6 +101,7 @@ def _discover_components(api_url: str, base_cls: type) -> None:
 
 def _discover_connectors(api_url: str, base_cls: type) -> None:
     """Discover and register all Connector subclasses."""
+    logger = DI.logger.resolve_sync()
     connectors = [c for c in _get_all_subclasses(base_cls) if not inspect.isabstract(c)]
     logger.info(f"Found {len(connectors)} connectors")
     for c in connectors:
@@ -123,6 +117,7 @@ def _discover_connectors(api_url: str, base_cls: type) -> None:
 
 def _discover_events(api_url: str, base_cls: type) -> None:
     """Discover and register all Event subclasses."""
+    logger = DI.logger.resolve_sync()
     events = [
         c
         for c in _get_all_subclasses(base_cls)
@@ -145,6 +140,7 @@ def _discover_events(api_url: str, base_cls: type) -> None:
 
 def _discover_processes(api_url: str, base_cls: type) -> None:
     """Discover and register all Process subclasses."""
+    logger = DI.logger.resolve_sync()
     processes = [c for c in _get_all_subclasses(base_cls) if not inspect.isabstract(c)]
     logger.info(f"Found {len(processes)} processes")
     for c in processes:
@@ -185,8 +181,7 @@ def discover(
     ] = "http://localhost:8000",
 ) -> None:
     """Discover Plugboard types in a project and push them to the Plugboard API."""
-    logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
-
+    logger = DI.logger.resolve_sync()
     api_url = api_url.rstrip("/")
 
     with Progress(
@@ -206,16 +201,11 @@ def discover(
             # Not a package, add dir directly
             sys.path.insert(0, str(project_dir))
 
-        # Import plugboard
-        try:
-            import plugboard  # noqa: F401
-            from plugboard.component import Component
-            from plugboard.connector import Connector
-            from plugboard.events import Event
-            from plugboard.process import Process
-        except ImportError:
-            stderr.print("[red]Error: plugboard not found in target environment[/red]")
-            raise typer.Exit(1)
+        # Import plugboard types - we're already in plugboard so just import directly
+        from plugboard.component import Component
+        from plugboard.connector import Connector
+        from plugboard.events import Event
+        from plugboard.process import Process
 
         # Import everything in the project
         progress.update(task, description="Importing modules...")
