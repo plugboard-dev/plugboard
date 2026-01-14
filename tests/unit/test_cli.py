@@ -4,6 +4,8 @@ Note: Tests which run async code synchronously from CLI entrypoints must be
 marked async so that they do not interfere with pytest-asyncio's event loop.
 """
 
+import tempfile
+from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -59,3 +61,63 @@ def test_cli_process_diagram() -> None:
     assert result.exit_code == 0
     # Must output a Mermaid flowchart
     assert "flowchart" in result.stdout
+
+
+def test_cli_server_discover() -> None:
+    """Tests the server discover command."""
+    with tempfile.TemporaryDirectory() as tmpdir:
+        # Create a minimal Python package
+        project_dir = Path(tmpdir) / "test_project"
+        project_dir.mkdir()
+        (project_dir / "__init__.py").write_text("")
+        
+        # Mock the discovery functions
+        with patch("plugboard.cli.server._import_recursive") as mock_import:
+            with patch("plugboard.cli.server._discover_components") as mock_discover_components:
+                with patch("plugboard.cli.server._discover_connectors") as mock_discover_connectors:
+                    with patch("plugboard.cli.server._discover_events") as mock_discover_events:
+                        with patch("plugboard.cli.server._discover_processes") as mock_discover_processes:
+                            result = runner.invoke(
+                                app,
+                                [
+                                    "server",
+                                    "discover",
+                                    str(project_dir),
+                                    "--api-url",
+                                    "http://test:8000",
+                                ],
+                            )
+                            # CLI must run without error
+                            assert result.exit_code == 0
+                            assert "Discovery complete" in result.stdout
+                            # Import must be called
+                            mock_import.assert_called_once()
+                            # All discovery functions must be called
+                            mock_discover_components.assert_called_once()
+                            mock_discover_connectors.assert_called_once()
+                            mock_discover_events.assert_called_once()
+                            mock_discover_processes.assert_called_once()
+
+
+def test_cli_server_discover_with_env_var() -> None:
+    """Tests the server discover command with environment variable."""
+    with tempfile.TemporaryDirectory() as tmpdir:
+        # Create a minimal Python package
+        project_dir = Path(tmpdir) / "test_project"
+        project_dir.mkdir()
+        (project_dir / "__init__.py").write_text("")
+        
+        # Mock the discovery functions
+        with patch("plugboard.cli.server._import_recursive"):
+            with patch("plugboard.cli.server._discover_components"):
+                with patch("plugboard.cli.server._discover_connectors"):
+                    with patch("plugboard.cli.server._discover_events"):
+                        with patch("plugboard.cli.server._discover_processes"):
+                            result = runner.invoke(
+                                app,
+                                ["server", "discover", str(project_dir)],
+                                env={"PLUGBOARD_API_URL": "http://env-test:9000"},
+                            )
+                            # CLI must run without error
+                            assert result.exit_code == 0
+                            assert "Discovery complete" in result.stdout
