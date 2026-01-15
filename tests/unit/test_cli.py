@@ -6,6 +6,7 @@ marked async so that they do not interfere with pytest-asyncio's event loop.
 
 from pathlib import Path
 import tempfile
+import typing as _t
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -19,12 +20,13 @@ runner = CliRunner()
 
 
 @pytest.fixture
-def test_project_dir():
+def test_project_dir() -> _t.Iterator[Path]:
     """Create a minimal Python package for testing."""
     with tempfile.TemporaryDirectory() as tmpdir:
         project_dir = Path(tmpdir) / "test_project"
         project_dir.mkdir()
         (project_dir / "__init__.py").write_text("")
+        (project_dir / "test_file.py").write_text("")
         yield project_dir
 
 
