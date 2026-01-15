@@ -13,6 +13,9 @@ from plugboard.schemas import ComponentArgsDict, ConnectorSpec, Status
 class A(Component):
     io = IO(inputs=["a", "b"], outputs=["c"])
 
+    def __init__(self, **kwargs: _t.Unpack[ComponentArgsDict]) -> None:
+        super().__init__(**kwargs)
+
     async def step(self) -> None:
         self.c = {"a": self.a, "b": self.b}
 
@@ -95,3 +98,17 @@ async def test_component_status() -> None:
     run_component.raise_exception = False
     await run_component.run()
     assert run_component.status == Status.COMPLETED, "Component should be COMPLETED after run"
+
+
+@pytest.mark.asyncio
+async def test_component_multi_step() -> None:
+    """Tests components on two steps."""
+    component = A(name="init_values")
+    await component.init()
+    component.a = 1
+    component.b = 2
+    await component.step()
+    assert component.c == {"a": 1, "b": 2}
+    component.a = 3
+    await component.step()
+    assert component.c == {"a": 3, "b": 4}

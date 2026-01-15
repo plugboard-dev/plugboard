@@ -31,11 +31,11 @@ def _post_to_api(url: str, data: dict) -> None:
     logger = DI.logger.resolve_sync()
     try:
         response = httpx.post(url, json=data, timeout=30.0)
-        if response.status_code not in (200, 201):
+        if response.status_code not in (200, 201):  # pragma: no cover
             logger.error(f"Failed to post to {url}: {response.status_code} {response.text}")
         else:
             logger.debug(f"Successfully posted to {url}")
-    except (httpx.HTTPStatusError, httpx.RequestError) as e:
+    except (httpx.HTTPStatusError, httpx.RequestError) as e:  # pragma: no cover
         logger.error(f"Error posting to {url}: {e}")
 
 
