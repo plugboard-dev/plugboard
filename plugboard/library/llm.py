@@ -33,6 +33,21 @@ class _LLMBase(Component, ABC):
 
     io = IO()
 
+    def __init__(
+        self,
+        llm: str = "llama_index.llms.openai.OpenAI",
+        response_model: _t.Optional[_t.Type[BaseModel] | str] = None,
+        expand_response: bool = False,
+        llm_kwargs: _t.Optional[dict[str, _t.Any]] = None,
+        **kwargs: _t.Unpack[ComponentArgsDict],
+    ) -> None:
+        super().__init__(**kwargs)
+        self._llm: LLM = self._initialize_llm(llm, llm_kwargs)
+        response_model = self._resolve_response_model(response_model)
+        self._llm, self._structured, self._expand_response = self._apply_structured_response(
+            self._llm, response_model, expand_response
+        )
+
     def _initialize_llm(self, llm_str: str, llm_kwargs: _t.Optional[dict[str, _t.Any]]) -> LLM:
         _llm_cls = locate(llm_str)
         if _llm_cls is None or not isinstance(_llm_cls, type) or not issubclass(_llm_cls, LLM):
@@ -114,11 +129,12 @@ class LLMChat(_LLMBase):
             llm_kwargs: Additional keyword arguments for the LLM.
             **kwargs: Additional keyword arguments for [`Component`][plugboard.component.Component].
         """
-        super().__init__(**kwargs)
-        self._llm: LLM = self._initialize_llm(llm, llm_kwargs)
-        response_model = self._resolve_response_model(response_model)
-        self._llm, self._structured, self._expand_response = self._apply_structured_response(
-            self._llm, response_model, expand_response
+        super().__init__(
+            llm=llm,
+            response_model=response_model,
+            expand_response=expand_response,
+            llm_kwargs=llm_kwargs,
+            **kwargs,
         )
         self._memory: deque[ChatMessage] = deque(maxlen=context_window * 2)
         self._system_prompt = (
@@ -176,11 +192,12 @@ class LLMImageProcessor(_LLMBase):
             llm_kwargs: Extra kwargs passed to the LLM constructor (e.g. {"model": "gpt-4o"}).
             **kwargs: Standard Component args.
         """
-        super().__init__(**kwargs)
-        self._llm: LLM = self._initialize_llm(llm, llm_kwargs)
-        response_model = self._resolve_response_model(response_model)
-        self._llm, self._structured, self._expand_response = self._apply_structured_response(
-            self._llm, response_model, expand_response
+        super().__init__(
+            llm=llm,
+            response_model=response_model,
+            expand_response=expand_response,
+            llm_kwargs=llm_kwargs,
+            **kwargs,
         )
         self._prompt = prompt
 
