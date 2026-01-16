@@ -3,7 +3,7 @@
 from .data_reader import DataReader
 from .data_writer import DataWriter
 from .file_io import FileReader, FileWriter
-from .llm import LLMChat
+from .llm import LLMChat, LLMImageProcessor
 from .sql_io import SQLReader, SQLWriter
 from .websocket_io import WebsocketBase, WebsocketReader, WebsocketWriter
 
@@ -12,6 +12,7 @@ __all__ = [
     "DataReader",
     "DataWriter",
     "LLMChat",
+    "LLMImageProcessor",
     "FileReader",
     "FileWriter",
     "SQLReader",

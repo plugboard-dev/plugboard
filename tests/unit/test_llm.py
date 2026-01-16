@@ -9,7 +9,7 @@ import openai_responses
 from pydantic import BaseModel
 import pytest
 
-from plugboard.library.llm import LLMChat
+from plugboard.library.llm import LLMChat, LLMImageProcessor
 
 
 class ExpectedResponse(BaseModel):  # noqa: D101
@@ -135,3 +135,60 @@ async def test_openai_structured_chat(
         assert llm.y == "test"
     else:
         assert json.loads(llm.response) == test_response.model_dump()
+
+
+@pytest.mark.asyncio
+async def test_llm_image_processor(openai_mock: openai_responses.OpenAIMock) -> None:
+    """Test the `LLMImageProcessor` component."""
+    processor = LLMImageProcessor(
+        name="processor",
+        prompt="Describe this image",
+        llm_kwargs={"model": "gpt-4o"},
+    )
+    await processor.init()
+
+    openai_mock.chat.completions.create.response = {
+        "choices": [
+            {
+                "index": 0,
+                "finish_reason": "stop",
+                "message": {"content": "A beautiful landscape", "role": "assistant"},
+            }
+        ]
+    }
+
+    # Test with URL
+    processor.image = "https://example.com/image.png"
+    await processor.step()
+
+    assert processor.response == "A beautiful landscape"
+
+    request = json.loads(openai_mock.chat.completions.create.route.calls[-1].request.content)
+    messages = request["messages"]
+    assert len(messages) == 1
+    content = messages[0]["content"]
+    assert isinstance(content, list)
+    # Check for text prompt
+    assert any(
+        block.get("type") == "text" and block.get("text") == "Describe this image"
+        for block in content
+    )
+    # Check for image url
+    assert any(
+        block.get("type") == "image_url"
+        and block.get("image_url", {}).get("url") == "https://example.com/image.png"
+        for block in content
+    )
+
+    # Test with bytes
+    # Note: llama-index converts bytes to base64 data URI
+    processor.image = b"fakeimagebytes"
+    await processor.step()
+    assert processor.response == "A beautiful landscape"
+
+    request = json.loads(openai_mock.chat.completions.create.route.calls[-1].request.content)
+    messages = request["messages"]
+    content = messages[0]["content"]
+    # Check for image url with data uri
+    image_block = next(block for block in content if block.get("type") == "image_url")
+    assert image_block["image_url"]["url"].startswith("data:")
