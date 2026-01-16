@@ -1038,6 +1038,8 @@ What's new: 🚀 we've open-sourced Plugboard - please <a href="https://github.c
       
         
       
+        
+      
     
     
     
@@ -1154,6 +1156,34 @@ What's new: 🚀 we've open-sourced Plugboard - please <a href="https://github.c
     
   
     Rock Paper Scissors
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/demos/llm/004_image_processing/local-and-remote-image-processing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Local and Remote Image Processing
   
 
     
@@ -1770,6 +1800,17 @@ What's new: 🚀 we've open-sourced Plugboard - please <a href="https://github.c
 </li>
       
         <li class="md-nav__item">
+  <a href="#plugboard.library.LLMImageProcessor" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-class"></code>&nbsp;LLMImageProcessor
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#plugboard.library.SQLReader" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2286,6 +2327,17 @@ What's new: 🚀 we've open-sourced Plugboard - please <a href="https://github.c
     <span class="md-ellipsis">
       
         <code class="doc-symbol doc-symbol-toc doc-symbol-class"></code>&nbsp;LLMChat
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#plugboard.library.LLMImageProcessor" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-class"></code>&nbsp;LLMImageProcessor
       
     </span>
   </a>
@@ -3053,7 +3105,7 @@ The file can be stored locally or on an fsspec-compatible cloud storage service.
 
     <div class="doc doc-contents ">
             <p class="doc doc-class-bases">
-              Bases: <code><a class="autorefs autorefs-internal" title="            Component (plugboard.component.Component)" href="../../component/component/#plugboard.component.Component">Component</a></code></p>
+              Bases: <code><span title="plugboard.library.llm._LLMBase">_LLMBase</span></code></p>
 
 
 
@@ -3188,6 +3240,192 @@ cause the individual attributes of the response model to be added as output fiel
             <td>
               <div class="doc-md-description">
                 <p>Additional keyword arguments for <a class="autorefs autorefs-internal" title="            Component" href="../../component/component/#plugboard.component.Component"><code>Component</code></a>.</p>
+              </div>
+            </td>
+            <td>
+                  <code>{}</code>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+
+
+  </div>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
+<h2 id="plugboard.library.LLMImageProcessor" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-class"></code>            <span class="doc doc-object-name doc-class-name">LLMImageProcessor</span>
+
+
+</h2>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">LLMImageProcessor</span><span class="p">(</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    <span class="n">llm</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;llama_index.llms.openai.OpenAI&quot;</span><span class="p">,</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>    <span class="n">prompt</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>    <span class="n">response_model</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Type</span><span class="p">[</span><span class="n">BaseModel</span><span class="p">]</span> <span class="o">|</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>    <span class="n">expand_response</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>    <span class="n">llm_kwargs</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>    <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Unpack</span><span class="p">[</span><span class="n">ComponentArgsDict</span><span class="p">],</span>
+</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="p">)</span>
+</span></code></pre></div>
+
+    <div class="doc doc-contents ">
+            <p class="doc doc-class-bases">
+              Bases: <code><span title="plugboard.library.llm._LLMBase">_LLMBase</span></code></p>
+
+
+
+        <p><code>LLMImageProcessor</code> processes an image with a vision-capable LLM.</p>
+<p>Sends a (optional) textual prompt plus an image to a llama-index LLM. The image may be
+provided either as a URL string (http/https or data URI) or as raw bytes. Structured output
+is supported via a Pydantic <code>response_model</code>.</p>
+
+
+<details class="inputs" open>
+  <summary>Inputs</summary>
+  <p>image: Union[str, bytes]; if <code>str</code> treated as URL, if <code>bytes</code> passed directly via
+    <code>ImageBlock(image=...)</code>.</p>
+</details>
+
+<details class="outputs" open>
+  <summary>Outputs</summary>
+  <p>response: Raw string response unless <code>expand_response=True</code> with a structured model.
+(If structured + expanded: individual model fields become outputs.)</p>
+</details>
+        <p>Instantiate <code>LLMImageProcessor</code>.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>llm</code>
+            </td>
+            <td>
+                  <code><span title="str">str</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>The vision-capable LLM class path for llama-index.</p>
+              </div>
+            </td>
+            <td>
+                  <code>&#39;llama_index.llms.openai.OpenAI&#39;</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>prompt</code>
+            </td>
+            <td>
+                  <code><span title="str">str</span> | None</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Optional; A base prompt applied to each request (can include instructions
+about desired output format, etc.).</p>
+              </div>
+            </td>
+            <td>
+                  <code>None</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>response_model</code>
+            </td>
+            <td>
+                  <code><span title="typing.Optional">Optional</span>[<span title="typing.Type">Type</span>[<span title="pydantic.BaseModel">BaseModel</span>] | <span title="str">str</span>]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Optional; Pydantic model (or namespaced string) describing structured
+output expected from the LLM.</p>
+              </div>
+            </td>
+            <td>
+                  <code>None</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>expand_response</code>
+            </td>
+            <td>
+                  <code><span title="bool">bool</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>When using a structured response model, expands fields into outputs.</p>
+              </div>
+            </td>
+            <td>
+                  <code>False</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>llm_kwargs</code>
+            </td>
+            <td>
+                  <code><span title="typing.Optional">Optional</span>[<span title="dict">dict</span>[<span title="str">str</span>, <span title="typing.Any">Any</span>]]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Extra kwargs passed to the LLM constructor (e.g. {"model": "gpt-4o"}).</p>
+              </div>
+            </td>
+            <td>
+                  <code>None</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>**kwargs</code>
+            </td>
+            <td>
+                  <code><span title="typing.Unpack">Unpack</span>[<span title="plugboard.schemas.ComponentArgsDict">ComponentArgsDict</span>]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Standard Component args.</p>
               </div>
             </td>
             <td>

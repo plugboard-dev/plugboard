@@ -10,13 +10,13 @@
       
       
       
-        <link rel="canonical" href="https://docs.plugboard.dev/latest/examples/demos/physics-models/001-hot-water-tank/hot-water-tank/">
+        <link rel="canonical" href="https://docs.plugboard.dev/latest/examples/demos/llm/004_image_processing/local-and-remote-image-processing/">
       
       
-        <link rel="prev" href="../../../llm/004_image_processing/local-and-remote-image-processing/">
+        <link rel="prev" href="../../003_rock_paper_scissors/rock-paper-scissors/">
       
       
-        <link rel="next" href="../../../finance/001_momentum_signal/momentum-signal/">
+        <link rel="next" href="../../../physics-models/001-hot-water-tank/hot-water-tank/">
       
       
         
@@ -27,7 +27,7 @@
     
     
       
-        <title>Hot water tank model - Plugboard</title>
+        <title>Local and Remote Image Processing - Plugboard</title>
       
     
     
@@ -92,7 +92,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#hot-water-tank-model" class="md-skip">
+        <a href="#local-and-remote-image-processing" class="md-skip">
           Skip to content
         </a>
       
@@ -142,7 +142,7 @@ What's new: 🚀 we've open-sourced Plugboard - please <a href="https://github.c
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Hot water tank model
+              Local and Remote Image Processing
             
           </span>
         </div>
@@ -1032,8 +1032,10 @@ What's new: 🚀 we've open-sourced Plugboard - please <a href="https://github.c
                 
   
   
+    
   
   
+  
     
     
       
@@ -1052,13 +1054,11 @@ What's new: 🚀 we've open-sourced Plugboard - please <a href="https://github.c
       
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
       
         
         
-          
-        
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3_2" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_2" checked>
         
           
           <label class="md-nav__link" for="__nav_3_2" id="__nav_3_2_label" tabindex="0">
@@ -1079,7 +1079,7 @@ What's new: 🚀 we've open-sourced Plugboard - please <a href="https://github.c
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_2_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_2_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_3_2">
             <span class="md-nav__icon md-icon"></span>
             
@@ -1097,7 +1097,7 @@ What's new: 🚀 we've open-sourced Plugboard - please <a href="https://github.c
   
   
     <li class="md-nav__item">
-      <a href="../../../llm/001_data_filter/llm-filtering/" class="md-nav__link">
+      <a href="../../001_data_filter/llm-filtering/" class="md-nav__link">
         
   
   
@@ -1125,7 +1125,7 @@ What's new: 🚀 we've open-sourced Plugboard - please <a href="https://github.c
   
   
     <li class="md-nav__item">
-      <a href="../../../llm/002_bluesky_websocket/bluesky-websocket/" class="md-nav__link">
+      <a href="../../002_bluesky_websocket/bluesky-websocket/" class="md-nav__link">
         
   
   
@@ -1153,7 +1153,7 @@ What's new: 🚀 we've open-sourced Plugboard - please <a href="https://github.c
   
   
     <li class="md-nav__item">
-      <a href="../../../llm/003_rock_paper_scissors/rock-paper-scissors/" class="md-nav__link">
+      <a href="../../003_rock_paper_scissors/rock-paper-scissors/" class="md-nav__link">
         
   
   
@@ -1178,10 +1178,37 @@ What's new: 🚀 we've open-sourced Plugboard - please <a href="https://github.c
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../../../llm/004_image_processing/local-and-remote-image-processing/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Local and Remote Image Processing
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -1197,6 +1224,81 @@ What's new: 🚀 we've open-sourced Plugboard - please <a href="https://github.c
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-define-local-components" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Define Local Components
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-define-events" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Define Events
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-logic-and-adapters" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Logic and Adapters
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-llm-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. LLM Configuration
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-define-and-run-process" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Define and Run Process
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -1214,8 +1316,6 @@ What's new: 🚀 we've open-sourced Plugboard - please <a href="https://github.c
                 
   
   
-    
-  
   
   
     
@@ -1230,11 +1330,13 @@ What's new: 🚀 we've open-sourced Plugboard - please <a href="https://github.c
       
     
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_3" checked>
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3_3" >
         
           
           <label class="md-nav__link" for="__nav_3_3" id="__nav_3_3_label" tabindex="0">
@@ -1255,7 +1357,7 @@ What's new: 🚀 we've open-sourced Plugboard - please <a href="https://github.c
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_3_label" aria-expanded="true">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_3_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_3_3">
             <span class="md-nav__icon md-icon"></span>
             
@@ -1270,19 +1372,10 @@ What's new: 🚀 we've open-sourced Plugboard - please <a href="https://github.c
                 
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../../../physics-models/001-hot-water-tank/hot-water-tank/" class="md-nav__link">
         
   
   
@@ -1298,7 +1391,6 @@ What's new: 🚀 we've open-sourced Plugboard - please <a href="https://github.c
   
 
       </a>
-      
     </li>
   
 
@@ -1926,6 +2018,69 @@ What's new: 🚀 we've open-sourced Plugboard - please <a href="https://github.c
     
   
   
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-define-local-components" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Define Local Components
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-define-events" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Define Events
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-logic-and-adapters" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Logic and Adapters
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-llm-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. LLM Configuration
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-define-and-run-process" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Define and Run Process
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
 </nav>
                   </div>
                 </div>
@@ -1945,7 +2100,7 @@ What's new: 🚀 we've open-sourced Plugboard - please <a href="https://github.c
       
       
       
-        <a href="../../../../../usage/topics/#tag:physics-models" class="md-tag">physics-models</a>
+        <a href="../../../../../usage/topics/#tag:llm" class="md-tag">llm</a>
       
     
   </nav>
@@ -2391,20 +2546,36 @@ span.linenos.special { color: #000000; background-color: #ffffc0; padding-left: 
 </style>
 <!-- End of mermaid configuration --><div class="jupyter-wrapper">
 <div class="jp-Notebook" data-jp-theme-light="true" data-jp-theme-name="JupyterLab Light">
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=0">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h1 id="hot-water-tank-model">Hot water tank model<a class="anchor-link" href="#hot-water-tank-model">¶</a></h1><p><a href="https://colab.research.google.com/github/plugboard-dev/plugboard/blob/main/examples/demos/physics-models/001-hot-water-tank/hot-water-tank.ipynb"><img alt="Open in Colab" src="https://colab.research.google.com/assets/colab-badge.svg"/></a></p>
+<h1 id="local-and-remote-image-processing">Local and Remote Image Processing<a class="anchor-link" href="#local-and-remote-image-processing">¶</a></h1><p><a href="https://colab.research.google.com/github/plugboard-dev/plugboard/blob/main/examples/demos/llm/004_image_processing/local-and-remote-image-processing.ipynb"><img alt="Open in Colab" src="https://colab.research.google.com/assets/colab-badge.svg"/></a></p>
 <p><a href="https://codespaces.new/plugboard-dev/plugboard"><img alt="Open in GitHub Codespaces" src="https://github.com/codespaces/badge.svg"/></a></p>
-<p>This model demonstrates how Plugboard can be used to connect physics-based models. We'll build a component to simulate the temperature of an insulated hot-water tank, along with another to control the tank's heating element.</p>
+<p>This example demonstrates a hybrid AI pipeline that combines a lightweight local model with a powerful remote LLM.</p>
+<p><strong>The Goal:</strong></p>
+<p>We want to process a stream of images, identify which ones contain clocks, and then read the time from those clocks.</p>
+<p><strong>The Problem:</strong></p>
+<p>Sending every image to a large multimodal model (like OpenAI) is expensive and slow.</p>
+<p><strong>The Solution:</strong></p>
+<ol>
+<li>Use a fast, local computer vision model (MobileNetV3) to classify images.</li>
+<li>Filter the stream:<ul>
+<li>If it's a clock -&gt; Send to GPT-5-nano to read the time.</li>
+<li>If it's not a clock -&gt; Log it and skip the expensive call.</li>
+</ul>
+</li>
+</ol>
+<p>This architecture demonstrates <strong>Event-driven routing</strong> in Plugboard, where data flows to different downstream components based on analysis results.</p>
+<p>The overall model will look like this:</p>
+<p><img alt="" src="https://mermaid.ink/img/pako:eNrVld9KwzAUxl8l5LJsPkCRoQwFoRXZjTdCOUvObDFNSpo5ofTdXZP-ddJtrrvwtvm-c37nOyEtKFMcqU83Qu1YDNqQYPUmCdEIHPVdQfIYMvSJVlvJkc-IgDUKnzwmAldWc7vWC89zes8jJZnPF0SocXuwP39K4R2d28krd9X7z2bbmgnI82STjFdgIML95MKV6DwNw4XzsxjZx5h_WQmWdVsGJlGyRnHOhuPyaablScGwOAIOmRkrF1aye6dydQbG7p6INMq0YpjnamzCILQLf2mk9eb77vb2TFvSYjr4nU7MsTvxajX9kZ3rSvlNByaVjE6Ee1bykO_A3zJ2J-dy_nT-R1b7rSsT49dwyQ-fKE3V_aZd5xS3YxDT7-2baAYEV4nWPmRTvEC9lI5HOnHX89KkM5qiTiHh1C-oiTGt_rIcN7AVhpblN21ynjw="/></p>
 </div>
 </div>
 </div>
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
-<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=1">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -2422,18 +2593,16 @@ span.linenos.special { color: #000000; background-color: #ffffc0; padding-left: 
 </div>
 </clipboard-copy>
 </div>
-<div class="highlight-ipynb hl-python"><pre><span></span><span class="c1"># Install plugboard and dependencies for Google Colab</span>
-<span class="err">!</span><span class="n">pip</span> <span class="n">install</span> <span class="o">-</span><span class="n">q</span> <span class="n">plugboard</span> <span class="n">plotly</span>
+<div class="highlight-ipynb hl-python"><pre><span></span><span class="err">!</span><span class="n">pip</span> <span class="n">install</span> <span class="n">torchvision</span> <span class="n">pillow</span> <span class="n">requests</span>
 </pre></div>
-<div class="clipboard-copy-txt" id="cell-1"># Install plugboard and dependencies for Google Colab
-!pip install -q plugboard plotly</div>
+<div class="clipboard-copy-txt" id="cell-1">!pip install torchvision pillow requests</div>
 </div>
 </div>
 </div>
 </div>
 </div>
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
-<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=2">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -2451,30 +2620,58 @@ span.linenos.special { color: #000000; background-color: #ffffc0; padding-left: 
 </div>
 </clipboard-copy>
 </div>
-<div class="highlight-ipynb hl-python"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">_t</span>
+<div class="highlight-ipynb hl-python"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">getpass</span><span class="w"> </span><span class="kn">import</span> <span class="n">getpass</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">io</span><span class="w"> </span><span class="kn">import</span> <span class="n">BytesIO</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">_t</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">time</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">plugboard.connector</span><span class="w"> </span><span class="kn">import</span> <span class="n">AsyncioConnector</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pydantic</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseModel</span><span class="p">,</span> <span class="n">ConfigDict</span><span class="p">,</span> <span class="n">AnyUrl</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">PIL</span><span class="w"> </span><span class="kn">import</span> <span class="n">Image</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">httpx</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torchvision.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">mobilenet_v3_small</span><span class="p">,</span> <span class="n">MobileNet_V3_Small_Weights</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">torchvision</span><span class="w"> </span><span class="kn">import</span> <span class="n">transforms</span>
+
 <span class="kn">from</span><span class="w"> </span><span class="nn">plugboard.component</span><span class="w"> </span><span class="kn">import</span> <span class="n">Component</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">plugboard.connector</span><span class="w"> </span><span class="kn">import</span> <span class="n">AsyncioConnector</span><span class="p">,</span> <span class="n">ConnectorBuilder</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">plugboard.component</span><span class="w"> </span><span class="kn">import</span> <span class="n">IOController</span> <span class="k">as</span> <span class="n">IO</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">plugboard.schemas</span><span class="w"> </span><span class="kn">import</span> <span class="n">ComponentArgsDict</span><span class="p">,</span> <span class="n">ConnectorSpec</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">plugboard.process</span><span class="w"> </span><span class="kn">import</span> <span class="n">LocalProcess</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">plugboard.library</span><span class="w"> </span><span class="kn">import</span> <span class="n">FileWriter</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">plugboard.library</span><span class="w"> </span><span class="kn">import</span> <span class="n">FileReader</span><span class="p">,</span> <span class="n">FileWriter</span><span class="p">,</span> <span class="n">LLMImageProcessor</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">plugboard.events</span><span class="w"> </span><span class="kn">import</span> <span class="n">Event</span><span class="p">,</span> <span class="n">EventConnectorBuilder</span>
 </pre></div>
-<div class="clipboard-copy-txt" id="cell-2">import typing as _t
+<div class="clipboard-copy-txt" id="cell-2">import os
+from getpass import getpass
+from io import BytesIO
+import typing as _t
+from datetime import time
 
-from plugboard.connector import AsyncioConnector
+import pandas as pd
+from pydantic import BaseModel, ConfigDict, AnyUrl
+from PIL import Image
+import httpx
+from torchvision.models import mobilenet_v3_small, MobileNet_V3_Small_Weights
+
+from torchvision import transforms
+
 from plugboard.component import Component
+
+from plugboard.connector import AsyncioConnector, ConnectorBuilder
 from plugboard.component import IOController as IO
 from plugboard.schemas import ComponentArgsDict, ConnectorSpec
 from plugboard.process import LocalProcess
-from plugboard.library import FileWriter</div>
+from plugboard.library import FileReader, FileWriter, LLMImageProcessor
+from plugboard.events import Event, EventConnectorBuilder</div>
 </div>
 </div>
 </div>
 </div>
 </div>
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
-<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=3">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -2492,18 +2689,33 @@ from plugboard.library import FileWriter</div>
 </div>
 </clipboard-copy>
 </div>
-<div class="highlight-ipynb hl-python"><pre><span></span><span class="n">WATER_SPECIFIC_HEAT</span> <span class="o">=</span> <span class="mi">4186</span>  <span class="c1"># J/(kg°C)</span>
-<span class="n">WATER_DENSITY</span> <span class="o">=</span> <span class="mf">1.0</span>  <span class="c1"># kg/L</span>
+<div class="highlight-ipynb hl-python"><pre><span></span><span class="k">if</span> <span class="s2">"OPENAI_API_KEY"</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">:</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s2">"OPENAI_API_KEY"</span><span class="p">]</span> <span class="o">=</span> <span class="n">getpass</span><span class="p">(</span><span class="s2">"Enter your OpenAI API key: "</span><span class="p">)</span>
 </pre></div>
-<div class="clipboard-copy-txt" id="cell-3">WATER_SPECIFIC_HEAT = 4186  # J/(kg°C)
-WATER_DENSITY = 1.0  # kg/L</div>
+<div class="clipboard-copy-txt" id="cell-3">if "OPENAI_API_KEY" not in os.environ:
+    os.environ["OPENAI_API_KEY"] = getpass("Enter your OpenAI API key: ")</div>
 </div>
 </div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=4">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h2 id="1-define-local-components">1. Define Local Components<a class="anchor-link" href="#1-define-local-components">¶</a></h2><p>First, we define the components that run locally.</p>
+<ul>
+<li><code>LoadImage</code>: Downloads an image from a URL and converts it to a format suitable for processing.</li>
+<li><code>LocalModel</code>: Uses <code>torchvision</code>'s pre-trained <strong>MobileNetV3</strong> to classify the image. This runs entirely on your machine (or CPU/GPU) and is very fast.</li>
+</ul>
 </div>
 </div>
 </div>
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
-<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=5">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -2521,80 +2733,112 @@ WATER_DENSITY = 1.0  # kg/L</div>
 </div>
 </clipboard-copy>
 </div>
-<div class="highlight-ipynb hl-python"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">HotWaterTank</span><span class="p">(</span><span class="n">Component</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">"""This component represents an insulated hot water tank with an on/off heating element."""</span>
+<div class="highlight-ipynb hl-python"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">LoadImage</span><span class="p">(</span><span class="n">Component</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Loads an image from a URL"""</span>
 
-    <span class="n">io</span> <span class="o">=</span> <span class="n">IO</span><span class="p">(</span><span class="n">inputs</span><span class="o">=</span><span class="p">[</span><span class="s2">"heating_element"</span><span class="p">,</span> <span class="s2">"prev_temperature"</span><span class="p">],</span> <span class="n">outputs</span><span class="o">=</span><span class="p">[</span><span class="s2">"temperature"</span><span class="p">])</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span>
-        <span class="n">volume</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
-        <span class="n">heater_power</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
-        <span class="n">insulation_r</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
-        <span class="n">ambient_temp</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
-        <span class="n">delta_t</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">60</span><span class="p">,</span>
-        <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">_t</span><span class="o">.</span><span class="n">Unpack</span><span class="p">[</span><span class="n">ComponentArgsDict</span><span class="p">],</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-        <span class="c1"># Set the initial running total to 0</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_heater_power_watts</span> <span class="o">=</span> <span class="n">heater_power</span> <span class="o">*</span> <span class="mi">1000</span>  <span class="c1"># W</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_water_mass</span> <span class="o">=</span> <span class="n">volume</span> <span class="o">*</span> <span class="n">WATER_DENSITY</span>  <span class="c1"># kg</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_heat_capacity</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_water_mass</span> <span class="o">*</span> <span class="n">WATER_SPECIFIC_HEAT</span>  <span class="c1"># J/°C</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_delta_t</span> <span class="o">=</span> <span class="n">delta_t</span>  <span class="c1"># s</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_insulation_r</span> <span class="o">=</span> <span class="n">insulation_r</span>  <span class="c1"># °C/W</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_ambient_temp</span> <span class="o">=</span> <span class="n">ambient_temp</span>  <span class="c1"># °C</span>
+    <span class="n">io</span> <span class="o">=</span> <span class="n">IO</span><span class="p">(</span><span class="n">inputs</span><span class="o">=</span><span class="p">[</span><span class="s2">"url"</span><span class="p">],</span> <span class="n">outputs</span><span class="o">=</span><span class="p">[</span><span class="s2">"image"</span><span class="p">])</span>
 
     <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">step</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="c1"># Apply heater power to the water</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">temperature</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">prev_temperature</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">heating_element</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">temperature</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_heater_power_watts</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_delta_t</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">_heat_capacity</span>
-        <span class="c1"># Apply heat loss to the environment</span>
-        <span class="n">heat_loss</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">prev_temperature</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ambient_temp</span><span class="p">)</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">_insulation_r</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_delta_t</span>
+        <span class="n">headers</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">"User-Agent"</span><span class="p">:</span> <span class="s2">"PlugboardExample/1.0 (https://docs.plugboard.dev, hello@plugboard.dev)"</span>
+        <span class="p">}</span>
+        <span class="k">async</span> <span class="k">with</span> <span class="n">httpx</span><span class="o">.</span><span class="n">AsyncClient</span><span class="p">()</span> <span class="k">as</span> <span class="n">client</span><span class="p">:</span>
+            <span class="n">r</span> <span class="o">=</span> <span class="k">await</span> <span class="n">client</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">url</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="n">headers</span><span class="p">,</span> <span class="n">follow_redirects</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">r</span><span class="o">.</span><span class="n">raise_for_status</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">image</span> <span class="o">=</span> <span class="n">Image</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">BytesIO</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">content</span><span class="p">))</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="s2">"RGB"</span><span class="p">)</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">LocalModel</span><span class="p">(</span><span class="n">Component</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Passes an image into a MobileNetV3 model"""</span>
+
+    <span class="n">io</span> <span class="o">=</span> <span class="n">IO</span><span class="p">(</span><span class="n">inputs</span><span class="o">=</span><span class="p">[</span><span class="s2">"image"</span><span class="p">],</span> <span class="n">outputs</span><span class="o">=</span><span class="p">[</span><span class="s2">"classification"</span><span class="p">])</span>
+
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">init</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_model</span> <span class="o">=</span> <span class="n">mobilenet_v3_small</span><span class="p">(</span><span class="n">weights</span><span class="o">=</span><span class="n">MobileNet_V3_Small_Weights</span><span class="o">.</span><span class="n">IMAGENET1K_V1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_categories</span> <span class="o">=</span> <span class="n">MobileNet_V3_Small_Weights</span><span class="o">.</span><span class="n">IMAGENET1K_V1</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">"categories"</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_model</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_transform</span> <span class="o">=</span> <span class="n">transforms</span><span class="o">.</span><span class="n">Compose</span><span class="p">(</span>
+            <span class="p">[</span>
+                <span class="n">transforms</span><span class="o">.</span><span class="n">Resize</span><span class="p">((</span><span class="mi">224</span><span class="p">,</span> <span class="mi">224</span><span class="p">)),</span>  <span class="c1"># MobileNetV3 expects 224x224 input</span>
+                <span class="n">transforms</span><span class="o">.</span><span class="n">ToTensor</span><span class="p">(),</span>  <span class="c1"># Convert PIL Image to torch.Tensor (CHW format, [0.0,1.0] range)</span>
+                <span class="n">transforms</span><span class="o">.</span><span class="n">Normalize</span><span class="p">(</span>
+                    <span class="n">mean</span><span class="o">=</span><span class="p">[</span><span class="mf">0.485</span><span class="p">,</span> <span class="mf">0.456</span><span class="p">,</span> <span class="mf">0.406</span><span class="p">],</span>  <span class="c1"># Normalize to ImageNet means</span>
+                    <span class="n">std</span><span class="o">=</span><span class="p">[</span><span class="mf">0.229</span><span class="p">,</span> <span class="mf">0.224</span><span class="p">,</span> <span class="mf">0.225</span><span class="p">],</span>  <span class="c1"># Normalize to ImageNet stds</span>
+                <span class="p">),</span>
+            <span class="p">]</span>
         <span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">temperature</span> <span class="o">-=</span> <span class="n">heat_loss</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">_heat_capacity</span>
+
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">step</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">tensor_image</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_transform</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">image</span><span class="p">)</span>
+        <span class="n">batch_tensor</span> <span class="o">=</span> <span class="n">tensor_image</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>  <span class="c1"># Add batch dimension</span>
+        <span class="n">outputs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_model</span><span class="p">(</span><span class="n">batch_tensor</span><span class="p">)</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">softmax</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">classification</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_categories</span><span class="p">,</span> <span class="n">outputs</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">()))</span>
 </pre></div>
-<div class="clipboard-copy-txt" id="cell-4">class HotWaterTank(Component):
-    """This component represents an insulated hot water tank with an on/off heating element."""
+<div class="clipboard-copy-txt" id="cell-4">class LoadImage(Component):
+    """Loads an image from a URL"""
 
-    io = IO(inputs=["heating_element", "prev_temperature"], outputs=["temperature"])
-
-    def __init__(
-        self,
-        volume: float,
-        heater_power: float,
-        insulation_r: float,
-        ambient_temp: float,
-        delta_t: float = 60,
-        **kwargs: _t.Unpack[ComponentArgsDict],
-    ) -&gt; None:
-        super().__init__(**kwargs)
-        # Set the initial running total to 0
-        self._heater_power_watts = heater_power * 1000  # W
-        self._water_mass = volume * WATER_DENSITY  # kg
-        self._heat_capacity = self._water_mass * WATER_SPECIFIC_HEAT  # J/°C
-        self._delta_t = delta_t  # s
-        self._insulation_r = insulation_r  # °C/W
-        self._ambient_temp = ambient_temp  # °C
+    io = IO(inputs=["url"], outputs=["image"])
 
     async def step(self) -&gt; None:
-        # Apply heater power to the water
-        self.temperature = self.prev_temperature
-        if self.heating_element:
-            self.temperature += self._heater_power_watts * self._delta_t / self._heat_capacity
-        # Apply heat loss to the environment
-        heat_loss = (
-            (self.prev_temperature - self._ambient_temp) / self._insulation_r * self._delta_t
+        headers = {
+            "User-Agent": "PlugboardExample/1.0 (https://docs.plugboard.dev, hello@plugboard.dev)"
+        }
+        async with httpx.AsyncClient() as client:
+            r = await client.get(self.url, headers=headers, follow_redirects=True)
+            r.raise_for_status()
+
+        self.image = Image.open(BytesIO(r.content)).convert("RGB")
+
+
+class LocalModel(Component):
+    """Passes an image into a MobileNetV3 model"""
+
+    io = IO(inputs=["image"], outputs=["classification"])
+
+    async def init(self) -&gt; None:
+        self._model = mobilenet_v3_small(weights=MobileNet_V3_Small_Weights.IMAGENET1K_V1)
+        self._categories = MobileNet_V3_Small_Weights.IMAGENET1K_V1.meta["categories"]
+        self._model.eval()
+        self._transform = transforms.Compose(
+            [
+                transforms.Resize((224, 224)),  # MobileNetV3 expects 224x224 input
+                transforms.ToTensor(),  # Convert PIL Image to torch.Tensor (CHW format, [0.0,1.0] range)
+                transforms.Normalize(
+                    mean=[0.485, 0.456, 0.406],  # Normalize to ImageNet means
+                    std=[0.229, 0.224, 0.225],  # Normalize to ImageNet stds
+                ),
+            ]
         )
-        self.temperature -= heat_loss / self._heat_capacity</div>
+
+    async def step(self) -&gt; None:
+        tensor_image = self._transform(self.image)
+        batch_tensor = tensor_image.unsqueeze(0)  # Add batch dimension
+        outputs = self._model(batch_tensor).squeeze(0).softmax(0)
+        self.classification = dict(zip(self._categories, outputs.detach().numpy()))</div>
 </div>
 </div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=6">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h2 id="2-define-events">2. Define Events<a class="anchor-link" href="#2-define-events">¶</a></h2><p>We define two types of events to handle the routing logic:</p>
+<ul>
+<li><code>MatchEvent</code>: Fired when the image matches our criteria (it is a clock). It carries the image data.</li>
+<li><code>NonMatchEvent</code>: Fired when the image does not match. It carries the classification results for logging.</li>
+</ul>
+<p>We use Pydantic models (<code>MatchData</code>, <code>NonMatchData</code>) to strictly type the event payloads.</p>
 </div>
 </div>
 </div>
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
-<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=7">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -2612,53 +2856,66 @@ WATER_DENSITY = 1.0  # kg/L</div>
 </div>
 </clipboard-copy>
 </div>
-<div class="highlight-ipynb hl-python"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">ThermostatController</span><span class="p">(</span><span class="n">Component</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">"""This component represents a thermostat with hysteresis."""</span>
+<div class="highlight-ipynb hl-python"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">MatchData</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+    <span class="n">model_config</span> <span class="o">=</span> <span class="n">ConfigDict</span><span class="p">(</span><span class="n">arbitrary_types_allowed</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">url</span><span class="p">:</span> <span class="n">AnyUrl</span>
 
-    <span class="n">io</span> <span class="o">=</span> <span class="n">IO</span><span class="p">(</span><span class="n">inputs</span><span class="o">=</span><span class="p">[</span><span class="s2">"setpoint"</span><span class="p">,</span> <span class="s2">"temperature"</span><span class="p">],</span> <span class="n">outputs</span><span class="o">=</span><span class="p">[</span><span class="s2">"heating_element"</span><span class="p">])</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">hysteresis</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">_t</span><span class="o">.</span><span class="n">Unpack</span><span class="p">[</span><span class="n">ComponentArgsDict</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_hysteresis</span> <span class="o">=</span> <span class="n">hysteresis</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">MatchEvent</span><span class="p">(</span><span class="n">Event</span><span class="p">):</span>
+    <span class="nb">type</span><span class="p">:</span> <span class="n">_t</span><span class="o">.</span><span class="n">ClassVar</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"match"</span>
+    <span class="n">data</span><span class="p">:</span> <span class="n">MatchData</span>
 
-    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">step</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">temperature</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">setpoint</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">_hysteresis</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">heating_element</span> <span class="o">=</span> <span class="kc">True</span>
-        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">temperature</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">setpoint</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_hysteresis</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">heating_element</span> <span class="o">=</span> <span class="kc">False</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">NonMatchData</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+    <span class="n">classification</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span>
+    <span class="n">url</span><span class="p">:</span> <span class="n">AnyUrl</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">NonMatchEvent</span><span class="p">(</span><span class="n">Event</span><span class="p">):</span>
+    <span class="nb">type</span><span class="p">:</span> <span class="n">_t</span><span class="o">.</span><span class="n">ClassVar</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"non_match"</span>
+    <span class="n">data</span><span class="p">:</span> <span class="n">NonMatchData</span>
 </pre></div>
-<div class="clipboard-copy-txt" id="cell-5">class ThermostatController(Component):
-    """This component represents a thermostat with hysteresis."""
+<div class="clipboard-copy-txt" id="cell-5">class MatchData(BaseModel):
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+    url: AnyUrl
 
-    io = IO(inputs=["setpoint", "temperature"], outputs=["heating_element"])
 
-    def __init__(self, hysteresis: float, **kwargs: _t.Unpack[ComponentArgsDict]) -&gt; None:
-        super().__init__(**kwargs)
-        self._hysteresis = hysteresis
+class MatchEvent(Event):
+    type: _t.ClassVar[str] = "match"
+    data: MatchData
 
-    async def step(self) -&gt; None:
-        if self.temperature &lt; self.setpoint - self._hysteresis:
-            self.heating_element = True
-        elif self.temperature &gt; self.setpoint + self._hysteresis:
-            self.heating_element = False</div>
+
+class NonMatchData(BaseModel):
+    classification: dict[str, float]
+    url: AnyUrl
+
+
+class NonMatchEvent(Event):
+    type: _t.ClassVar[str] = "non_match"
+    data: NonMatchData</div>
 </div>
 </div>
 </div>
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=8">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<p>We'll use a <code>Constant</code> value to represent the setpoint and trigger the rest of the model.</p>
+<h2 id="3-logic-and-adapters">3. Logic and Adapters<a class="anchor-link" href="#3-logic-and-adapters">¶</a></h2><p>Now we define the components that use these events.</p>
+<ul>
+<li><code>CheckClassification</code>: Takes the classification result from <code>LocalModel</code>. If the probability of any target class (e.g., "analog clock") is above a threshold, it fires a <code>MatchEvent</code>. Otherwise, it fires a <code>NonMatchEvent</code>.</li>
+<li><code>MatchAdapter</code> &amp; <code>NonMatchAdapter</code>: These components subscribe to the events and convert the event payload back into a standard output stream. This allows us to connect them to downstream components like <code>LLMImageProcessor</code> or <code>FileWriter</code>.</li>
+</ul>
+<p><strong>Note:</strong> <code>MatchAdapter</code> also passes on the URL of time image to the <code>LLMImageProcessor</code>.</p>
 </div>
 </div>
 </div>
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
-<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=9">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -2676,46 +2933,157 @@ WATER_DENSITY = 1.0  # kg/L</div>
 </div>
 </clipboard-copy>
 </div>
-<div class="highlight-ipynb hl-python"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">Constant</span><span class="p">(</span><span class="n">Component</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">"""This component represents a constant value."""</span>
+<div class="highlight-ipynb hl-python"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">CheckClassification</span><span class="p">(</span><span class="n">Component</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Checks for a classification match."""</span>
 
-    <span class="n">io</span> <span class="o">=</span> <span class="n">IO</span><span class="p">(</span><span class="n">outputs</span><span class="o">=</span><span class="p">[</span><span class="s2">"value"</span><span class="p">])</span>
+    <span class="n">io</span> <span class="o">=</span> <span class="n">IO</span><span class="p">(</span><span class="n">inputs</span><span class="o">=</span><span class="p">[</span><span class="s2">"url"</span><span class="p">,</span> <span class="s2">"classification"</span><span class="p">],</span> <span class="n">output_events</span><span class="o">=</span><span class="p">[</span><span class="n">MatchEvent</span><span class="p">,</span> <span class="n">NonMatchEvent</span><span class="p">])</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">n_iterations</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">_t</span><span class="o">.</span><span class="n">Unpack</span><span class="p">[</span><span class="n">ComponentArgsDict</span><span class="p">]</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">classes</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">threshold</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.5</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">_t</span><span class="o">.</span><span class="n">Unpack</span><span class="p">[</span><span class="n">ComponentArgsDict</span><span class="p">]</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="n">value</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_remaining_iterations</span> <span class="o">=</span> <span class="n">n_iterations</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_class_names</span> <span class="o">=</span> <span class="n">classes</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_threshold</span> <span class="o">=</span> <span class="n">threshold</span>
 
     <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">step</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_remaining_iterations</span> <span class="o">-=</span> <span class="mi">1</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_remaining_iterations</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
-</pre></div>
-<div class="clipboard-copy-txt" id="cell-6">class Constant(Component):
-    """This component represents a constant value."""
+        <span class="n">match</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_class_names</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">classification</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_threshold</span><span class="p">:</span>
+                <span class="n">match</span> <span class="o">=</span> <span class="kc">True</span>
+                <span class="k">break</span>
+        <span class="k">if</span> <span class="n">match</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">queue_event</span><span class="p">(</span><span class="n">MatchEvent</span><span class="p">(</span><span class="n">source</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">MatchData</span><span class="p">(</span><span class="n">url</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">url</span><span class="p">)))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">queue_event</span><span class="p">(</span>
+                <span class="n">NonMatchEvent</span><span class="p">(</span>
+                    <span class="n">source</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+                    <span class="n">data</span><span class="o">=</span><span class="n">NonMatchData</span><span class="p">(</span><span class="n">classification</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">classification</span><span class="p">,</span> <span class="n">url</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">url</span><span class="p">),</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
 
-    io = IO(outputs=["value"])
+
+<span class="k">class</span><span class="w"> </span><span class="nc">MatchAdapter</span><span class="p">(</span><span class="n">Component</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Listens for match events and passes them on for further processing."""</span>
+
+    <span class="n">io</span> <span class="o">=</span> <span class="n">IO</span><span class="p">(</span><span class="n">outputs</span><span class="o">=</span><span class="p">[</span><span class="s2">"url"</span><span class="p">],</span> <span class="n">input_events</span><span class="o">=</span><span class="p">[</span><span class="n">MatchEvent</span><span class="p">])</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">_t</span><span class="o">.</span><span class="n">Unpack</span><span class="p">[</span><span class="n">ComponentArgsDict</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_buffer</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="nd">@MatchEvent</span><span class="o">.</span><span class="n">handler</span>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">handle_match</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">:</span> <span class="n">MatchEvent</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_buffer</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">event</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
+
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">step</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_buffer</span><span class="p">:</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_buffer</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">url</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">url</span><span class="p">)</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">NonMatchAdapter</span><span class="p">(</span><span class="n">Component</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Listens for non-match events and passes them on for further processing."""</span>
+
+    <span class="n">io</span> <span class="o">=</span> <span class="n">IO</span><span class="p">(</span><span class="n">outputs</span><span class="o">=</span><span class="p">[</span><span class="s2">"classification"</span><span class="p">,</span> <span class="s2">"url"</span><span class="p">],</span> <span class="n">input_events</span><span class="o">=</span><span class="p">[</span><span class="n">NonMatchEvent</span><span class="p">])</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">_t</span><span class="o">.</span><span class="n">Unpack</span><span class="p">[</span><span class="n">ComponentArgsDict</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_buffer</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="nd">@NonMatchEvent</span><span class="o">.</span><span class="n">handler</span>
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">handle_non_match</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">:</span> <span class="n">NonMatchEvent</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_buffer</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">event</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
+
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">step</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_buffer</span><span class="p">:</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_buffer</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">classification</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">classification</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">url</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">url</span><span class="p">)</span>
+</pre></div>
+<div class="clipboard-copy-txt" id="cell-6">class CheckClassification(Component):
+    """Checks for a classification match."""
+
+    io = IO(inputs=["url", "classification"], output_events=[MatchEvent, NonMatchEvent])
 
     def __init__(
-        self, value: float, n_iterations: int, **kwargs: _t.Unpack[ComponentArgsDict]
+        self, classes: list[str], threshold: float = 0.5, **kwargs: _t.Unpack[ComponentArgsDict]
     ) -&gt; None:
         super().__init__(**kwargs)
-        self.value = value
-        self._remaining_iterations = n_iterations
+        self._class_names = classes
+        self._threshold = threshold
 
     async def step(self) -&gt; None:
-        self._remaining_iterations -= 1
-        if self._remaining_iterations &lt;= 0:
-            await self.io.close()</div>
+        match = False
+        for c in self._class_names:
+            if self.classification.get(c, 0) &gt;= self._threshold:
+                match = True
+                break
+        if match:
+            self.io.queue_event(MatchEvent(source=self.name, data=MatchData(url=self.url)))
+        else:
+            self.io.queue_event(
+                NonMatchEvent(
+                    source=self.name,
+                    data=NonMatchData(classification=self.classification, url=self.url),
+                )
+            )
+
+
+class MatchAdapter(Component):
+    """Listens for match events and passes them on for further processing."""
+
+    io = IO(outputs=["url"], input_events=[MatchEvent])
+
+    def __init__(self, **kwargs: _t.Unpack[ComponentArgsDict]) -&gt; None:
+        super().__init__(**kwargs)
+        self._buffer = []
+
+    @MatchEvent.handler
+    async def handle_match(self, event: MatchEvent):
+        self._buffer.append(event.data)
+
+    async def step(self) -&gt; None:
+        if self._buffer:
+            data = self._buffer.pop(0)
+            self.url = str(data.url)
+
+
+class NonMatchAdapter(Component):
+    """Listens for non-match events and passes them on for further processing."""
+
+    io = IO(outputs=["classification", "url"], input_events=[NonMatchEvent])
+
+    def __init__(self, **kwargs: _t.Unpack[ComponentArgsDict]) -&gt; None:
+        super().__init__(**kwargs)
+        self._buffer = []
+
+    @NonMatchEvent.handler
+    async def handle_non_match(self, event: NonMatchEvent):
+        self._buffer.append(event.data)
+
+    async def step(self) -&gt; None:
+        if self._buffer:
+            data = self._buffer.pop(0)
+            self.classification = data.classification
+            self.url = str(data.url)</div>
 </div>
 </div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=10">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h2 id="4-llm-configuration">4. LLM Configuration<a class="anchor-link" href="#4-llm-configuration">¶</a></h2><p>We define a Pydantic model for the LLM's response. This ensures we get structured data (JSON) back from the model, rather than just free text.</p>
 </div>
 </div>
 </div>
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
-<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=11">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -2733,51 +3101,39 @@ WATER_DENSITY = 1.0  # kg/L</div>
 </div>
 </clipboard-copy>
 </div>
-<div class="highlight-ipynb hl-python"><pre><span></span><span class="n">setpoint</span> <span class="o">=</span> <span class="n">Constant</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">"setpoint"</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="mi">60</span><span class="p">,</span> <span class="n">n_iterations</span><span class="o">=</span><span class="mi">24</span> <span class="o">*</span> <span class="mi">60</span><span class="p">)</span>
-<span class="n">tank</span> <span class="o">=</span> <span class="n">HotWaterTank</span><span class="p">(</span>
-    <span class="n">name</span><span class="o">=</span><span class="s2">"tank"</span><span class="p">,</span>
-    <span class="n">initial_values</span><span class="o">=</span><span class="p">{</span><span class="s2">"prev_temperature"</span><span class="p">:</span> <span class="p">[</span><span class="mi">58</span><span class="p">],</span> <span class="s2">"heating_element"</span><span class="p">:</span> <span class="p">[</span><span class="kc">False</span><span class="p">]},</span>
-    <span class="n">volume</span><span class="o">=</span><span class="mi">150</span><span class="p">,</span>
-    <span class="n">heater_power</span><span class="o">=</span><span class="mf">1.1</span><span class="p">,</span>
-    <span class="n">insulation_r</span><span class="o">=</span><span class="mf">0.9</span><span class="p">,</span>
-    <span class="n">ambient_temp</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span>
-<span class="p">)</span>
-<span class="n">thermostat</span> <span class="o">=</span> <span class="n">ThermostatController</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">"controller"</span><span class="p">,</span> <span class="n">hysteresis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
-<span class="n">save</span> <span class="o">=</span> <span class="n">FileWriter</span><span class="p">(</span>
-    <span class="n">name</span><span class="o">=</span><span class="s2">"save"</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="s2">"temperature.csv"</span><span class="p">,</span> <span class="n">field_names</span><span class="o">=</span><span class="p">[</span><span class="s2">"heater"</span><span class="p">,</span> <span class="s2">"temperature"</span><span class="p">,</span> <span class="s2">"setpoint"</span><span class="p">]</span>
-<span class="p">)</span>
+<div class="highlight-ipynb hl-python"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">TimeReading</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+    <span class="n">time</span><span class="p">:</span> <span class="nb">str</span>
 </pre></div>
-<div class="clipboard-copy-txt" id="cell-7">setpoint = Constant(name="setpoint", value=60, n_iterations=24 * 60)
-tank = HotWaterTank(
-    name="tank",
-    initial_values={"prev_temperature": [58], "heating_element": [False]},
-    volume=150,
-    heater_power=1.1,
-    insulation_r=0.9,
-    ambient_temp=20,
-)
-thermostat = ThermostatController(name="controller", hysteresis=1)
-save = FileWriter(
-    name="save", path="temperature.csv", field_names=["heater", "temperature", "setpoint"]
-)</div>
+<div class="clipboard-copy-txt" id="cell-7">class TimeReading(BaseModel):
+    time: str</div>
 </div>
 </div>
 </div>
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=12">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<p>Now connect the components together in a <code>LocalProcess</code>.</p>
+<h2 id="5-define-and-run-process">5. Define and Run Process<a class="anchor-link" href="#5-define-and-run-process">¶</a></h2><p>Finally, we wire everything together in a <code>LocalProcess</code>.</p>
+<ol>
+<li><strong>Input</strong>: We create a CSV with URLs of images (some clocks, some not).</li>
+<li><strong>Pipeline</strong>:<ul>
+<li><code>FileReader</code> -&gt; <code>LoadImage</code> -&gt; <code>LocalModel</code> -&gt; <code>CheckClassification</code></li>
+<li><code>CheckClassification</code> fires events.</li>
+<li><code>MatchEvent</code> -&gt; <code>MatchAdapter</code> -&gt; <code>LLMImageProcessor</code> -&gt; <code>FileWriter</code> (matches.csv)</li>
+<li><code>NonMatchEvent</code> -&gt; <code>NonMatchAdapter</code> -&gt; <code>FileWriter</code> (non_matches.csv)</li>
+</ul>
+</li>
+</ol>
 </div>
 </div>
 </div>
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
-<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=13">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -2795,87 +3151,16 @@ save = FileWriter(
 </div>
 </clipboard-copy>
 </div>
-<div class="highlight-ipynb hl-python"><pre><span></span><span class="n">process</span> <span class="o">=</span> <span class="n">LocalProcess</span><span class="p">(</span>
-    <span class="n">components</span><span class="o">=</span><span class="p">[</span><span class="n">setpoint</span><span class="p">,</span> <span class="n">tank</span><span class="p">,</span> <span class="n">thermostat</span><span class="p">,</span> <span class="n">save</span><span class="p">],</span>
-    <span class="n">connectors</span><span class="o">=</span><span class="p">[</span>
-        <span class="c1"># Connect setpoint to controller</span>
-        <span class="n">AsyncioConnector</span><span class="p">(</span>
-            <span class="n">spec</span><span class="o">=</span><span class="n">ConnectorSpec</span><span class="p">(</span><span class="n">source</span><span class="o">=</span><span class="s2">"setpoint.value"</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="s2">"controller.setpoint"</span><span class="p">),</span>
-        <span class="p">),</span>
-        <span class="c1"># Connect controller to tank</span>
-        <span class="n">AsyncioConnector</span><span class="p">(</span>
-            <span class="n">spec</span><span class="o">=</span><span class="n">ConnectorSpec</span><span class="p">(</span><span class="n">source</span><span class="o">=</span><span class="s2">"controller.heating_element"</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="s2">"tank.heating_element"</span><span class="p">),</span>
-        <span class="p">),</span>
-        <span class="c1"># Connect tank to controller</span>
-        <span class="n">AsyncioConnector</span><span class="p">(</span>
-            <span class="n">spec</span><span class="o">=</span><span class="n">ConnectorSpec</span><span class="p">(</span><span class="n">source</span><span class="o">=</span><span class="s2">"tank.temperature"</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="s2">"controller.temperature"</span><span class="p">),</span>
-        <span class="p">),</span>
-        <span class="c1"># Connect tank to itself to save the previous temperature</span>
-        <span class="n">AsyncioConnector</span><span class="p">(</span>
-            <span class="n">spec</span><span class="o">=</span><span class="n">ConnectorSpec</span><span class="p">(</span><span class="n">source</span><span class="o">=</span><span class="s2">"tank.temperature"</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="s2">"tank.prev_temperature"</span><span class="p">),</span>
-        <span class="p">),</span>
-        <span class="c1"># Connect tank, controller and setpoint to save</span>
-        <span class="n">AsyncioConnector</span><span class="p">(</span>
-            <span class="n">spec</span><span class="o">=</span><span class="n">ConnectorSpec</span><span class="p">(</span><span class="n">source</span><span class="o">=</span><span class="s2">"tank.temperature"</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="s2">"save.temperature"</span><span class="p">),</span>
-        <span class="p">),</span>
-        <span class="n">AsyncioConnector</span><span class="p">(</span>
-            <span class="n">spec</span><span class="o">=</span><span class="n">ConnectorSpec</span><span class="p">(</span><span class="n">source</span><span class="o">=</span><span class="s2">"controller.heating_element"</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="s2">"save.heater"</span><span class="p">),</span>
-        <span class="p">),</span>
-        <span class="n">AsyncioConnector</span><span class="p">(</span>
-            <span class="n">spec</span><span class="o">=</span><span class="n">ConnectorSpec</span><span class="p">(</span><span class="n">source</span><span class="o">=</span><span class="s2">"setpoint.value"</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="s2">"save.setpoint"</span><span class="p">),</span>
-        <span class="p">),</span>
-    <span class="p">],</span>
-<span class="p">)</span>
+<div class="highlight-ipynb hl-python"><pre><span></span><span class="n">connect</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">src</span><span class="p">,</span> <span class="n">dst</span><span class="p">:</span> <span class="n">AsyncioConnector</span><span class="p">(</span><span class="n">spec</span><span class="o">=</span><span class="n">ConnectorSpec</span><span class="p">(</span><span class="n">source</span><span class="o">=</span><span class="n">src</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="n">dst</span><span class="p">))</span>
 </pre></div>
-<div class="clipboard-copy-txt" id="cell-8">process = LocalProcess(
-    components=[setpoint, tank, thermostat, save],
-    connectors=[
-        # Connect setpoint to controller
-        AsyncioConnector(
-            spec=ConnectorSpec(source="setpoint.value", target="controller.setpoint"),
-        ),
-        # Connect controller to tank
-        AsyncioConnector(
-            spec=ConnectorSpec(source="controller.heating_element", target="tank.heating_element"),
-        ),
-        # Connect tank to controller
-        AsyncioConnector(
-            spec=ConnectorSpec(source="tank.temperature", target="controller.temperature"),
-        ),
-        # Connect tank to itself to save the previous temperature
-        AsyncioConnector(
-            spec=ConnectorSpec(source="tank.temperature", target="tank.prev_temperature"),
-        ),
-        # Connect tank, controller and setpoint to save
-        AsyncioConnector(
-            spec=ConnectorSpec(source="tank.temperature", target="save.temperature"),
-        ),
-        AsyncioConnector(
-            spec=ConnectorSpec(source="controller.heating_element", target="save.heater"),
-        ),
-        AsyncioConnector(
-            spec=ConnectorSpec(source="setpoint.value", target="save.setpoint"),
-        ),
-    ],
-)</div>
+<div class="clipboard-copy-txt" id="cell-8">connect = lambda src, dst: AsyncioConnector(spec=ConnectorSpec(source=src, target=dst))</div>
 </div>
 </div>
-</div>
-</div>
-</div>
-</div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
-<div class="jp-Cell-inputWrapper" tabindex="0">
-<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
-</div>
-<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
-</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<p>Now we can initialise and run the simulation.</p>
 </div>
 </div>
 </div>
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
-<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=14">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -2893,10 +3178,130 @@ save = FileWriter(
 </div>
 </clipboard-copy>
 </div>
-<div class="highlight-ipynb hl-python"><pre><span></span><span class="k">async</span> <span class="k">with</span> <span class="n">process</span><span class="p">:</span>
+<div class="highlight-ipynb hl-python"><pre><span></span><span class="c1"># Create CSV with some image URLs</span>
+<span class="n">images_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span>
+    <span class="p">{</span>
+        <span class="s2">"url"</span><span class="p">:</span> <span class="p">[</span>
+            <span class="c1"># This is a clock</span>
+            <span class="s2">"https://images.unsplash.com/photo-1541480601022-2308c0f02487?ixlib=rb-4.1.0&amp;q=85&amp;fm=jpg&amp;crop=entropy&amp;cs=srgb"</span><span class="p">,</span>
+            <span class="c1"># Not a clock (Train)</span>
+            <span class="s2">"https://images.unsplash.com/photo-1535535112387-56ffe8db21ff?ixlib=rb-4.1.0&amp;q=85&amp;fm=jpg&amp;crop=entropy&amp;cs=srgb"</span><span class="p">,</span>
+            <span class="c1"># This is a clock</span>
+            <span class="s2">"https://images.unsplash.com/photo-1563861826100-9cb868fdbe1c?ixlib=rb-4.1.0&amp;q=85&amp;fm=jpg&amp;crop=entropy&amp;cs=srgb"</span><span class="p">,</span>
+            <span class="c1"># Not a clock (Dog)</span>
+            <span class="s2">"https://images.unsplash.com/photo-1530281700549-e82e7bf110d6?ixlib=rb-4.1.0&amp;q=85&amp;fm=jpg&amp;crop=entropy&amp;cs=srgb"</span><span class="p">,</span>
+        <span class="p">]</span>
+    <span class="p">}</span>
+<span class="p">)</span>
+<span class="n">images_df</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="s2">"images.csv"</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+<span class="c1"># Define Components</span>
+<span class="n">components</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="n">FileReader</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">"reader"</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="s2">"images.csv"</span><span class="p">,</span> <span class="n">field_names</span><span class="o">=</span><span class="p">[</span><span class="s2">"url"</span><span class="p">]),</span>
+    <span class="n">LoadImage</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">"loader"</span><span class="p">),</span>
+    <span class="n">LocalModel</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">"classifier"</span><span class="p">),</span>
+    <span class="n">CheckClassification</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">"checker"</span><span class="p">,</span> <span class="n">classes</span><span class="o">=</span><span class="p">[</span><span class="s2">"analog clock"</span><span class="p">,</span> <span class="s2">"wall clock"</span><span class="p">,</span> <span class="s2">"digital clock"</span><span class="p">]),</span>
+    <span class="n">MatchAdapter</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">"match_adapter"</span><span class="p">),</span>
+    <span class="n">LLMImageProcessor</span><span class="p">(</span>
+        <span class="n">name</span><span class="o">=</span><span class="s2">"llm_processor"</span><span class="p">,</span>
+        <span class="n">prompt</span><span class="o">=</span><span class="s2">"Read the time on the clock"</span><span class="p">,</span>
+        <span class="n">response_model</span><span class="o">=</span><span class="n">TimeReading</span><span class="p">,</span>
+        <span class="n">expand_response</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">llm_kwargs</span><span class="o">=</span><span class="p">{</span><span class="s2">"model"</span><span class="p">:</span> <span class="s2">"gpt-4o-mini"</span><span class="p">},</span>
+    <span class="p">),</span>
+    <span class="n">FileWriter</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">"match_writer"</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="s2">"matches.csv"</span><span class="p">,</span> <span class="n">field_names</span><span class="o">=</span><span class="p">[</span><span class="s2">"time"</span><span class="p">,</span> <span class="s2">"url"</span><span class="p">]),</span>
+    <span class="n">NonMatchAdapter</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">"non_match_adapter"</span><span class="p">),</span>
+    <span class="n">FileWriter</span><span class="p">(</span>
+        <span class="n">name</span><span class="o">=</span><span class="s2">"non_match_writer"</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="s2">"non_matches.csv"</span><span class="p">,</span> <span class="n">field_names</span><span class="o">=</span><span class="p">[</span><span class="s2">"classification"</span><span class="p">,</span> <span class="s2">"url"</span><span class="p">]</span>
+    <span class="p">),</span>
+<span class="p">]</span>
+
+<span class="c1"># Define Connectors</span>
+<span class="n">connectors</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="n">connect</span><span class="p">(</span><span class="s2">"reader.url"</span><span class="p">,</span> <span class="s2">"loader.url"</span><span class="p">),</span>
+    <span class="n">connect</span><span class="p">(</span><span class="s2">"loader.image"</span><span class="p">,</span> <span class="s2">"classifier.image"</span><span class="p">),</span>
+    <span class="n">connect</span><span class="p">(</span><span class="s2">"reader.url"</span><span class="p">,</span> <span class="s2">"checker.url"</span><span class="p">),</span>
+    <span class="n">connect</span><span class="p">(</span><span class="s2">"classifier.classification"</span><span class="p">,</span> <span class="s2">"checker.classification"</span><span class="p">),</span>
+    <span class="c1"># Adapter to Processor/Writer</span>
+    <span class="n">connect</span><span class="p">(</span><span class="s2">"match_adapter.url"</span><span class="p">,</span> <span class="s2">"llm_processor.image"</span><span class="p">),</span>
+    <span class="n">connect</span><span class="p">(</span><span class="s2">"llm_processor.time"</span><span class="p">,</span> <span class="s2">"match_writer.time"</span><span class="p">),</span>
+    <span class="n">connect</span><span class="p">(</span><span class="s2">"match_adapter.url"</span><span class="p">,</span> <span class="s2">"match_writer.url"</span><span class="p">),</span>
+    <span class="n">connect</span><span class="p">(</span><span class="s2">"non_match_adapter.classification"</span><span class="p">,</span> <span class="s2">"non_match_writer.classification"</span><span class="p">),</span>
+    <span class="n">connect</span><span class="p">(</span><span class="s2">"non_match_adapter.url"</span><span class="p">,</span> <span class="s2">"non_match_writer.url"</span><span class="p">),</span>
+<span class="p">]</span>
+
+<span class="c1"># Event Connectors</span>
+<span class="n">builder</span> <span class="o">=</span> <span class="n">ConnectorBuilder</span><span class="p">(</span><span class="n">connector_cls</span><span class="o">=</span><span class="n">AsyncioConnector</span><span class="p">)</span>
+<span class="n">event_builder</span> <span class="o">=</span> <span class="n">EventConnectorBuilder</span><span class="p">(</span><span class="n">connector_builder</span><span class="o">=</span><span class="n">builder</span><span class="p">)</span>
+<span class="n">event_connectors</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">event_builder</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="n">components</span><span class="p">)</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+
+<span class="c1"># Define Process</span>
+<span class="n">process</span> <span class="o">=</span> <span class="n">LocalProcess</span><span class="p">(</span><span class="n">components</span><span class="o">=</span><span class="n">components</span><span class="p">,</span> <span class="n">connectors</span><span class="o">=</span><span class="n">connectors</span> <span class="o">+</span> <span class="n">event_connectors</span><span class="p">)</span>
+
+<span class="k">async</span> <span class="k">with</span> <span class="n">process</span><span class="p">:</span>
     <span class="k">await</span> <span class="n">process</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
 </pre></div>
-<div class="clipboard-copy-txt" id="cell-9">async with process:
+<div class="clipboard-copy-txt" id="cell-9"># Create CSV with some image URLs
+images_df = pd.DataFrame(
+    {
+        "url": [
+            # This is a clock
+            "https://images.unsplash.com/photo-1541480601022-2308c0f02487?ixlib=rb-4.1.0&amp;q=85&amp;fm=jpg&amp;crop=entropy&amp;cs=srgb",
+            # Not a clock (Train)
+            "https://images.unsplash.com/photo-1535535112387-56ffe8db21ff?ixlib=rb-4.1.0&amp;q=85&amp;fm=jpg&amp;crop=entropy&amp;cs=srgb",
+            # This is a clock
+            "https://images.unsplash.com/photo-1563861826100-9cb868fdbe1c?ixlib=rb-4.1.0&amp;q=85&amp;fm=jpg&amp;crop=entropy&amp;cs=srgb",
+            # Not a clock (Dog)
+            "https://images.unsplash.com/photo-1530281700549-e82e7bf110d6?ixlib=rb-4.1.0&amp;q=85&amp;fm=jpg&amp;crop=entropy&amp;cs=srgb",
+        ]
+    }
+)
+images_df.to_csv("images.csv", index=False)
+
+# Define Components
+components = [
+    FileReader(name="reader", path="images.csv", field_names=["url"]),
+    LoadImage(name="loader"),
+    LocalModel(name="classifier"),
+    CheckClassification(name="checker", classes=["analog clock", "wall clock", "digital clock"]),
+    MatchAdapter(name="match_adapter"),
+    LLMImageProcessor(
+        name="llm_processor",
+        prompt="Read the time on the clock",
+        response_model=TimeReading,
+        expand_response=True,
+        llm_kwargs={"model": "gpt-4o-mini"},
+    ),
+    FileWriter(name="match_writer", path="matches.csv", field_names=["time", "url"]),
+    NonMatchAdapter(name="non_match_adapter"),
+    FileWriter(
+        name="non_match_writer", path="non_matches.csv", field_names=["classification", "url"]
+    ),
+]
+
+# Define Connectors
+connectors = [
+    connect("reader.url", "loader.url"),
+    connect("loader.image", "classifier.image"),
+    connect("reader.url", "checker.url"),
+    connect("classifier.classification", "checker.classification"),
+    # Adapter to Processor/Writer
+    connect("match_adapter.url", "llm_processor.image"),
+    connect("llm_processor.time", "match_writer.time"),
+    connect("match_adapter.url", "match_writer.url"),
+    connect("non_match_adapter.classification", "non_match_writer.classification"),
+    connect("non_match_adapter.url", "non_match_writer.url"),
+]
+
+# Event Connectors
+builder = ConnectorBuilder(connector_cls=AsyncioConnector)
+event_builder = EventConnectorBuilder(connector_builder=builder)
+event_connectors = list(event_builder.build(components).values())
+
+# Define Process
+process = LocalProcess(components=components, connectors=connectors + event_connectors)
+
+async with process:
     await process.run()</div>
 </div>
 </div>
@@ -2904,18 +3309,18 @@ save = FileWriter(
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=15">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<p>Finally check we have the output data saved in <code>temperature.csv</code>.</p>
+<p>Now open the output CSVs to see the time read from the clock images.</p>
 </div>
 </div>
 </div>
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
-<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=16">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -2933,33 +3338,9 @@ save = FileWriter(
 </div>
 </clipboard-copy>
 </div>
-<div class="highlight-ipynb hl-python"><pre><span></span><span class="k">try</span><span class="p">:</span>
-    <span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
-
-    <span class="n">fig</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="s2">"temperature.csv"</span><span class="p">)</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
-        <span class="n">backend</span><span class="o">=</span><span class="s2">"plotly"</span><span class="p">,</span>
-        <span class="n">y</span><span class="o">=</span><span class="p">[</span><span class="s2">"temperature"</span><span class="p">,</span> <span class="s2">"setpoint"</span><span class="p">],</span>
-        <span class="n">title</span><span class="o">=</span><span class="s2">"Temperature vs. Setpoint"</span><span class="p">,</span>
-        <span class="n">labels</span><span class="o">=</span><span class="p">{</span><span class="s2">"index"</span><span class="p">:</span> <span class="s2">"Time (min)"</span><span class="p">,</span> <span class="s2">"value"</span><span class="p">:</span> <span class="s2">"Temperature (°C)"</span><span class="p">},</span>
-    <span class="p">)</span>
-<span class="k">except</span> <span class="p">(</span><span class="ne">ImportError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">):</span>
-    <span class="nb">print</span><span class="p">(</span><span class="s2">"Please install plotly to run this cell."</span><span class="p">)</span>
-    <span class="n">fig</span> <span class="o">=</span> <span class="kc">None</span>
-<span class="n">fig</span>
+<div class="highlight-ipynb hl-python"><pre><span></span><span class="err">!</span><span class="n">cat</span> <span class="n">matches</span><span class="o">.</span><span class="n">csv</span> 
 </pre></div>
-<div class="clipboard-copy-txt" id="cell-10">try:
-    import pandas as pd
-
-    fig = pd.read_csv("temperature.csv").plot(
-        backend="plotly",
-        y=["temperature", "setpoint"],
-        title="Temperature vs. Setpoint",
-        labels={"index": "Time (min)", "value": "Temperature (°C)"},
-    )
-except (ImportError, ValueError):
-    print("Please install plotly to run this cell.")
-    fig = None
-fig</div>
+<div class="clipboard-copy-txt" id="cell-10">!cat matches.csv </div>
 </div>
 </div>
 </div>
