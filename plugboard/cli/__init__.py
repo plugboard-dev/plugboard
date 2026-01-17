@@ -4,6 +4,7 @@ import typer
 
 from plugboard import __version__
 from plugboard.cli.process import app as process_app
+from plugboard.cli.server import app as server_app
 
 
 app = typer.Typer(
@@ -13,3 +14,4 @@ app = typer.Typer(
     pretty_exceptions_show_locals=False,
 )
 app.add_typer(process_app, name="process")
+app.add_typer(server_app, name="server")
