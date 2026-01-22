@@ -225,10 +225,11 @@ class Tuner:
         # https://docs.ray.io/en/latest/tune/api/doc/ray.tune.execution.placement_groups.PlacementGroupFactory.html
         trainable_with_resources = ray.tune.with_resources(
             self._build_objective(required_classes, spec),
-            # Use empty resource dict to let Ray manage resources automatically
-            # and avoid exhausting Ray CPUs when running with concurrency
-            # TODO: Implement better resource allocation based on Process requirements
-            {},
+            ray.tune.PlacementGroupFactory(
+                # Reserve 0.5 CPU for the tune process and 0 CPU for each component in the Process
+                # TODO: Implement better resource allocation based on Process requirements
+                [{"CPU": 0.5}],
+            ),
         )
 
         tuner_kwargs: dict[str, _t.Any] = {
