@@ -225,7 +225,8 @@ class Tuner:
         # https://docs.ray.io/en/latest/tune/api/doc/ray.tune.execution.placement_groups.PlacementGroupFactory.html
         trainable_with_resources = ray.tune.with_resources(
             self._build_objective(required_classes, spec),
-            # Reserve no CPUs to avoid exhausting Ray CPUs when running with concurrency
+            # Use empty resource dict to let Ray manage resources automatically
+            # and avoid exhausting Ray CPUs when running with concurrency
             # TODO: Implement better resource allocation based on Process requirements
             {},
         )
