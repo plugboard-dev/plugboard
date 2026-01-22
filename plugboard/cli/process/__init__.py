@@ -13,7 +13,11 @@ from typing_extensions import Annotated
 
 from plugboard.diagram import MermaidDiagram
 from plugboard.process import Process, ProcessBuilder
-from plugboard.schemas import ConfigSpec
+from plugboard.schemas import (
+    ConfigSpec,
+    ConnectorBuilderSpec,
+    StateBackendSpec,
+)
 from plugboard.tune import Tuner
 from plugboard.utils import add_sys_path, run_coro_sync
 
@@ -32,6 +36,65 @@ def _read_yaml(path: Path) -> ConfigSpec:
         stderr.print(f"[red]Invalid YAML[/red] at {path}")
         raise typer.Exit(1) from e
     return ConfigSpec.model_validate(data)
+
+
+def _override_process_type(config: ConfigSpec, process_type: str) -> None:
+    """Override the process type in the config and ensure compatible connector and state.
+
+    Args:
+        config: The configuration spec to modify
+        process_type: The process type to use ("local" or "ray")
+    """
+    if process_type == "ray":
+        # Prepare updates for RayProcess
+        ray_updates: dict[str, _t.Any] = {
+            "type": "plugboard.process.RayProcess",
+        }
+        # Override connector builder to RayConnector if it's the default AsyncioConnector
+        if (
+            config.plugboard.process.connector_builder.type
+            == "plugboard.connector.AsyncioConnector"
+        ):
+            ray_updates["connector_builder"] = ConnectorBuilderSpec(
+                type="plugboard.connector.RayConnector",
+                args=config.plugboard.process.connector_builder.args,
+            )
+        # Override state backend to RayStateBackend if it's the default DictStateBackend
+        if config.plugboard.process.args.state.type == "plugboard.state.DictStateBackend":
+            new_state = StateBackendSpec(
+                type="plugboard.state.RayStateBackend",
+                args=config.plugboard.process.args.state.args,
+            )
+            ray_updates["args"] = config.plugboard.process.args.model_copy(
+                update={"state": new_state}
+            )
+
+        # Apply all updates at once using model_copy
+        config.plugboard.process = config.plugboard.process.model_copy(update=ray_updates)
+
+    elif process_type == "local":
+        # Prepare updates for LocalProcess
+        local_updates: dict[str, _t.Any] = {
+            "type": "plugboard.process.LocalProcess",
+        }
+        # Override connector builder to AsyncioConnector if it's RayConnector
+        if config.plugboard.process.connector_builder.type == "plugboard.connector.RayConnector":
+            local_updates["connector_builder"] = ConnectorBuilderSpec(
+                type="plugboard.connector.AsyncioConnector",
+                args=config.plugboard.process.connector_builder.args,
+            )
+        # Override state backend to DictStateBackend if it's RayStateBackend
+        if config.plugboard.process.args.state.type == "plugboard.state.RayStateBackend":
+            new_state = StateBackendSpec(
+                type="plugboard.state.DictStateBackend",
+                args=config.plugboard.process.args.state.args,
+            )
+            local_updates["args"] = config.plugboard.process.args.model_copy(
+                update={"state": new_state}
+            )
+
+        # Apply all updates at once using model_copy
+        config.plugboard.process = config.plugboard.process.model_copy(update=local_updates)
 
 
 def _build_process(config: ConfigSpec) -> Process:
@@ -92,6 +155,16 @@ def run(
             help="Job ID for the process. If not provided, a random job ID will be generated.",
         ),
     ] = None,
+    process_type: Annotated[
+        _t.Optional[str],
+        typer.Option(
+            "--process-type",
+            help=(
+                "Override the process type. "
+                "Options: 'local' for LocalProcess, 'ray' for RayProcess."
+            ),
+        ),
+    ] = None,
 ) -> None:
     """Run a Plugboard process."""
     config_spec = _read_yaml(config)
@@ -99,6 +172,16 @@ def run(
     if job_id is not None:
         # Override job ID in config file if set
         config_spec.plugboard.process.args.state.args.job_id = job_id
+
+    if process_type is not None:
+        # Validate and normalize process type
+        process_type_lower = process_type.lower()
+        if process_type_lower not in ["local", "ray"]:
+            stderr.print(
+                f"[red]Invalid process type: {process_type}. Must be 'local' or 'ray'.[/red]"
+            )
+            raise typer.Exit(1)
+        _override_process_type(config_spec, process_type_lower)
 
     with Progress(
         SpinnerColumn("arrow3"),
