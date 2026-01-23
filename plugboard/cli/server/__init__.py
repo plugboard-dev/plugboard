@@ -16,7 +16,7 @@ from plugboard.component import Component
 from plugboard.connector import Connector
 from plugboard.events import Event
 from plugboard.process import Process
-from plugboard.utils import add_sys_path
+from plugboard.utils import add_sys_path, run_coro_sync
 from plugboard.utils.di import DI
 
 
@@ -26,17 +26,18 @@ app = typer.Typer(
 stderr = Console(stderr=True)
 
 
-def _post_to_api(url: str, data: dict) -> None:
+async def _post_to_api(url: str, data: dict) -> None:
     """Post data to the given API URL."""
     logger = DI.logger.resolve_sync()
-    try:
-        response = httpx.post(url, json=data, timeout=30.0)
-        if response.status_code not in (200, 201):  # pragma: no cover
-            logger.error(f"Failed to post to {url}: {response.status_code} {response.text}")
-        else:
-            logger.debug(f"Successfully posted to {url}")
-    except (httpx.HTTPStatusError, httpx.RequestError) as e:  # pragma: no cover
-        logger.error(f"Error posting to {url}: {e}")
+    async with httpx.AsyncClient() as client:
+        try:
+            response = await client.post(url, json=data, timeout=30.0)
+            if response.status_code not in (200, 201):  # pragma: no cover
+                logger.error(f"Failed to post to {url}: {response.status_code} {response.text}")
+            else:
+                logger.debug(f"Successfully posted to {url}")
+        except (httpx.HTTPStatusError, httpx.RequestError) as e:  # pragma: no cover
+            logger.error(f"Error posting to {url}: {e}")
 
 
 def _import_recursive(path: Path, base_package: _t.Optional[str] = None) -> None:
@@ -70,7 +71,7 @@ def _get_docstring(cls: type) -> _t.Optional[str]:
     return inspect.getdoc(cls)
 
 
-def _discover_components(api_url: str, base_cls: type) -> None:
+async def _discover_components(api_url: str, base_cls: type) -> None:
     """Discover and register all Component subclasses."""
     logger = DI.logger.resolve_sync()
     components = [c for c in _get_all_subclasses(base_cls) if not inspect.isabstract(c)]
@@ -100,10 +101,10 @@ def _discover_components(api_url: str, base_cls: type) -> None:
             "input_events": input_events,
             "output_events": output_events,
         }
-        _post_to_api(f"{api_url}/types/component", data)
+        await _post_to_api(f"{api_url}/types/component", data)
 
 
-def _discover_connectors(api_url: str, base_cls: type) -> None:
+async def _discover_connectors(api_url: str, base_cls: type) -> None:
     """Discover and register all Connector subclasses."""
     logger = DI.logger.resolve_sync()
     connectors = [c for c in _get_all_subclasses(base_cls) if not inspect.isabstract(c)]
@@ -116,10 +117,10 @@ def _discover_connectors(api_url: str, base_cls: type) -> None:
             "description": _get_docstring(c),
             "parameters_schema": {},  # Placeholder
         }
-        _post_to_api(f"{api_url}/types/connector", data)
+        await _post_to_api(f"{api_url}/types/connector", data)
 
 
-def _discover_events(api_url: str, base_cls: type) -> None:
+async def _discover_events(api_url: str, base_cls: type) -> None:
     """Discover and register all Event subclasses."""
     logger = DI.logger.resolve_sync()
     events = [
@@ -139,10 +140,10 @@ def _discover_events(api_url: str, base_cls: type) -> None:
             "description": _get_docstring(c),
             "schema": schema,
         }
-        _post_to_api(f"{api_url}/types/event", data)
+        await _post_to_api(f"{api_url}/types/event", data)
 
 
-def _discover_processes(api_url: str, base_cls: type) -> None:
+async def _discover_processes(api_url: str, base_cls: type) -> None:
     """Discover and register all Process subclasses."""
     logger = DI.logger.resolve_sync()
     processes = [c for c in _get_all_subclasses(base_cls) if not inspect.isabstract(c)]
@@ -155,7 +156,7 @@ def _discover_processes(api_url: str, base_cls: type) -> None:
             "description": _get_docstring(c),
             "args_schema": {},  # Placeholder
         }
-        _post_to_api(f"{api_url}/types/process", data)
+        await _post_to_api(f"{api_url}/types/process", data)
 
 
 @app.command()
@@ -210,15 +211,15 @@ def discover(
             _import_recursive(project_dir, base_package)
 
             progress.update(task, description="Discovering components...")
-            _discover_components(api_url, Component)
+            run_coro_sync(_discover_components(api_url, Component))
 
             progress.update(task, description="Discovering connectors...")
-            _discover_connectors(api_url, Connector)
+            run_coro_sync(_discover_connectors(api_url, Connector))
 
             progress.update(task, description="Discovering events...")
-            _discover_events(api_url, Event)
+            run_coro_sync(_discover_events(api_url, Event))
 
             progress.update(task, description="Discovering processes...")
-            _discover_processes(api_url, Process)
+            run_coro_sync(_discover_processes(api_url, Process))
 
         progress.update(task, description="[green]Discovery complete[/green]")
