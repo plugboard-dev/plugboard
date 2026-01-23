@@ -4,15 +4,30 @@ Note: Tests which run async code synchronously from CLI entrypoints must be
 marked async so that they do not interfere with pytest-asyncio's event loop.
 """
 
+from pathlib import Path
+import tempfile
+import typing as _t
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+import respx
 from typer.testing import CliRunner
 
 from plugboard.cli import app
 
 
 runner = CliRunner()
+
+
+@pytest.fixture
+def test_project_dir() -> _t.Iterator[Path]:
+    """Create a minimal Python package for testing."""
+    with tempfile.TemporaryDirectory() as tmpdir:
+        project_dir = Path(tmpdir) / "test_project"
+        project_dir.mkdir()
+        (project_dir / "__init__.py").write_text("")
+        (project_dir / "test_file.py").write_text("")
+        yield project_dir
 
 
 @pytest.mark.asyncio
@@ -59,3 +74,59 @@ def test_cli_process_diagram() -> None:
     assert result.exit_code == 0
     # Must output a Mermaid flowchart
     assert "flowchart" in result.stdout
+
+
+def test_cli_server_discover(test_project_dir: Path) -> None:
+    """Tests the server discover command."""
+    with respx.mock:
+        # Mock all the API endpoints
+        component_route = respx.post("http://test:8000/types/component").respond(
+            json={"status": "ok"}
+        )
+        connector_route = respx.post("http://test:8000/types/connector").respond(
+            json={"status": "ok"}
+        )
+        event_route = respx.post("http://test:8000/types/event").respond(json={"status": "ok"})
+        process_route = respx.post("http://test:8000/types/process").respond(json={"status": "ok"})
+
+        result = runner.invoke(
+            app,
+            [
+                "server",
+                "discover",
+                str(test_project_dir),
+                "--api-url",
+                "http://test:8000",
+            ],
+        )
+
+        # CLI must run without error
+        assert result.exit_code == 0
+        assert "Discovery complete" in result.stdout
+
+        # At minimum, should have discovered plugboard's built-in types
+        # The exact number may vary, but we expect some calls to each endpoint
+        assert component_route.called
+        assert connector_route.called
+        assert event_route.called
+        assert process_route.called
+
+
+def test_cli_server_discover_with_env_var(test_project_dir: Path) -> None:
+    """Tests the server discover command with environment variable."""
+    with respx.mock:
+        # Mock all the API endpoints with the env var URL
+        respx.post("http://env-test:9000/types/component").respond(json={"status": "ok"})
+        respx.post("http://env-test:9000/types/connector").respond(json={"status": "ok"})
+        respx.post("http://env-test:9000/types/event").respond(json={"status": "ok"})
+        respx.post("http://env-test:9000/types/process").respond(json={"status": "ok"})
+
+        result = runner.invoke(
+            app,
+            ["server", "discover", str(test_project_dir)],
+            env={"PLUGBOARD_API_URL": "http://env-test:9000"},
+        )
+
+        # CLI must run without error
+        assert result.exit_code == 0
+        assert "Discovery complete" in result.stdout
