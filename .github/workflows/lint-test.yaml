@@ -38,6 +38,10 @@ jobs:
       - name: Install project
         run: uv sync --group test --group docs
 
+      - name: Check uv lockfile
+        run: uv lock --check
+        if: always()
+
       - name: Ruff linting
         run: uv run ruff check .
         if: always()
