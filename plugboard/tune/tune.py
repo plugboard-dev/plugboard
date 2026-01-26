@@ -226,9 +226,9 @@ class Tuner:
         trainable_with_resources = ray.tune.with_resources(
             self._build_objective(required_classes, spec),
             ray.tune.PlacementGroupFactory(
-                # Reserve 0.5 CPU for the tune process and 0.5 CPU for each component in the Process
+                # Reserve 0.5 CPU for the tune process and 0 CPU for each component in the Process
                 # TODO: Implement better resource allocation based on Process requirements
-                [{"CPU": 0.5}] + [{"CPU": 0.5}] * len(spec.args.components),
+                [{"CPU": 0.5}],
             ),
         )
 
