@@ -24,6 +24,7 @@ from plugboard.schemas import Status
 from plugboard.state import StateBackend
 from plugboard.utils import DI, ClassRegistry, ExportMixin, is_on_ray_worker
 
+
 if _t.TYPE_CHECKING:
     from plugboard.schemas import Resource
 
