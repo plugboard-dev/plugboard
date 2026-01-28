@@ -56,7 +56,6 @@ async def main() -> None:
     # Define resource requirements for components
     cpu_resources = Resource(cpu=2.0)  # Requires 2 CPUs
     gpu_resources = Resource(cpu="500m", gpu=1)  # Requires 0.5 CPU and 1 GPU
-    memory_resources = Resource(cpu="250m", memory="100Mi")  # 0.25 CPU and 100MB memory
 
     process = RayProcess(
         components=[

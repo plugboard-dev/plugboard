@@ -1,8 +1,8 @@
 """Unit tests for Resource class."""
 # ruff: noqa: D101,D102,D103
 
-import pytest
 from pydantic import ValidationError
+import pytest
 
 from plugboard.schemas import Resource
 

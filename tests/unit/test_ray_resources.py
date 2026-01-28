@@ -1,8 +1,6 @@
 """Unit tests for RayProcess resource handling."""
 # ruff: noqa: D101,D102,D103
 
-import typing as _t
-
 from plugboard.component import Component, IOController as IO
 from plugboard.schemas import Resource
 

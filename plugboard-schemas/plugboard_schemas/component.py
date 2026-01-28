@@ -50,7 +50,9 @@ def _parse_resource_value(value: str | float | int) -> float:
 
     for suffix, multiplier in memory_units.items():
         if value.endswith(suffix):
-            match = re.match(rf"^(\d+(?:\.\d+)?){suffix}$", value)
+            # Use re.escape to safely escape the suffix in the regex pattern
+            pattern = rf"^(\d+(?:\.\d+)?){re.escape(suffix)}$"
+            match = re.match(pattern, value)
             if match:
                 return float(match.group(1)) * multiplier
             raise ValueError(f"Invalid memory unit format: {value}")
@@ -76,10 +78,10 @@ class Resource(PlugboardBaseModel):
         resources: Custom resource requirements as a dictionary.
     """
 
-    cpu: str | float | int = 0.001
-    gpu: str | float | int = 0
-    memory: str | float | int = 0
-    resources: dict[str, str | float | int] = Field(default_factory=dict)
+    cpu: float = 0.001
+    gpu: float = 0
+    memory: float = 0
+    resources: dict[str, float] = Field(default_factory=dict)
 
     @field_validator("cpu", "gpu", "memory", mode="before")
     @classmethod
@@ -99,7 +101,7 @@ class Resource(PlugboardBaseModel):
         Returns:
             Dictionary of Ray actor options.
         """
-        options = {}
+        options: dict[str, _t.Any] = {}
 
         if self.cpu > 0:
             options["num_cpus"] = self.cpu
