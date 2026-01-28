@@ -9,7 +9,7 @@ This includes:
 from importlib.metadata import version
 
 from ._common import PlugboardBaseModel
-from .component import ComponentArgsDict, ComponentArgsSpec, ComponentSpec
+from .component import ComponentArgsDict, ComponentArgsSpec, ComponentSpec, Resource
 from .config import ConfigSpec, ProcessConfigSpec
 from .connector import (
     DEFAULT_CONNECTOR_CLS_PATH,
@@ -68,6 +68,7 @@ __all__ = [
     "ProcessSpec",
     "ProcessArgsDict",
     "ProcessArgsSpec",
+    "Resource",
     "StateBackendSpec",
     "StateBackendArgsDict",
     "StateBackendArgsSpec",
