@@ -62,9 +62,20 @@ class RayProcess(Process):
         name = component.id
         args = component.export()["args"]
         actor_cls = build_actor_wrapper(component.__class__)
-        return ray.remote(num_cpus=0, name=name, namespace=self._namespace)(  # type: ignore
-            actor_cls
-        ).remote(**args)
+
+        # Get resource requirements from component
+        from plugboard.schemas import Resource
+
+        resources = component.resources
+        if resources is None:
+            # Use default resources if not specified
+            resources = Resource()
+
+        ray_options = resources.to_ray_options()
+        ray_options["name"] = name
+        ray_options["namespace"] = self._namespace
+
+        return ray.remote(**ray_options)(actor_cls).remote(**args)  # type: ignore
 
     async def _update_component_attributes(self) -> None:
         """Updates attributes on local components from remote actors."""
