@@ -7,7 +7,7 @@ from plugboard.component import Component
 from plugboard.component.io_controller import IODirection
 from plugboard.connector import Connector
 from plugboard.process.process import Process
-from plugboard.schemas import Status
+from plugboard.schemas import Resource, Status
 from plugboard.state import RayStateBackend, StateBackend
 from plugboard.utils import build_actor_wrapper, depends_on_optional, gather_except, gen_rand_str
 
@@ -64,8 +64,6 @@ class RayProcess(Process):
         actor_cls = build_actor_wrapper(component.__class__)
 
         # Get resource requirements from component
-        from plugboard.schemas import Resource
-
         resources = component.resources
         if resources is None:
             # Use default resources if not specified

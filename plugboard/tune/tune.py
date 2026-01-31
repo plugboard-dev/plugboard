@@ -16,6 +16,7 @@ from plugboard.schemas import (
     OptunaSpec,
     ParameterSpec,
     ProcessSpec,
+    Resource,
 )
 from plugboard.utils import DI, run_coro_sync
 from plugboard.utils.dependencies import depends_on_optional
@@ -331,8 +332,6 @@ class Tuner:
         Returns:
             List of resource bundles for Ray placement group.
         """
-        from plugboard.schemas import Resource
-
         # Start with a bundle for the tune process itself
         bundles = [{"CPU": 0.5}]
 

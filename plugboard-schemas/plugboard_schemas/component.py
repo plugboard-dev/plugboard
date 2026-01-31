@@ -13,9 +13,8 @@ def _parse_resource_value(value: str | float | int) -> float:
 
     Supports:
     - Direct numerical values: 1, 0.5, 2.0
-    - Milli-units: "250m" -> 0.25
-    - Memory units: "10Mi" -> 10485760 (10 * 1024 * 1024)
-    - Memory units: "10Gi" -> 10737418240 (10 * 1024 * 1024 * 1024)
+    - Decimal SI prefixes: n, u, m, k, M, G, T, P, E (e.g., "250m" -> 0.25, "5k" -> 5000)
+    - Binary prefixes: Ki, Mi, Gi, Ti, Pi, Ei (e.g., "10Mi" -> 10485760)
 
     Args:
         value: The resource value to parse.
@@ -32,30 +31,34 @@ def _parse_resource_value(value: str | float | int) -> float:
     # Handle string values
     value = value.strip()
 
-    # Handle milli-units (e.g., "250m" -> 0.25)
-    if value.endswith("m"):
-        match = re.match(r"^(\d+(?:\.\d+)?)m$", value)
-        if match:
-            return float(match.group(1)) / 1000.0
-        raise ValueError(f"Invalid milli-unit format: {value}")
-
-    # Handle memory units
-    # Ki = 1024, Mi = 1024^2, Gi = 1024^3, Ti = 1024^4
-    memory_units = {
+    # Define all supported suffixes (decimal SI and binary)
+    suffixes = {
+        "n": 1e-9,
+        "u": 1e-6,
+        "m": 1e-3,  # Decimal SI
+        "k": 1e3,
+        "M": 1e6,
+        "G": 1e9,
+        "T": 1e12,
+        "P": 1e15,
+        "E": 1e18,
         "Ki": 1024,
         "Mi": 1024**2,
         "Gi": 1024**3,
         "Ti": 1024**4,
+        "Pi": 1024**5,
+        "Ei": 1024**6,
     }
 
-    for suffix, multiplier in memory_units.items():
+    # Sort by length (longest first) to match "Ki" before "k", etc.
+    for suffix in sorted(suffixes.keys(), key=len, reverse=True):
         if value.endswith(suffix):
             # Use re.escape to safely escape the suffix in the regex pattern
             pattern = rf"^(\d+(?:\.\d+)?){re.escape(suffix)}$"
             match = re.match(pattern, value)
             if match:
-                return float(match.group(1)) * multiplier
-            raise ValueError(f"Invalid memory unit format: {value}")
+                return float(match.group(1)) * suffixes[suffix]
+            raise ValueError(f"Invalid format for suffix '{suffix}': {value}")
 
     # Try to parse as a plain number
     try:
@@ -74,20 +77,26 @@ class Resource(PlugboardBaseModel):
     Attributes:
         cpu: CPU requirement (default: 0.001).
         gpu: GPU requirement (default: 0).
-        memory: Memory requirement in bytes (default: 0).
+        memory: Memory requirement in bytes as an integer (default: 0).
         resources: Custom resource requirements as a dictionary.
     """
 
     cpu: float = 0.001
     gpu: float = 0
-    memory: float = 0
+    memory: int = 0
     resources: dict[str, float] = Field(default_factory=dict)
 
-    @field_validator("cpu", "gpu", "memory", mode="before")
+    @field_validator("cpu", "gpu", mode="before")
     @classmethod
-    def _parse_resource_field(cls, v: str | float | int) -> float:
-        """Validate and parse resource fields."""
+    def _parse_cpu_gpu_field(cls, v: str | float | int) -> float:
+        """Validate and parse CPU and GPU fields."""
         return _parse_resource_value(v)
+
+    @field_validator("memory", mode="before")
+    @classmethod
+    def _parse_memory_field(cls, v: str | float | int) -> int:
+        """Validate and parse memory field as integer bytes."""
+        return int(_parse_resource_value(v))
 
     @field_validator("resources", mode="before")
     @classmethod
@@ -124,7 +133,7 @@ class ComponentArgsDict(_t.TypedDict):
     initial_values: _t.NotRequired[dict[str, _t.Any] | None]
     parameters: _t.NotRequired[dict[str, _t.Any] | None]
     constraints: _t.NotRequired[dict[str, _t.Any] | None]
-    resources: _t.NotRequired["Resource | None"]
+    resources: _t.NotRequired[Resource | None]
 
 
 class ComponentArgsSpec(PlugboardBaseModel, extra="allow"):

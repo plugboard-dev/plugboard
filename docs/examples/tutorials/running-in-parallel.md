@@ -70,3 +70,9 @@ Specifying the process type and channel builder type in the YAML is the only cha
 
 1. Tell Plugboard to use a [`RayProcess`][plugboard.process.RayProcess] instead of the default [`LocalProcess`][plugboard.process.LocalProcess].
 2. Also change the connector builder to [`RayConnector`][plugboard.connector.RayConnector], which will build [`RayChannel`][plugboard.connector.RayChannel] objects when creating the `Process`.
+
+## Specifying resource requirements
+
+When running components on Ray, you can specify resource requirements for each component to control how Ray allocates computational resources. This is particularly useful when you have components with different resource needs (e.g., CPU-intensive vs GPU-intensive tasks).
+
+Resources can be specified in both Python and YAML configurations. See the [resource requirements example](../../examples/tutorials/004_using_ray/resources-example.yaml) for a complete YAML configuration demonstrating various resource specifications including CPU, GPU, memory, and custom resources.
