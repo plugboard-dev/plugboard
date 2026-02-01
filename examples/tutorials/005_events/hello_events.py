@@ -9,7 +9,7 @@ from pydantic import BaseModel
 
 from plugboard.component import Component, IOController
 from plugboard.connector import AsyncioConnector, ConnectorBuilder
-from plugboard.events import Event, EventConnectorBuilder, StopEvent
+from plugboard.events import Event, StopEvent
 from plugboard.library import FileWriter
 from plugboard.process import LocalProcess
 from plugboard.schemas import ConnectorSpec, ComponentArgsDict
