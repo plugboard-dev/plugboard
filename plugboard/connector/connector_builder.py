@@ -1,8 +1,13 @@
 """Provides `ConnectorBuilder` to build `Connector` objects."""
 
+from __future__ import annotations
+
 import typing as _t
 
-from plugboard.connector.connector import Connector
+
+if _t.TYPE_CHECKING:
+    from plugboard.connector.connector import Connector
+
 from plugboard.connector.event_connector_spec_builder import EventConnectorSpecBuilder
 from plugboard.schemas import ConnectorSpec
 
