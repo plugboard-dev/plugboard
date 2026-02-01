@@ -21,7 +21,6 @@ from plugboard.connector import (
     RayConnector,
 )
 from plugboard.events import Event
-from plugboard.events.event_connector_builder import EventConnectorBuilder
 from plugboard.exceptions import NotInitialisedError, ProcessStatusError
 from plugboard.process import LocalProcess, Process, RayProcess
 from plugboard.schemas import ConnectorSpec, Status
@@ -439,8 +438,7 @@ async def test_event_driven_process_shutdown(
     components = [clock, controller, actuator]
 
     connector_builder = ConnectorBuilder(connector_cls=connector_cls)
-    event_connector_builder = EventConnectorBuilder(connector_builder=connector_builder)
-    event_connectors = list(event_connector_builder.build(components).values())
+    event_connectors = connector_builder.build_event_connectors(components)
 
     process = process_cls(components, event_connectors)
     await process.init()

@@ -9,7 +9,6 @@ from plugboard.component.utils import ComponentDecoratorHelper
 from plugboard.connector.connector import Connector
 from plugboard.connector.connector_builder import ConnectorBuilder
 from plugboard.connector.ray_channel import RayConnector
-from plugboard.events.event_connector_builder import EventConnectorBuilder
 from plugboard.process.process import Process
 from plugboard.schemas import ProcessSpec
 from plugboard.state import StateBackend
@@ -71,7 +70,6 @@ class ProcessBuilder:
         connector_builder = ConnectorBuilder(
             connector_cls=connector_class, **dict(spec.connector_builder.args)
         )
-        event_connector_builder = EventConnectorBuilder(connector_builder=connector_builder)
         # TODO: Remove this when https://github.com/plugboard-dev/plugboard/issues/101 is resolved
         if connector_class is RayConnector:
             DI.logger.resolve_sync().warning(
@@ -80,7 +78,7 @@ class ProcessBuilder:
             )
             event_connectors = []
         else:
-            event_connectors = list(event_connector_builder.build(components).values())
+            event_connectors = connector_builder.build_event_connectors(components)
         spec_connectors = [connector_builder.build(cs) for cs in spec.args.connectors]
         return sorted(
             {conn.id: conn for conn in event_connectors + spec_connectors}.values(),
