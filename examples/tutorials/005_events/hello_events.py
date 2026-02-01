@@ -139,8 +139,7 @@ async def main() -> None:
         connect("collect-high.value", "save-high.value"),
         connect("collect-low.value", "save-low.value"),
     ]
-    connector_builder = ConnectorBuilder(connector_cls=AsyncioConnector)  # (2)!
-    event_connectors = connector_builder.build_event_connectors(components)  # (3)!
+    event_connectors = AsyncioConnector.builder().build_event_connectors(components)  # (3)!
 
     process = LocalProcess(
         components=components,
