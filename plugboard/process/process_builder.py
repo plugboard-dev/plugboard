@@ -8,6 +8,7 @@ from plugboard.component.component import Component, ComponentRegistry
 from plugboard.component.utils import ComponentDecoratorHelper
 from plugboard.connector.connector import Connector
 from plugboard.connector.connector_builder import ConnectorBuilder
+from plugboard.connector.ray_channel import RayConnector
 from plugboard.events.event_connector_builder import EventConnectorBuilder
 from plugboard.process.process import Process
 from plugboard.schemas import ProcessSpec
@@ -72,9 +73,9 @@ class ProcessBuilder:
         )
         event_connector_builder = EventConnectorBuilder(connector_builder=connector_builder)
         # TODO: Remove this when https://github.com/plugboard-dev/plugboard/issues/101 is resolved
-        if spec.type.endswith("RayProcess"):
+        if connector_class is RayConnector:
             DI.logger.resolve_sync().warning(
-                "RayProcess does not yet support event-based models. "
+                "RayConnector does not yet support event-based models. "
                 "Event connectors will not be built."
             )
             event_connectors = []
