@@ -40,9 +40,12 @@ def test_ray_process_default_state_backend() -> None:
         "connector_builder": {"type": "plugboard.connector.RayConnector"},
         "args": {
             "components": [
-                {"type": "tests.integration.test_process_with_components_run.A", "args": {"name": "A", "iters": 1}}
+                {
+                    "type": "tests.integration.test_process_with_components_run.A",
+                    "args": {"name": "A", "iters": 1},
+                }
             ]
-        }
+        },
     }
     spec = ProcessSpec.model_validate(spec_dict)
     # Must default to RayStateBackend for RayProcess
@@ -56,9 +59,12 @@ def test_local_process_default_state_backend() -> None:
         "type": "plugboard.process.LocalProcess",
         "args": {
             "components": [
-                {"type": "tests.integration.test_process_with_components_run.A", "args": {"name": "A", "iters": 1}}
+                {
+                    "type": "tests.integration.test_process_with_components_run.A",
+                    "args": {"name": "A", "iters": 1},
+                }
             ]
-        }
+        },
     }
     spec = ProcessSpec.model_validate(spec_dict)
     # Must default to DictStateBackend for LocalProcess
@@ -73,10 +79,13 @@ def test_ray_process_explicit_state_backend() -> None:
         "connector_builder": {"type": "plugboard.connector.RayConnector"},
         "args": {
             "components": [
-                {"type": "tests.integration.test_process_with_components_run.A", "args": {"name": "A", "iters": 1}}
+                {
+                    "type": "tests.integration.test_process_with_components_run.A",
+                    "args": {"name": "A", "iters": 1},
+                }
             ],
-            "state": {"type": "plugboard.state.SqliteStateBackend"}
-        }
+            "state": {"type": "plugboard.state.SqliteStateBackend"},
+        },
     }
     spec = ProcessSpec.model_validate(spec_dict)
     # Must preserve explicitly set state backend
