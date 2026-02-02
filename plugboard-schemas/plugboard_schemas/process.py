@@ -71,7 +71,7 @@ class ProcessSpec(PlugboardBaseModel):
         """Set appropriate default state backend based on process type."""
         # If RayProcess and state backend is still the default, change to RayStateBackend
         if (
-            self.type.endswith("RayProcess")
+            self.type == "plugboard.process.RayProcess"
             and self.args.state.type == DEFAULT_STATE_BACKEND_CLS_PATH
         ):
             self.args.state.type = RAY_STATE_BACKEND_CLS_PATH
