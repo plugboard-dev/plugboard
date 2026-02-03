@@ -32,12 +32,17 @@ def test_load(config: dict) -> None:
     assert process_spec.connector_builder.type == DEFAULT_CONNECTOR_CLS_PATH
 
 
-def test_ray_process_default_state_backend() -> None:
-    """Tests that RayProcess defaults to RayStateBackend when state not explicitly set."""
-    # Test with minimal RayProcess spec - no explicit state
+@pytest.mark.parametrize(
+    "process_type,expected_state_backend",
+    [
+        ("plugboard.process.RayProcess", RAY_STATE_BACKEND_CLS_PATH),
+        ("plugboard.process.LocalProcess", DEFAULT_STATE_BACKEND_CLS_PATH),
+    ],
+)
+def test_process_default_state_backend(process_type: str, expected_state_backend: str) -> None:
+    """Tests that each process type defaults to the appropriate state backend."""
     spec_dict = {
-        "type": "plugboard.process.RayProcess",
-        "connector_builder": {"type": "plugboard.connector.RayConnector"},
+        "type": process_type,
         "args": {
             "components": [
                 {
@@ -47,28 +52,12 @@ def test_ray_process_default_state_backend() -> None:
             ]
         },
     }
-    spec = ProcessSpec.model_validate(spec_dict)
-    # Must default to RayStateBackend for RayProcess
-    assert spec.args.state.type == RAY_STATE_BACKEND_CLS_PATH
+    # Add connector_builder for RayProcess (required)
+    if process_type == "plugboard.process.RayProcess":
+        spec_dict["connector_builder"] = {"type": "plugboard.connector.RayConnector"}
 
-
-def test_local_process_default_state_backend() -> None:
-    """Tests that LocalProcess defaults to DictStateBackend when state not explicitly set."""
-    # Test with minimal LocalProcess spec - no explicit state
-    spec_dict = {
-        "type": "plugboard.process.LocalProcess",
-        "args": {
-            "components": [
-                {
-                    "type": "tests.integration.test_process_with_components_run.A",
-                    "args": {"name": "A", "iters": 1},
-                }
-            ]
-        },
-    }
     spec = ProcessSpec.model_validate(spec_dict)
-    # Must default to DictStateBackend for LocalProcess
-    assert spec.args.state.type == DEFAULT_STATE_BACKEND_CLS_PATH
+    assert spec.args.state.type == expected_state_backend
 
 
 def test_ray_process_explicit_state_backend() -> None:
