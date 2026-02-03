@@ -8,6 +8,25 @@ from pydantic import Field, field_validator
 from ._common import PlugboardBaseModel
 
 
+RESOURCE_SUFFIXES = {
+    "n": 1e-9,
+    "u": 1e-6,
+    "m": 1e-3,
+    "k": 1e3,
+    "M": 1e6,
+    "G": 1e9,
+    "T": 1e12,
+    "P": 1e15,
+    "E": 1e18,
+    "Ki": 1024,
+    "Mi": 1024**2,
+    "Gi": 1024**3,
+    "Ti": 1024**4,
+    "Pi": 1024**5,
+    "Ei": 1024**6,
+}
+
+
 def _parse_resource_value(value: str | float | int) -> float:
     """Parse a resource value from string or number.
 
@@ -31,33 +50,14 @@ def _parse_resource_value(value: str | float | int) -> float:
     # Handle string values
     value = value.strip()
 
-    # Define all supported suffixes (decimal SI and binary)
-    suffixes = {
-        "n": 1e-9,
-        "u": 1e-6,
-        "m": 1e-3,  # Decimal SI
-        "k": 1e3,
-        "M": 1e6,
-        "G": 1e9,
-        "T": 1e12,
-        "P": 1e15,
-        "E": 1e18,
-        "Ki": 1024,
-        "Mi": 1024**2,
-        "Gi": 1024**3,
-        "Ti": 1024**4,
-        "Pi": 1024**5,
-        "Ei": 1024**6,
-    }
-
     # Sort by length (longest first) to match "Ki" before "k", etc.
-    for suffix in sorted(suffixes.keys(), key=len, reverse=True):
+    for suffix in sorted(RESOURCE_SUFFIXES.keys(), key=len, reverse=True):
         if value.endswith(suffix):
             # Use re.escape to safely escape the suffix in the regex pattern
             pattern = rf"^(\d+(?:\.\d+)?){re.escape(suffix)}$"
             match = re.match(pattern, value)
             if match:
-                return float(match.group(1)) * suffixes[suffix]
+                return float(match.group(1)) * RESOURCE_SUFFIXES[suffix]
             raise ValueError(f"Invalid format for suffix '{suffix}': {value}")
 
     # Try to parse as a plain number
