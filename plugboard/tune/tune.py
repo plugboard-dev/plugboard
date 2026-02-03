@@ -332,40 +332,45 @@ class Tuner:
         Returns:
             List of resource bundles for Ray placement group.
         """
-        # Start with a bundle for the tune process itself
-        bundles = [{"CPU": 0.5}]
+        bundles = []
 
-        # Aggregate resources from all components
-        total_cpu = 0.0
-        total_gpu = 0.0
-        total_memory = 0.0
-        custom_resources: dict[str, float] = {}
+        if spec.type.endswith("RayProcess"):
+            # Ray process requires a bundle for the tune process and each component
+            bundles.append({"CPU": 1.0})  # Bundle for the tune process
+            for component_spec in spec.args.components:
+                resources = component_spec.args.resources
+                if resources is None:
+                    # Use default resources
+                    resources = Resource()
 
-        for component_spec in spec.args.components:
-            resources = component_spec.args.resources
-            if resources is None:
-                # Use default resources
-                resources = Resource()
+                bundles.append(resources.to_ray_options())
+        else:
+            # Aggregate resources from all components
+            total_cpu = 1.0  # Ensure at least 1 CPU for the tune process
+            total_gpu = 0.0
+            total_memory = 0.0
+            custom_resources: dict[str, float] = {}
 
-            total_cpu += resources.cpu
-            total_gpu += resources.gpu
-            total_memory += resources.memory
+            for component_spec in spec.args.components:
+                resources = component_spec.args.resources
+                if resources is None:
+                    # Use default resources
+                    resources = Resource()
 
-            # Aggregate custom resources
-            for key, value in resources.resources.items():
-                custom_resources[key] = custom_resources.get(key, 0.0) + value
+                total_cpu += resources.cpu
+                total_gpu += resources.gpu
+                total_memory += resources.memory
 
-        # Create a single bundle for all component resources
-        component_bundle: dict[str, float] = {}
-        if total_cpu > 0:
-            component_bundle["CPU"] = total_cpu
-        if total_gpu > 0:
-            component_bundle["GPU"] = total_gpu
-        if total_memory > 0:
-            component_bundle["memory"] = total_memory
-        component_bundle.update(custom_resources)
+                # Aggregate custom resources
+                for key, value in resources.resources.items():
+                    custom_resources[key] = custom_resources.get(key, 0.0) + value
 
-        if component_bundle:
-            bundles.append(component_bundle)
+            resources = Resource(
+                cpu=total_cpu,
+                gpu=total_gpu,
+                memory=total_memory,
+                resources=custom_resources,
+            )
+            bundles.append(resources.to_ray_options())
 
         return bundles
