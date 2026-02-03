@@ -26,7 +26,7 @@ dependencies = [
     "fsspec>=2024.9.0",
     "httpx>=0.27,<1",
     "msgspec[yaml]>=0.18,<1",
-    "pandas>=1.0,<3",
+    "pandas>=1.0,<4",
     "plugboard-schemas",
     "pyarrow>=17.0,<21",
     "pydantic>=2.8,<3",
