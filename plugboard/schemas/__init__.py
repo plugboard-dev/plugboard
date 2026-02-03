@@ -11,7 +11,9 @@ This includes:
 
 from plugboard_schemas import (
     DEFAULT_CONNECTOR_CLS_PATH,
+    DEFAULT_STATE_BACKEND_CLS_PATH,
     ENTITY_ID_REGEX,
+    RAY_STATE_BACKEND_CLS_PATH,
     CategoricalParameterSpec,
     ComponentArgsDict,
     ComponentArgsSpec,
@@ -59,6 +61,7 @@ __all__ = [
     "ConnectorSocket",
     "ConnectorSpec",
     "DEFAULT_CONNECTOR_CLS_PATH",
+    "DEFAULT_STATE_BACKEND_CLS_PATH",
     "Direction",
     "ENTITY_ID_REGEX",
     "Entity",
@@ -73,6 +76,7 @@ __all__ = [
     "ProcessSpec",
     "ProcessArgsDict",
     "ProcessArgsSpec",
+    "RAY_STATE_BACKEND_CLS_PATH",
     "StateBackendSpec",
     "StateBackendArgsDict",
     "StateBackendArgsSpec",

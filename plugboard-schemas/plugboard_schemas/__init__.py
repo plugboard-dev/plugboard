@@ -23,7 +23,14 @@ from .connector import (
 from .entities import ENTITY_ID_REGEX, Entity
 from .io import IODirection
 from .process import ProcessArgsDict, ProcessArgsSpec, ProcessSpec
-from .state import StateBackendArgsDict, StateBackendArgsSpec, StateBackendSpec, Status
+from .state import (
+    DEFAULT_STATE_BACKEND_CLS_PATH,
+    RAY_STATE_BACKEND_CLS_PATH,
+    StateBackendArgsDict,
+    StateBackendArgsSpec,
+    StateBackendSpec,
+    Status,
+)
 from .tune import (
     CategoricalParameterSpec,
     Direction,
@@ -54,6 +61,7 @@ __all__ = [
     "ConnectorSocket",
     "ConnectorSpec",
     "DEFAULT_CONNECTOR_CLS_PATH",
+    "DEFAULT_STATE_BACKEND_CLS_PATH",
     "Direction",
     "ENTITY_ID_REGEX",
     "Entity",
@@ -68,6 +76,7 @@ __all__ = [
     "ProcessSpec",
     "ProcessArgsDict",
     "ProcessArgsSpec",
+    "RAY_STATE_BACKEND_CLS_PATH",
     "StateBackendSpec",
     "StateBackendArgsDict",
     "StateBackendArgsSpec",
