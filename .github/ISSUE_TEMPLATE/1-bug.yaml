@@ -12,26 +12,14 @@ body:
     validations:
       required: true
 
-  - type: input
+  - type: textarea
     attributes:
-      label: Platform
-      description: What operating system and architecture are you using? (see `uname -orsm`)
-      placeholder: e.g., macOS 14 arm64, Windows 11 x86_64, Ubuntu 20.04 amd64
+      label: Version Information
+      description: Please paste the output of `plugboard version`
+      placeholder: |
+        Plugboard version: 0.1.0
+        Platform: Linux-6.11.0-1018-azure-x86_64-with-glibc2.39
+        Python version: 3.12.3
+      render: text
     validations:
       required: true
-
-  - type: input
-    attributes:
-      label: Version
-      description: What version of Plugboard are you using? (see `plugboard --help`)
-      placeholder: e.g., 0.1.0
-    validations:
-      required: true
-
-  - type: input
-    attributes:
-      label: Python version
-      description: What version of Python are you using? (see `python --version`)
-      placeholder: e.g., Python 3.12.8
-    validations:
-      required: false
