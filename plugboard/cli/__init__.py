@@ -25,7 +25,7 @@ def version() -> None:
     """Display version and system information."""
     python_version = sys.version.split()[0]
     platform_info = platform.platform()
-    
+
     typer.echo(f"Plugboard version: {__version__}")
     typer.echo(f"Platform: {platform_info}")
     typer.echo(f"Python version: {python_version}")
