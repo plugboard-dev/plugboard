@@ -8,9 +8,7 @@ import typer
 from plugboard import __version__
 
 
-app = typer.Typer(
-    rich_markup_mode="rich", pretty_exceptions_show_locals=False
-)
+app = typer.Typer(rich_markup_mode="rich", pretty_exceptions_show_locals=False)
 
 
 @app.callback(invoke_without_command=True)
