@@ -74,7 +74,7 @@ class Tuner:
 
     @property
     def result_grid(self) -> ray.tune.ResultGrid:
-        """Returns a [`ResultGrid`][ray.tune.ResultGrid] summarising the optimisation results."""
+        """Returns a `ResultGrid` summarising the optimisation results."""
         if self._result_grid is None:
             raise ValueError("No result grid available. Run the optimisation job first.")
         return self._result_grid
@@ -213,8 +213,8 @@ class Tuner:
             spec: The [`ProcessSpec`][plugboard.schemas.ProcessSpec] to optimise.
 
         Returns:
-            Either one or a list of [`Result`][ray.tune.Result] objects containing the best trial
-            result. Use the `result_grid` property to get full trial results.
+            Either one or a list of `Result` objects containing the best trial esult. Use the
+                `result_grid` property to get full trial results.
         """
         self._logger.info("Running optimisation job on Ray")
         spec = spec.model_copy()
