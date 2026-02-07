@@ -54,6 +54,7 @@ class DataProducer(Component):
 async def main() -> None:
     """Run the process with resource-constrained components."""
     # Define resource requirements for components
+    # --8<-- [start:resources]
     cpu_resources = Resource(cpu=2.0)  # Requires 2 CPUs
     gpu_resources = Resource(cpu="500m", gpu=1)  # Requires 0.5 CPU and 1 GPU
 
@@ -68,6 +69,7 @@ async def main() -> None:
             RayConnector(spec=ConnectorSpec(source="cpu-task.y", target="gpu-task.data")),
         ],
     )
+    # --8<-- [end:resources]
 
     async with process:
         await process.run()

@@ -73,6 +73,31 @@ Specifying the process type and channel builder type in the YAML is the only cha
 
 ## Specifying resource requirements
 
-When running components on Ray, you can specify resource requirements for each component to control how Ray allocates computational resources. This is particularly useful when you have components with different resource needs (e.g., CPU-intensive vs GPU-intensive tasks).
+When running components on Ray, you can specify resource requirements for each component to control how Ray allocates computational resources. This is particularly useful when you have components with different resource needs (e.g., CPU-intensive vs GPU-intensive tasks) and you are running on a Ray cluster.
 
-Resources can be specified in both Python and YAML configurations. See the [resource requirements example](../../examples/tutorials/004_using_ray/resources-example.yaml) for a complete YAML configuration demonstrating various resource specifications including CPU, GPU, memory, and custom resources.
+!!! tip
+    Normally Ray will start automatically when you are using Plugboard locally. If you want to start a separate Ray instance, for example so that you can control the configuration options, you can launch it from the [CLI](https://docs.ray.io/en/latest/ray-core/starting-ray.html). For example, this command will start a Ray instance with enough resources to run the example below.
+
+    ```sh
+    uv run ray start --head --num-cpus=4 --num-gpus=1 --resources='{"custom_hardware": 5}'
+    ```
+
+For example, you can specify [`Resource`][plugboard.schemas.Resource] requirements like this when creating components:
+
+```python
+--8<-- "examples/tutorials/004_using_ray/resources_example.py:resources"
+```
+
+Or in YAML:
+
+```yaml
+--8<-- "examples/tutorials/004_using_ray/resources-example.yaml:10:"
+```
+
+1. Requires 1 CPU.
+2. Requires 2 CPU resources.
+3. Requires 0.5 CPU, this time specified in Kubernetes-style format, i.e. 500 milli CPUs.
+4. Requires 1 GPU.
+5. Requires a custom resource called `custom_hardware`. This needs to specified in the configuration of your Ray cluster to make it available.
+
+See the [Ray documentation](https://docs.ray.io/en/latest/ray-core/scheduling/resources.html) for more information about specifying resource requirements.
