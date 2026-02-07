@@ -75,15 +75,10 @@ async def main() -> None:
         await process.run()
 
     print("Process completed successfully!")
-    print(f"Final result from GPU task: {process.components['gpu-task'].result}")
 
 
 if __name__ == "__main__":
-    # Initialize Ray
-    ray.init()
-
-    # Run the process
+    if not ray.is_initialized():
+        # Ray must be initialised with the necessary resources
+        ray.init(num_cpus=5, num_gpus=1, resources={"custom_hardware": 10}, include_dashboard=True)
     asyncio.run(main())
-
-    # Shutdown Ray
-    ray.shutdown()
