@@ -83,4 +83,4 @@ async def test_component_export_includes_resources() -> None:
     exported = component.export()
     assert "args" in exported
     # The resources should be passed through in the exported args
-    assert exported["args"]["resources"] == resources
+    assert exported["args"]["resources"] == resources.model_dump()
