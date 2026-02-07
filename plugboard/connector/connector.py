@@ -44,4 +44,4 @@ class Connector(ABC, ExportMixin):
     @classmethod
     def builder(cls, *args: _t.Any, **kwargs: _t.Any) -> ConnectorBuilder:
         """Returns a `ConnectorBuilder` for this `Connector` class."""
-        return ConnectorBuilder(connector_cls=cls, *args, **kwargs)
+        return ConnectorBuilder(cls, *args, **kwargs)
