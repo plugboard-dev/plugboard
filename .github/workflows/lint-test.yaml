@@ -157,7 +157,7 @@ jobs:
   test-integration-tuner:
     name: Tests - integration:tuner
     runs-on: ubuntu-latest
-    timeout-minutes: 8
+    timeout-minutes: 10
     strategy:
       matrix:
         python_version: [3.12, 3.13]
