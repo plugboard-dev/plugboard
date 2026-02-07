@@ -4,10 +4,12 @@
 import typing as _t
 
 import pytest
+from ray.util.state import list_actors
 
 from plugboard.component import Component, IOController as IO
-from plugboard.process import LocalProcess
-from plugboard.schemas import Resource
+from plugboard.connector import RayConnector
+from plugboard.process import RayProcess
+from plugboard.schemas import ConnectorSpec, Resource
 
 
 class ResourceComponent(Component):
@@ -46,19 +48,25 @@ async def test_component_with_default_resources() -> None:
 
 
 @pytest.mark.asyncio
-async def test_component_resources_in_local_process() -> None:
-    """Test that components with resources work in LocalProcess."""
-    resources = Resource(cpu=1.0, memory="100Mi")
+async def test_component_resources_in_ray_process(ray_ctx: None) -> None:
+    """Test that components with resources work in RayProcess."""
+    resources = Resource(cpu=1.0, memory="1Mi")
     component = ResourceComponent(
         name="test",
         resources=resources,
         multiplier=2,
         initial_values={"a": [5]},
     )
+    connectors = [RayConnector(spec=ConnectorSpec(source="test.b", target="test.a"))]
 
-    process = LocalProcess(components=[component], connectors=[])
+    process = RayProcess(components=[component], connectors=connectors)
 
     async with process:
+        actors = list_actors(detail=True)
+        component_actor = next(a for a in actors if a.name == "test")
+        # Verify the component actor has the correct resources
+        assert component_actor.required_resources["CPU"] == 1.0
+        assert component_actor.required_resources["memory"] == 1.0 * 1024 * 1024
         await process.run()
 
     assert component.b == 10
