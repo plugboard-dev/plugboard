@@ -8,7 +8,6 @@ import typing as _t
 if _t.TYPE_CHECKING:
     from plugboard.connector.connector import Connector
 
-from plugboard.connector.event_connector_spec_builder import EventConnectorSpecBuilder
 from plugboard.schemas import ConnectorSpec
 
 
@@ -26,5 +25,7 @@ class ConnectorBuilder:
 
     def build_event_connectors(self, components: _t.Iterable[_t.Any]) -> list[Connector]:
         """Builds event connectors for the given components."""
+        from plugboard.connector.event_connector_spec_builder import EventConnectorSpecBuilder
+
         evt_conn_map = EventConnectorSpecBuilder.build(components)
         return [self.build(spec=spec) for spec in evt_conn_map.values()]
