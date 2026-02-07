@@ -70,6 +70,7 @@ async def test_component_resources_in_ray_process(ray_ctx: None) -> None:
         await process.run()
 
     assert component.b == 10
+    assert component.resources is not None
     assert component.resources.cpu == 1.0
 
 
