@@ -40,8 +40,11 @@ def mp_set_start_method() -> None:
 
 @pytest.fixture(scope="session")
 def ray_ctx() -> _t.Iterator[None]:
-    """Initialises and shuts down Ray."""
-    ray.init(num_cpus=4, num_gpus=0, include_dashboard=True)
+    """Initialises and shuts down Ray.
+
+    Includes a small amount of resources to allow testing of resource-constrained components.
+    """
+    ray.init(num_cpus=5, num_gpus=1, resources={"custom_hardware": 10}, include_dashboard=True)
     yield
     ray.shutdown()
 

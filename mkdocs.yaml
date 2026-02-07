@@ -33,7 +33,7 @@ plugins:
     default_handler: python
     handlers:
       python:
-        paths: [src]
+        paths: [plugboard, plugboard-schemas]
         options:
           docstring_style: google
           show_source: false
@@ -113,6 +113,7 @@ watch:
 - docs
 - examples
 - plugboard
+- plugboard-schemas
 - README.md
 - CONTRIBUTING.md
 

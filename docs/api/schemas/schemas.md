@@ -1,1 +1,1 @@
-::: plugboard.schemas
+::: plugboard_schemas
