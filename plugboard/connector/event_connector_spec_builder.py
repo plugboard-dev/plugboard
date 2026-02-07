@@ -4,9 +4,12 @@ from __future__ import annotations
 
 import typing as _t
 
-from plugboard.component import Component
 from plugboard.events.event import Event
 from plugboard.schemas import ConnectorMode, ConnectorSocket, ConnectorSpec
+
+
+if _t.TYPE_CHECKING:
+    from plugboard.component import Component
 
 
 class EventConnectorSpecBuilder:  # pragma: no cover
