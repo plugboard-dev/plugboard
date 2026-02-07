@@ -64,8 +64,10 @@ def test_process_spec_with_multiple_component_resources() -> None:
     )
 
     # Verify both components have resources
+    assert process_spec.args.components[0].args.resources is not None
     assert process_spec.args.components[0].args.resources.cpu == 1.0
     assert process_spec.args.components[0].args.resources.gpu == 0.5
+    assert process_spec.args.components[1].args.resources is not None
     assert process_spec.args.components[1].args.resources.cpu == 2.0
     assert process_spec.args.components[1].args.resources.memory == 50 * 1024 * 1024
 

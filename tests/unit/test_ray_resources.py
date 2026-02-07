@@ -52,6 +52,7 @@ def test_component_with_zero_resources() -> None:
     component = SimpleComponent(name="test", resources=resources)
 
     # Zero values should be stored
+    assert component.resources is not None
     assert component.resources.cpu == 0
     assert component.resources.gpu == 0
     assert component.resources.memory == 0
