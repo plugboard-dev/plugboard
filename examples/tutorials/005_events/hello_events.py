@@ -9,7 +9,7 @@ from pydantic import BaseModel
 
 from plugboard.component import Component, IOController
 from plugboard.connector import AsyncioConnector, ConnectorBuilder
-from plugboard.events import Event, EventConnectorBuilder, StopEvent
+from plugboard.events import Event, StopEvent
 from plugboard.library import FileWriter
 from plugboard.process import LocalProcess
 from plugboard.schemas import ConnectorSpec, ComponentArgsDict
@@ -139,9 +139,7 @@ async def main() -> None:
         connect("collect-high.value", "save-high.value"),
         connect("collect-low.value", "save-low.value"),
     ]
-    connector_builder = ConnectorBuilder(connector_cls=AsyncioConnector)  # (2)!
-    event_connector_builder = EventConnectorBuilder(connector_builder=connector_builder)
-    event_connectors = list(event_connector_builder.build(components).values())
+    event_connectors = AsyncioConnector.builder().build_event_connectors(components)  # (3)!
 
     process = LocalProcess(
         components=components,

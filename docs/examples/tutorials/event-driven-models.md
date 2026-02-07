@@ -66,7 +66,7 @@ Finally, we need components to subscribe to these events and process them. Use t
 Now we can create a [`Process`][plugboard.process.Process] from all these components. The outputs from `CollectLow` and `CollectHigh` are connected to separate [`FileWriter`][plugboard.library.FileWriter] components so that we'll get a CSV file containing the latest high and low values at each step of the simulation.
 
 !!! info
-    We need a few extra lines of code to create connectors for the event-based parts of the model. If you define your process in YAML this will be done automatically for you, but if you are defining the process in code then you will need to use the [`EventConnectorBuilder`][plugboard.events.EventConnectorBuilder] to do this.
+    We need a few extra lines of code to create connectors for the event-based parts of the model. If you define your process in YAML this will be done automatically for you, but if you are defining the process in code then you will need to use the [`ConnectorBuilder`][plugboard.connector.ConnectorBuilder] to do this.
 
 ```python hl_lines="15-17"
 --8<-- "examples/tutorials/005_events/hello_events.py:main"

@@ -17,7 +17,7 @@ from plugboard.connector import (
     RabbitMQConnector,
     RayConnector,
 )
-from plugboard.events import EventConnectorBuilder, StopEvent
+from plugboard.events import StopEvent
 from plugboard.process import LocalProcess, Process, RayProcess
 from plugboard.schemas import ConnectorSpec, Status
 from tests.conftest import ComponentTestHelper, zmq_connector_cls
@@ -73,7 +73,6 @@ async def test_process_stop_event(
 ) -> None:
     """Tests that an event-driven Process can be stopped gracefully via a StopEvent."""
     connector_builder = ConnectorBuilder(connector_cls=connector_cls)
-    event_connectors = EventConnectorBuilder(connector_builder=connector_builder)
 
     max_iters = 25
     iters_before_stop = 15
@@ -89,13 +88,14 @@ async def test_process_stop_event(
     ]
     field_connectors: list[Connector] = [conn_ab1, conn_ab2, conn_ab3, conn_ab4, conn_ab5]
 
-    event_connectors_map = event_connectors.build(components)
-    connectors: list[Connector] = list(event_connectors_map.values()) + field_connectors
+    event_connectors = connector_builder.build_event_connectors(components)
+    event_connectors_map = {conn.spec.source.entity: conn for conn in event_connectors}
+    connectors: list[Connector] = event_connectors + field_connectors
 
     process = process_cls(components, connectors)
 
     async with process:
-        stop_evt_conn = event_connectors_map[StopEvent.type]
+        stop_evt_conn = event_connectors_map[StopEvent.safe_type()]
         stop_chan = await stop_evt_conn.connect_send()
 
         async def stop_after() -> None:

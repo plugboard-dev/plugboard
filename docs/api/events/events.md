@@ -4,5 +4,4 @@
       - Event
       - SystemEvent
       - StopEvent
-      - EventConnectorBuilder
       - EventHandlers
