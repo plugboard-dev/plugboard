@@ -25,6 +25,7 @@ RESOURCE_SUFFIXES = {
     "Pi": 1024**5,
     "Ei": 1024**6,
 }
+RAY_RESOURCE_PRECISION = 4  # Decimal places to round to for Ray resource values
 
 
 def _parse_resource_value(value: str | float | int) -> float:
@@ -104,7 +105,9 @@ class Resource(PlugboardBaseModel):
         """Validate and parse custom resources dictionary."""
         return {key: _parse_resource_value(value) for key, value in v.items()}
 
-    def to_ray_options(self) -> dict[str, _t.Any]:
+    def to_ray_options(
+        self, style: _t.Literal["actor", "placement_group"] = "actor"
+    ) -> dict[str, _t.Any]:
         """Convert resource requirements to Ray actor options.
 
         Returns:
@@ -112,16 +115,20 @@ class Resource(PlugboardBaseModel):
         """
         options: dict[str, _t.Any] = {}
 
+        cpu_key = "num_cpus" if style == "actor" else "CPU"
+        gpu_key = "num_gpus" if style == "actor" else "GPU"
         if self.cpu > 0:
-            options["num_cpus"] = self.cpu
+            options[cpu_key] = round(self.cpu, RAY_RESOURCE_PRECISION)
         if self.gpu > 0:
-            options["num_gpus"] = self.gpu
+            options[gpu_key] = round(self.gpu, RAY_RESOURCE_PRECISION)
         if self.memory > 0:
             options["memory"] = self.memory
 
         # Add custom resources
         if self.resources:
-            options["resources"] = self.resources
+            options["resources"] = {
+                key: round(value, RAY_RESOURCE_PRECISION) for key, value in self.resources.items()
+            }
 
         return options
 

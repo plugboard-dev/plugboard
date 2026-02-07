@@ -343,7 +343,7 @@ class Tuner:
                     # Use default resources
                     resources = Resource()
 
-                bundles.append(resources.to_ray_options())
+                bundles.append(resources.to_ray_options(style="placement_group"))
         else:
             # Aggregate resources from all components
             total_cpu = 1.0  # Ensure at least 1 CPU for the tune process
@@ -371,6 +371,6 @@ class Tuner:
                 memory=total_memory,
                 resources=custom_resources,
             )
-            bundles.append(resources.to_ray_options())
+            bundles.append(resources.to_ray_options(style="placement_group"))
 
         return bundles
