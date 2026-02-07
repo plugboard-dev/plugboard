@@ -1,0 +1,16 @@
+{
+  "github.copilot.chat.codeGeneration.instructions": [
+    {
+      "file": "AGENTS.md"
+    },
+    {
+      "file": "examples/AGENTS.md"
+    },
+    {
+      "file": ".github/agents/docs/AGENTS.md"
+    },
+    {
+      "file": ".github/agents/linting/AGENTS.md"
+    }
+  ]
+}
