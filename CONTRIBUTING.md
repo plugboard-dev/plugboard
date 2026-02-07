@@ -40,6 +40,13 @@ The package documentation uses [Material for MkDocs](https://squidfunk.github.io
 uv run mkdocs serve
 ```
 
-### Building example models
+### AI-assisted development
 
-This repo includes a [custom LLM prompt](.github/instructions/models.instructions.md) for the [examples](examples/) folder. If you use GitHub Copilot, this can help you build a Plugboard model from a description of the process and/or the components that you would like to implement. We recommend using Copilot in agent mode and allowing it to implement the boilerplate code from your input prompt.
+This repo includes custom AI agent prompts to assist with development:
+
+- [AGENTS.md](AGENTS.md) - General guidelines for working with the Plugboard codebase
+- [examples/AGENTS.md](examples/AGENTS.md) - Specific guidance for building example models and demos
+- [.github/agents/docs/AGENTS.md](.github/agents/docs/AGENTS.md) - Documentation maintenance agent
+- [.github/agents/linting/AGENTS.md](.github/agents/linting/AGENTS.md) - Linting and code quality agent
+
+If you use GitHub Copilot or other AI coding assistants that support the AGENTS.md convention, these prompts can help you build Plugboard models from a description of the process and/or the components that you would like to implement. We recommend using Copilot in agent mode and allowing it to implement the boilerplate code from your input prompt.
