@@ -25,7 +25,7 @@ from plugboard.state import StateBackend
 from plugboard.utils import DI, ClassRegistry, ExportMixin, is_on_ray_worker
 
 
-if _t.TYPE_CHECKING:
+if _t.TYPE_CHECKING:  # pragma: no cover
     from plugboard.schemas import Resource
 
 
@@ -73,7 +73,7 @@ class Component(ABC, ExportMixin):
         setattr(self, "init", self._handle_init_wrapper())
         setattr(self, "step", self._handle_step_wrapper())
 
-        if is_on_ray_worker():
+        if is_on_ray_worker():  # pragma: no cover
             # Required until https://github.com/ray-project/ray/issues/42823 is resolved
             try:
                 self.__class__._configure_io()
