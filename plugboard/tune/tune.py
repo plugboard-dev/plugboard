@@ -213,7 +213,7 @@ class Tuner:
             spec: The [`ProcessSpec`][plugboard.schemas.ProcessSpec] to optimise.
 
         Returns:
-            Either one or a list of `Result` objects containing the best trial esult. Use the
+            Either one or a list of `Result` objects containing the best trial result. Use the
                 `result_grid` property to get full trial results.
         """
         self._logger.info("Running optimisation job on Ray")
