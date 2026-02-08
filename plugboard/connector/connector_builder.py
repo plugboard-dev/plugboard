@@ -5,7 +5,7 @@ from __future__ import annotations
 import typing as _t
 
 
-if _t.TYPE_CHECKING:
+if _t.TYPE_CHECKING:  # pragma: no cover
     from plugboard.connector.connector import Connector
 
 from plugboard.connector.event_connector_spec_builder import EventConnectorSpecBuilder

@@ -71,7 +71,7 @@ class ProcessBuilder:
             connector_cls=connector_class, **dict(spec.connector_builder.args)
         )
         # TODO: Remove this when https://github.com/plugboard-dev/plugboard/issues/101 is resolved
-        if connector_class is RayConnector:
+        if connector_class is RayConnector:  # pragma: no cover
             DI.logger.resolve_sync().warning(
                 "RayConnector does not yet support event-based models. "
                 "Event connectors will not be built."
