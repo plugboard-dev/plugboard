@@ -27,6 +27,18 @@ class ResourceComponent(Component):
         await self.io.close()
 
 
+class DeclaredResourceComponent(Component):
+    """Test component with declared class-level resource requirements."""
+
+    io = IO(inputs=["a"], outputs=["b"])
+    resources = Resource(cpu="1", memory="512Mi")
+
+    async def step(self) -> None:
+        if self.a is not None:
+            self.b = self.a * 2
+        await self.io.close()
+
+
 @pytest.mark.asyncio
 async def test_component_with_resources() -> None:
     """Test that a component can be created with resource requirements."""
@@ -45,6 +57,27 @@ async def test_component_with_default_resources() -> None:
     component = ResourceComponent(name="test")
     default_resources = Resource()
     assert component.resources == default_resources
+
+
+@pytest.mark.asyncio
+async def test_component_with_declared_resources() -> None:
+    """Test that a component with class-level declared resources has those resources."""
+    component = DeclaredResourceComponent(name="test")
+    expected_resources = Resource(cpu=1.0, memory=512 * 1024 * 1024)
+    assert component.resources == expected_resources
+
+
+@pytest.mark.asyncio
+async def test_component_with_declared_resources_overrides() -> None:
+    """Test that a component with class-level declared resources can be overridden by constructor."""
+    resources = Resource(cpu="250m", gpu=0.5, memory="5Gi")
+    component_1 = DeclaredResourceComponent(name="test", resources=resources)
+    # Confirm that the constructor resources override the class-level resources
+    assert component_1.resources == resources
+    # Confirm that the class-level resources are still the same for a new instances
+    component_2 = DeclaredResourceComponent(name="test")
+    expected_resources = Resource(cpu=1.0, memory=512 * 1024 * 1024)
+    assert component_2.resources == expected_resources
 
 
 @pytest.mark.asyncio
