@@ -82,22 +82,56 @@ When running components on Ray, you can specify resource requirements for each c
     uv run ray start --head --num-cpus=4 --num-gpus=1 --resources='{"custom_hardware": 5}'
     ```
 
-For example, you can specify [`Resource`][plugboard.schemas.Resource] requirements like this when creating components:
+### Declaring resources at component definition
+
+The recommended way to specify resource requirements is to declare them as a class attribute when defining your component. This makes the resource requirements explicit and part of the component's definition:
+
+```python
+from plugboard.component import Component
+from plugboard.schemas import Resource
+
+class CPUIntensiveTask(Component):
+    """Component that requires more CPU resources."""
+    
+    io = IO(inputs=["x"], outputs=["y"])
+    resources = Resource(cpu=2.0)  # Declare resources at class level
+    
+    async def step(self) -> None:
+        # Your component logic here
+        pass
+```
+
+### Overriding resources at instantiation
+
+You can also override resource requirements when creating component instances. This is useful when you want to use the same component class with different resource requirements:
+
+```python
+# Override the class-level resource requirements
+component = CPUIntensiveTask(
+    name="my-task",
+    resources=Resource(cpu=4.0)  # Override to use 4 CPUs instead of 2
+)
+```
+
+### Example
+
+For example, you can specify [`Resource`][plugboard.schemas.Resource] requirements like this when defining components:
 
 ```python
 --8<-- "examples/tutorials/004_using_ray/resources_example.py:resources"
 ```
 
-Or in YAML:
+Or override them in YAML configuration:
 
 ```yaml
 --8<-- "examples/tutorials/004_using_ray/resources-example.yaml:10:"
 ```
 
-1. Requires 1 CPU.
-2. Requires 2 CPU resources.
-3. Requires 0.5 CPU, this time specified in Kubernetes-style format, i.e. 500 milli CPUs.
-4. Requires 1 GPU.
-5. Requires a custom resource called `custom_hardware`. This needs to specified in the configuration of your Ray cluster to make it available.
+1. Override DataProducer to require 1 CPU (instead of the default 0.001).
+2. CPUIntensiveTask already declares cpu: 2.0 at the class level, so this matches the class definition.
+3. Add 512MB memory requirement to CPUIntensiveTask (extending the class-level resources).
+4. Requires 0.5 CPU, specified in Kubernetes-style format (500 milli CPUs). This matches the class-level declaration.
+5. Requires 1 GPU, matching the class-level declaration.
+6. Add a custom resource called `custom_hardware`. This needs to be specified in the configuration of your Ray cluster to make it available.
 
 See the [Ray documentation](https://docs.ray.io/en/latest/ray-core/scheduling/resources.html) for more information about specifying resource requirements.

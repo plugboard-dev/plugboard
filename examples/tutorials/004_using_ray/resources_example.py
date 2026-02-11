@@ -12,22 +12,32 @@ from plugboard.schemas import ComponentArgsDict, ConnectorSpec, Resource
 
 
 class CPUIntensiveTask(Component):
-    """Component that requires more CPU resources."""
+    """Component that requires more CPU resources.
+
+    Resource requirements are declared as a class attribute.
+    """
 
     io = IO(inputs=["x"], outputs=["y"])
+    resources = Resource(cpu=2.0)  # Declare resources at class level
 
     async def step(self) -> None:
+        """Execute CPU-intensive computation."""
         # Simulate CPU-intensive work
         result = sum(i**2 for i in range(int(self.x * 10000)))
         self.y = result
 
 
 class GPUTask(Component):
-    """Component that requires GPU resources."""
+    """Component that requires GPU resources.
+
+    Resource requirements are declared as a class attribute.
+    """
 
     io = IO(inputs=["data"], outputs=["result"])
+    resources = Resource(cpu="500m", gpu=1)  # Declare resources at class level
 
     async def step(self) -> None:
+        """Execute GPU computation."""
         # Simulate GPU computation
         self.result = self.data * 2
 
@@ -38,13 +48,16 @@ class DataProducer(Component):
     io = IO(outputs=["output"])
 
     def __init__(self, iters: int, **kwargs: _t.Unpack[ComponentArgsDict]) -> None:
+        """Initialize DataProducer with iteration count."""
         super().__init__(**kwargs)
         self._iters = iters
 
     async def init(self) -> None:
+        """Initialize the data sequence."""
         self._seq = iter(range(self._iters))
 
     async def step(self) -> None:
+        """Produce the next data value."""
         try:
             self.output = next(self._seq)
         except StopIteration:
@@ -53,16 +66,14 @@ class DataProducer(Component):
 
 async def main() -> None:
     """Run the process with resource-constrained components."""
-    # Define resource requirements for components
     # --8<-- [start:resources]
-    cpu_resources = Resource(cpu=2.0)  # Requires 2 CPUs
-    gpu_resources = Resource(cpu="500m", gpu=1)  # Requires 0.5 CPU and 1 GPU
-
+    # Resources can be declared at the class level (see CPUIntensiveTask and GPUTask above)
+    # or overridden when instantiating components
     process = RayProcess(
         components=[
-            DataProducer(name="producer", iters=5, resources=cpu_resources),
-            CPUIntensiveTask(name="cpu-task", resources=cpu_resources),
-            GPUTask(name="gpu-task", resources=gpu_resources),
+            DataProducer(name="producer", iters=5),  # Uses default resources
+            CPUIntensiveTask(name="cpu-task"),  # Uses class-level resources (2.0 CPU)
+            GPUTask(name="gpu-task"),  # Uses class-level resources (0.5 CPU, 1 GPU)
         ],
         connectors=[
             RayConnector(spec=ConnectorSpec(source="producer.output", target="cpu-task.x")),

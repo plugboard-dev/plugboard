@@ -41,6 +41,9 @@ class Component(ABC, ExportMixin):
         io: The `IOController` for the component, specifying inputs, outputs, and events.
         exports: Optional; The exportable fields from the component during distributed runs
             in addition to input and output fields.
+        resources: Resource requirements for the component. Can be declared as a class attribute
+            to set default resource requirements, which can be overridden in the constructor.
+            Defaults to `Resource()` (0.001 CPU, 0 GPU, 0 memory).
     """
 
     io: IO = IO(input_events=[StopEvent], output_events=[StopEvent])
@@ -59,6 +62,17 @@ class Component(ABC, ExportMixin):
         constraints: _t.Optional[dict] = None,
         resources: _t.Optional[Resource] = None,
     ) -> None:
+        """Initialize a Component instance.
+
+        Args:
+            name: The name of the component.
+            initial_values: Optional; Initial values for the component's inputs.
+            parameters: Optional; Parameters for the component.
+            state: Optional; State backend for the component.
+            constraints: Optional; Constraints for the component.
+            resources: Optional; Resource requirements for the component. If not provided,
+                uses the class-level `resources` attribute as default.
+        """
         self.name = name
         self._initial_values = initial_values or {}
         self._constraints = constraints or {}
