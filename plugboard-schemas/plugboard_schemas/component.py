@@ -48,24 +48,30 @@ def _parse_resource_value(value: str | float | int) -> float:
     if isinstance(value, (int, float)):
         return float(value)
 
+    if not isinstance(value, str):
+        raise ValueError(f"Resource value must be a string, int, or float: {value}")
+
     # Handle string values
     value = value.strip()
 
-    # Sort by length (longest first) to match "Ki" before "k", etc.
-    for suffix in sorted(RESOURCE_SUFFIXES.keys(), key=len, reverse=True):
-        if value.endswith(suffix):
-            # Use re.escape to safely escape the suffix in the regex pattern
-            pattern = rf"^(\d+(?:\.\d+)?){re.escape(suffix)}$"
-            match = re.match(pattern, value)
-            if match:
-                return float(match.group(1)) * RESOURCE_SUFFIXES[suffix]
-            raise ValueError(f"Invalid format for suffix '{suffix}': {value}")
-
-    # Try to parse as a plain number
-    try:
-        return float(value)
-    except ValueError:
+    pattern = r"^(\d+(?:\.\d+)?)([a-zA-Z]+)?$"
+    match = re.search(pattern, value)
+    if not match:
         raise ValueError(f"Invalid resource value format: {value}")
+
+    multiplier = 1.0
+    if (suffix := match.group(2)) is not None:
+        try:
+            multiplier = RESOURCE_SUFFIXES[suffix]
+        except KeyError:
+            raise ValueError(f"Unknown resource suffix '{suffix}' in value: {value}")
+
+    try:
+        number = float(number_group := match.group(1))
+    except ValueError:
+        raise ValueError(f"Invalid resource value format: {number_group}")
+
+    return number * multiplier
 
 
 class Resource(PlugboardBaseModel):
