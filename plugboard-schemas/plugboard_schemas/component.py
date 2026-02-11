@@ -164,7 +164,7 @@ class ComponentArgsSpec(PlugboardBaseModel, extra="allow"):
     initial_values: dict[str, _t.Any] = {}
     parameters: dict[str, _t.Any] = {}
     constraints: dict[str, _t.Any] = {}
-    resources: "Resource | None" = None
+    resources: Resource | None = None
 
 
 class ComponentSpec(PlugboardBaseModel):
