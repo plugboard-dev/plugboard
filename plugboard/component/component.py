@@ -20,13 +20,9 @@ from plugboard.exceptions import (
     UnrecognisedEventError,
     ValidationError,
 )
-from plugboard.schemas import Status
+from plugboard.schemas import Resource, Status
 from plugboard.state import StateBackend
 from plugboard.utils import DI, ClassRegistry, ExportMixin, is_on_ray_worker
-
-
-if _t.TYPE_CHECKING:  # pragma: no cover
-    from plugboard.schemas import Resource
 
 
 _io_key_in: str = str(IODirection.INPUT)
@@ -49,6 +45,7 @@ class Component(ABC, ExportMixin):
 
     io: IO = IO(input_events=[StopEvent], output_events=[StopEvent])
     exports: _t.Optional[list[str]] = None
+    resources: Resource = Resource()
 
     _implements_step: bool = False
 
@@ -60,7 +57,7 @@ class Component(ABC, ExportMixin):
         parameters: _t.Optional[dict[str, _t.Any]] = None,
         state: _t.Optional[StateBackend] = None,
         constraints: _t.Optional[dict] = None,
-        resources: _t.Optional["Resource"] = None,
+        resources: _t.Optional[Resource] = None,
     ) -> None:
         self.name = name
         self._initial_values = initial_values or {}
@@ -68,7 +65,6 @@ class Component(ABC, ExportMixin):
         self._parameters = parameters or {}
         self._state: _t.Optional[StateBackend] = state
         self._state_is_connected = False
-        self._resources = resources
 
         setattr(self, "init", self._handle_init_wrapper())
         setattr(self, "step", self._handle_step_wrapper())
@@ -87,6 +83,12 @@ class Component(ABC, ExportMixin):
             output_events=self.__class__.io.output_events,
             namespace=self.name,
             component=self,
+        )
+        self.resources = resources or Resource(
+            cpu=self.__class__.resources.cpu,
+            gpu=self.__class__.resources.gpu,
+            memory=self.__class__.resources.memory,
+            resources=self.__class__.resources.resources,
         )
         self._event_producers: dict[str, set[str]] = defaultdict(set)
         self._status = Status.CREATED
@@ -125,11 +127,6 @@ class Component(ABC, ExportMixin):
     def parameters(self) -> dict[str, _t.Any]:
         """Gets the parameters of the component."""
         return self._parameters
-
-    @property
-    def resources(self) -> _t.Optional["Resource"]:
-        """Gets the resource requirements of the component."""
-        return self._resources
 
     @classmethod
     def _configure_io(cls) -> None:

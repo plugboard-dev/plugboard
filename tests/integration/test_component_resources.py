@@ -43,8 +43,8 @@ async def test_component_with_resources() -> None:
 async def test_component_with_default_resources() -> None:
     """Test that a component uses default resources when none specified."""
     component = ResourceComponent(name="test")
-
-    assert component.resources is None
+    default_resources = Resource()
+    assert component.resources == default_resources
 
 
 @pytest.mark.asyncio
