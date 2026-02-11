@@ -69,7 +69,7 @@ async def test_component_with_declared_resources() -> None:
 
 @pytest.mark.asyncio
 async def test_component_with_declared_resources_overrides() -> None:
-    """Test that a component with class-level declared resources can be overridden by constructor."""
+    """Test that a component with class-level declared resources can be overridden by constructor."""  # noqa: E501,W505
     resources = Resource(cpu="250m", gpu=0.5, memory="5Gi")
     component_1 = DeclaredResourceComponent(name="test", resources=resources)
     # Confirm that the constructor resources override the class-level resources
