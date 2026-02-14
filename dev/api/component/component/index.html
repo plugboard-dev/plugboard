@@ -2642,7 +2642,8 @@ What's new: 🚀 we've open-sourced Plugboard - please <a href="https://github.c
 </span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>    <span class="n">parameters</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 </span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>    <span class="n">state</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">StateBackend</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 </span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>    <span class="n">constraints</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">dict</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="p">)</span>
+</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>    <span class="n">resources</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Resource</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="p">)</span>
 </span></code></pre></div>
 
     <div class="doc doc-contents ">
@@ -2695,6 +2696,133 @@ What's new: 🚀 we've open-sourced Plugboard - please <a href="https://github.c
                 <p>Optional; The exportable fields from the component during distributed runs
 in addition to input and output fields.</p>
               </div>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code><span title="plugboard.component.Component.resources">resources</span></code></td>
+            <td>
+                  <code><a class="autorefs autorefs-internal" title="            Resource (plugboard.schemas.Resource)" href="../../schemas/schemas/#plugboard_schemas.Resource">Resource</a></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Resource requirements for the component. Can be declared as a class attribute
+to set default resource requirements, which can be overridden in the constructor.
+Defaults to <code>Resource()</code> (0.001 CPU, 0 GPU, 0 memory).</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+        <p>Initialize a Component instance.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>name</code>
+            </td>
+            <td>
+                  <code><span title="str">str</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>The name of the component.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>initial_values</code>
+            </td>
+            <td>
+                  <code><span title="typing.Optional">Optional</span>[<a class="autorefs autorefs-internal" title="            dict (plugboard.component.component.Component.dict)" href="../../utils/#plugboard.utils.ExportMixin.dict">dict</a>[<span title="str">str</span>, <span title="typing.Iterable">Iterable</span>]]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Optional; Initial values for the component's inputs.</p>
+              </div>
+            </td>
+            <td>
+                  <code>None</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>parameters</code>
+            </td>
+            <td>
+                  <code><span title="typing.Optional">Optional</span>[<a class="autorefs autorefs-internal" title="            dict (plugboard.component.component.Component.dict)" href="../../utils/#plugboard.utils.ExportMixin.dict">dict</a>[<span title="str">str</span>, <span title="typing.Any">Any</span>]]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Optional; Parameters for the component.</p>
+              </div>
+            </td>
+            <td>
+                  <code>None</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>state</code>
+            </td>
+            <td>
+                  <code><span title="typing.Optional">Optional</span>[<a class="autorefs autorefs-internal" title="            StateBackend (plugboard.state.StateBackend)" href="../../state/state/#plugboard.state.StateBackend">StateBackend</a>]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Optional; State backend for the component.</p>
+              </div>
+            </td>
+            <td>
+                  <code>None</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>constraints</code>
+            </td>
+            <td>
+                  <code><span title="typing.Optional">Optional</span>[<a class="autorefs autorefs-internal" title="            dict (plugboard.component.component.Component.dict)" href="../../utils/#plugboard.utils.ExportMixin.dict">dict</a>]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Optional; Constraints for the component.</p>
+              </div>
+            </td>
+            <td>
+                  <code>None</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>resources</code>
+            </td>
+            <td>
+                  <code><span title="typing.Optional">Optional</span>[<a class="autorefs autorefs-internal" title="            Resource (plugboard.schemas.Resource)" href="../../schemas/schemas/#plugboard_schemas.Resource">Resource</a>]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Optional; Resource requirements for the component. If not provided,
+uses the class-level <code>resources</code> attribute as default.</p>
+              </div>
+            </td>
+            <td>
+                  <code>None</code>
             </td>
           </tr>
       </tbody>

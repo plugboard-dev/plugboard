@@ -810,6 +810,56 @@ What's new: 🚀 we've open-sourced Plugboard - please <a href="https://github.c
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#specifying-resource-requirements" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Specifying resource requirements
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Specifying resource requirements">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#declaring-resources-at-component-definition" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Declaring resources at component definition
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#overriding-resources-at-instantiation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Overriding resources at instantiation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#example" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Example
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -2083,6 +2133,56 @@ What's new: 🚀 we've open-sourced Plugboard - please <a href="https://github.c
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#specifying-resource-requirements" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Specifying resource requirements
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Specifying resource requirements">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#declaring-resources-at-component-definition" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Declaring resources at component definition
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#overriding-resources-at-instantiation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Overriding resources at instantiation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#example" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Example
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -2287,6 +2387,110 @@ What's new: 🚀 we've open-sourced Plugboard - please <a href="https://github.c
 <li>Tell Plugboard to use a <a class="autorefs autorefs-internal" title="            RayProcess" href="../../../api/process/process/#plugboard.process.RayProcess"><code>RayProcess</code></a> instead of the default <a class="autorefs autorefs-internal" title="            LocalProcess" href="../../../api/process/process/#plugboard.process.LocalProcess"><code>LocalProcess</code></a>.</li>
 <li>Also change the connector builder to <a class="autorefs autorefs-internal" title="            RayConnector" href="../../../api/connector/connector/#plugboard.connector.RayConnector"><code>RayConnector</code></a>, which will build <a class="autorefs autorefs-internal" title="            RayChannel" href="../../../api/connector/connector/#plugboard.connector.RayChannel"><code>RayChannel</code></a> objects when creating the <code>Process</code>.</li>
 </ol>
+<h2 id="specifying-resource-requirements">Specifying resource requirements</h2>
+<p>When running components on Ray, you can specify resource requirements for each component to control how Ray allocates computational resources. This is particularly useful when you have components with different resource needs (e.g., CPU-intensive vs GPU-intensive tasks) and you are running on a Ray cluster.</p>
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<p>Normally Ray will start automatically when you are using Plugboard locally. If you want to start a separate Ray instance, for example so that you can control the configuration options, you can launch it from the <a href="https://docs.ray.io/en/latest/ray-core/starting-ray.html">CLI</a>. For example, this command will start a Ray instance with enough resources to run the example below.</p>
+<div class="language-sh highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>uv<span class="w"> </span>run<span class="w"> </span>ray<span class="w"> </span>start<span class="w"> </span>--head<span class="w"> </span>--num-cpus<span class="o">=</span><span class="m">4</span><span class="w"> </span>--num-gpus<span class="o">=</span><span class="m">1</span><span class="w"> </span>--resources<span class="o">=</span><span class="s1">&#39;{&quot;custom_hardware&quot;: 5}&#39;</span>
+</span></code></pre></div>
+</div>
+<h3 id="declaring-resources-at-component-definition">Declaring resources at component definition</h3>
+<p>The recommended way to specify resource requirements is to declare them as a class attribute when defining your component. This makes the <a class="autorefs autorefs-internal" title="            Resource" href="../../../api/schemas/schemas/#plugboard_schemas.Resource"><code>Resource</code></a> requirements explicit and part of the component's definition:</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="k">class</span><span class="w"> </span><span class="nc">CPUIntensiveTask</span><span class="p">(</span><span class="n">Component</span><span class="p">):</span>
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Component that requires more CPU resources.</span>
+</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>
+</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="sd">    Resource requirements are declared as a class attribute.</span>
+</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="sd">    &quot;&quot;&quot;</span>
+</span><span id="__span-5-6"><a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a>
+</span><span id="__span-5-7"><a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a>    <span class="n">io</span> <span class="o">=</span> <span class="n">IO</span><span class="p">(</span><span class="n">inputs</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;x&quot;</span><span class="p">],</span> <span class="n">outputs</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;y&quot;</span><span class="p">])</span>
+</span><span id="__span-5-8"><a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a>    <span class="n">resources</span> <span class="o">=</span> <span class="n">Resource</span><span class="p">(</span><span class="n">cpu</span><span class="o">=</span><span class="mf">2.0</span><span class="p">)</span>   <span class="c1"># (1)!</span>
+</span><span id="__span-5-9"><a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a>
+</span><span id="__span-5-10"><a id="__codelineno-5-10" name="__codelineno-5-10" href="#__codelineno-5-10"></a>    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">step</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+</span><span id="__span-5-11"><a id="__codelineno-5-11" name="__codelineno-5-11" href="#__codelineno-5-11"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;Execute CPU-intensive computation.&quot;&quot;&quot;</span>
+</span><span id="__span-5-12"><a id="__codelineno-5-12" name="__codelineno-5-12" href="#__codelineno-5-12"></a>        <span class="c1"># Simulate CPU-intensive work</span>
+</span><span id="__span-5-13"><a id="__codelineno-5-13" name="__codelineno-5-13" href="#__codelineno-5-13"></a>        <span class="n">result</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">i</span><span class="o">**</span><span class="mi">2</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span> <span class="o">*</span> <span class="mi">10000</span><span class="p">)))</span>
+</span><span id="__span-5-14"><a id="__codelineno-5-14" name="__codelineno-5-14" href="#__codelineno-5-14"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">y</span> <span class="o">=</span> <span class="n">result</span>
+</span></code></pre></div>
+<ol>
+<li>Declare resources when defining the class.</li>
+</ol>
+<h3 id="overriding-resources-at-instantiation">Overriding resources at instantiation</h3>
+<p>You can also override resource requirements when creating component instances. This is useful when you want to use the same component class with different resource requirements:</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="n">CPUIntensiveTask</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;cpu-task&quot;</span><span class="p">,</span> <span class="n">resources</span><span class="o">=</span><span class="n">Resource</span><span class="p">(</span><span class="n">cpu</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)),</span>  <span class="c1"># (1)!</span>
+</span></code></pre></div>
+<ol>
+<li>Pass a <a class="autorefs autorefs-internal" title="            Resource" href="../../../api/schemas/schemas/#plugboard_schemas.Resource"><code>Resource</code></a> object to override the CPU requirements for this component.</li>
+</ol>
+<h3 id="example">Example</h3>
+<p>For example, you can specify <a class="autorefs autorefs-internal" title="            Resource" href="../../../api/schemas/schemas/#plugboard_schemas.Resource"><code>Resource</code></a> requirements like this when defining components:</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="c1"># Resources can be declared at the class level (see CPUIntensiveTask and GPUTask above)</span>
+</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="c1"># or overridden when instantiating components</span>
+</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="n">process</span> <span class="o">=</span> <span class="n">RayProcess</span><span class="p">(</span>
+</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a>    <span class="n">components</span><span class="o">=</span><span class="p">[</span>
+</span><span id="__span-7-5"><a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a>        <span class="n">CPUIntensiveTask</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;cpu-task&quot;</span><span class="p">,</span> <span class="n">resources</span><span class="o">=</span><span class="n">Resource</span><span class="p">(</span><span class="n">cpu</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)),</span>  <span class="c1"># (1)!</span>
+</span><span id="__span-7-6"><a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a>        <span class="n">GPUTask</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;gpu-task&quot;</span><span class="p">),</span>  <span class="c1"># (2)!</span>
+</span><span id="__span-7-7"><a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a>        <span class="n">DataProducer</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;producer&quot;</span><span class="p">,</span> <span class="n">iters</span><span class="o">=</span><span class="mi">5</span><span class="p">),</span>  <span class="c1"># (3)!</span>
+</span><span id="__span-7-8"><a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a>    <span class="p">],</span>
+</span><span id="__span-7-9"><a id="__codelineno-7-9" name="__codelineno-7-9" href="#__codelineno-7-9"></a>    <span class="n">connectors</span><span class="o">=</span><span class="p">[</span>
+</span><span id="__span-7-10"><a id="__codelineno-7-10" name="__codelineno-7-10" href="#__codelineno-7-10"></a>        <span class="n">RayConnector</span><span class="p">(</span><span class="n">spec</span><span class="o">=</span><span class="n">ConnectorSpec</span><span class="p">(</span><span class="n">source</span><span class="o">=</span><span class="s2">&quot;producer.output&quot;</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="s2">&quot;cpu-task.x&quot;</span><span class="p">)),</span>
+</span><span id="__span-7-11"><a id="__codelineno-7-11" name="__codelineno-7-11" href="#__codelineno-7-11"></a>        <span class="n">RayConnector</span><span class="p">(</span><span class="n">spec</span><span class="o">=</span><span class="n">ConnectorSpec</span><span class="p">(</span><span class="n">source</span><span class="o">=</span><span class="s2">&quot;cpu-task.y&quot;</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="s2">&quot;gpu-task.data&quot;</span><span class="p">)),</span>
+</span><span id="__span-7-12"><a id="__codelineno-7-12" name="__codelineno-7-12" href="#__codelineno-7-12"></a>    <span class="p">],</span>
+</span><span id="__span-7-13"><a id="__codelineno-7-13" name="__codelineno-7-13" href="#__codelineno-7-13"></a><span class="p">)</span>
+</span></code></pre></div>
+<ol>
+<li>Override the resource requirement on this instance.</li>
+<li>Use resources specified in class definition.</li>
+<li>Use default resources.</li>
+</ol>
+<p>Or override them in YAML configuration:</p>
+<div class="language-yaml highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="nt">plugboard</span><span class="p">:</span>
+</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="w">  </span><span class="nt">process</span><span class="p">:</span>
+</span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a><span class="w">    </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">plugboard.process.RayProcess</span>
+</span><span id="__span-8-4"><a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a><span class="w">    </span><span class="nt">connector_builder</span><span class="p">:</span>
+</span><span id="__span-8-5"><a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a><span class="w">      </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">plugboard.connector.RayConnector</span>
+</span><span id="__span-8-6"><a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a><span class="w">    </span><span class="nt">args</span><span class="p">:</span>
+</span><span id="__span-8-7"><a id="__codelineno-8-7" name="__codelineno-8-7" href="#__codelineno-8-7"></a><span class="w">      </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">resource-example-process</span>
+</span><span id="__span-8-8"><a id="__codelineno-8-8" name="__codelineno-8-8" href="#__codelineno-8-8"></a><span class="w">      </span><span class="nt">components</span><span class="p">:</span>
+</span><span id="__span-8-9"><a id="__codelineno-8-9" name="__codelineno-8-9" href="#__codelineno-8-9"></a><span class="w">        </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">examples.tutorials.004_using_ray.resources_example.DataProducer</span>
+</span><span id="__span-8-10"><a id="__codelineno-8-10" name="__codelineno-8-10" href="#__codelineno-8-10"></a><span class="w">          </span><span class="nt">args</span><span class="p">:</span>
+</span><span id="__span-8-11"><a id="__codelineno-8-11" name="__codelineno-8-11" href="#__codelineno-8-11"></a><span class="w">            </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">producer</span>
+</span><span id="__span-8-12"><a id="__codelineno-8-12" name="__codelineno-8-12" href="#__codelineno-8-12"></a><span class="w">            </span><span class="nt">iters</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">10</span>
+</span><span id="__span-8-13"><a id="__codelineno-8-13" name="__codelineno-8-13" href="#__codelineno-8-13"></a><span class="w">            </span><span class="nt">resources</span><span class="p">:</span>
+</span><span id="__span-8-14"><a id="__codelineno-8-14" name="__codelineno-8-14" href="#__codelineno-8-14"></a><span class="w">              </span><span class="nt">cpu</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1.0</span><span class="w">   </span><span class="c1"># (1)!</span>
+</span><span id="__span-8-15"><a id="__codelineno-8-15" name="__codelineno-8-15" href="#__codelineno-8-15"></a><span class="w">        </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">examples.tutorials.004_using_ray.resources_example.CPUIntensiveTask</span>
+</span><span id="__span-8-16"><a id="__codelineno-8-16" name="__codelineno-8-16" href="#__codelineno-8-16"></a><span class="w">          </span><span class="nt">args</span><span class="p">:</span>
+</span><span id="__span-8-17"><a id="__codelineno-8-17" name="__codelineno-8-17" href="#__codelineno-8-17"></a><span class="w">            </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">cpu-task</span>
+</span><span id="__span-8-18"><a id="__codelineno-8-18" name="__codelineno-8-18" href="#__codelineno-8-18"></a><span class="w">            </span><span class="c1"># CPUIntensiveTask has class-level resources (cpu: 2.0)</span>
+</span><span id="__span-8-19"><a id="__codelineno-8-19" name="__codelineno-8-19" href="#__codelineno-8-19"></a><span class="w">            </span><span class="c1"># Override to use more memory</span>
+</span><span id="__span-8-20"><a id="__codelineno-8-20" name="__codelineno-8-20" href="#__codelineno-8-20"></a><span class="w">            </span><span class="nt">resources</span><span class="p">:</span>
+</span><span id="__span-8-21"><a id="__codelineno-8-21" name="__codelineno-8-21" href="#__codelineno-8-21"></a><span class="w">              </span><span class="nt">cpu</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">2.0</span><span class="w">  </span><span class="c1"># (2)!</span>
+</span><span id="__span-8-22"><a id="__codelineno-8-22" name="__codelineno-8-22" href="#__codelineno-8-22"></a><span class="w">              </span><span class="nt">memory</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;512Mi&quot;</span><span class="w">  </span><span class="c1"># (3)!</span>
+</span><span id="__span-8-23"><a id="__codelineno-8-23" name="__codelineno-8-23" href="#__codelineno-8-23"></a><span class="w">        </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">examples.tutorials.004_using_ray.resources_example.GPUTask</span>
+</span><span id="__span-8-24"><a id="__codelineno-8-24" name="__codelineno-8-24" href="#__codelineno-8-24"></a><span class="w">          </span><span class="nt">args</span><span class="p">:</span>
+</span><span id="__span-8-25"><a id="__codelineno-8-25" name="__codelineno-8-25" href="#__codelineno-8-25"></a><span class="w">            </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">gpu-task</span>
+</span><span id="__span-8-26"><a id="__codelineno-8-26" name="__codelineno-8-26" href="#__codelineno-8-26"></a><span class="w">            </span><span class="c1"># GPUTask has class-level resources (cpu: &quot;500m&quot;, gpu: 1)</span>
+</span><span id="__span-8-27"><a id="__codelineno-8-27" name="__codelineno-8-27" href="#__codelineno-8-27"></a><span class="w">            </span><span class="c1"># Can override or extend with custom resources</span>
+</span><span id="__span-8-28"><a id="__codelineno-8-28" name="__codelineno-8-28" href="#__codelineno-8-28"></a><span class="w">            </span><span class="nt">resources</span><span class="p">:</span>
+</span><span id="__span-8-29"><a id="__codelineno-8-29" name="__codelineno-8-29" href="#__codelineno-8-29"></a><span class="w">              </span><span class="nt">cpu</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;500m&quot;</span><span class="w">  </span><span class="c1"># (4)!</span>
+</span><span id="__span-8-30"><a id="__codelineno-8-30" name="__codelineno-8-30" href="#__codelineno-8-30"></a><span class="w">              </span><span class="nt">gpu</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span><span class="w">  </span><span class="c1"># (5)!</span>
+</span><span id="__span-8-31"><a id="__codelineno-8-31" name="__codelineno-8-31" href="#__codelineno-8-31"></a><span class="w">              </span><span class="nt">resources</span><span class="p">:</span>
+</span><span id="__span-8-32"><a id="__codelineno-8-32" name="__codelineno-8-32" href="#__codelineno-8-32"></a><span class="w">                </span><span class="nt">custom_hardware</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">2</span><span class="w">  </span><span class="c1"># (6)!</span>
+</span><span id="__span-8-33"><a id="__codelineno-8-33" name="__codelineno-8-33" href="#__codelineno-8-33"></a><span class="w">      </span><span class="nt">connectors</span><span class="p">:</span>
+</span><span id="__span-8-34"><a id="__codelineno-8-34" name="__codelineno-8-34" href="#__codelineno-8-34"></a><span class="w">        </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">source</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">producer.output</span>
+</span><span id="__span-8-35"><a id="__codelineno-8-35" name="__codelineno-8-35" href="#__codelineno-8-35"></a><span class="w">          </span><span class="nt">target</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">cpu-task.x</span>
+</span><span id="__span-8-36"><a id="__codelineno-8-36" name="__codelineno-8-36" href="#__codelineno-8-36"></a><span class="w">        </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">source</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">cpu-task.y</span>
+</span><span id="__span-8-37"><a id="__codelineno-8-37" name="__codelineno-8-37" href="#__codelineno-8-37"></a><span class="w">          </span><span class="nt">target</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">gpu-task.data</span>
+</span></code></pre></div>
+<ol>
+<li>Override DataProducer to require 1 CPU (instead of the default 0.001).</li>
+<li>CPUIntensiveTask already declares cpu: 2.0 at the class level, so this matches the class definition.</li>
+<li>Add 512MB memory requirement to CPUIntensiveTask (extending the class-level resources).</li>
+<li>Requires 0.5 CPU, specified in Kubernetes-style format (500 milli CPUs). This matches the class-level declaration.</li>
+<li>Requires 1 GPU, matching the class-level declaration.</li>
+<li>Add a custom resource called <code>custom_hardware</code>. This needs to be specified in the configuration of your Ray cluster to make it available.</li>
+</ol>
+<p>See the <a href="https://docs.ray.io/en/latest/ray-core/scheduling/resources.html">Ray documentation</a> for more information about specifying resource requirements.</p>
 
 
 
