@@ -84,34 +84,23 @@ When running components on Ray, you can specify resource requirements for each c
 
 ### Declaring resources at component definition
 
-The recommended way to specify resource requirements is to declare them as a class attribute when defining your component. This makes the resource requirements explicit and part of the component's definition:
+The recommended way to specify resource requirements is to declare them as a class attribute when defining your component. This makes the [`Resource`][plugboard.schemas.Resource] requirements explicit and part of the component's definition:
 
 ```python
-from plugboard.component import Component
-from plugboard.schemas import Resource
-
-class CPUIntensiveTask(Component):
-    """Component that requires more CPU resources."""
-    
-    io = IO(inputs=["x"], outputs=["y"])
-    resources = Resource(cpu=2.0)  # Declare resources at class level
-    
-    async def step(self) -> None:
-        # Your component logic here
-        pass
+--8<-- "examples/tutorials/004_using_ray/resources_example.py:definition"
 ```
+
+1. Declare resources when defining the class.
 
 ### Overriding resources at instantiation
 
 You can also override resource requirements when creating component instances. This is useful when you want to use the same component class with different resource requirements:
 
 ```python
-# Override the class-level resource requirements
-component = CPUIntensiveTask(
-    name="my-task",
-    resources=Resource(cpu=4.0)  # Override to use 4 CPUs instead of 2
-)
+--8<-- "examples/tutorials/004_using_ray/resources_example.py:77:77"
 ```
+
+1. Pass a [`Resource`][plugboard.schemas.Resource] object to override the CPU requirements for this component.
 
 ### Example
 
@@ -120,6 +109,10 @@ For example, you can specify [`Resource`][plugboard.schemas.Resource] requiremen
 ```python
 --8<-- "examples/tutorials/004_using_ray/resources_example.py:resources"
 ```
+
+1. Override the resource requirement on this instance.
+2. Use resources specified in class definition.
+3. Use default resources.
 
 Or override them in YAML configuration:
 

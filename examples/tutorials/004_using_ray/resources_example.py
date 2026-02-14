@@ -1,5 +1,6 @@
 """Example demonstrating resource requirements for components in RayProcess."""
 
+# fmt: off
 import asyncio
 import typing as _t
 
@@ -11,6 +12,7 @@ from plugboard.process import RayProcess
 from plugboard.schemas import ComponentArgsDict, ConnectorSpec, Resource
 
 
+# --8<-- [start:definition]
 class CPUIntensiveTask(Component):
     """Component that requires more CPU resources.
 
@@ -18,13 +20,14 @@ class CPUIntensiveTask(Component):
     """
 
     io = IO(inputs=["x"], outputs=["y"])
-    resources = Resource(cpu=2.0)  # Declare resources at class level
+    resources = Resource(cpu=2.0)   # (1)!
 
     async def step(self) -> None:
         """Execute CPU-intensive computation."""
         # Simulate CPU-intensive work
         result = sum(i**2 for i in range(int(self.x * 10000)))
         self.y = result
+# --8<-- [end:definition]
 
 
 class GPUTask(Component):
@@ -71,9 +74,9 @@ async def main() -> None:
     # or overridden when instantiating components
     process = RayProcess(
         components=[
-            DataProducer(name="producer", iters=5),  # Uses default resources
-            CPUIntensiveTask(name="cpu-task"),  # Uses class-level resources (2.0 CPU)
-            GPUTask(name="gpu-task"),  # Uses class-level resources (0.5 CPU, 1 GPU)
+            CPUIntensiveTask(name="cpu-task", resources=Resource(cpu=1.0)),  # (1)!
+            GPUTask(name="gpu-task"),  # (2)!
+            DataProducer(name="producer", iters=5),  # (3)!
         ],
         connectors=[
             RayConnector(spec=ConnectorSpec(source="producer.output", target="cpu-task.x")),
