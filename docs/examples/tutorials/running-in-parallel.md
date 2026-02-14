@@ -117,7 +117,7 @@ For example, you can specify [`Resource`][plugboard.schemas.Resource] requiremen
 Or override them in YAML configuration:
 
 ```yaml
---8<-- "examples/tutorials/004_using_ray/resources-example.yaml:10:"
+--8<-- "examples/tutorials/004_using_ray/resources-example.yaml:11:"
 ```
 
 1. Override DataProducer to require 1 CPU (instead of the default 0.001).
