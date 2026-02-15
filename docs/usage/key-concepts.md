@@ -57,6 +57,21 @@ These Process classes are currently available which can be extended with custom 
 * [`LocalProcess`][plugboard.process.LocalProcess] runs models in a single Python process on your computer. This is useful for initial development, and is often sufficient for models are not computationally demanding.
 * [`RayProcess`][plugboard.process.RayProcess] allows you to execute components on different Python processes using the [Ray Framework](https://docs.ray.io/en/latest/). This supports parallel computation on a single machine and scales out to large-scale [compute clusters](https://docs.ray.io/en/latest/cluster/getting-started.html).
 
+## Working with async code
+
+While Plugboard abstracts away most of the complexity of asynchronous programming, there are times when you may need to work directly with async code. For example:
+
+* Running a Plugboard process from a synchronous script or CLI application
+* Gathering results from multiple async operations with better error handling
+* Integrating Plugboard with other async libraries or frameworks
+
+For these use cases, Plugboard provides utilities in the [`plugboard.utils.async_utils`][plugboard.utils.async_utils] module:
+
+* [`run_coro_sync`][plugboard.utils.async_utils.run_coro_sync] - Run an async function from synchronous code
+* [`gather_except`][plugboard.utils.async_utils.gather_except] - Gather results from multiple coroutines with improved error handling
+
+See the [async_utils API reference](../api/utils/async_utils/async_utils.md) for detailed documentation and examples.
+
 ## Running models
 
 Most models start out life in a Jupyter notebook or Python script. Later on in development you may choose to convert the Plugboard process definition to a YAML file. This allows you to:
