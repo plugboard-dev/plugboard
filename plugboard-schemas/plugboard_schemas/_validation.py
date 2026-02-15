@@ -19,12 +19,6 @@ if _t.TYPE_CHECKING:
     from .connector import ConnectorSpec
 
 
-class ValidationError(Exception):
-    """Raised when a process specification fails validation."""
-
-    pass
-
-
 def _build_component_graph(
     connectors: list[ConnectorSpec],
 ) -> dict[str, set[str]]:
@@ -62,13 +56,12 @@ def _get_edges_in_cycle(
         List of connector specs that are part of the cycle.
     """
     cycle_edges: list[ConnectorSpec] = []
-    cycle_set = set(cycle)
     for i, node in enumerate(cycle):
         next_node = cycle[(i + 1) % len(cycle)]
         for conn in connectors:
             if conn.source.entity == node and conn.target.entity == next_node:
                 cycle_edges.append(conn)
-    return [c for c in cycle_edges if c.source.entity in cycle_set and c.target.entity in cycle_set]
+    return cycle_edges
 
 
 def validate_all_inputs_connected(

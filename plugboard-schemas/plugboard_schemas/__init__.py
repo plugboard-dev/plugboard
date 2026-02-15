@@ -11,7 +11,6 @@ from importlib.metadata import version
 from ._common import PlugboardBaseModel
 from ._graph import simple_cycles
 from ._validation import (
-    ValidationError,
     validate_all_inputs_connected,
     validate_input_events,
     validate_no_unresolved_cycles,
@@ -92,7 +91,6 @@ __all__ = [
     "TuneArgsDict",
     "TuneArgsSpec",
     "TuneSpec",
-    "ValidationError",
     "simple_cycles",
     "validate_all_inputs_connected",
     "validate_input_events",
