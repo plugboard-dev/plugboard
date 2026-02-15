@@ -10,7 +10,7 @@ import pytest
 from plugboard.component import Component, IOController as IO
 from plugboard.connector import AsyncioConnector, ConnectorBuilder
 from plugboard.diagram import MermaidDiagram
-from plugboard.events import Event, EventConnectorBuilder
+from plugboard.events import Event
 from plugboard.process import LocalProcess
 from plugboard.schemas import ConnectorSpec
 
@@ -65,8 +65,7 @@ def process() -> LocalProcess:
         AsyncioConnector(spec=ConnectorSpec(source="component-b.c", target="component-c.c")),
     ]
     connector_builder = ConnectorBuilder(connector_cls=AsyncioConnector)  # (2)!
-    event_connector_builder = EventConnectorBuilder(connector_builder=connector_builder)
-    event_connectors = list(event_connector_builder.build(components).values())
+    event_connectors = connector_builder.build_event_connectors(components)
     return LocalProcess(components=components, connectors=connectors + event_connectors)
 
 

@@ -19,6 +19,17 @@ from plugboard.cli import app
 runner = CliRunner()
 
 
+def test_cli_version() -> None:
+    """Tests the version command."""
+    result = runner.invoke(app, ["version"])
+    # CLI must run without error
+    assert result.exit_code == 0
+    # Must output version information
+    assert "Plugboard version:" in result.stdout
+    assert "Platform:" in result.stdout
+    assert "Python version:" in result.stdout
+
+
 @pytest.fixture
 def test_project_dir() -> _t.Iterator[Path]:
     """Create a minimal Python package for testing."""
