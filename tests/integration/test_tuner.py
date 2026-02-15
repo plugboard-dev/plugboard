@@ -174,7 +174,7 @@ async def test_multi_objective_tune(config: dict, ray_ctx: None) -> None:
                 categories=[1, -1],
             ),
         ],
-        num_samples=10,
+        num_samples=20,
         mode=["max", "min"],
         max_concurrent=2,
     )
