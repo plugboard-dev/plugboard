@@ -1,7 +1,7 @@
 """Provides `Tuner` class for optimising Plugboard processes."""
 
 from functools import partial
-from inspect import isfunction, signature
+from inspect import signature
 import math
 from pydoc import locate
 import typing as _t
@@ -141,7 +141,7 @@ class Tuner:
 
     def _resolve_space_fn(self, space: str, process_spec: ProcessSpec) -> _t.Callable:
         space_fn = locate(space)
-        if not space_fn or not isfunction(space_fn):  # pragma: no cover
+        if not space_fn or not callable(space_fn):  # pragma: no cover
             raise ValueError(f"Could not locate search space function {space}")
         sig = signature(space_fn)
         if "spec" in sig.parameters:
