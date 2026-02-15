@@ -2720,7 +2720,6 @@ span.linenos.special { color: #000000; background-color: #ffffc0; padding-left: 
 <span class="kn">import</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">_t</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">plugboard.connector</span><span class="w"> </span><span class="kn">import</span> <span class="n">AsyncioConnector</span><span class="p">,</span> <span class="n">ConnectorBuilder</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">plugboard.events</span><span class="w"> </span><span class="kn">import</span> <span class="n">EventConnectorBuilder</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">plugboard.process</span><span class="w"> </span><span class="kn">import</span> <span class="n">LocalProcess</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">plugboard.schemas</span><span class="w"> </span><span class="kn">import</span> <span class="n">ConnectorSpec</span>
 
@@ -2742,7 +2741,6 @@ import datetime as dt
 import typing as _t
 
 from plugboard.connector import AsyncioConnector, ConnectorBuilder
-from plugboard.events import EventConnectorBuilder
 from plugboard.process import LocalProcess
 from plugboard.schemas import ConnectorSpec
 
@@ -3496,9 +3494,7 @@ class TradeSignalAggregator(Component):
 <span class="p">]</span>
 
 <span class="c1"># Event connectors</span>
-<span class="n">builder</span> <span class="o">=</span> <span class="n">ConnectorBuilder</span><span class="p">(</span><span class="n">connector_cls</span><span class="o">=</span><span class="n">AsyncioConnector</span><span class="p">)</span>
-<span class="n">event_builder</span> <span class="o">=</span> <span class="n">EventConnectorBuilder</span><span class="p">(</span><span class="n">connector_builder</span><span class="o">=</span><span class="n">builder</span><span class="p">)</span>
-<span class="n">event_connectors</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">event_builder</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="n">components</span><span class="p">)</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+<span class="n">event_connectors</span> <span class="o">=</span> <span class="n">AsyncioConnector</span><span class="o">.</span><span class="n">builder</span><span class="p">()</span><span class="o">.</span><span class="n">build_event_connectors</span><span class="p">(</span><span class="n">components</span><span class="p">)</span>
 
 <span class="n">process</span> <span class="o">=</span> <span class="n">LocalProcess</span><span class="p">(</span><span class="n">components</span><span class="o">=</span><span class="n">components</span><span class="p">,</span> <span class="n">connectors</span><span class="o">=</span><span class="n">connectors</span> <span class="o">+</span> <span class="n">event_connectors</span><span class="p">)</span>
 </pre></div>
@@ -3562,9 +3558,7 @@ connectors = [
 ]
 
 # Event connectors
-builder = ConnectorBuilder(connector_cls=AsyncioConnector)
-event_builder = EventConnectorBuilder(connector_builder=builder)
-event_connectors = list(event_builder.build(components).values())
+event_connectors = AsyncioConnector.builder().build_event_connectors(components)
 
 process = LocalProcess(components=components, connectors=connectors + event_connectors)</div>
 </div>
