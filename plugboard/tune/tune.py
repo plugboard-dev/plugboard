@@ -1,7 +1,7 @@
 """Provides `Tuner` class for optimising Plugboard processes."""
 
 from functools import partial
-from inspect import signature
+from inspect import isfunction, signature
 import math
 from pydoc import locate
 import typing as _t
