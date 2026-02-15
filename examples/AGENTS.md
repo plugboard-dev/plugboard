@@ -243,7 +243,7 @@ plugboard process run my-model.yaml
 
 ## Jupyter Notebooks
 
-For interactive demonstrations:
+Use the following guidelines when creating demo notebooks:
 
 1. **Structure**
    - Title markdown cell in the same format as the other notebooks, including badges to run on Github/Colab
@@ -257,7 +257,6 @@ For interactive demonstrations:
    - Add docstrings to helper functions
    - Show intermediate results
    - Include error handling
-   - Clean up resources properly
 
 3. **Output**
    - Clear cell output before committing
