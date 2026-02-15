@@ -1,6 +1,7 @@
 """Provides `Tuner` class for optimising Plugboard processes."""
 
-from inspect import isfunction
+from functools import partial
+from inspect import isfunction, signature
 import math
 from pydoc import locate
 import typing as _t
@@ -61,14 +62,14 @@ class Tuner:
         self._objective, self._mode, self._metric = self._normalize_objective_and_mode(
             objective, mode
         )
-        self._custom_space = bool(algorithm and algorithm.space)
+        self._algorithm = algorithm
+        self._custom_space = bool(self._algorithm and self._algorithm.space)
+        self._max_concurrent = max_concurrent
+        self._num_samples = num_samples
 
-        # Prepare parameters and search algorithm
+        # Prepare parameters
         self._parameters_dict, self._parameters = self._prepare_parameters(parameters)
-        searcher = self._init_search_algorithm(algorithm, max_concurrent)
 
-        # Configure Ray Tune
-        self._config = ray.tune.TuneConfig(num_samples=num_samples, search_alg=searcher)
         self._result_grid: _t.Optional[ray.tune.ResultGrid] = None
         self._logger.info("Tuner created")
 
@@ -96,13 +97,15 @@ class Tuner:
                 raise ValueError("If using a single objective, `mode` must not be a list.")
 
     def _build_algorithm(
-        self, algorithm: _t.Optional[OptunaSpec] = None
+        self,
+        process_spec: ProcessSpec,
+        algorithm: _t.Optional[OptunaSpec] = None,
     ) -> ray.tune.search.Searcher:
         if algorithm is None:
             self._logger.info("Using default Optuna search algorithm")
             return self._default_searcher()
 
-        algo_kwargs = self._build_algo_kwargs(algorithm)
+        algo_kwargs = self._build_algo_kwargs(algorithm, process_spec)
         algo_cls = self._get_algo_class(algorithm.type)
         self._logger.info(
             "Using custom search algorithm",
@@ -114,7 +117,9 @@ class Tuner:
     def _default_searcher(self) -> "ray.tune.search.Searcher":
         return ray.tune.search.optuna.OptunaSearch(metric=self._metric, mode=self._mode)
 
-    def _build_algo_kwargs(self, algorithm: OptunaSpec) -> dict[str, _t.Any]:
+    def _build_algo_kwargs(
+        self, algorithm: OptunaSpec, process_spec: ProcessSpec
+    ) -> dict[str, _t.Any]:
         """Prepare keyword args for the searcher, normalising storage/space."""
         kwargs = algorithm.model_dump(exclude={"type"})
         kwargs["mode"] = self._mode
@@ -130,14 +135,18 @@ class Tuner:
 
         space = kwargs.get("space")
         if space is not None:
-            kwargs["space"] = self._resolve_space_fn(space)
+            kwargs["space"] = self._resolve_space_fn(space, process_spec)
 
         return kwargs
 
-    def _resolve_space_fn(self, space: str) -> _t.Callable:
+    def _resolve_space_fn(self, space: str, process_spec: ProcessSpec) -> _t.Callable:
         space_fn = locate(space)
         if not space_fn or not isfunction(space_fn):  # pragma: no cover
             raise ValueError(f"Could not locate search space function {space}")
+        sig = signature(space_fn)
+        if "spec" in sig.parameters:
+            self._logger.info("Search space function accepts `spec` argument, passing ProcessSpec")
+            return partial(space_fn, spec=process_spec)
         return space_fn
 
     def _get_algo_class(self, type_path: str) -> _t.Type[ray.tune.search.searcher.Searcher]:
@@ -232,8 +241,11 @@ class Tuner:
             ray.tune.PlacementGroupFactory(placement_bundles),
         )
 
+        searcher = self._init_search_algorithm(self._algorithm, self._max_concurrent, spec)
+        config = ray.tune.TuneConfig(num_samples=self._num_samples, search_alg=searcher)
+
         tuner_kwargs: dict[str, _t.Any] = {
-            "tune_config": self._config,
+            "tune_config": config,
         }
         if not self._custom_space:
             self._logger.info("Setting Tuner with parameters", params=list(self._parameters.keys()))
@@ -315,10 +327,13 @@ class Tuner:
         return params_dict, params_space
 
     def _init_search_algorithm(
-        self, algorithm: _t.Optional[OptunaSpec], max_concurrent: _t.Optional[int]
+        self,
+        algorithm: _t.Optional[OptunaSpec],
+        max_concurrent: _t.Optional[int],
+        process_spec: ProcessSpec,
     ) -> "ray.tune.search.Searcher":
         """Create the search algorithm and apply concurrency limits if requested."""
-        algo = self._build_algorithm(algorithm)
+        algo = self._build_algorithm(process_spec, algorithm)
         if max_concurrent is not None:
             algo = ray.tune.search.ConcurrencyLimiter(algo, max_concurrent)
         return algo

@@ -17,6 +17,7 @@ from plugboard.schemas import (
     IntParameterSpec,
     ObjectiveSpec,
     OptunaSpec,
+    ProcessSpec,
 )
 from plugboard.tune import Tuner
 from tests.conftest import ComponentTestHelper
@@ -68,7 +69,21 @@ def custom_space(trial: Trial) -> dict[str, _t.Any] | None:
         trial.suggest_float(f"list_param_{i}", -5.0, -5.0 + float(i)) for i in range(n_list)
     ]
     # Set existing parameter
-    trial.suggest_int("a.iters", 1, 10)
+    trial.suggest_int("component.a.arg.iters", 1, 10)
+    # Use the return value to set the list parameter
+    return {"component.d.arg.list_param": list_param}
+
+
+def custom_space_with_process_spec(trial: Trial, spec: ProcessSpec) -> dict[str, _t.Any] | None:
+    """Custom space function that also takes the process spec."""
+    # Process spec can be used to obtain parameters or other information to define the search space
+    iters = spec.args.parameters["max_iters"]
+    n_list = trial.suggest_int("n_list", 1, 10)
+    list_param = [
+        trial.suggest_float(f"list_param_{i}", -5.0, -5.0 + float(i)) for i in range(n_list)
+    ]
+    # Set existing parameter
+    trial.suggest_int("component.a.arg.iters", 1, iters)
     # Use the return value to set the list parameter
     return {"component.d.arg.list_param": list_param}
 
@@ -281,7 +296,10 @@ async def test_tune_with_constraint(config: dict, ray_ctx: None) -> None:
 
 @pytest.mark.tuner
 @pytest.mark.asyncio
-async def test_custom_space_tune(dynamic_param_config: dict, ray_ctx: None) -> None:
+@pytest.mark.parametrize("space_func", [custom_space, custom_space_with_process_spec])
+async def test_custom_space_tune(
+    dynamic_param_config: dict, ray_ctx: None, space_func: _t.Callable
+) -> None:
     """Tests tuning with a custom search space."""
     spec = ConfigSpec.model_validate(dynamic_param_config)
     process_spec = spec.plugboard.process
@@ -312,7 +330,7 @@ async def test_custom_space_tune(dynamic_param_config: dict, ray_ctx: None) -> N
         num_samples=10,
         mode="max",
         max_concurrent=2,
-        algorithm=OptunaSpec(space="tests.integration.test_tuner.custom_space"),
+        algorithm=OptunaSpec(space=f"tests.integration.test_tuner.{space_func.__name__}"),
     )
     tuner.run(
         spec=process_spec,
@@ -327,3 +345,6 @@ async def test_custom_space_tune(dynamic_param_config: dict, ray_ctx: None) -> N
         if r.config["n_list"] < 5:
             # When n_list < 5, all list_param values are negative
             assert all(v < 0.0 for v in r.config["component.d.arg.list_param"])
+        if space_func.__name__ == "custom_space_with_process_spec":
+            # The iters parameter must be set based on the process params
+            assert r.config["component.a.arg.iters"] <= process_spec.args.parameters["max_iters"]
