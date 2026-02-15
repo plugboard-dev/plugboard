@@ -9,61 +9,48 @@ These examples demonstrate how to use Plugboard to model and simulate complex pr
 ## Example Categories
 
 ### Tutorials (`tutorials/`)
+
 Step-by-step learning materials for new users. Focus on:
-- Clear explanations of concepts
-- Progressive complexity
-- Runnable code with expected outputs
-- Markdown documentation alongside code
+- Clear explanations of concepts.
+- Progressive complexity.
+- Runnable code with expected outputs.
+- Markdown documentation alongside code. You can delegate to the `docs` agent to make these updates.
 
 ### Demos (`demos/`)
-Practical applications organized by domain:
-- `fundamentals/`: Core Plugboard concepts
-- `llm/`: LLM and AI integrations  
-- `physics-models/`: Physics-based simulations
-- `finance/`: Financial modeling examples
 
-## Creating Examples
+Practical applications are organized by domain into folders.
+
+## Creating a Plugboard model
+
+Always using the following sequence of steps to help users plan, implement and run their models.
 
 ### Planning a Model
 
-Help users structure their model from concept to implementation:
+Help users to plan their models from a high-level overview to a detailed design. This should include:
 
-1. **Define Scope**
-   - Clear problem statement
-   - Expected inputs and outputs
-   - Success criteria
+* The inputs and outputs of the model;
+* The components that will be needed to implement each part of the model, and any inputs, outputs and parameters they will need;
+* The data flow between components, either via connectors or events. Identify any feedback loops and resolve if necessary.
 
-2. **Component Design**
-   - Break problem into logical components
-   - Define each component's inputs, outputs, and parameters
-   - Identify data dependencies and flow
-
-3. **Data Flow**
-   - Map connections between components
-   - Identify feedback loops
-   - Plan event-driven interactions if needed
-
-Example breakdown for a hot-water tank model:
-- **Components**: WaterTank, Heater, Thermostat, DataLoader, ResultSaver
-- **Flow**: Temperature sensor → Thermostat → Heater → Tank → Temperature sensor
-- **Data**: Load initial conditions, save temperature over time
+Ask questions if anything is not clear about the business logic or you require additional domain expertise from the user.
 
 ### Implementing Components
 
-Use appropriate components from the library or create custom ones:
+Always check whether the functionality you need is already available in the library components in `plugboard.library`. For example, try to use:
+- `FileReader` and `FileWriter` for reading/writing data from CSV or parquet files.
+- `SQLReader` and `SQLReader` for reading/writing data from SQL databases.
+- `LLMChat` for interacting with standard LLMs, e.g. OpenAI, Gemini, etc.
 
 **Using Built-in Components**
+
 ```python
-from plugboard.library import Load, Save, Random
+from plugboard.library import FileReader
 
-# Load data from file
-data_loader = Load(name="load_data", path="input.csv")
-
-# Save results
-results_saver = Save(name="save_results", path="output.csv")
+data_loader = FileReader(name="input_data", path="input.csv", field_names=["x", "y", "value"])
 ```
 
 **Creating Custom Components**
+
 ```python
 import typing as _t
 from plugboard.component import Component, IOController as IO
@@ -82,15 +69,37 @@ class Offset(Component):
         self._offset = offset
 
     async def step(self) -> None:
+        # Implement business logic here
         self.x = self.a + self._offset
+```
+
+If a component is intended to be a source of new data into the model, then it should await `self.io.close()` when it has finished all the iterations it needs to do. This sends a signal into the `Process` so that other components know when the model has completed. For example, this component runs for a fixed number of iterations:
+
+```python
+class Iterator(Component):
+    io = IO(outputs=["x"])
+
+    def __init__(self, iters: int, **kwargs: _t.Unpack[ComponentArgsDict]) -> None:
+        super().__init__(**kwargs)
+        self._iters = iters
+
+    async def init(self) -> None:
+        self._seq = iter(range(self._iters))
+
+    async def step(self) -> None:
+        try:
+            self.x = next(self._seq)
+        except StopIteration:
+            await self.io.close()
 ```
 
 ### Assembling a Process
 
-Connect components and create a runnable process:
+Connect components and create a runnable process. Unless asked otherwise, use a `LocalProcess`.
 
 ```python
 from plugboard.connector import AsyncioConnector
+from plugboard.library import FileWriter
 from plugboard.process import LocalProcess
 from plugboard.schemas import ConnectorSpec
 
@@ -106,23 +115,28 @@ process = LocalProcess(
         Offset(name="offset", offset=10),
         Scale(name="scale", scale=2),
         Sum(name="sum"),
-        Save(name="save-input", path="input.txt"),
-        Save(name="save-output", path="output.txt"),
+        FileWriter(name="save-output", path="results.csv", field_names=["input_value", "output_value"]),
     ],
     connectors=[
-        connect("random.x", "save-input.value_to_save"),
+        connect("random.x", "save-output.input_value"),
         connect("random.x", "offset.a"),
         connect("random.x", "scale.a"),
         connect("offset.x", "sum.a"),
         connect("scale.x", "sum.b"),
-        connect("sum.x", "save-output.value_to_save"),
+        connect("sum.x", "save-output.output_value"),
     ],
 )
 ```
 
+Check for circular loops when defining connectors in the `Process`. These will need to be resolved using the `initial_values` argument to a component somewhere within the loop, e.g.
+
+```python
+my_component = MyComponent(name="test", initial_values={"x": [False], "y": [False]})
+```
+
 ### Visualizing Process Flow
 
-Generate diagrams to help understand the model:
+You can create a mermaid diagram to help users understand their models visually.
 
 ```python
 from plugboard.diagram import markdown_diagram
@@ -133,139 +147,101 @@ print(diagram)
 
 ### Running the Model
 
-Execute the process asynchronously:
+You can help users to run their model. For example, to run the model defined above:
 
 ```python
-import asyncio
-
-async def main():
-    async with process:
-        await process.run()
-
-if __name__ == "__main__":
-    asyncio.run(main())
+async with process:
+    await process.run()
 ```
 
 ## Event-Driven Models
 
-For models requiring dynamic interactions and responses:
+You can help users to implement event-driven models using Plugboard's event system. Components can emit and handle events to communicate with each other.
 
-### When to Use Events
-- Monitoring thresholds and triggering alerts
-- Conditional workflows (if X happens, do Y)
-- Multi-agent systems with communication
-- Real-time data processing with decision points
+Examples of where you might want to use events include:
+* A component that monitors a data stream and emits an event when a threshold is crossed.
+* A component that listens for events and triggers actions in response, e.g. sending an alert.
+* A trading algorithm that uses events to signal buy/sell decisions.
+* Where a model has conditional workflows, e.g. process data differently in the model depending on a specific condition.
 
-### Defining Events
+Events must be defined by inheriting from the `plugboard.events.Event` class. Each event class should define the data it carries using a Pydantic `BaseModel`. For example:
 
 ```python
 from pydantic import BaseModel
 from plugboard.events import Event
 
-class ThresholdCrossedData(BaseModel):
-    component: str
-    value: float
-    threshold: float
-    timestamp: float
+class MyEventData(BaseModel):
+    some_value: int
+    another_value: str
 
-class ThresholdCrossed(Event):
-    data: ThresholdCrossedData
+class MyEvent(Event):
+    data: MyEventData
 ```
 
-### Publishing Events
+Components can emit events using the `self.io.queue_event()` method or by returning them from an event handler. Event handlers are defined using methods decorated with `@EventClass.handler`. For example:
 
 ```python
 from plugboard.component import Component, IOController as IO
 
-class Monitor(Component):
-    io = IO(
-        inputs=["value"],
-        outputs=[],
-        output_events=[ThresholdCrossed]
-    )
-    
-    def __init__(self, threshold: float, **kwargs) -> None:
-        super().__init__(**kwargs)
-        self._threshold = threshold
-    
+class MyEventPublisher(Component):
+    io = IO(inputs=["some_input"], output_events=[MyEvent])
+
     async def step(self) -> None:
-        if self.value > self._threshold:
-            event_data = ThresholdCrossedData(
-                component=self.name,
-                value=self.value,
-                threshold=self._threshold,
-                timestamp=time.time()
-            )
-            self.io.queue_event(
-                ThresholdCrossed(source=self.name, data=event_data)
-            )
+        # Emit an event
+        event_data = MyEventData(some_value=42, another_value=f"received {self.some_input}")
+        self.io.queue_event(MyEvent(source=self.name, data=event_data))
+
+class MyEventSubscriber(Component):
+    io = IO(input_events=[MyEvent], output_events=[MyEvent])
+
+    @MyEvent.handler
+    async def handle_my_event(self, event: MyEvent) -> MyEvent:
+        # Handle the event
+        print(f"Received event: {event.data}")
+        output_event_data = MyEventData(some_value=event.data.some_value + 1, another_value="handled")
+        return MyEvent(source=self.name, data=output_event_data)
 ```
 
-### Subscribing to Events
+To assemble a process with event-driven components, you can use the same approach as for non-event-driven components. You will need to create connectors for event-driven components using `plugboard.events.event_connector_builder.EventConnectorBuilder`. For example:
 
 ```python
-class AlertHandler(Component):
-    io = IO(
-        inputs=[],
-        outputs=[],
-        input_events=[ThresholdCrossed],
-        output_events=[AlertSent]
-    )
-    
-    @ThresholdCrossed.handler
-    async def handle_threshold(self, event: ThresholdCrossed) -> AlertSent:
-        print(f"ALERT: {event.data.component} exceeded threshold!")
-        
-        # Return new event
-        alert_data = AlertSentData(
-            original_event=event.data,
-            alert_method="console"
-        )
-        return AlertSent(source=self.name, data=alert_data)
-```
-
-### Wiring Event-Driven Components
-
-```python
-from plugboard.connector import ConnectorBuilder
+from plugboard.connector import AsyncioConnector, ConnectorBuilder
 from plugboard.events.event_connector_builder import EventConnectorBuilder
+from plugboard.process import LocalProcess
 
-# Regular connectors
-connect = lambda src, tgt: AsyncioConnector(
-    spec=ConnectorSpec(source=src, target=tgt)
-)
+# Define components....
+component_1 = ...
+component_2 = ...
+
+# Define connectors for non-event components as before
+connect = lambda in_, out_: AsyncioConnector(spec=ConnectorSpec(source=in_, target=out_))
 connectors = [
-    connect("data_source.value", "monitor.value"),
-    # ... other data connectors
+    connect("component_1.output", "component_2.input"),
+    ...
 ]
 
-# Event connectors (automatically wired)
 connector_builder = ConnectorBuilder(connector_cls=AsyncioConnector)
-event_connector_builder = EventConnectorBuilder(
-    connector_builder=connector_builder
-)
-components = [monitor, alert_handler, ...]
-event_connectors = list(
-    event_connector_builder.build(components).values()
-)
+event_connector_builder = EventConnectorBuilder(connector_builder=connector_builder)
+event_connectors = list(event_connector_builder.build(components).values())
 
-# Create process with both types
 process = LocalProcess(
-    components=components,
+    components=[
+        component_1, component_2, ...
+    ],
     connectors=connectors + event_connectors,
 )
 ```
 
 ## Exporting Models
 
-Save process configuration for reuse:
+Save a process configuration for reuse:
 
 ```python
-# Export to YAML
-process.dump("my_model.yaml")
+process.dump("my-model.yaml")
 
-# Later, load and run via CLI
-# $ plugboard process run my_model.yaml
+Later, load and run via CLI
+```sh
+plugboard process run my-model.yaml
 ```
 
 ## Jupyter Notebooks
@@ -273,6 +249,7 @@ process.dump("my_model.yaml")
 For interactive demonstrations:
 
 1. **Structure**
+   - Title markdown cell in the same format as the other notebooks, including badges to run on Github/Colab
    - Clear markdown sections
    - Code cells with explanations
    - Visualizations of results
@@ -286,68 +263,9 @@ For interactive demonstrations:
    - Clean up resources properly
 
 3. **Output**
-   - Include sample outputs in notebook
+   - Clear cell output before committing
    - Generate plots where helpful
    - Provide interpretation of results
-
-## Documentation Standards
-
-### Code Comments
-- Explain *why*, not *what*
-- Document assumptions
-- Note limitations or edge cases
-
-### Docstrings
-- Use Google-style docstrings
-- Document all parameters and return values
-- Include usage examples for complex functions
-
-### Markdown Files
-- Clear headings and structure
-- Code blocks with syntax highlighting
-- Link to relevant API documentation
-- Include expected outputs
-
-## Testing Examples
-
-While examples are primarily educational:
-- Ensure all code actually runs
-- Verify outputs are as expected
-- Check for common error cases
-- Test with different parameter values
-
-## Common Patterns
-
-### Data Processing Pipeline
-```python
-components = [
-    Load(name="load", path="data.csv"),
-    Transform(name="transform", ...),
-    Filter(name="filter", ...),
-    Save(name="save", path="output.csv"),
-]
-```
-
-### Simulation Loop
-```python
-components = [
-    Clock(name="clock", steps=100),
-    Model(name="model", ...),
-    Observer(name="observer", ...),
-    Save(name="save", ...),
-]
-```
-
-### Multi-Agent System
-```python
-components = [
-    Agent(name="agent_1", ...),
-    Agent(name="agent_2", ...),
-    Environment(name="env", ...),
-    Coordinator(name="coord", ...),
-]
-# Use events for agent communication
-```
 
 ## Resources
 
