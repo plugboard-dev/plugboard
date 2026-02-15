@@ -202,11 +202,10 @@ class MyEventSubscriber(Component):
         return MyEvent(source=self.name, data=output_event_data)
 ```
 
-To assemble a process with event-driven components, you can use the same approach as for non-event-driven components. You will need to create connectors for event-driven components using `plugboard.events.event_connector_builder.EventConnectorBuilder`. For example:
+To assemble a process with event-driven components, you can use the same approach as for non-event-driven components. You will need to create connectors for event-driven components using a `ConnectorBuilder`. For example:
 
 ```python
 from plugboard.connector import AsyncioConnector, ConnectorBuilder
-from plugboard.events.event_connector_builder import EventConnectorBuilder
 from plugboard.process import LocalProcess
 
 # Define components....
@@ -219,10 +218,8 @@ connectors = [
     connect("component_1.output", "component_2.input"),
     ...
 ]
-
-connector_builder = ConnectorBuilder(connector_cls=AsyncioConnector)
-event_connector_builder = EventConnectorBuilder(connector_builder=connector_builder)
-event_connectors = list(event_connector_builder.build(components).values())
+# Define connectors for events
+event_connectors = AsyncioConnector.builder().build_event_connectors(components)
 
 process = LocalProcess(
     components=[
