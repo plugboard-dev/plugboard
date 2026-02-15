@@ -51,6 +51,8 @@ data_loader = FileReader(name="input_data", path="input.csv", field_names=["x", 
 
 **Creating Custom Components**
 
+New components should inherit from `plugboard.componen.Component`. Add logging messages where it would be helpful by using the bound logger `self._logger`.
+
 ```python
 import typing as _t
 from plugboard.component import Component, IOController as IO
@@ -90,6 +92,7 @@ class Iterator(Component):
         try:
             self.x = next(self._seq)
         except StopIteration:
+            self._logger.info("Iterator exhausted", total_iterations=self._iters)
             await self.io.close()
 ```
 
