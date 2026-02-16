@@ -4471,7 +4471,9 @@ Optuna configuration.</p>
             <td>
               <div class="doc-md-description">
                 <p>Optional; A function defining the search space. Use this to define more complex
-search spaces that cannot be represented using the built-in parameter types.</p>
+search spaces that cannot be represented using the built-in parameter types.
+The function must accept a <code>trial</code> argument. If it also accepts a <code>spec</code> argument,
+the <code>ProcessSpec</code> will be passed to it.</p>
               </div>
             </td>
           </tr>
