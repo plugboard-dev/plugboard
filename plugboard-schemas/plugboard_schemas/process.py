@@ -7,6 +7,7 @@ from pydantic import field_validator, model_validator
 from typing_extensions import Self
 
 from ._common import PlugboardBaseModel
+from ._validation import validate_no_unresolved_cycles
 from .component import ComponentSpec
 from .connector import DEFAULT_CONNECTOR_CLS_PATH, ConnectorBuilderSpec, ConnectorSpec
 from .state import DEFAULT_STATE_BACKEND_CLS_PATH, RAY_STATE_BACKEND_CLS_PATH, StateBackendSpec
@@ -75,6 +76,14 @@ class ProcessSpec(PlugboardBaseModel):
             and self.args.state.type == DEFAULT_STATE_BACKEND_CLS_PATH
         ):
             self.args.state.type = RAY_STATE_BACKEND_CLS_PATH
+        return self
+
+    @model_validator(mode="after")
+    def _validate_no_unresolved_cycles(self: Self) -> Self:
+        """Validate that circular connections have initial_values set."""
+        errors = validate_no_unresolved_cycles(self.args.components, self.args.connectors)
+        if errors:
+            raise ValueError("\n".join(errors))
         return self
 
     @field_validator("type", mode="before")
