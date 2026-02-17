@@ -6,7 +6,7 @@ from unittest.mock import MagicMock, patch
 
 import msgspec
 import pytest
-import ray.tune
+from ray.tune.search.optuna import OptunaSearch
 
 from plugboard.schemas import (
     CategoricalParameterSpec,
@@ -127,5 +127,7 @@ def test_optuna_storage_uri_conversion(temp_dir: str) -> None:
             storage=f"sqlite:///{temp_dir}/test_conversion.db",
         ),
     )
-    algo = tuner._config.search_alg
-    assert isinstance(algo, ray.tune.search.optuna.OptunaSearch)
+    with patch("ray.tune.Tuner") as mock_tuner_cls:
+        tuner.run(spec=MagicMock())
+        passed_alg = mock_tuner_cls.call_args.kwargs["tune_config"].search_alg
+        assert isinstance(passed_alg, OptunaSearch)

@@ -1,0 +1,47 @@
+# Example YAML configuration with resource requirements
+#
+# This configuration demonstrates how to specify resource requirements
+# for components in a Plugboard process. Resources can be specified as:
+# - Numerical values: cpu: 2.0
+# - Milli-units: cpu: "250m" (equals 0.25)
+# - Memory units: memory: "100Mi" (equals 100 * 1024 * 1024 bytes)
+#
+# Note: Resources can be declared at the component class level (recommended)
+# or overridden in the YAML configuration as shown below.
+plugboard:
+  process:
+    type: plugboard.process.RayProcess
+    connector_builder:
+      type: plugboard.connector.RayConnector
+    args:
+      name: resource-example-process
+      components:
+        - type: examples.tutorials.004_using_ray.resources_example.DataProducer
+          args:
+            name: producer
+            iters: 10
+            resources:
+              cpu: 1.0   # (1)!
+        - type: examples.tutorials.004_using_ray.resources_example.CPUIntensiveTask
+          args:
+            name: cpu-task
+            # CPUIntensiveTask has class-level resources (cpu: 2.0)
+            # Override to use more memory
+            resources:
+              cpu: 2.0  # (2)!
+              memory: "512Mi"  # (3)!
+        - type: examples.tutorials.004_using_ray.resources_example.GPUTask
+          args:
+            name: gpu-task
+            # GPUTask has class-level resources (cpu: "500m", gpu: 1)
+            # Can override or extend with custom resources
+            resources:
+              cpu: "500m"  # (4)!
+              gpu: 1  # (5)!
+              resources:
+                custom_hardware: 2  # (6)!
+      connectors:
+        - source: producer.output
+          target: cpu-task.x
+        - source: cpu-task.y
+          target: gpu-task.data

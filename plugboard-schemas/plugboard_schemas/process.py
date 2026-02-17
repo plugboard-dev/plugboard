@@ -9,7 +9,7 @@ from typing_extensions import Self
 from ._common import PlugboardBaseModel
 from .component import ComponentSpec
 from .connector import DEFAULT_CONNECTOR_CLS_PATH, ConnectorBuilderSpec, ConnectorSpec
-from .state import StateBackendSpec
+from .state import DEFAULT_STATE_BACKEND_CLS_PATH, RAY_STATE_BACKEND_CLS_PATH, StateBackendSpec
 
 
 class ProcessArgsDict(_t.TypedDict):
@@ -64,6 +64,17 @@ class ProcessSpec(PlugboardBaseModel):
             and self.connector_builder.type == DEFAULT_CONNECTOR_CLS_PATH
         ):
             raise ValueError("RayProcess requires a parallel-capable connector type.")
+        return self
+
+    @model_validator(mode="after")
+    def _set_default_state_backend(self: Self) -> Self:
+        """Set appropriate default state backend based on process type."""
+        # If RayProcess and state backend is still the default, change to RayStateBackend
+        if (
+            self.type == "plugboard.process.RayProcess"
+            and self.args.state.type == DEFAULT_STATE_BACKEND_CLS_PATH
+        ):
+            self.args.state.type = RAY_STATE_BACKEND_CLS_PATH
         return self
 
     @field_validator("type", mode="before")

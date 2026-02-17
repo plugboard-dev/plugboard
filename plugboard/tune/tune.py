@@ -1,6 +1,7 @@
 """Provides `Tuner` class for optimising Plugboard processes."""
 
-from inspect import isfunction
+from functools import partial
+from inspect import isfunction, signature
 import math
 from pydoc import locate
 import typing as _t
@@ -16,6 +17,7 @@ from plugboard.schemas import (
     OptunaSpec,
     ParameterSpec,
     ProcessSpec,
+    Resource,
 )
 from plugboard.utils import DI, run_coro_sync
 from plugboard.utils.dependencies import depends_on_optional
@@ -60,20 +62,20 @@ class Tuner:
         self._objective, self._mode, self._metric = self._normalize_objective_and_mode(
             objective, mode
         )
-        self._custom_space = bool(algorithm and algorithm.space)
+        self._algorithm = algorithm
+        self._custom_space = bool(self._algorithm and self._algorithm.space)
+        self._max_concurrent = max_concurrent
+        self._num_samples = num_samples
 
-        # Prepare parameters and search algorithm
+        # Prepare parameters
         self._parameters_dict, self._parameters = self._prepare_parameters(parameters)
-        searcher = self._init_search_algorithm(algorithm, max_concurrent)
 
-        # Configure Ray Tune
-        self._config = ray.tune.TuneConfig(num_samples=num_samples, search_alg=searcher)
         self._result_grid: _t.Optional[ray.tune.ResultGrid] = None
         self._logger.info("Tuner created")
 
     @property
     def result_grid(self) -> ray.tune.ResultGrid:
-        """Returns a [`ResultGrid`][ray.tune.ResultGrid] summarising the optimisation results."""
+        """Returns a `ResultGrid` summarising the optimisation results."""
         if self._result_grid is None:
             raise ValueError("No result grid available. Run the optimisation job first.")
         return self._result_grid
@@ -95,13 +97,15 @@ class Tuner:
                 raise ValueError("If using a single objective, `mode` must not be a list.")
 
     def _build_algorithm(
-        self, algorithm: _t.Optional[OptunaSpec] = None
+        self,
+        process_spec: ProcessSpec,
+        algorithm: _t.Optional[OptunaSpec] = None,
     ) -> ray.tune.search.Searcher:
         if algorithm is None:
             self._logger.info("Using default Optuna search algorithm")
             return self._default_searcher()
 
-        algo_kwargs = self._build_algo_kwargs(algorithm)
+        algo_kwargs = self._build_algo_kwargs(algorithm, process_spec)
         algo_cls = self._get_algo_class(algorithm.type)
         self._logger.info(
             "Using custom search algorithm",
@@ -113,7 +117,9 @@ class Tuner:
     def _default_searcher(self) -> "ray.tune.search.Searcher":
         return ray.tune.search.optuna.OptunaSearch(metric=self._metric, mode=self._mode)
 
-    def _build_algo_kwargs(self, algorithm: OptunaSpec) -> dict[str, _t.Any]:
+    def _build_algo_kwargs(
+        self, algorithm: OptunaSpec, process_spec: ProcessSpec
+    ) -> dict[str, _t.Any]:
         """Prepare keyword args for the searcher, normalising storage/space."""
         kwargs = algorithm.model_dump(exclude={"type"})
         kwargs["mode"] = self._mode
@@ -129,14 +135,18 @@ class Tuner:
 
         space = kwargs.get("space")
         if space is not None:
-            kwargs["space"] = self._resolve_space_fn(space)
+            kwargs["space"] = self._resolve_space_fn(space, process_spec)
 
         return kwargs
 
-    def _resolve_space_fn(self, space: str) -> _t.Callable:
+    def _resolve_space_fn(self, space: str, process_spec: ProcessSpec) -> _t.Callable:
         space_fn = locate(space)
-        if not space_fn or not isfunction(space_fn):  # pragma: no cover
+        if not space_fn or not callable(space_fn):  # pragma: no cover
             raise ValueError(f"Could not locate search space function {space}")
+        sig = signature(space_fn)
+        if "spec" in sig.parameters:
+            self._logger.info("Search space function accepts `spec` argument, passing ProcessSpec")
+            return partial(space_fn, spec=process_spec)
         return space_fn
 
     def _get_algo_class(self, type_path: str) -> _t.Type[ray.tune.search.searcher.Searcher]:
@@ -212,8 +222,8 @@ class Tuner:
             spec: The [`ProcessSpec`][plugboard.schemas.ProcessSpec] to optimise.
 
         Returns:
-            Either one or a list of [`Result`][ray.tune.Result] objects containing the best trial
-            result. Use the `result_grid` property to get full trial results.
+            Either one or a list of `Result` objects containing the best trial result. Use the
+                `result_grid` property to get full trial results.
         """
         self._logger.info("Running optimisation job on Ray")
         spec = spec.model_copy()
@@ -221,19 +231,21 @@ class Tuner:
         # re-register the classes in the worker
         required_classes = {c.type: ComponentRegistry.get(c.type) for c in spec.args.components}
 
+        # Calculate resource requirements from components
+        placement_bundles = self._calculate_placement_bundles(spec)
+
         # See https://github.com/ray-project/ray/issues/24445 and
         # https://docs.ray.io/en/latest/tune/api/doc/ray.tune.execution.placement_groups.PlacementGroupFactory.html
         trainable_with_resources = ray.tune.with_resources(
             self._build_objective(required_classes, spec),
-            ray.tune.PlacementGroupFactory(
-                # Reserve 0.5 CPU for the tune process and 0 CPU for each component in the Process
-                # TODO: Implement better resource allocation based on Process requirements
-                [{"CPU": 0.5}],
-            ),
+            ray.tune.PlacementGroupFactory(placement_bundles),
         )
 
+        searcher = self._init_search_algorithm(self._algorithm, self._max_concurrent, spec)
+        config = ray.tune.TuneConfig(num_samples=self._num_samples, search_alg=searcher)
+
         tuner_kwargs: dict[str, _t.Any] = {
-            "tune_config": self._config,
+            "tune_config": config,
         }
         if not self._custom_space:
             self._logger.info("Setting Tuner with parameters", params=list(self._parameters.keys()))
@@ -315,10 +327,65 @@ class Tuner:
         return params_dict, params_space
 
     def _init_search_algorithm(
-        self, algorithm: _t.Optional[OptunaSpec], max_concurrent: _t.Optional[int]
+        self,
+        algorithm: _t.Optional[OptunaSpec],
+        max_concurrent: _t.Optional[int],
+        process_spec: ProcessSpec,
     ) -> "ray.tune.search.Searcher":
         """Create the search algorithm and apply concurrency limits if requested."""
-        algo = self._build_algorithm(algorithm)
+        algo = self._build_algorithm(process_spec, algorithm)
         if max_concurrent is not None:
             algo = ray.tune.search.ConcurrencyLimiter(algo, max_concurrent)
         return algo
+
+    def _calculate_placement_bundles(self, spec: ProcessSpec) -> list[dict[str, float]]:
+        """Calculate placement group bundles from component resource requirements.
+
+        Args:
+            spec: The ProcessSpec containing component specifications.
+
+        Returns:
+            List of resource bundles for Ray placement group.
+        """
+        bundles = []
+
+        if spec.type.endswith("RayProcess"):
+            # Ray process requires a bundle for the tune process and each component
+            bundles.append({"CPU": 1.0})  # Bundle for the tune process
+            for component_spec in spec.args.components:
+                resources = component_spec.args.resources
+                if resources is None:
+                    # Use default resources
+                    resources = Resource()
+
+                bundles.append(resources.to_ray_options(style="placement_group"))
+        else:
+            # Aggregate resources from all components
+            total_cpu = 1.0  # Ensure at least 1 CPU for the tune process
+            total_gpu = 0.0
+            total_memory = 0.0
+            custom_resources: dict[str, float] = {}
+
+            for component_spec in spec.args.components:
+                resources = component_spec.args.resources
+                if resources is None:
+                    # Use default resources
+                    resources = Resource()
+
+                total_cpu += resources.cpu
+                total_gpu += resources.gpu
+                total_memory += resources.memory
+
+                # Aggregate custom resources
+                for key, value in resources.resources.items():
+                    custom_resources[key] = custom_resources.get(key, 0.0) + value
+
+            resources = Resource(
+                cpu=total_cpu,
+                gpu=total_gpu,
+                memory=total_memory,
+                resources=custom_resources,
+            )
+            bundles.append(resources.to_ray_options(style="placement_group"))
+
+        return bundles

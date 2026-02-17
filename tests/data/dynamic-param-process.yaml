@@ -19,3 +19,5 @@ plugboard:
         target: "d.in_1"
       - source: "d.out_1"
         target: "c.in_1"
+      parameters:
+        max_iters: 6

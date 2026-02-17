@@ -19,6 +19,8 @@ class OptunaSpec(PlugboardBaseModel):
         type: The algorithm type to load.
         space: Optional; A function defining the search space. Use this to define more complex
             search spaces that cannot be represented using the built-in parameter types.
+            The function must accept a `trial` argument. If it also accepts a `spec` argument,
+            the `ProcessSpec` will be passed to it.
         study_name: Optional; The name of the study.
         storage: Optional; The storage URI to save the optimisation results to.
     """
