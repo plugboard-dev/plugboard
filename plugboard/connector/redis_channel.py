@@ -6,6 +6,7 @@ import asyncio
 from contextlib import nullcontext
 import typing as _t
 
+from plugboard_schemas.connector import ConnectorMode
 from redis.asyncio import Redis
 from redis.asyncio.client import PubSub
 from that_depends import Provide, inject
@@ -13,7 +14,6 @@ from that_depends import Provide, inject
 from plugboard.connector.connector import Connector
 from plugboard.connector.serde_channel import SerdeChannel
 from plugboard.exceptions import ChannelClosedError
-from plugboard.schemas.connector import ConnectorMode
 from plugboard.utils import DI
 
 
