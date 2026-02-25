@@ -95,7 +95,7 @@ jobs:
           cache-dependency-glob: "uv.lock"
 
       - name: Install project
-        run: uv sync --group test
+        run: uv sync --group test --extra redis
 
       - name: Run unit tests
         run: COVERAGE_FILE=.coverage.py${{ matrix.python_version }}.unit uv run coverage run -m pytest ./tests/unit/
@@ -133,7 +133,7 @@ jobs:
           cache-dependency-glob: "uv.lock"
 
       - name: Install project
-        run: uv sync --group test
+        run: uv sync --group test --extra redis
 
       - name: Run backing services
         run: |
@@ -177,7 +177,7 @@ jobs:
           cache-dependency-glob: "uv.lock"
 
       - name: Install project
-        run: uv sync --group test
+        run: uv sync --group test --extra redis
 
       - name: Run tuner tests
         run: COVERAGE_FILE=.coverage.py${{ matrix.python_version }}.integration.tuner uv run coverage run -m pytest ./tests/integration/ -m "tuner"
