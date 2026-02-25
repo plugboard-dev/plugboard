@@ -38,13 +38,13 @@ class RedisChannel(SerdeChannel):
 
     async def send(self, msg: bytes) -> None:
         """Sends a message to the Redis channel."""
-        if self._is_send_closed:
+        if self._is_send_closed or self._send_fn is None:
             raise ChannelClosedError("Channel is closed for sending")
         await self._send_fn(msg)
 
     async def recv(self) -> bytes:
         """Receives a message from the Redis channel."""
-        if self._is_recv_closed:
+        if self._is_recv_closed or self._recv_fn is None:
             raise ChannelClosedError("Channel is closed for receiving")
         return await self._recv_fn()
 
@@ -147,6 +147,8 @@ class RedisConnector(Connector):
                 result = await redis_client.brpop([key], timeout=None)
                 return result[1]
         else:
+            if pubsub is None:
+                raise ValueError("PubSub instance required for PUBSUB mode")
 
             async def recv_fn() -> bytes:
                 message = await pubsub.get_message(ignore_subscribe_messages=True, timeout=None)
