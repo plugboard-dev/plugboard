@@ -57,10 +57,8 @@ class RedisChannel(SerdeChannel):
             raise ChannelClosedError("Channel is closed for receiving")
 
         if self._mode == ConnectorMode.PIPELINE:
-            # brpop returns (key, value) tuple
-            # timeout=0 blocks indefinitely
             try:
-                result = await self._redis.brpop(self._key, timeout=0)
+                result = await self._redis.brpop([self._key], timeout=None)
             except Exception as e:
                 # Handle connection errors or closure
                 if self._is_recv_closed:
@@ -73,15 +71,10 @@ class RedisChannel(SerdeChannel):
         else:
             if self._pubsub is None:
                 raise RuntimeError("PubSub object not initialized for receiving")
-
-            while not self._is_recv_closed:
-                message = await self._pubsub.get_message(
-                    ignore_subscribe_messages=True, timeout=1.0
-                )
-                if message is not None:
-                    return message["data"]
-
-            raise ChannelClosedError("Channel closed")
+            if self._is_recv_closed:
+                raise ChannelClosedError("Channel is closed for receiving")
+            message = await self._pubsub.get_message(ignore_subscribe_messages=True, timeout=None)
+            return message["data"]
 
     async def close(self) -> None:
         """Closes the `RedisChannel`."""
