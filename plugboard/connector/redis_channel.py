@@ -33,6 +33,17 @@ class RedisChannel(SerdeChannel):
         pubsub: _t.Optional[PubSub] = None,
         **kwargs: _t.Any,
     ) -> None:
+        """Instantiates a `RedisChannel`.
+
+        Uses Redis to provide communication between components on different processes.
+        Requires a Redis server to be running with the URL set in the `REDIS_URL`
+        environment variable.
+
+        Args:
+            send_fn: Optional; A callable for sending messages to the Redis channel.
+            recv_fn: Optional; A callable for receiving messages from the Redis channel.
+            pubsub: Optional; The Redis `PubSub` instance, used in pub-sub mode.
+        """
         super().__init__(*args, **kwargs)
         self._send_fn = send_fn
         self._recv_fn = recv_fn
@@ -43,13 +54,13 @@ class RedisChannel(SerdeChannel):
         self._is_recv_closed = recv_fn is None
 
     async def send(self, msg: bytes) -> None:
-        """Sends a message to the Redis channel."""
+        """Send a message to the Redis channel."""
         if self._is_send_closed or self._send_fn is None:
             raise ChannelClosedError("Channel is closed for sending")
         await self._send_fn(msg)
 
     async def recv(self) -> bytes:
-        """Receives a message from the Redis channel."""
+        """Receive a message from the Redis channel."""
         if self._is_recv_closed or self._recv_fn is None:
             raise ChannelClosedError("Channel is closed for receiving")
         return await self._recv_fn()
@@ -74,6 +85,12 @@ class RedisConnector(Connector):
 
     @depends_on_optional("redis")
     def __init__(self, *args: _t.Any, **kwargs: _t.Any) -> None:
+        """Instantiates a `RedisConnector`.
+
+        Uses Redis to connect components via either pipeline (list-based) or pub-sub
+        (channel-based) mode. Requires a Redis server to be running with the URL set
+        in the `REDIS_URL` environment variable.
+        """
         super().__init__(*args, **kwargs)
         self._topic: str = (
             str(self.spec.source) if self.spec.mode == ConnectorMode.PUBSUB else self.spec.id
