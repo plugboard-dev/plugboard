@@ -34,6 +34,8 @@ services:
   redis:
     image: redis:8.6-alpine
     container_name: redis
+    environment:
+      - REDIS_PASSWORD=password
     command: redis-server --bind 0.0.0.0 --protected-mode no
     ports:
       - 6379:6379
