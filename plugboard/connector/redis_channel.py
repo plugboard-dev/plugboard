@@ -6,19 +6,25 @@ import asyncio
 import typing as _t
 
 from plugboard_schemas.connector import ConnectorMode
-from redis.asyncio import Redis
-from redis.asyncio.client import PubSub
 from that_depends import Provide, inject
 
 from plugboard.connector.connector import Connector
 from plugboard.connector.serde_channel import SerdeChannel
 from plugboard.exceptions import ChannelClosedError
-from plugboard.utils import DI
+from plugboard.utils import DI, depends_on_optional
+
+
+try:
+    from redis.asyncio import Redis
+    from redis.asyncio.client import PubSub
+except ImportError:
+    pass
 
 
 class RedisChannel(SerdeChannel):
     """`RedisChannel` for sending and receiving messages via Redis."""
 
+    @depends_on_optional("redis")
     def __init__(
         self,
         *args: _t.Any,
@@ -66,6 +72,7 @@ class RedisChannel(SerdeChannel):
 class RedisConnector(Connector):
     """`RedisConnector` connects components via Redis."""
 
+    @depends_on_optional("redis")
     def __init__(self, *args: _t.Any, **kwargs: _t.Any) -> None:
         super().__init__(*args, **kwargs)
         self._topic: str = (
