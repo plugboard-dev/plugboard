@@ -137,7 +137,7 @@ jobs:
 
       - name: Run backing services
         run: |
-          docker compose up postgres rabbitmq -d
+          docker compose up -d
           sleep 10 # Wait for services to start
 
       - name: Run integration tests
