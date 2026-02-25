@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import asyncio
-from contextlib import nullcontext
 import typing as _t
 
 from plugboard_schemas.connector import ConnectorMode
@@ -124,25 +123,20 @@ class RedisConnector(Connector):
     @inject
     async def connect_recv(self, redis_client: Redis = Provide[DI.redis_client]) -> RedisChannel:
         """Returns a `RedisChannel` for receiving messages."""
-        cm = self._recv_channel_lock if self.spec.mode != ConnectorMode.PUBSUB else nullcontext()
-        async with cm:
-            if self._recv_channel is not None:
-                return self._recv_channel
-
-            key = await self._get_key()
-            pubsub: _t.Optional[PubSub] = None
-
-            if self.spec.mode == ConnectorMode.PUBSUB:
-                pubsub = redis_client.pubsub()
-                await pubsub.subscribe(key)
-
-            recv_fn = self._build_recv_fn(redis_client, key, pubsub=pubsub)
-            channel = RedisChannel(pubsub=pubsub, recv_fn=recv_fn)
-
-            if self.spec.mode == ConnectorMode.PIPELINE:
+        key = await self._get_key()
+        if self.spec.mode == ConnectorMode.PIPELINE:
+            async with self._recv_channel_lock:
+                if self._recv_channel is not None:
+                    return self._recv_channel
+                recv_fn = self._build_recv_fn(redis_client, key)
+                channel = RedisChannel(recv_fn=recv_fn)
                 self._recv_channel = channel
-
-            return channel
+        else:  # ConnectorMode.PUBSUB
+            pubsub = redis_client.pubsub()
+            await pubsub.subscribe(key)
+            recv_fn = self._build_recv_fn(redis_client, key, pubsub=pubsub)
+            channel = RedisChannel(recv_fn=recv_fn, pubsub=pubsub)
+        return channel
 
     def _build_recv_fn(
         self, redis_client: Redis, key: str, pubsub: _t.Optional[PubSub] = None
