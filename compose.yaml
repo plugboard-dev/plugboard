@@ -2,7 +2,7 @@ name: plugboard
 
 services:
   rabbitmq:
-    image: rabbitmq:4.2-debian13
+    image: rabbitmq:4.2-management-alpine
     container_name: rabbitmq
     ports:
       - 5672:5672
