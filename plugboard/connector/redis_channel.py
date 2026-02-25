@@ -23,58 +23,31 @@ class RedisChannel(SerdeChannel):
     def __init__(
         self,
         *args: _t.Any,
-        redis_client: Redis,
-        key: str,
-        mode: ConnectorMode,
+        send_fn: _t.Optional[_t.Callable[[bytes], _t.Awaitable[None]]] = None,
+        recv_fn: _t.Optional[_t.Callable[[], _t.Awaitable[bytes]]] = None,
         pubsub: _t.Optional[PubSub] = None,
-        is_sender: bool = False,
-        is_receiver: bool = False,
         **kwargs: _t.Any,
     ) -> None:
         super().__init__(*args, **kwargs)
-        self._redis = redis_client
-        self._key = key
-        self._mode = mode
+        self._send_fn = send_fn
+        self._recv_fn = recv_fn
         self._pubsub = pubsub
 
         # Set initial state based on intended usage
-        self._is_send_closed = not is_sender
-        self._is_recv_closed = not is_receiver
+        self._is_send_closed = send_fn is None
+        self._is_recv_closed = recv_fn is None
 
     async def send(self, msg: bytes) -> None:
         """Sends a message to the Redis channel."""
         if self._is_send_closed:
             raise ChannelClosedError("Channel is closed for sending")
-
-        if self._mode == ConnectorMode.PIPELINE:
-            await self._redis.lpush(self._key, msg)
-        else:
-            await self._redis.publish(self._key, msg)
+        await self._send_fn(msg)
 
     async def recv(self) -> bytes:
         """Receives a message from the Redis channel."""
         if self._is_recv_closed:
             raise ChannelClosedError("Channel is closed for receiving")
-
-        if self._mode == ConnectorMode.PIPELINE:
-            try:
-                result = await self._redis.brpop([self._key], timeout=None)
-            except Exception as e:
-                # Handle connection errors or closure
-                if self._is_recv_closed:
-                    raise ChannelClosedError("Channel closed") from e
-                raise
-
-            if result is None:
-                raise ChannelClosedError("Redis connection closed or returned None")
-            return result[1]
-        else:
-            if self._pubsub is None:
-                raise RuntimeError("PubSub object not initialized for receiving")
-            if self._is_recv_closed:
-                raise ChannelClosedError("Channel is closed for receiving")
-            message = await self._pubsub.get_message(ignore_subscribe_messages=True, timeout=None)
-            return message["data"]
+        return await self._recv_fn()
 
     async def close(self) -> None:
         """Closes the `RedisChannel`."""
@@ -130,14 +103,23 @@ class RedisConnector(Connector):
                 return self._send_channel
 
             key = await self._get_key()
-            self._send_channel = RedisChannel(
-                redis_client=redis_client,
-                key=key,
-                mode=self.spec.mode,
-                is_sender=True,
-                is_receiver=False,
-            )
+            send_fn = self._build_send_fn(redis_client, key)
+            self._send_channel = RedisChannel(send_fn=send_fn)
             return self._send_channel
+
+    def _build_send_fn(
+        self, redis_client: Redis, key: str
+    ) -> _t.Callable[[bytes], _t.Awaitable[None]]:
+        if self.spec.mode == ConnectorMode.PIPELINE:
+
+            async def send_fn(msg: bytes) -> None:
+                await redis_client.lpush(key, msg)
+        else:
+
+            async def send_fn(msg: bytes) -> None:
+                await redis_client.publish(key, msg)
+
+        return send_fn
 
     @inject
     async def connect_recv(self, redis_client: Redis = Provide[DI.redis_client]) -> RedisChannel:
@@ -148,22 +130,32 @@ class RedisConnector(Connector):
                 return self._recv_channel
 
             key = await self._get_key()
-            pubsub = None
+            pubsub: _t.Optional[PubSub] = None
 
             if self.spec.mode == ConnectorMode.PUBSUB:
                 pubsub = redis_client.pubsub()
                 await pubsub.subscribe(key)
 
-            channel = RedisChannel(
-                redis_client=redis_client,
-                key=key,
-                mode=self.spec.mode,
-                pubsub=pubsub,
-                is_sender=False,
-                is_receiver=True,
-            )
+            recv_fn = self._build_recv_fn(redis_client, key, pubsub=pubsub)
+            channel = RedisChannel(pubsub=pubsub, recv_fn=recv_fn)
 
             if self.spec.mode == ConnectorMode.PIPELINE:
                 self._recv_channel = channel
 
             return channel
+
+    def _build_recv_fn(
+        self, redis_client: Redis, key: str, pubsub: _t.Optional[PubSub] = None
+    ) -> _t.Callable[[], _t.Awaitable[bytes]]:
+        if self.spec.mode == ConnectorMode.PIPELINE:
+
+            async def recv_fn() -> bytes:
+                result = await redis_client.brpop([key], timeout=None)
+                return result[1]
+        else:
+
+            async def recv_fn() -> bytes:
+                message = await pubsub.get_message(ignore_subscribe_messages=True, timeout=None)
+                return message["data"]
+
+        return recv_fn
