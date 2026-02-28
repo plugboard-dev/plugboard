@@ -134,6 +134,7 @@ nav:
   - Fundamentals:
     - Simple model: examples/demos/fundamentals/001_simple_model/simple-model.ipynb
     - Production line: examples/demos/fundamentals/002_production_line_optimisation/production-line.ipynb
+    - Factory simulation: examples/demos/fundamentals/003_factory_simulation/factory-simulation.ipynb
   - LLMs:
     - Data filtering: examples/demos/llm/001_data_filter/llm-filtering.ipynb
     - Websocket streaming: examples/demos/llm/002_bluesky_websocket/bluesky-websocket.ipynb
