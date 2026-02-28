@@ -98,6 +98,7 @@ async def test_component_resources_in_ray_process(ray_ctx: None) -> None:
         actors = list_actors(detail=True)
         component_actor = next(a for a in actors if a.name == "test")
         # Verify the component actor has the correct resources
+        assert component_actor.required_resources is not None
         assert component_actor.required_resources["CPU"] == 1.0
         assert component_actor.required_resources["memory"] == 1.0 * 1024 * 1024
         await process.run()
