@@ -207,7 +207,7 @@ if __name__ == "__main__":
         factory = next(c for c in process.components.values() if c.name == "factory")
         print(f"Total factory output over 365 days: ${factory._total:,.0f}")
 
-    async def run_optimisation() -> None:
+    def run_optimisation() -> None:
         """Optimise maintenance intervals for all machines."""
         from plugboard.schemas import IntParameterSpec, ObjectiveSpec
         from plugboard.tune import Tuner
