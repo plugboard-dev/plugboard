@@ -3557,7 +3557,7 @@ wheels = [
 
 [[package]]
 name = "optuna"
-version = "3.6.2"
+version = "4.7.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "alembic" },
@@ -3568,9 +3568,9 @@ dependencies = [
     { name = "sqlalchemy" },
     { name = "tqdm" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/9b/80/8fda921f9336667e08761b23414632c4fdfe615982630a2678bc2c51b5e3/optuna-3.6.2.tar.gz", hash = "sha256:794d6ae9554f0b507760ea5c8b7e889a5e75699baba5a0001f78df3be175faf8", size = 292859, upload-time = "2025-01-27T07:14:20.383Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/58/b2/b5e12de7b4486556fe2257611b55dbabf30d0300bdb031831aa943ad20e4/optuna-4.7.0.tar.gz", hash = "sha256:d91817e2079825557bd2e97de2e8c9ae260bfc99b32712502aef8a5095b2d2c0", size = 479740, upload-time = "2026-01-19T05:45:52.604Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/8b/9e/f74ceef93fa8026dc423a290244eed610d4fad77a077d88cc0913a678133/optuna-3.6.2-py3-none-any.whl", hash = "sha256:052dafa62964d0c700098275f449c39692aa6b97c4c15509163c5bb15ed852fa", size = 380115, upload-time = "2025-01-27T07:14:18.908Z" },
+    { url = "https://files.pythonhosted.org/packages/75/d1/6c8a4fbb38a9e3565f5c36b871262a85ecab3da48120af036b1e4937a15c/optuna-4.7.0-py3-none-any.whl", hash = "sha256:e41ec84018cecc10eabf28143573b1f0bde0ba56dba8151631a590ecbebc1186", size = 413894, upload-time = "2026-01-19T05:45:50.815Z" },
 ]
 
 [[package]]
@@ -3924,7 +3924,7 @@ requires-dist = [
     { name = "llama-index-core", marker = "extra == 'llm'", specifier = ">=0.12.30,<1" },
     { name = "llama-index-llms-openai", marker = "extra == 'llm'", specifier = ">=0.3.33,<1" },
     { name = "msgspec", extras = ["yaml"], specifier = ">=0.18,<1" },
-    { name = "optuna", marker = "extra == 'ray'", specifier = ">=3.0,<4" },
+    { name = "optuna", marker = "extra == 'ray'", specifier = ">=3.0,<5" },
     { name = "pandas", specifier = ">=1.0,<4" },
     { name = "plugboard-schemas", editable = "plugboard-schemas" },
     { name = "pyarrow", specifier = ">=17.0,<21" },
@@ -3964,7 +3964,7 @@ all = [
     { name = "mypy", specifier = ">=1.11,<2" },
     { name = "nbstripout", specifier = ">=0.8,<1" },
     { name = "openai-responses", specifier = ">=0.11.4,<1" },
-    { name = "optuna", specifier = ">=3.0,<4" },
+    { name = "optuna", specifier = ">=3.0,<5" },
     { name = "pre-commit", specifier = ">=3.8,<4" },
     { name = "pytest", specifier = ">=8.3,<10" },
     { name = "pytest-asyncio", specifier = ">=1.0,<2" },
@@ -4011,7 +4011,7 @@ test = [
     { name = "llama-index-llms-openai", specifier = ">=0.3.33,<1" },
     { name = "moto", extras = ["server"], specifier = ">=5.0,<6" },
     { name = "openai-responses", specifier = ">=0.11.4,<1" },
-    { name = "optuna", specifier = ">=3.0,<4" },
+    { name = "optuna", specifier = ">=3.0,<5" },
     { name = "pytest", specifier = ">=8.3,<10" },
     { name = "pytest-asyncio", specifier = ">=1.0,<2" },
     { name = "pytest-benchmark", specifier = ">=5.1.0" },
