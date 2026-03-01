@@ -1,7 +1,6 @@
 """Provides the `SerdeChannel` base class for serializing and deserializing messages."""
 
 from abc import ABC, abstractmethod
-from base64 import b64decode, b64encode
 from functools import wraps
 import pickle
 import typing as _t
@@ -11,17 +10,17 @@ from plugboard.exceptions import ChannelClosedError
 
 
 def _serialise(item: _t.Any) -> bytes:
-    """Converts item to base64-encoded pickle."""
-    return b64encode(pickle.dumps(item))
+    """Converts item to pickle bytes."""
+    return pickle.dumps(item)
 
 
 def _deserialise(msg: bytes) -> _t.Any:
-    """Deserialises item from base64-encoded pickle msg.
+    """Deserialises item from pickle msg.
 
     Note: There are security implications to consider when unpickling data. It
     is assumed that data received through a channel is trusted.
     """
-    return pickle.loads(b64decode(msg))  # noqa: S301 (assumed trusted data)
+    return pickle.loads(msg)  # noqa: S301 (assumed trusted data)
 
 
 class SerdeChannel(Channel, ABC):
