@@ -70,7 +70,7 @@ async def _rabbitmq_conn(
 
 async def _redis_client(
     logger: Singleton[structlog.BoundLogger], url: _t.Optional[str] = None
-) -> _t.AsyncIterator["redis.Redis" | None]:
+) -> _t.AsyncIterator[_t.Optional["redis.Redis"]]:
     if url is None:
         yield None
         return
@@ -130,7 +130,7 @@ class DI(BaseContainer):
     rabbitmq_conn: Resource[aio_pika.abc.AbstractRobustConnection | None] = Resource(
         _rabbitmq_conn, logger, url=settings.rabbitmq.url
     )
-    redis_client: Resource["redis.Redis" | None] = Resource(
+    redis_client: Resource[_t.Optional["redis.Redis"]] = Resource(
         _redis_client, logger, url=settings.redis.url
     )
     job_id: ContextResource[str] = ContextResource(_job_id)
