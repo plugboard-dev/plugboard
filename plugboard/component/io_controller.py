@@ -276,10 +276,9 @@ class IOController:
             raise ChannelClosedError(f"Channel closed for field: {field}.") from e
 
     async def _write_events(self) -> None:
-        queue = deque(self.buf_events[_io_key_out].flush())
+        events = self.buf_events[_io_key_out].flush()
         async with asyncio.TaskGroup() as tg:
-            for _ in range(len(queue)):
-                event = queue.popleft()
+            for event in events:
                 tg.create_task(self._write_event(event))
 
     async def _write_event(self, event: Event) -> None:
@@ -393,8 +392,8 @@ class IOController:
             self._read_tasks[task_name] = group_task
 
     def _validate_connections(self) -> None:
-        connected_inputs = set(k for k, _ in self._input_channels.keys())
-        connected_outputs = set(k for k, _ in self._output_channels.keys())
+        connected_inputs = {k for k, _ in self._input_channels}
+        connected_outputs = {k for k, _ in self._output_channels}
         if unconnected_inputs := set(self.inputs) - connected_inputs:
             self._logger.error(
                 "Input fields not connected, process may hang", unconnected=unconnected_inputs
@@ -430,17 +429,17 @@ class IOFieldBuffer(IOBuffer):
     """`IOFieldBuffer` is a buffer for input/output data."""
 
     def __init__(self) -> None:
-        self._buf: dict[str, _t.Any] = dict()
+        self._buf: dict[str, _t.Any] = {}
 
     def put(self, items: _t.Iterable) -> None:
         """Adds items to the buffer."""
-        self._buf.update(dict(items))
+        self._buf.update(items)
 
     def flush(self) -> _t.Iterable:
         """Returns items in the buffer and resets the buffer."""
-        items = self._buf.items()
-        self._buf = dict()
-        return items
+        items = self._buf
+        self._buf = {}
+        return items.items()
 
     def __bool__(self) -> bool:
         return bool(self._buf)
