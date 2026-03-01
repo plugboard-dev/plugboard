@@ -123,7 +123,7 @@ class WebsocketReader(WebsocketBase):
     async def _get_conn(self) -> Connection:
         conn = await super()._get_conn()
         if self._initial_message is not None:
-            self._logger.info(f"Sending initial message", message=self._initial_message)
+            self._logger.info("Sending initial message", message=self._initial_message)
             await conn.send(self._initial_message)
         self._skip_count = self._skip_messages
         return conn
@@ -143,7 +143,7 @@ class WebsocketReader(WebsocketBase):
             message = await self._recv_websocket()
             if message is None:
                 continue
-            self._logger.info(f"Skipping message", message=message)
+            self._logger.info("Skipping message", message=message)
             self._skip_count -= 1
         while True:
             message = await self._recv_websocket()
