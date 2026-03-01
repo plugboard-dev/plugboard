@@ -119,8 +119,12 @@ class RedisConnector(Connector):
         return f"{job_id}.{self._topic}"
 
     @inject
-    async def connect_send(self, redis_client: Redis = Provide[DI.redis_client]) -> RedisChannel:
+    async def connect_send(
+        self, redis_client: Redis | None = Provide[DI.redis_client]
+    ) -> RedisChannel:
         """Returns a `RedisChannel` for sending messages."""
+        if redis_client is None:
+            raise RuntimeError("Redis client not available. Ensure Redis URL is configured.")
         async with self._send_channel_lock:
             if self._send_channel is not None:
                 return self._send_channel
@@ -136,7 +140,7 @@ class RedisConnector(Connector):
         if self.spec.mode == ConnectorMode.PIPELINE:
 
             async def send_fn(msg: bytes) -> None:
-                await redis_client.lpush(key, msg)
+                await redis_client.lpush(key, msg)  # type: ignore[misc]
         else:
 
             async def send_fn(msg: bytes) -> None:
@@ -145,8 +149,12 @@ class RedisConnector(Connector):
         return send_fn
 
     @inject
-    async def connect_recv(self, redis_client: Redis = Provide[DI.redis_client]) -> RedisChannel:
+    async def connect_recv(
+        self, redis_client: Redis | None = Provide[DI.redis_client]
+    ) -> RedisChannel:
         """Returns a `RedisChannel` for receiving messages."""
+        if redis_client is None:
+            raise RuntimeError("Redis client not available. Ensure Redis URL is configured.")
         key = await self._get_key()
         if self.spec.mode == ConnectorMode.PIPELINE:
             async with self._recv_channel_lock:
@@ -168,7 +176,7 @@ class RedisConnector(Connector):
         if self.spec.mode == ConnectorMode.PIPELINE:
 
             async def recv_fn() -> bytes:
-                result = await redis_client.brpop([key], timeout=None)
+                result = await redis_client.brpop([key], timeout=None)  # type: ignore[misc]
                 return result[1]
         else:
             if pubsub is None:

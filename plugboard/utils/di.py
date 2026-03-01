@@ -5,7 +5,6 @@ import os
 import typing as _t
 
 import aio_pika
-import redis.asyncio as redis
 import structlog
 from that_depends import BaseContainer, ContextScopes, fetch_context_item
 from that_depends.providers import ContextResource, Resource, Singleton
@@ -15,6 +14,10 @@ from plugboard._zmq.zmq_proxy import ZMQProxy
 from plugboard.utils.entities import EntityIdGen
 from plugboard.utils.logging import configure_logging
 from plugboard.utils.settings import Settings
+
+
+if _t.TYPE_CHECKING:
+    import redis.asyncio as redis
 
 
 def _logger(settings: Settings) -> structlog.BoundLogger:
@@ -49,8 +52,10 @@ def _zmq_proxy(
 
 async def _rabbitmq_conn(
     logger: Singleton[structlog.BoundLogger], url: _t.Optional[str] = None
-) -> _t.AsyncIterator[aio_pika.abc.AbstractRobustConnection]:
-    url = url or "amqp://user:password@localhost:5672/"
+) -> _t.AsyncIterator[aio_pika.abc.AbstractRobustConnection | None]:
+    if url is None:
+        yield None
+        return
     try:
         conn = await aio_pika.connect_robust(URL(url))
         yield conn
@@ -65,8 +70,13 @@ async def _rabbitmq_conn(
 
 async def _redis_client(
     logger: Singleton[structlog.BoundLogger], url: _t.Optional[str] = None
-) -> _t.AsyncIterator[redis.Redis]:
-    url = url or "redis://localhost:6379"
+) -> _t.AsyncIterator["redis.Redis" | None]:
+    if url is None:
+        yield None
+        return
+
+    import redis.asyncio as redis
+
     try:
         client = redis.from_url(url)
         yield client
@@ -117,8 +127,10 @@ class DI(BaseContainer):
         _mp_set_start_method, logger, use_fork=settings.flags.multiprocessing_fork
     )
     zmq_proxy: Resource[ZMQProxy] = Resource(_zmq_proxy, mp_ctx, logger)
-    rabbitmq_conn: Resource[aio_pika.abc.AbstractRobustConnection] = Resource(
+    rabbitmq_conn: Resource[aio_pika.abc.AbstractRobustConnection | None] = Resource(
         _rabbitmq_conn, logger, url=settings.rabbitmq.url
     )
-    redis_client: Resource[redis.Redis] = Resource(_redis_client, logger, url=settings.redis.url)
+    redis_client: Resource["redis.Redis" | None] = Resource(
+        _redis_client, logger, url=settings.redis.url
+    )
     job_id: ContextResource[str] = ContextResource(_job_id)
