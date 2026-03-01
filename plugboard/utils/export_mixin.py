@@ -26,16 +26,17 @@ class ExportMixin:
 
     @staticmethod
     def _save_args_wrapper(method: _t.Callable, key: str) -> _t.Callable:
+        # Pre-compute positional arg names once at decoration time
+        _positional_args = [
+            k
+            for k, p in inspect.signature(method).parameters.items()
+            if p.kind == inspect.Parameter.POSITIONAL_OR_KEYWORD and k != "self"
+        ]
+
         @wraps(method)
         def _wrapper(self: _t.Any, *args: _t.Any, **kwargs: _t.Any) -> None:
-            # Get positional argument names
-            positional_args = [
-                k
-                for k, p in inspect.signature(method).parameters.items()
-                if p.kind == inspect.Parameter.POSITIONAL_OR_KEYWORD & (k != "self")
-            ]
             saved_kwargs = ExportMixin._convert_exportable_objs(kwargs)
-            saved_args = dict(zip(positional_args[: len(args)], args))
+            saved_args = dict(zip(_positional_args[: len(args)], args))
             setattr(self, key, {**getattr(self, key, {}), **saved_args, **saved_kwargs})
             method(self, *args, **kwargs)
 
