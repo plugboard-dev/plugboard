@@ -6,6 +6,10 @@ from plugboard.schemas import ENTITY_ID_REGEX, Entity
 from plugboard.utils.random import gen_rand_str
 
 
+_COMPILED_ENTITY_ID_REGEX = re.compile(ENTITY_ID_REGEX)
+_COMPILED_JOB_ID_REGEX = re.compile(Entity.Job.id_regex)
+
+
 class EntityIdGen:
     """EntityIdGen generates entity ids."""
 
@@ -31,7 +35,7 @@ class EntityIdGen:
         Returns:
             tuple[Entity, str]: The parsed entity and id.
         """
-        parsed = re.match(ENTITY_ID_REGEX, id)
+        parsed = _COMPILED_ENTITY_ID_REGEX.match(id)
         if parsed is not None:
             try:
                 entity = Entity[parsed.group("entity")]
@@ -61,4 +65,4 @@ class EntityIdGen:
         Returns:
             bool: True if the id is a job id.
         """
-        return re.match(Entity.Job.id_regex, id) is not None
+        return _COMPILED_JOB_ID_REGEX.match(id) is not None
