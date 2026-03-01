@@ -6,6 +6,7 @@ from plugboard.connector.connector import Connector
 from plugboard.connector.connector_builder import ConnectorBuilder
 from plugboard.connector.rabbitmq_channel import RabbitMQChannel, RabbitMQConnector
 from plugboard.connector.ray_channel import RayChannel, RayConnector
+from plugboard.connector.redis_channel import RedisChannel, RedisConnector
 from plugboard.connector.serde_channel import SerdeChannel
 from plugboard.connector.zmq_channel import ZMQChannel, ZMQConnector
 
@@ -20,6 +21,8 @@ __all__ = [
     "RabbitMQConnector",
     "RayChannel",
     "RayConnector",
+    "RedisChannel",
+    "RedisConnector",
     "SerdeChannel",
     "ZMQChannel",
     "ZMQConnector",

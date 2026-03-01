@@ -134,9 +134,13 @@ class RabbitMQConnector(Connector):
 
     @inject
     async def connect_send(
-        self, rabbitmq_conn: AbstractRobustConnection = Provide[DI.rabbitmq_conn]
+        self, rabbitmq_conn: AbstractRobustConnection | None = Provide[DI.rabbitmq_conn]
     ) -> RabbitMQChannel:
         """Returns a `RabbitMQ` channel for sending messages."""
+        if rabbitmq_conn is None:
+            raise RuntimeError(
+                "RabbitMQ connection not available. Ensure RabbitMQ URL is configured."
+            )
         async with self._send_channel_lock:
             if self._send_channel is not None:
                 return self._send_channel
@@ -150,9 +154,13 @@ class RabbitMQConnector(Connector):
 
     @inject
     async def connect_recv(
-        self, rabbitmq_conn: AbstractRobustConnection = Provide[DI.rabbitmq_conn]
+        self, rabbitmq_conn: AbstractRobustConnection | None = Provide[DI.rabbitmq_conn]
     ) -> RabbitMQChannel:
         """Returns a `RabbitMQ` channel for receiving messages."""
+        if rabbitmq_conn is None:
+            raise RuntimeError(
+                "RabbitMQ connection not available. Ensure RabbitMQ URL is configured."
+            )
         cm = self._recv_channel_lock if self.spec.mode != ConnectorMode.PUBSUB else nullcontext()
         async with cm:
             if self._recv_channel is not None:

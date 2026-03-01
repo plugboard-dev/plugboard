@@ -2,7 +2,7 @@ name: plugboard
 
 services:
   rabbitmq:
-    image: rabbitmq:4.0-rc-management-alpine
+    image: rabbitmq:4.2-management-alpine
     container_name: rabbitmq
     ports:
       - 5672:5672
@@ -17,7 +17,7 @@ services:
     restart: always
 
   postgres:
-    image: postgres:18-alpine
+    image: postgres:18.2-alpine
     container_name: postgres
     environment:
       - POSTGRES_USER=plugboard
@@ -31,14 +31,16 @@ services:
       - main
     restart: always
 
-  valkey:
-    image: valkey/valkey:8.0-alpine
-    container_name: valkey
-    command: valkey-server --dir /var/lib/valkey --bind 0.0.0.0 -::1 --protected-mode no
+  redis:
+    image: redis:8.6-alpine
+    container_name: redis
+    environment:
+      - REDIS_PASSWORD=password
+    command: redis-server --bind 0.0.0.0 --requirepass password
     ports:
       - 6379:6379
     volumes:
-      - valkey-data:/var/lib/valkey
+      - redis-data:/data
     networks:
       - main
     restart: always
@@ -50,4 +52,4 @@ networks:
 volumes:
   rabbitmq-data:
   postgres-data:
-  valkey-data:
+  redis-data:

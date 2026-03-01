@@ -45,6 +45,18 @@ class _RabbitMQSettings(BaseSettings):
     url: _t.Optional[str] = None
 
 
+class _RedisSettings(BaseSettings):
+    """Redis settings.
+
+    Attributes:
+        url: The URL of the Redis server. Should contain credentials if required.
+    """
+
+    model_config = SettingsConfigDict(env_prefix="REDIS_")
+
+    url: _t.Optional[str] = None
+
+
 class Settings(BaseSettings):
     """Settings for Plugboard.
 
@@ -55,6 +67,8 @@ class Settings(BaseSettings):
             terminal session.
         io_read_timeout: Timeout for reading from IO streams in seconds between periodic
             status checks.
+        rabbitmq: RabbitMQ settings.
+        redis: Redis settings.
     """
 
     model_config = SettingsConfigDict(env_prefix=_ENV_PREFIX)
@@ -65,3 +79,4 @@ class Settings(BaseSettings):
     io_read_timeout: float = 20.0
 
     rabbitmq: _RabbitMQSettings = Field(default_factory=_RabbitMQSettings)
+    redis: _RedisSettings = Field(default_factory=_RedisSettings)
