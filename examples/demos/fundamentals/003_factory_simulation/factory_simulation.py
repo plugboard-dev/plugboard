@@ -149,4 +149,3 @@ MACHINE_CONFIGS: list[dict[str, _t.Any]] = [
     {"sigmoid_steepness": 0.18, "sigmoid_midpoint": 35.0, "seed": 404},  # Fragile
     {"sigmoid_steepness": 0.20, "sigmoid_midpoint": 30.0, "seed": 505},  # Very fragile
 ]
-
