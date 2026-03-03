@@ -10,13 +10,13 @@
       
       
       
-        <link rel="canonical" href="https://docs.plugboard.dev/latest/examples/demos/physics-models/001-hot-water-tank/hot-water-tank/">
+        <link rel="canonical" href="https://docs.plugboard.dev/latest/examples/demos/fundamentals/003_factory_simulation/factory-simulation/">
       
       
-        <link rel="prev" href="../../../llm/004_image_processing/local-and-remote-image-processing/">
+        <link rel="prev" href="../../002_production_line_optimisation/production-line/">
       
       
-        <link rel="next" href="../../../finance/001_momentum_signal/momentum-signal/">
+        <link rel="next" href="../../../llm/001_data_filter/llm-filtering/">
       
       
         
@@ -27,7 +27,7 @@
     
     
       
-        <title>Hot water tank model - Plugboard</title>
+        <title>Factory simulation with maintenance optimisation - Plugboard</title>
       
     
     
@@ -92,7 +92,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#hot-water-tank-model" class="md-skip">
+        <a href="#factory-simulation-with-maintenance-optimisation" class="md-skip">
           Skip to content
         </a>
       
@@ -142,7 +142,7 @@ What's new: 🚀 we've open-sourced Plugboard - please <a href="https://github.c
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Hot water tank model
+              Factory simulation with maintenance optimisation
             
           </span>
         </div>
@@ -317,7 +317,7 @@ What's new: 🚀 we've open-sourced Plugboard - please <a href="https://github.c
     
     
       <li class="md-tabs__item md-tabs__item--active">
-        <a href="../../../fundamentals/001_simple_model/simple-model/" class="md-tabs__link">
+        <a href="../../001_simple_model/simple-model/" class="md-tabs__link">
           
   
   
@@ -910,8 +910,10 @@ What's new: 🚀 we've open-sourced Plugboard - please <a href="https://github.c
                 
   
   
+    
   
   
+  
     
     
       
@@ -928,13 +930,11 @@ What's new: 🚀 we've open-sourced Plugboard - please <a href="https://github.c
       
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
       
         
         
-          
-        
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3_1" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_1" checked>
         
           
           <label class="md-nav__link" for="__nav_3_1" id="__nav_3_1_label" tabindex="0">
@@ -955,7 +955,7 @@ What's new: 🚀 we've open-sourced Plugboard - please <a href="https://github.c
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_1_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_1_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_3_1">
             <span class="md-nav__icon md-icon"></span>
             
@@ -973,7 +973,7 @@ What's new: 🚀 we've open-sourced Plugboard - please <a href="https://github.c
   
   
     <li class="md-nav__item">
-      <a href="../../../fundamentals/001_simple_model/simple-model/" class="md-nav__link">
+      <a href="../../001_simple_model/simple-model/" class="md-nav__link">
         
   
   
@@ -1001,7 +1001,7 @@ What's new: 🚀 we've open-sourced Plugboard - please <a href="https://github.c
   
   
     <li class="md-nav__item">
-      <a href="../../../fundamentals/002_production_line_optimisation/production-line/" class="md-nav__link">
+      <a href="../../002_production_line_optimisation/production-line/" class="md-nav__link">
         
   
   
@@ -1026,10 +1026,37 @@ What's new: 🚀 we've open-sourced Plugboard - please <a href="https://github.c
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../../../fundamentals/003_factory_simulation/factory-simulation/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Factory simulation with maintenance optimisation
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -1045,6 +1072,48 @@ What's new: 🚀 we've open-sourced Plugboard - please <a href="https://github.c
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#components" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Components:
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#machine-reliability-profiles" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Machine reliability profiles:
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -1244,8 +1313,6 @@ What's new: 🚀 we've open-sourced Plugboard - please <a href="https://github.c
                 
   
   
-    
-  
   
   
     
@@ -1260,11 +1327,13 @@ What's new: 🚀 we've open-sourced Plugboard - please <a href="https://github.c
       
     
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_3" checked>
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3_3" >
         
           
           <label class="md-nav__link" for="__nav_3_3" id="__nav_3_3_label" tabindex="0">
@@ -1285,7 +1354,7 @@ What's new: 🚀 we've open-sourced Plugboard - please <a href="https://github.c
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_3_label" aria-expanded="true">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_3_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_3_3">
             <span class="md-nav__icon md-icon"></span>
             
@@ -1300,19 +1369,10 @@ What's new: 🚀 we've open-sourced Plugboard - please <a href="https://github.c
                 
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../../../physics-models/001-hot-water-tank/hot-water-tank/" class="md-nav__link">
         
   
   
@@ -1328,7 +1388,6 @@ What's new: 🚀 we've open-sourced Plugboard - please <a href="https://github.c
   
 
       </a>
-      
     </li>
   
 
@@ -1956,6 +2015,36 @@ What's new: 🚀 we've open-sourced Plugboard - please <a href="https://github.c
     
   
   
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#components" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Components:
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#machine-reliability-profiles" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Machine reliability profiles:
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
 </nav>
                   </div>
                 </div>
@@ -1975,7 +2064,14 @@ What's new: 🚀 we've open-sourced Plugboard - please <a href="https://github.c
       
       
       
-        <a href="../../../../../usage/topics/#tag:physics-models" class="md-tag">physics-models</a>
+        <a href="../../../../../usage/topics/#tag:optimisation" class="md-tag">optimisation</a>
+      
+    
+      
+      
+      
+      
+        <a href="../../../../../usage/topics/#tag:simulation" class="md-tag">simulation</a>
       
     
   </nav>
@@ -2421,20 +2517,74 @@ span.linenos.special { color: #000000; background-color: #ffffc0; padding-left: 
 </style>
 <!-- End of mermaid configuration --><div class="jupyter-wrapper">
 <div class="jp-Notebook" data-jp-theme-light="true" data-jp-theme-name="JupyterLab Light">
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=0">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h1 id="hot-water-tank-model">Hot water tank model<a class="anchor-link" href="#hot-water-tank-model">¶</a></h1><p><a href="https://colab.research.google.com/github/plugboard-dev/plugboard/blob/main/examples/demos/physics-models/001-hot-water-tank/hot-water-tank.ipynb"><img alt="Open in Colab" src="https://colab.research.google.com/assets/colab-badge.svg"/></a></p>
+<h1 id="factory-simulation-with-maintenance-optimisation">Factory simulation with maintenance optimisation<a class="anchor-link" href="#factory-simulation-with-maintenance-optimisation">¶</a></h1><p><a href="https://colab.research.google.com/github/plugboard-dev/plugboard/blob/main/examples/demos/fundamentals/003_factory_simulation/factory-simulation.ipynb"><img alt="Open in Colab" src="https://colab.research.google.com/assets/colab-badge.svg"/></a></p>
 <p><a href="https://codespaces.new/plugboard-dev/plugboard"><img alt="Open in GitHub Codespaces" src="https://github.com/codespaces/badge.svg"/></a></p>
-<p>This model demonstrates how Plugboard can be used to connect physics-based models. We'll build a component to simulate the temperature of an insulated hot-water tank, along with another to control the tank's heating element.</p>
+<p>This demo simulates a factory containing 5 machines over 1 year (365 days). The simulation runs in steps of 1 day, with each machine exhibiting realistic behaviour:</p>
+<h3 id="components">Components:<a class="anchor-link" href="#components">¶</a></h3><ol>
+<li><strong>Iterator</strong> (<code>clock</code>): Drives the simulation by emitting day numbers from 0 to 364</li>
+<li><strong>Machine</strong> (5 instances, each with different reliability characteristics):<ul>
+<li>Produces $10,000 of value per day when running</li>
+<li>Has a probability of random breakdown modelled as a sigmoid function of days since last maintenance — near zero soon after maintenance, rising to near 1 over time</li>
+<li>Stops for 5 days when it breaks down</li>
+<li>Has a proactive maintenance schedule: stops for 1 day at regular intervals</li>
+</ul>
+</li>
+<li><strong>Factory</strong>: Aggregates daily output from all machines and tracks the cumulative total value</li>
+</ol>
+<h3 id="machine-reliability-profiles">Machine reliability profiles:<a class="anchor-link" href="#machine-reliability-profiles">¶</a></h3><table>
+<thead>
+<tr>
+<th>Machine</th>
+<th>Sigmoid steepness</th>
+<th>Sigmoid midpoint</th>
+<th>Profile</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>0.10</td>
+<td>50 days</td>
+<td>Reliable</td>
+</tr>
+<tr>
+<td>2</td>
+<td>0.12</td>
+<td>45 days</td>
+<td>Average</td>
+</tr>
+<tr>
+<td>3</td>
+<td>0.15</td>
+<td>40 days</td>
+<td>Average</td>
+</tr>
+<tr>
+<td>4</td>
+<td>0.18</td>
+<td>35 days</td>
+<td>Fragile</td>
+</tr>
+<tr>
+<td>5</td>
+<td>0.20</td>
+<td>30 days</td>
+<td>Very fragile</td>
+</tr>
+</tbody>
+</table>
+<p>We can then use the model to find optimal proactive maintenance intervals for each machine to maximise total output.</p>
 </div>
 </div>
 </div>
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
-<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=1">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -2453,17 +2603,17 @@ span.linenos.special { color: #000000; background-color: #ffffc0; padding-left: 
 </clipboard-copy>
 </div>
 <div class="highlight-ipynb hl-python"><pre><span></span><span class="c1"># Install plugboard and dependencies for Google Colab</span>
-<span class="err">!</span><span class="n">pip</span> <span class="n">install</span> <span class="o">-</span><span class="n">q</span> <span class="n">plugboard</span> <span class="n">plotly</span>
+<span class="err">!</span><span class="n">pip</span> <span class="n">install</span> <span class="o">-</span><span class="n">q</span> <span class="n">plugboard</span><span class="p">[</span><span class="n">ray</span><span class="p">]</span>
 </pre></div>
 <div class="clipboard-copy-txt" id="cell-1"># Install plugboard and dependencies for Google Colab
-!pip install -q plugboard plotly</div>
+!pip install -q plugboard[ray]</div>
 </div>
 </div>
 </div>
 </div>
 </div>
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
-<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=2">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -2481,30 +2631,52 @@ span.linenos.special { color: #000000; background-color: #ffffc0; padding-left: 
 </div>
 </clipboard-copy>
 </div>
-<div class="highlight-ipynb hl-python"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">_t</span>
-
-<span class="kn">from</span><span class="w"> </span><span class="nn">plugboard.connector</span><span class="w"> </span><span class="kn">import</span> <span class="n">AsyncioConnector</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">plugboard.component</span><span class="w"> </span><span class="kn">import</span> <span class="n">Component</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">plugboard.component</span><span class="w"> </span><span class="kn">import</span> <span class="n">IOController</span> <span class="k">as</span> <span class="n">IO</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">plugboard.schemas</span><span class="w"> </span><span class="kn">import</span> <span class="n">ComponentArgsDict</span><span class="p">,</span> <span class="n">ConnectorSpec</span>
+<div class="highlight-ipynb hl-python"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">plugboard.connector</span><span class="w"> </span><span class="kn">import</span> <span class="n">AsyncioConnector</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">plugboard.process</span><span class="w"> </span><span class="kn">import</span> <span class="n">LocalProcess</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">plugboard.library</span><span class="w"> </span><span class="kn">import</span> <span class="n">FileWriter</span>
-</pre></div>
-<div class="clipboard-copy-txt" id="cell-2">import typing as _t
+<span class="kn">from</span><span class="w"> </span><span class="nn">plugboard.schemas</span><span class="w"> </span><span class="kn">import</span> <span class="n">ConnectorSpec</span>
 
-from plugboard.connector import AsyncioConnector
-from plugboard.component import Component
-from plugboard.component import IOController as IO
-from plugboard.schemas import ComponentArgsDict, ConnectorSpec
+<span class="kn">from</span><span class="w"> </span><span class="nn">factory_simulation</span><span class="w"> </span><span class="kn">import</span> <span class="n">Iterator</span><span class="p">,</span> <span class="n">Machine</span><span class="p">,</span> <span class="n">Factory</span><span class="p">,</span> <span class="n">MACHINE_CONFIGS</span>
+</pre></div>
+<div class="clipboard-copy-txt" id="cell-2">from plugboard.connector import AsyncioConnector
 from plugboard.process import LocalProcess
-from plugboard.library import FileWriter</div>
+from plugboard.schemas import ConnectorSpec
+
+from factory_simulation import Iterator, Machine, Factory, MACHINE_CONFIGS</div>
 </div>
 </div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=3">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<p>The components are defined in <code>factory_simulation.py</code>:</p>
+<ul>
+<li><strong><code>Iterator</code></strong> emits a sequence of day numbers and closes once the configured number of days is reached.</li>
+<li><strong><code>Machine</code></strong> tracks its own state (running, broken, or under maintenance). At each step it checks whether it is due for proactive maintenance, whether a random breakdown occurs (using a sigmoid probability curve), and outputs its daily production value.</li>
+<li><strong><code>Factory</code></strong> sums daily values from all machines and maintains a running total.</li>
+</ul>
+<p>Each machine has different sigmoid parameters that control its breakdown probability curve, making some machines more reliable than others.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=4">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<p>Now assemble the components into a <code>Process</code> and connect them together. Each machine receives the day count from the clock, and sends its daily output to the factory aggregator.</p>
 </div>
 </div>
 </div>
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
-<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=5">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -2522,18 +2694,56 @@ from plugboard.library import FileWriter</div>
 </div>
 </clipboard-copy>
 </div>
-<div class="highlight-ipynb hl-python"><pre><span></span><span class="n">WATER_SPECIFIC_HEAT</span> <span class="o">=</span> <span class="mi">4186</span>  <span class="c1"># J/(kg°C)</span>
-<span class="n">WATER_DENSITY</span> <span class="o">=</span> <span class="mf">1.0</span>  <span class="c1"># kg/L</span>
+<div class="highlight-ipynb hl-python"><pre><span></span><span class="n">connect</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">s</span><span class="p">,</span> <span class="n">t</span><span class="p">:</span> <span class="n">AsyncioConnector</span><span class="p">(</span><span class="n">spec</span><span class="o">=</span><span class="n">ConnectorSpec</span><span class="p">(</span><span class="n">source</span><span class="o">=</span><span class="n">s</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="n">t</span><span class="p">))</span>
+
+<span class="n">components</span> <span class="o">=</span> <span class="p">[</span><span class="n">Iterator</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">"clock"</span><span class="p">,</span> <span class="n">num_days</span><span class="o">=</span><span class="mi">365</span><span class="p">)]</span>
+<span class="n">connectors</span> <span class="o">=</span> <span class="p">[]</span>
+
+<span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">cfg</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">MACHINE_CONFIGS</span><span class="p">,</span> <span class="n">start</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+    <span class="n">components</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Machine</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s2">"machine_</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span> <span class="n">maintenance_interval</span><span class="o">=</span><span class="mi">30</span><span class="p">,</span> <span class="o">**</span><span class="n">cfg</span><span class="p">))</span>
+    <span class="n">connectors</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">connect</span><span class="p">(</span><span class="s2">"clock.day"</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"machine_</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">.day"</span><span class="p">))</span>
+    <span class="n">connectors</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">connect</span><span class="p">(</span><span class="sa">f</span><span class="s2">"machine_</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">.daily_value"</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"factory.value_</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">"</span><span class="p">))</span>
+
+<span class="n">components</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Factory</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">"factory"</span><span class="p">))</span>
+
+<span class="n">process</span> <span class="o">=</span> <span class="n">LocalProcess</span><span class="p">(</span><span class="n">components</span><span class="o">=</span><span class="n">components</span><span class="p">,</span> <span class="n">connectors</span><span class="o">=</span><span class="n">connectors</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Process has </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">process</span><span class="o">.</span><span class="n">components</span><span class="p">)</span><span class="si">}</span><span class="s2"> components and </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">process</span><span class="o">.</span><span class="n">connectors</span><span class="p">)</span><span class="si">}</span><span class="s2"> connectors"</span><span class="p">)</span>
 </pre></div>
-<div class="clipboard-copy-txt" id="cell-3">WATER_SPECIFIC_HEAT = 4186  # J/(kg°C)
-WATER_DENSITY = 1.0  # kg/L</div>
+<div class="clipboard-copy-txt" id="cell-3">connect = lambda s, t: AsyncioConnector(spec=ConnectorSpec(source=s, target=t))
+
+components = [Iterator(name="clock", num_days=365)]
+connectors = []
+
+for i, cfg in enumerate(MACHINE_CONFIGS, start=1):
+    components.append(Machine(name=f"machine_{i}", maintenance_interval=30, **cfg))
+    connectors.append(connect("clock.day", f"machine_{i}.day"))
+    connectors.append(connect(f"machine_{i}.daily_value", f"factory.value_{i}"))
+
+components.append(Factory(name="factory"))
+
+process = LocalProcess(components=components, connectors=connectors)
+
+print(f"Process has {len(process.components)} components and {len(process.connectors)} connectors")</div>
 </div>
 </div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=6">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<p>We can create a diagram of the process to make a visual check.</p>
+<p><img alt="Process Diagram" src="https://mermaid.ink/img/pako:eNrNlLEOgjAURX_lpSOBQYGFGOJkYqKLs4kp7SMQW2pqiTGEf1dAHZowUBzY7z3vnuU1hCmOJCG5UA9WUG3gcDpXAEwodt02cC_oDRPQqq44ch8EzVAksDeoqVF6k-nU8_qw50ELQZCCpKwoK7ysxuvHITK0f_mO0N2eBegn5JS9xz3H-7shMPQ_6e_5P6ivJy5f2-pOgEWohxOXh7a6E2AR6tHE5ZGt7gRYhHo8cXlsqzsB5qkTn0jUkpacJA0xBcruEXLMaS0MadsXZtO5rA=="/></p>
 </div>
 </div>
 </div>
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
-<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=7">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -2551,80 +2761,35 @@ WATER_DENSITY = 1.0  # kg/L</div>
 </div>
 </clipboard-copy>
 </div>
-<div class="highlight-ipynb hl-python"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">HotWaterTank</span><span class="p">(</span><span class="n">Component</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">"""This component represents an insulated hot water tank with an on/off heating element."""</span>
+<div class="highlight-ipynb hl-python"><pre><span></span><span class="c1"># Visualize the process flow</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">plugboard.diagram</span><span class="w"> </span><span class="kn">import</span> <span class="n">MermaidDiagram</span>
 
-    <span class="n">io</span> <span class="o">=</span> <span class="n">IO</span><span class="p">(</span><span class="n">inputs</span><span class="o">=</span><span class="p">[</span><span class="s2">"heating_element"</span><span class="p">,</span> <span class="s2">"prev_temperature"</span><span class="p">],</span> <span class="n">outputs</span><span class="o">=</span><span class="p">[</span><span class="s2">"temperature"</span><span class="p">])</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span>
-        <span class="n">volume</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
-        <span class="n">heater_power</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
-        <span class="n">insulation_r</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
-        <span class="n">ambient_temp</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
-        <span class="n">delta_t</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">60</span><span class="p">,</span>
-        <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">_t</span><span class="o">.</span><span class="n">Unpack</span><span class="p">[</span><span class="n">ComponentArgsDict</span><span class="p">],</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-        <span class="c1"># Set the initial running total to 0</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_heater_power_watts</span> <span class="o">=</span> <span class="n">heater_power</span> <span class="o">*</span> <span class="mi">1000</span>  <span class="c1"># W</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_water_mass</span> <span class="o">=</span> <span class="n">volume</span> <span class="o">*</span> <span class="n">WATER_DENSITY</span>  <span class="c1"># kg</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_heat_capacity</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_water_mass</span> <span class="o">*</span> <span class="n">WATER_SPECIFIC_HEAT</span>  <span class="c1"># J/°C</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_delta_t</span> <span class="o">=</span> <span class="n">delta_t</span>  <span class="c1"># s</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_insulation_r</span> <span class="o">=</span> <span class="n">insulation_r</span>  <span class="c1"># °C/W</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_ambient_temp</span> <span class="o">=</span> <span class="n">ambient_temp</span>  <span class="c1"># °C</span>
-
-    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">step</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="c1"># Apply heater power to the water</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">temperature</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">prev_temperature</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">heating_element</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">temperature</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_heater_power_watts</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_delta_t</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">_heat_capacity</span>
-        <span class="c1"># Apply heat loss to the environment</span>
-        <span class="n">heat_loss</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">prev_temperature</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ambient_temp</span><span class="p">)</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">_insulation_r</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_delta_t</span>
-        <span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">temperature</span> <span class="o">-=</span> <span class="n">heat_loss</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">_heat_capacity</span>
+<span class="n">diagram_url</span> <span class="o">=</span> <span class="n">MermaidDiagram</span><span class="o">.</span><span class="n">from_process</span><span class="p">(</span><span class="n">process</span><span class="p">)</span><span class="o">.</span><span class="n">url</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">diagram_url</span><span class="p">)</span>
 </pre></div>
-<div class="clipboard-copy-txt" id="cell-4">class HotWaterTank(Component):
-    """This component represents an insulated hot water tank with an on/off heating element."""
+<div class="clipboard-copy-txt" id="cell-4"># Visualize the process flow
+from plugboard.diagram import MermaidDiagram
 
-    io = IO(inputs=["heating_element", "prev_temperature"], outputs=["temperature"])
-
-    def __init__(
-        self,
-        volume: float,
-        heater_power: float,
-        insulation_r: float,
-        ambient_temp: float,
-        delta_t: float = 60,
-        **kwargs: _t.Unpack[ComponentArgsDict],
-    ) -&gt; None:
-        super().__init__(**kwargs)
-        # Set the initial running total to 0
-        self._heater_power_watts = heater_power * 1000  # W
-        self._water_mass = volume * WATER_DENSITY  # kg
-        self._heat_capacity = self._water_mass * WATER_SPECIFIC_HEAT  # J/°C
-        self._delta_t = delta_t  # s
-        self._insulation_r = insulation_r  # °C/W
-        self._ambient_temp = ambient_temp  # °C
-
-    async def step(self) -&gt; None:
-        # Apply heater power to the water
-        self.temperature = self.prev_temperature
-        if self.heating_element:
-            self.temperature += self._heater_power_watts * self._delta_t / self._heat_capacity
-        # Apply heat loss to the environment
-        heat_loss = (
-            (self.prev_temperature - self._ambient_temp) / self._insulation_r * self._delta_t
-        )
-        self.temperature -= heat_loss / self._heat_capacity</div>
+diagram_url = MermaidDiagram.from_process(process).url
+print(diagram_url)</div>
 </div>
 </div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=8">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<p>Run the simulation for 365 days with a default maintenance interval of 30 days for all machines.</p>
 </div>
 </div>
 </div>
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
-<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=9">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -2642,53 +2807,31 @@ WATER_DENSITY = 1.0  # kg/L</div>
 </div>
 </clipboard-copy>
 </div>
-<div class="highlight-ipynb hl-python"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">ThermostatController</span><span class="p">(</span><span class="n">Component</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">"""This component represents a thermostat with hysteresis."""</span>
-
-    <span class="n">io</span> <span class="o">=</span> <span class="n">IO</span><span class="p">(</span><span class="n">inputs</span><span class="o">=</span><span class="p">[</span><span class="s2">"setpoint"</span><span class="p">,</span> <span class="s2">"temperature"</span><span class="p">],</span> <span class="n">outputs</span><span class="o">=</span><span class="p">[</span><span class="s2">"heating_element"</span><span class="p">])</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">hysteresis</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">_t</span><span class="o">.</span><span class="n">Unpack</span><span class="p">[</span><span class="n">ComponentArgsDict</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_hysteresis</span> <span class="o">=</span> <span class="n">hysteresis</span>
-
-    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">step</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">temperature</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">setpoint</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">_hysteresis</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">heating_element</span> <span class="o">=</span> <span class="kc">True</span>
-        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">temperature</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">setpoint</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_hysteresis</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">heating_element</span> <span class="o">=</span> <span class="kc">False</span>
+<div class="highlight-ipynb hl-python"><pre><span></span><span class="c1"># Run the simulation</span>
+<span class="k">async</span> <span class="k">with</span> <span class="n">process</span><span class="p">:</span>
+    <span class="k">await</span> <span class="n">process</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
 </pre></div>
-<div class="clipboard-copy-txt" id="cell-5">class ThermostatController(Component):
-    """This component represents a thermostat with hysteresis."""
-
-    io = IO(inputs=["setpoint", "temperature"], outputs=["heating_element"])
-
-    def __init__(self, hysteresis: float, **kwargs: _t.Unpack[ComponentArgsDict]) -&gt; None:
-        super().__init__(**kwargs)
-        self._hysteresis = hysteresis
-
-    async def step(self) -&gt; None:
-        if self.temperature &lt; self.setpoint - self._hysteresis:
-            self.heating_element = True
-        elif self.temperature &gt; self.setpoint + self._hysteresis:
-            self.heating_element = False</div>
+<div class="clipboard-copy-txt" id="cell-5"># Run the simulation
+async with process:
+    await process.run()</div>
 </div>
 </div>
 </div>
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=10">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<p>We'll use a <code>Constant</code> value to represent the setpoint and trigger the rest of the model.</p>
+<p>At the end of the simulation, we can read the cumulative total value from the <code>Factory</code> component.</p>
 </div>
 </div>
 </div>
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
-<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=11">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -2706,46 +2849,36 @@ WATER_DENSITY = 1.0  # kg/L</div>
 </div>
 </clipboard-copy>
 </div>
-<div class="highlight-ipynb hl-python"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">Constant</span><span class="p">(</span><span class="n">Component</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">"""This component represents a constant value."""</span>
-
-    <span class="n">io</span> <span class="o">=</span> <span class="n">IO</span><span class="p">(</span><span class="n">outputs</span><span class="o">=</span><span class="p">[</span><span class="s2">"value"</span><span class="p">])</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">n_iterations</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">_t</span><span class="o">.</span><span class="n">Unpack</span><span class="p">[</span><span class="n">ComponentArgsDict</span><span class="p">]</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="n">value</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_remaining_iterations</span> <span class="o">=</span> <span class="n">n_iterations</span>
-
-    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">step</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_remaining_iterations</span> <span class="o">-=</span> <span class="mi">1</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_remaining_iterations</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+<div class="highlight-ipynb hl-python"><pre><span></span><span class="n">total_value</span> <span class="o">=</span> <span class="n">process</span><span class="o">.</span><span class="n">components</span><span class="p">[</span><span class="s2">"factory"</span><span class="p">]</span><span class="o">.</span><span class="n">total_value</span>
+<span class="n">max_possible</span> <span class="o">=</span> <span class="mi">365</span> <span class="o">*</span> <span class="mi">5</span> <span class="o">*</span> <span class="mi">10_000</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Total factory output over 365 days: $</span><span class="si">{</span><span class="n">total_value</span><span class="si">:</span><span class="s2">,.0f</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Maximum possible output: $</span><span class="si">{</span><span class="n">max_possible</span><span class="si">:</span><span class="s2">,.0f</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Efficiency: </span><span class="si">{</span><span class="n">total_value</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">max_possible</span><span class="si">:</span><span class="s2">.1%</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 </pre></div>
-<div class="clipboard-copy-txt" id="cell-6">class Constant(Component):
-    """This component represents a constant value."""
-
-    io = IO(outputs=["value"])
-
-    def __init__(
-        self, value: float, n_iterations: int, **kwargs: _t.Unpack[ComponentArgsDict]
-    ) -&gt; None:
-        super().__init__(**kwargs)
-        self.value = value
-        self._remaining_iterations = n_iterations
-
-    async def step(self) -&gt; None:
-        self._remaining_iterations -= 1
-        if self._remaining_iterations &lt;= 0:
-            await self.io.close()</div>
+<div class="clipboard-copy-txt" id="cell-6">total_value = process.components["factory"].total_value
+max_possible = 365 * 5 * 10_000
+print(f"Total factory output over 365 days: ${total_value:,.0f}")
+print(f"Maximum possible output: ${max_possible:,.0f}")
+print(f"Efficiency: {total_value / max_possible:.1%}")</div>
 </div>
 </div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=12">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<p>Now suppose we want to find the optimal proactive maintenance interval for each machine. Maintaining too frequently wastes productive days, but maintaining too rarely leads to expensive breakdowns (5 days of downtime vs 1 day for scheduled maintenance).</p>
+<p>We can set up an optimisation to maximise <code>total_value</code> by varying the <code>maintenance_interval</code> argument on each machine. First, we build a <code>ProcessSpec</code> that describes the simulation programmatically.</p>
 </div>
 </div>
 </div>
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
-<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=13">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -2763,32 +2896,52 @@ WATER_DENSITY = 1.0  # kg/L</div>
 </div>
 </clipboard-copy>
 </div>
-<div class="highlight-ipynb hl-python"><pre><span></span><span class="n">setpoint</span> <span class="o">=</span> <span class="n">Constant</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">"setpoint"</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="mi">60</span><span class="p">,</span> <span class="n">n_iterations</span><span class="o">=</span><span class="mi">24</span> <span class="o">*</span> <span class="mi">60</span><span class="p">)</span>
-<span class="n">tank</span> <span class="o">=</span> <span class="n">HotWaterTank</span><span class="p">(</span>
-    <span class="n">name</span><span class="o">=</span><span class="s2">"tank"</span><span class="p">,</span>
-    <span class="n">initial_values</span><span class="o">=</span><span class="p">{</span><span class="s2">"prev_temperature"</span><span class="p">:</span> <span class="p">[</span><span class="mi">58</span><span class="p">],</span> <span class="s2">"heating_element"</span><span class="p">:</span> <span class="p">[</span><span class="kc">False</span><span class="p">]},</span>
-    <span class="n">volume</span><span class="o">=</span><span class="mi">150</span><span class="p">,</span>
-    <span class="n">heater_power</span><span class="o">=</span><span class="mf">1.1</span><span class="p">,</span>
-    <span class="n">insulation_r</span><span class="o">=</span><span class="mf">0.9</span><span class="p">,</span>
-    <span class="n">ambient_temp</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span>
-<span class="p">)</span>
-<span class="n">thermostat</span> <span class="o">=</span> <span class="n">ThermostatController</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">"controller"</span><span class="p">,</span> <span class="n">hysteresis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
-<span class="n">save</span> <span class="o">=</span> <span class="n">FileWriter</span><span class="p">(</span>
-    <span class="n">name</span><span class="o">=</span><span class="s2">"save"</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="s2">"temperature.csv"</span><span class="p">,</span> <span class="n">field_names</span><span class="o">=</span><span class="p">[</span><span class="s2">"heater"</span><span class="p">,</span> <span class="s2">"temperature"</span><span class="p">,</span> <span class="s2">"setpoint"</span><span class="p">]</span>
+<div class="highlight-ipynb hl-python"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">plugboard.schemas</span><span class="w"> </span><span class="kn">import</span> <span class="n">ProcessArgsSpec</span><span class="p">,</span> <span class="n">ProcessSpec</span>
+
+<span class="n">spec_components</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="p">{</span><span class="s2">"type"</span><span class="p">:</span> <span class="s2">"factory_simulation.Iterator"</span><span class="p">,</span> <span class="s2">"args"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"name"</span><span class="p">:</span> <span class="s2">"clock"</span><span class="p">,</span> <span class="s2">"num_days"</span><span class="p">:</span> <span class="mi">365</span><span class="p">}},</span>
+<span class="p">]</span>
+<span class="n">spec_connectors</span> <span class="o">=</span> <span class="p">[]</span>
+
+<span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">cfg</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">MACHINE_CONFIGS</span><span class="p">,</span> <span class="n">start</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+    <span class="n">spec_components</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+        <span class="p">{</span>
+            <span class="s2">"type"</span><span class="p">:</span> <span class="s2">"factory_simulation.Machine"</span><span class="p">,</span>
+            <span class="s2">"args"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"name"</span><span class="p">:</span> <span class="sa">f</span><span class="s2">"machine_</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span> <span class="s2">"maintenance_interval"</span><span class="p">:</span> <span class="mi">30</span><span class="p">,</span> <span class="o">**</span><span class="n">cfg</span><span class="p">},</span>
+        <span class="p">}</span>
+    <span class="p">)</span>
+    <span class="n">spec_connectors</span><span class="o">.</span><span class="n">append</span><span class="p">({</span><span class="s2">"source"</span><span class="p">:</span> <span class="s2">"clock.day"</span><span class="p">,</span> <span class="s2">"target"</span><span class="p">:</span> <span class="sa">f</span><span class="s2">"machine_</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">.day"</span><span class="p">})</span>
+    <span class="n">spec_connectors</span><span class="o">.</span><span class="n">append</span><span class="p">({</span><span class="s2">"source"</span><span class="p">:</span> <span class="sa">f</span><span class="s2">"machine_</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">.daily_value"</span><span class="p">,</span> <span class="s2">"target"</span><span class="p">:</span> <span class="sa">f</span><span class="s2">"factory.value_</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">"</span><span class="p">})</span>
+
+<span class="n">spec_components</span><span class="o">.</span><span class="n">append</span><span class="p">({</span><span class="s2">"type"</span><span class="p">:</span> <span class="s2">"factory_simulation.Factory"</span><span class="p">,</span> <span class="s2">"args"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"name"</span><span class="p">:</span> <span class="s2">"factory"</span><span class="p">}})</span>
+
+<span class="n">spec</span> <span class="o">=</span> <span class="n">ProcessSpec</span><span class="p">(</span>
+    <span class="n">args</span><span class="o">=</span><span class="n">ProcessArgsSpec</span><span class="p">(</span><span class="n">components</span><span class="o">=</span><span class="n">spec_components</span><span class="p">,</span> <span class="n">connectors</span><span class="o">=</span><span class="n">spec_connectors</span><span class="p">),</span>
+    <span class="nb">type</span><span class="o">=</span><span class="s2">"plugboard.process.LocalProcess"</span><span class="p">,</span>
 <span class="p">)</span>
 </pre></div>
-<div class="clipboard-copy-txt" id="cell-7">setpoint = Constant(name="setpoint", value=60, n_iterations=24 * 60)
-tank = HotWaterTank(
-    name="tank",
-    initial_values={"prev_temperature": [58], "heating_element": [False]},
-    volume=150,
-    heater_power=1.1,
-    insulation_r=0.9,
-    ambient_temp=20,
-)
-thermostat = ThermostatController(name="controller", hysteresis=1)
-save = FileWriter(
-    name="save", path="temperature.csv", field_names=["heater", "temperature", "setpoint"]
+<div class="clipboard-copy-txt" id="cell-7">from plugboard.schemas import ProcessArgsSpec, ProcessSpec
+
+spec_components = [
+    {"type": "factory_simulation.Iterator", "args": {"name": "clock", "num_days": 365}},
+]
+spec_connectors = []
+
+for i, cfg in enumerate(MACHINE_CONFIGS, start=1):
+    spec_components.append(
+        {
+            "type": "factory_simulation.Machine",
+            "args": {"name": f"machine_{i}", "maintenance_interval": 30, **cfg},
+        }
+    )
+    spec_connectors.append({"source": "clock.day", "target": f"machine_{i}.day"})
+    spec_connectors.append({"source": f"machine_{i}.daily_value", "target": f"factory.value_{i}"})
+
+spec_components.append({"type": "factory_simulation.Factory", "args": {"name": "factory"}})
+
+spec = ProcessSpec(
+    args=ProcessArgsSpec(components=spec_components, connectors=spec_connectors),
+    type="plugboard.process.LocalProcess",
 )</div>
 </div>
 </div>
@@ -2796,18 +2949,18 @@ save = FileWriter(
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=14">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<p>Now connect the components together in a <code>LocalProcess</code>.</p>
+<p>Now configure the <code>Tuner</code> to search for the best <code>maintenance_interval</code> for each machine (between 5 and 60 days), maximising the factory's <code>total_value</code>.</p>
 </div>
 </div>
 </div>
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
-<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=15">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -2825,173 +2978,89 @@ save = FileWriter(
 </div>
 </clipboard-copy>
 </div>
-<div class="highlight-ipynb hl-python"><pre><span></span><span class="n">process</span> <span class="o">=</span> <span class="n">LocalProcess</span><span class="p">(</span>
-    <span class="n">components</span><span class="o">=</span><span class="p">[</span><span class="n">setpoint</span><span class="p">,</span> <span class="n">tank</span><span class="p">,</span> <span class="n">thermostat</span><span class="p">,</span> <span class="n">save</span><span class="p">],</span>
-    <span class="n">connectors</span><span class="o">=</span><span class="p">[</span>
-        <span class="c1"># Connect setpoint to controller</span>
-        <span class="n">AsyncioConnector</span><span class="p">(</span>
-            <span class="n">spec</span><span class="o">=</span><span class="n">ConnectorSpec</span><span class="p">(</span><span class="n">source</span><span class="o">=</span><span class="s2">"setpoint.value"</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="s2">"controller.setpoint"</span><span class="p">),</span>
-        <span class="p">),</span>
-        <span class="c1"># Connect controller to tank</span>
-        <span class="n">AsyncioConnector</span><span class="p">(</span>
-            <span class="n">spec</span><span class="o">=</span><span class="n">ConnectorSpec</span><span class="p">(</span><span class="n">source</span><span class="o">=</span><span class="s2">"controller.heating_element"</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="s2">"tank.heating_element"</span><span class="p">),</span>
-        <span class="p">),</span>
-        <span class="c1"># Connect tank to controller</span>
-        <span class="n">AsyncioConnector</span><span class="p">(</span>
-            <span class="n">spec</span><span class="o">=</span><span class="n">ConnectorSpec</span><span class="p">(</span><span class="n">source</span><span class="o">=</span><span class="s2">"tank.temperature"</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="s2">"controller.temperature"</span><span class="p">),</span>
-        <span class="p">),</span>
-        <span class="c1"># Connect tank to itself to save the previous temperature</span>
-        <span class="n">AsyncioConnector</span><span class="p">(</span>
-            <span class="n">spec</span><span class="o">=</span><span class="n">ConnectorSpec</span><span class="p">(</span><span class="n">source</span><span class="o">=</span><span class="s2">"tank.temperature"</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="s2">"tank.prev_temperature"</span><span class="p">),</span>
-        <span class="p">),</span>
-        <span class="c1"># Connect tank, controller and setpoint to save</span>
-        <span class="n">AsyncioConnector</span><span class="p">(</span>
-            <span class="n">spec</span><span class="o">=</span><span class="n">ConnectorSpec</span><span class="p">(</span><span class="n">source</span><span class="o">=</span><span class="s2">"tank.temperature"</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="s2">"save.temperature"</span><span class="p">),</span>
-        <span class="p">),</span>
-        <span class="n">AsyncioConnector</span><span class="p">(</span>
-            <span class="n">spec</span><span class="o">=</span><span class="n">ConnectorSpec</span><span class="p">(</span><span class="n">source</span><span class="o">=</span><span class="s2">"controller.heating_element"</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="s2">"save.heater"</span><span class="p">),</span>
-        <span class="p">),</span>
-        <span class="n">AsyncioConnector</span><span class="p">(</span>
-            <span class="n">spec</span><span class="o">=</span><span class="n">ConnectorSpec</span><span class="p">(</span><span class="n">source</span><span class="o">=</span><span class="s2">"setpoint.value"</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="s2">"save.setpoint"</span><span class="p">),</span>
-        <span class="p">),</span>
+<div class="highlight-ipynb hl-python"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">plugboard.schemas</span><span class="w"> </span><span class="kn">import</span> <span class="n">IntParameterSpec</span><span class="p">,</span> <span class="n">ObjectiveSpec</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">plugboard.tune</span><span class="w"> </span><span class="kn">import</span> <span class="n">Tuner</span>
+
+<span class="n">tuner</span> <span class="o">=</span> <span class="n">Tuner</span><span class="p">(</span>
+    <span class="n">objective</span><span class="o">=</span><span class="n">ObjectiveSpec</span><span class="p">(</span>
+        <span class="n">object_type</span><span class="o">=</span><span class="s2">"component"</span><span class="p">,</span>
+        <span class="n">object_name</span><span class="o">=</span><span class="s2">"factory"</span><span class="p">,</span>
+        <span class="n">field_type</span><span class="o">=</span><span class="s2">"field"</span><span class="p">,</span>
+        <span class="n">field_name</span><span class="o">=</span><span class="s2">"total_value"</span><span class="p">,</span>
+    <span class="p">),</span>
+    <span class="n">parameters</span><span class="o">=</span><span class="p">[</span>
+        <span class="n">IntParameterSpec</span><span class="p">(</span>
+            <span class="n">object_type</span><span class="o">=</span><span class="s2">"component"</span><span class="p">,</span>
+            <span class="n">object_name</span><span class="o">=</span><span class="sa">f</span><span class="s2">"machine_</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span>
+            <span class="n">field_type</span><span class="o">=</span><span class="s2">"arg"</span><span class="p">,</span>
+            <span class="n">field_name</span><span class="o">=</span><span class="s2">"maintenance_interval"</span><span class="p">,</span>
+            <span class="n">lower</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
+            <span class="n">upper</span><span class="o">=</span><span class="mi">60</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">6</span><span class="p">)</span>
     <span class="p">],</span>
+    <span class="n">num_samples</span><span class="o">=</span><span class="mi">40</span><span class="p">,</span>
+    <span class="n">max_concurrent</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span>
+    <span class="n">mode</span><span class="o">=</span><span class="s2">"max"</span><span class="p">,</span>
 <span class="p">)</span>
+
+<span class="n">result</span> <span class="o">=</span> <span class="n">tuner</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">spec</span><span class="o">=</span><span class="n">spec</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="s2">"=== Optimisation Results ==="</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">6</span><span class="p">):</span>
+    <span class="n">key</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"component.machine_</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">.arg.maintenance_interval"</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"  Machine </span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2"> optimal maintenance interval: </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="si">}</span><span class="s2"> days"</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"  Maximum total value: $</span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">metrics</span><span class="p">[</span><span class="s1">'component.factory.field.total_value'</span><span class="p">]</span><span class="si">:</span><span class="s2">,.0f</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 </pre></div>
-<div class="clipboard-copy-txt" id="cell-8">process = LocalProcess(
-    components=[setpoint, tank, thermostat, save],
-    connectors=[
-        # Connect setpoint to controller
-        AsyncioConnector(
-            spec=ConnectorSpec(source="setpoint.value", target="controller.setpoint"),
-        ),
-        # Connect controller to tank
-        AsyncioConnector(
-            spec=ConnectorSpec(source="controller.heating_element", target="tank.heating_element"),
-        ),
-        # Connect tank to controller
-        AsyncioConnector(
-            spec=ConnectorSpec(source="tank.temperature", target="controller.temperature"),
-        ),
-        # Connect tank to itself to save the previous temperature
-        AsyncioConnector(
-            spec=ConnectorSpec(source="tank.temperature", target="tank.prev_temperature"),
-        ),
-        # Connect tank, controller and setpoint to save
-        AsyncioConnector(
-            spec=ConnectorSpec(source="tank.temperature", target="save.temperature"),
-        ),
-        AsyncioConnector(
-            spec=ConnectorSpec(source="controller.heating_element", target="save.heater"),
-        ),
-        AsyncioConnector(
-            spec=ConnectorSpec(source="setpoint.value", target="save.setpoint"),
-        ),
+<div class="clipboard-copy-txt" id="cell-8">from plugboard.schemas import IntParameterSpec, ObjectiveSpec
+from plugboard.tune import Tuner
+
+tuner = Tuner(
+    objective=ObjectiveSpec(
+        object_type="component",
+        object_name="factory",
+        field_type="field",
+        field_name="total_value",
+    ),
+    parameters=[
+        IntParameterSpec(
+            object_type="component",
+            object_name=f"machine_{i}",
+            field_type="arg",
+            field_name="maintenance_interval",
+            lower=5,
+            upper=60,
+        )
+        for i in range(1, 6)
     ],
-)</div>
+    num_samples=40,
+    max_concurrent=4,
+    mode="max",
+)
+
+result = tuner.run(spec=spec)
+
+print("=== Optimisation Results ===")
+for i in range(1, 6):
+    key = f"component.machine_{i}.arg.maintenance_interval"
+    print(f"  Machine {i} optimal maintenance interval: {result.config[key]} days")
+print(f"  Maximum total value: ${result.metrics['component.factory.field.total_value']:,.0f}")</div>
 </div>
 </div>
 </div>
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=16">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<p>Now we can initialise and run the simulation.</p>
-</div>
-</div>
-</div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
-<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
-<div class="jp-Cell-inputWrapper" tabindex="0">
-<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
-</div>
-<div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
-<div class="CodeMirror cm-s-jupyter">
-<div class="zeroclipboard-container">
-<clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-9">
-<div>
-<span class="notice" hidden="">Copied!</span>
-<svg aria-hidden="true" class="clipboard-copy-icon" data-view-component="true" height="20" version="1.1" viewbox="0 0 16 16" width="20">
-<path d="M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 010 1.5h-1.5a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-1.5a.75.75 0 011.5 0v1.5A1.75 1.75 0 019.25 16h-7.5A1.75 1.75 0 010 14.25v-7.5z" fill="currentColor" fill-rule="evenodd"></path>
-<path d="M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0114.25 11h-7.5A1.75 1.75 0 015 9.25v-7.5zm1.75-.25a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-7.5a.25.25 0 00-.25-.25h-7.5z" fill="currentColor" fill-rule="evenodd"></path>
-</svg>
-</div>
-</clipboard-copy>
-</div>
-<div class="highlight-ipynb hl-python"><pre><span></span><span class="k">async</span> <span class="k">with</span> <span class="n">process</span><span class="p">:</span>
-    <span class="k">await</span> <span class="n">process</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+<p>Since each machine has different reliability characteristics, the optimal maintenance schedule will differ — more fragile machines benefit from more frequent maintenance, while reliable machines can run longer between stops.</p>
+<p>Alternatively, the same optimisation can be launched via the CLI using the YAML config in <code>factory-simulation.yaml</code>:</p>
+<div class="highlight"><pre><span></span>plugboard<span class="w"> </span>process<span class="w"> </span>tune<span class="w"> </span>factory-simulation.yaml
 </pre></div>
-<div class="clipboard-copy-txt" id="cell-9">async with process:
-    await process.run()</div>
-</div>
-</div>
-</div>
-</div>
-</div>
-</div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
-<div class="jp-Cell-inputWrapper" tabindex="0">
-<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
-</div>
-<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
-</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<p>Finally check we have the output data saved in <code>temperature.csv</code>.</p>
-</div>
-</div>
-</div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
-<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
-<div class="jp-Cell-inputWrapper" tabindex="0">
-<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
-</div>
-<div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
-<div class="CodeMirror cm-s-jupyter">
-<div class="zeroclipboard-container">
-<clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-10">
-<div>
-<span class="notice" hidden="">Copied!</span>
-<svg aria-hidden="true" class="clipboard-copy-icon" data-view-component="true" height="20" version="1.1" viewbox="0 0 16 16" width="20">
-<path d="M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 010 1.5h-1.5a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-1.5a.75.75 0 011.5 0v1.5A1.75 1.75 0 019.25 16h-7.5A1.75 1.75 0 010 14.25v-7.5z" fill="currentColor" fill-rule="evenodd"></path>
-<path d="M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0114.25 11h-7.5A1.75 1.75 0 015 9.25v-7.5zm1.75-.25a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-7.5a.25.25 0 00-.25-.25h-7.5z" fill="currentColor" fill-rule="evenodd"></path>
-</svg>
-</div>
-</clipboard-copy>
-</div>
-<div class="highlight-ipynb hl-python"><pre><span></span><span class="k">try</span><span class="p">:</span>
-    <span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
-
-    <span class="n">fig</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="s2">"temperature.csv"</span><span class="p">)</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
-        <span class="n">backend</span><span class="o">=</span><span class="s2">"plotly"</span><span class="p">,</span>
-        <span class="n">y</span><span class="o">=</span><span class="p">[</span><span class="s2">"temperature"</span><span class="p">,</span> <span class="s2">"setpoint"</span><span class="p">],</span>
-        <span class="n">title</span><span class="o">=</span><span class="s2">"Temperature vs. Setpoint"</span><span class="p">,</span>
-        <span class="n">labels</span><span class="o">=</span><span class="p">{</span><span class="s2">"index"</span><span class="p">:</span> <span class="s2">"Time (min)"</span><span class="p">,</span> <span class="s2">"value"</span><span class="p">:</span> <span class="s2">"Temperature (°C)"</span><span class="p">},</span>
-    <span class="p">)</span>
-<span class="k">except</span> <span class="p">(</span><span class="ne">ImportError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">):</span>
-    <span class="nb">print</span><span class="p">(</span><span class="s2">"Please install plotly to run this cell."</span><span class="p">)</span>
-    <span class="n">fig</span> <span class="o">=</span> <span class="kc">None</span>
-<span class="n">fig</span>
-</pre></div>
-<div class="clipboard-copy-txt" id="cell-10">try:
-    import pandas as pd
-
-    fig = pd.read_csv("temperature.csv").plot(
-        backend="plotly",
-        y=["temperature", "setpoint"],
-        title="Temperature vs. Setpoint",
-        labels={"index": "Time (min)", "value": "Temperature (°C)"},
-    )
-except (ImportError, ValueError):
-    print("Please install plotly to run this cell.")
-    fig = None
-fig</div>
-</div>
-</div>
 </div>
 </div>
 </div>
