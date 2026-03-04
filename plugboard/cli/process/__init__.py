@@ -13,7 +13,7 @@ from typing_extensions import Annotated
 
 from plugboard.diagram import MermaidDiagram
 from plugboard.process import Process, ProcessBuilder
-from plugboard.schemas import ConfigSpec
+from plugboard.schemas import ConfigSpec, validate_process
 from plugboard.tune import Tuner
 from plugboard.utils import add_sys_path, run_coro_sync
 
@@ -164,3 +164,31 @@ def diagram(
     diagram = MermaidDiagram.from_process(process)
     md = Markdown(f"```\n{diagram.diagram}\n```\n[Editable diagram]({diagram.url}) (external link)")
     print(md)
+
+
+@app.command()
+def validate(
+    config: Annotated[
+        Path,
+        typer.Argument(
+            exists=True,
+            file_okay=True,
+            dir_okay=False,
+            writable=False,
+            readable=True,
+            resolve_path=True,
+            help="Path to the YAML configuration file.",
+        ),
+    ],
+) -> None:
+    """Validate a Plugboard process configuration."""
+    config_spec = _read_yaml(config)
+    with add_sys_path(config.parent):
+        process = _build_process(config_spec)
+    errors = validate_process(process.dict())
+    if errors:
+        stderr.print("[red]Validation failed:[/red]")
+        for error in errors:
+            stderr.print(f"  • {error}")
+        raise typer.Exit(1)
+    print("[green]Validation passed[/green]")
