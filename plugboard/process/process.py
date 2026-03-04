@@ -111,7 +111,8 @@ class Process(ExportMixin, ABC):
         """Performs component initialisation actions."""
         errors = validate_process(self.dict())
         if errors:
-            raise ValidationError("\n".join(errors))
+            msg = "Process validation failed:\n" + "\n".join(errors)
+            raise ValidationError(msg)
         self._is_initialised = True
         await self._set_status(Status.INIT)
 
