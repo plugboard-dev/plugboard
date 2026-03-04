@@ -14,6 +14,7 @@ from ._validation import (
     validate_all_inputs_connected,
     validate_input_events,
     validate_no_unresolved_cycles,
+    validate_process,
 )
 from .component import ComponentArgsDict, ComponentArgsSpec, ComponentSpec, Resource
 from .config import ConfigSpec, ProcessConfigSpec
@@ -95,4 +96,5 @@ __all__ = [
     "validate_all_inputs_connected",
     "validate_input_events",
     "validate_no_unresolved_cycles",
+    "validate_process",
 ]

@@ -1,9 +1,12 @@
-"""Validation utilities for `ProcessSpec` objects.
+"""Validation utilities for process topology.
 
 Provides functions to validate process topology including:
 - Checking that all component inputs are connected
 - Checking that input events have matching output event producers
 - Checking for circular connections that require initial values
+
+All validators accept the output of ``process.dict()`` or the relevant
+sub-structures thereof.
 """
 
 from __future__ import annotations
@@ -14,29 +17,25 @@ import typing as _t
 from ._graph import simple_cycles
 
 
-if _t.TYPE_CHECKING:
-    from .component import ComponentSpec
-    from .connector import ConnectorSpec
-
-
 def _build_component_graph(
-    connectors: list[ConnectorSpec],
+    connectors: dict[str, dict[str, _t.Any]],
 ) -> dict[str, set[str]]:
-    """Build a directed graph of component connections from connector specs.
+    """Build a directed graph of component connections from connector dicts.
 
     Args:
-        connectors: List of connector specifications.
+        connectors: Dictionary mapping connector IDs to connector dicts,
+            as returned by ``process.dict()["connectors"]``.
 
     Returns:
         A dictionary mapping source component names to sets of target component names.
     """
     graph: dict[str, set[str]] = defaultdict(set)
-    for conn in connectors:
-        source_entity = conn.source.entity
-        target_entity = conn.target.entity
+    for conn_info in connectors.values():
+        spec = conn_info["spec"]
+        source_entity = spec["source"]["entity"]
+        target_entity = spec["target"]["entity"]
         if source_entity != target_entity:
             graph[source_entity].add(target_entity)
-            # Ensure target is in graph even with no outgoing edges
             if target_entity not in graph:
                 graph[target_entity] = set()
     return dict(graph)
@@ -44,50 +43,53 @@ def _build_component_graph(
 
 def _get_edges_in_cycle(
     cycle: list[str],
-    connectors: list[ConnectorSpec],
-) -> list[ConnectorSpec]:
-    """Get all connector specs that form edges within a cycle.
+    connectors: dict[str, dict[str, _t.Any]],
+) -> list[dict[str, _t.Any]]:
+    """Get all connector spec dicts that form edges within a cycle.
 
     Args:
         cycle: List of component names forming a cycle.
-        connectors: All connector specifications.
+        connectors: Dictionary mapping connector IDs to connector dicts.
 
     Returns:
-        List of connector specs that are part of the cycle.
+        List of connector spec dicts that are part of the cycle.
     """
-    cycle_edges: list[ConnectorSpec] = []
+    cycle_edges: list[dict[str, _t.Any]] = []
     for i, node in enumerate(cycle):
         next_node = cycle[(i + 1) % len(cycle)]
-        for conn in connectors:
-            if conn.source.entity == node and conn.target.entity == next_node:
-                cycle_edges.append(conn)
+        for conn_info in connectors.values():
+            spec = conn_info["spec"]
+            if spec["source"]["entity"] == node and spec["target"]["entity"] == next_node:
+                cycle_edges.append(spec)
     return cycle_edges
 
 
 def validate_all_inputs_connected(
-    components: dict[str, dict[str, _t.Any]],
-    connectors: list[ConnectorSpec],
+    process_dict: dict[str, _t.Any],
 ) -> list[str]:
     """Check that all component inputs are connected.
 
     Args:
-        components: Dictionary mapping component names to their IO info.
-            Each value must have an ``"inputs"`` key with a list of input field names.
-        connectors: List of connector specifications.
+        process_dict: The output of ``process.dict()``.  Uses the ``"components"``
+            and ``"connectors"`` keys.
 
     Returns:
         List of error messages for unconnected inputs.
     """
-    # Build mapping of which component inputs are connected
+    components: dict[str, dict[str, _t.Any]] = process_dict["components"]
+    connectors: dict[str, dict[str, _t.Any]] = process_dict["connectors"]
+
     connected_inputs: dict[str, set[str]] = defaultdict(set)
-    for conn in connectors:
-        target_name = conn.target.entity
-        target_field = conn.target.descriptor
+    for conn_info in connectors.values():
+        spec = conn_info["spec"]
+        target_name = spec["target"]["entity"]
+        target_field = spec["target"]["descriptor"]
         connected_inputs[target_name].add(target_field)
 
     errors: list[str] = []
-    for comp_name, comp_info in components.items():
-        all_inputs = set(comp_info.get("inputs", []))
+    for comp_name, comp_data in components.items():
+        io = comp_data.get("io", {})
+        all_inputs = set(io.get("inputs", []))
         connected = connected_inputs.get(comp_name, set())
         unconnected = all_inputs - connected
         if unconnected:
@@ -96,26 +98,27 @@ def validate_all_inputs_connected(
 
 
 def validate_input_events(
-    components: dict[str, dict[str, _t.Any]],
+    process_dict: dict[str, _t.Any],
 ) -> list[str]:
     """Check that all components with input events have a matching output event producer.
 
     Args:
-        components: Dictionary mapping component names to their IO info.
-            Each value must have ``"input_events"`` and ``"output_events"`` keys
-            with lists of event type strings.
+        process_dict: The output of ``process.dict()``.  Uses the ``"components"`` key.
 
     Returns:
         List of error messages for unmatched input events.
     """
-    # Collect all output event types across all components
+    components: dict[str, dict[str, _t.Any]] = process_dict["components"]
+
     all_output_events: set[str] = set()
-    for comp_info in components.values():
-        all_output_events.update(comp_info.get("output_events", []))
+    for comp_data in components.values():
+        io = comp_data.get("io", {})
+        all_output_events.update(io.get("output_events", []))
 
     errors: list[str] = []
-    for comp_name, comp_info in components.items():
-        input_events = set(comp_info.get("input_events", []))
+    for comp_name, comp_data in components.items():
+        io = comp_data.get("io", {})
+        input_events = set(io.get("input_events", []))
         unmatched = input_events - all_output_events
         if unmatched:
             errors.append(
@@ -125,8 +128,7 @@ def validate_input_events(
 
 
 def validate_no_unresolved_cycles(
-    components: list[ComponentSpec],
-    connectors: list[ConnectorSpec],
+    process_dict: dict[str, _t.Any],
 ) -> list[str]:
     """Check for circular connections that are not resolved by initial values.
 
@@ -134,30 +136,34 @@ def validate_no_unresolved_cycles(
     appropriate component input within the loop.
 
     Args:
-        components: List of component specifications.
-        connectors: List of connector specifications.
+        process_dict: The output of ``process.dict()``.  Uses the ``"components"``
+            and ``"connectors"`` keys.
 
     Returns:
         List of error messages for unresolved circular connections.
     """
+    components: dict[str, dict[str, _t.Any]] = process_dict["components"]
+    connectors: dict[str, dict[str, _t.Any]] = process_dict["connectors"]
+
     graph = _build_component_graph(connectors)
     if not graph:
         return []
 
     # Build lookup of component initial_values by name
     initial_values_by_comp: dict[str, set[str]] = {}
-    for comp in components:
-        if comp.args.initial_values:
-            initial_values_by_comp[comp.args.name] = set(comp.args.initial_values.keys())
+    for comp_name, comp_data in components.items():
+        io = comp_data.get("io", {})
+        iv = io.get("initial_values", {})
+        if iv:
+            initial_values_by_comp[comp_name] = set(iv.keys())
 
     errors: list[str] = []
     for cycle in simple_cycles(graph):
-        # Check if any edge in the cycle targets a component input with initial_values
         cycle_edges = _get_edges_in_cycle(cycle, connectors)
         cycle_resolved = False
         for edge in cycle_edges:
-            target_comp = edge.target.entity
-            target_field = edge.target.descriptor
+            target_comp = edge["target"]["entity"]
+            target_field = edge["target"]["descriptor"]
             if target_comp in initial_values_by_comp:
                 if target_field in initial_values_by_comp[target_comp]:
                     cycle_resolved = True
@@ -168,4 +174,24 @@ def validate_no_unresolved_cycles(
                 f"Circular connection detected without initial values: {cycle_str}. "
                 f"Set initial_values on a component input within the loop to resolve."
             )
+    return errors
+
+
+def validate_process(process_dict: dict[str, _t.Any]) -> list[str]:
+    """Run all topology validation checks on a process.
+
+    This is the main validation entry point.  It accepts the output of
+    ``process.dict()`` and runs every available check, returning a
+    combined list of error messages.
+
+    Args:
+        process_dict: The output of ``process.dict()``.
+
+    Returns:
+        List of error messages.  An empty list indicates a valid topology.
+    """
+    errors: list[str] = []
+    errors.extend(validate_all_inputs_connected(process_dict))
+    errors.extend(validate_input_events(process_dict))
+    errors.extend(validate_no_unresolved_cycles(process_dict))
     return errors

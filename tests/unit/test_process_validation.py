@@ -1,12 +1,14 @@
 """Tests for process topology validation."""
 
+import typing as _t
+
 from plugboard_schemas import (
-    ProcessSpec,
     validate_all_inputs_connected,
     validate_input_events,
+    validate_no_unresolved_cycles,
+    validate_process,
 )
 from plugboard_schemas._graph import simple_cycles
-import pytest
 
 
 # ---------------------------------------------------------------------------
@@ -83,6 +85,67 @@ class TestSimpleCycles:
 
 
 # ---------------------------------------------------------------------------
+# Helpers for building process.dict()-style data structures
+# ---------------------------------------------------------------------------
+
+
+def _make_component(
+    name: str,
+    inputs: list[str] | None = None,
+    outputs: list[str] | None = None,
+    input_events: list[str] | None = None,
+    output_events: list[str] | None = None,
+    initial_values: dict[str, _t.Any] | None = None,
+) -> dict[str, _t.Any]:
+    """Build a component dict matching process.dict() format."""
+    return {
+        "id": name,
+        "name": name,
+        "status": "created",
+        "io": {
+            "namespace": name,
+            "inputs": inputs or [],
+            "outputs": outputs or [],
+            "input_events": input_events or [],
+            "output_events": output_events or [],
+            "initial_values": initial_values or {},
+        },
+    }
+
+
+def _make_connector(source: str, target: str) -> dict[str, _t.Any]:
+    """Build a connector dict matching process.dict() format."""
+    src_entity, src_desc = source.split(".")
+    tgt_entity, tgt_desc = target.split(".")
+    conn_id = f"{source}..{target}"
+    return {
+        conn_id: {
+            "id": conn_id,
+            "spec": {
+                "source": {"entity": src_entity, "descriptor": src_desc},
+                "target": {"entity": tgt_entity, "descriptor": tgt_desc},
+                "mode": "pipeline",
+            },
+        }
+    }
+
+
+def _make_process_dict(
+    components: dict[str, dict[str, _t.Any]],
+    connectors: dict[str, dict[str, _t.Any]] | None = None,
+) -> dict[str, _t.Any]:
+    """Build a process dict matching process.dict() format."""
+    return {
+        "id": "test_process",
+        "name": "test_process",
+        "status": "created",
+        "components": components,
+        "connectors": connectors or {},
+        "parameters": {},
+    }
+
+
+# ---------------------------------------------------------------------------
 # Tests for validate_no_unresolved_cycles
 # ---------------------------------------------------------------------------
 
@@ -90,196 +153,159 @@ class TestSimpleCycles:
 class TestValidateNoUnresolvedCycles:
     """Tests for circular connection validation."""
 
-    @staticmethod
-    def _make_component(name: str, type_: str = "some.Component", **kwargs: object) -> dict:
-        args: dict = {"name": name}
-        args.update(kwargs)
-        return {"type": type_, "args": args}
-
-    @staticmethod
-    def _make_connector(source: str, target: str) -> dict:
-        return {"source": source, "target": target}
-
     def test_no_cycles_passes(self) -> None:
         """Linear topology passes validation."""
-        spec = ProcessSpec.model_validate(
-            {
-                "args": {
-                    "components": [
-                        self._make_component("a"),
-                        self._make_component("b"),
-                        self._make_component("c"),
-                    ],
-                    "connectors": [
-                        self._make_connector("a.out", "b.in_1"),
-                        self._make_connector("b.out", "c.in_1"),
-                    ],
-                }
-            }
+        connectors = {**_make_connector("a.out", "b.in_1"), **_make_connector("b.out", "c.in_1")}
+        pd = _make_process_dict(
+            components={
+                "a": _make_component("a", outputs=["out"]),
+                "b": _make_component("b", inputs=["in_1"], outputs=["out"]),
+                "c": _make_component("c", inputs=["in_1"]),
+            },
+            connectors=connectors,
         )
-        assert spec is not None
+        errors = validate_no_unresolved_cycles(pd)
+        assert errors == []
 
     def test_cycle_without_initial_values_fails(self) -> None:
-        """Cycle without initial_values raises ValueError."""
-        with pytest.raises(ValueError, match="Circular connection detected"):
-            ProcessSpec.model_validate(
-                {
-                    "args": {
-                        "components": [
-                            self._make_component("a"),
-                            self._make_component("b"),
-                        ],
-                        "connectors": [
-                            self._make_connector("a.out", "b.in_1"),
-                            self._make_connector("b.out", "a.in_1"),
-                        ],
-                    }
-                }
-            )
+        """Cycle without initial_values returns errors."""
+        connectors = {**_make_connector("a.out", "b.in_1"), **_make_connector("b.out", "a.in_1")}
+        pd = _make_process_dict(
+            components={
+                "a": _make_component("a", inputs=["in_1"], outputs=["out"]),
+                "b": _make_component("b", inputs=["in_1"], outputs=["out"]),
+            },
+            connectors=connectors,
+        )
+        errors = validate_no_unresolved_cycles(pd)
+        assert len(errors) == 1
+        assert "Circular connection detected" in errors[0]
 
     def test_cycle_with_initial_values_passes(self) -> None:
         """Cycle with initial_values on a target input passes."""
-        spec = ProcessSpec.model_validate(
-            {
-                "args": {
-                    "components": [
-                        self._make_component("a", initial_values={"in_1": [0]}),
-                        self._make_component("b"),
-                    ],
-                    "connectors": [
-                        self._make_connector("a.out", "b.in_1"),
-                        self._make_connector("b.out", "a.in_1"),
-                    ],
-                }
-            }
+        connectors = {**_make_connector("a.out", "b.in_1"), **_make_connector("b.out", "a.in_1")}
+        pd = _make_process_dict(
+            components={
+                "a": _make_component(
+                    "a", inputs=["in_1"], outputs=["out"], initial_values={"in_1": [0]}
+                ),
+                "b": _make_component("b", inputs=["in_1"], outputs=["out"]),
+            },
+            connectors=connectors,
         )
-        assert spec is not None
+        errors = validate_no_unresolved_cycles(pd)
+        assert errors == []
 
     def test_cycle_with_initial_values_on_other_field_fails(self) -> None:
         """Cycle with initial_values on an unrelated field still fails."""
-        with pytest.raises(ValueError, match="Circular connection detected"):
-            ProcessSpec.model_validate(
-                {
-                    "args": {
-                        "components": [
-                            self._make_component("a", initial_values={"other": [0]}),
-                            self._make_component("b"),
-                        ],
-                        "connectors": [
-                            self._make_connector("a.out", "b.in_1"),
-                            self._make_connector("b.out", "a.in_1"),
-                        ],
-                    }
-                }
-            )
+        connectors = {**_make_connector("a.out", "b.in_1"), **_make_connector("b.out", "a.in_1")}
+        pd = _make_process_dict(
+            components={
+                "a": _make_component(
+                    "a", inputs=["in_1"], outputs=["out"], initial_values={"other": [0]}
+                ),
+                "b": _make_component("b", inputs=["in_1"], outputs=["out"]),
+            },
+            connectors=connectors,
+        )
+        errors = validate_no_unresolved_cycles(pd)
+        assert len(errors) == 1
+        assert "Circular connection detected" in errors[0]
 
     def test_three_node_cycle_without_initial_values_fails(self) -> None:
-        """Three-node cycle without initial_values raises ValueError."""
-        with pytest.raises(ValueError, match="Circular connection detected"):
-            ProcessSpec.model_validate(
-                {
-                    "args": {
-                        "components": [
-                            self._make_component("a"),
-                            self._make_component("b"),
-                            self._make_component("c"),
-                        ],
-                        "connectors": [
-                            self._make_connector("a.out", "b.in_1"),
-                            self._make_connector("b.out", "c.in_1"),
-                            self._make_connector("c.out", "a.in_1"),
-                        ],
-                    }
-                }
-            )
+        """Three-node cycle without initial_values returns errors."""
+        connectors = {
+            **_make_connector("a.out", "b.in_1"),
+            **_make_connector("b.out", "c.in_1"),
+            **_make_connector("c.out", "a.in_1"),
+        }
+        pd = _make_process_dict(
+            components={
+                "a": _make_component("a", inputs=["in_1"], outputs=["out"]),
+                "b": _make_component("b", inputs=["in_1"], outputs=["out"]),
+                "c": _make_component("c", inputs=["in_1"], outputs=["out"]),
+            },
+            connectors=connectors,
+        )
+        errors = validate_no_unresolved_cycles(pd)
+        assert len(errors) == 1
+        assert "Circular connection detected" in errors[0]
 
     def test_three_node_cycle_with_initial_values_passes(self) -> None:
         """Three-node cycle with initial_values on any target input passes."""
-        spec = ProcessSpec.model_validate(
-            {
-                "args": {
-                    "components": [
-                        self._make_component("a"),
-                        self._make_component("b", initial_values={"in_1": [0]}),
-                        self._make_component("c"),
-                    ],
-                    "connectors": [
-                        self._make_connector("a.out", "b.in_1"),
-                        self._make_connector("b.out", "c.in_1"),
-                        self._make_connector("c.out", "a.in_1"),
-                    ],
-                }
-            }
+        connectors = {
+            **_make_connector("a.out", "b.in_1"),
+            **_make_connector("b.out", "c.in_1"),
+            **_make_connector("c.out", "a.in_1"),
+        }
+        pd = _make_process_dict(
+            components={
+                "a": _make_component("a", inputs=["in_1"], outputs=["out"]),
+                "b": _make_component(
+                    "b", inputs=["in_1"], outputs=["out"], initial_values={"in_1": [0]}
+                ),
+                "c": _make_component("c", inputs=["in_1"], outputs=["out"]),
+            },
+            connectors=connectors,
         )
-        assert spec is not None
+        errors = validate_no_unresolved_cycles(pd)
+        assert errors == []
 
     def test_no_connectors_passes(self) -> None:
         """Process with no connectors passes validation."""
-        spec = ProcessSpec.model_validate(
-            {
-                "args": {
-                    "components": [self._make_component("a")],
-                }
-            }
+        pd = _make_process_dict(
+            components={"a": _make_component("a")},
         )
-        assert spec is not None
+        errors = validate_no_unresolved_cycles(pd)
+        assert errors == []
 
 
 # ---------------------------------------------------------------------------
-# Tests for validate_all_inputs_connected (runtime utility)
+# Tests for validate_all_inputs_connected
 # ---------------------------------------------------------------------------
 
 
 class TestValidateAllInputsConnected:
     """Tests for the all-inputs-connected validation utility."""
 
-    @staticmethod
-    def _conn(source: str, target: str) -> dict:
-        return {"source": source, "target": target}
-
     def test_all_connected(self) -> None:
         """Test that validation passes when all inputs are connected."""
-        from typing import Any
-
-        from plugboard_schemas import ConnectorSpec
-
-        components: dict[str, dict[str, Any]] = {
-            "a": {"inputs": []},
-            "b": {"inputs": ["in_1"]},
-        }
-        connectors = [ConnectorSpec.model_validate(self._conn("a.out", "b.in_1"))]
-        errors = validate_all_inputs_connected(components, connectors)
+        connectors = _make_connector("a.out", "b.in_1")
+        pd = _make_process_dict(
+            components={
+                "a": _make_component("a", outputs=["out"]),
+                "b": _make_component("b", inputs=["in_1"]),
+            },
+            connectors=connectors,
+        )
+        errors = validate_all_inputs_connected(pd)
         assert errors == []
 
     def test_missing_input(self) -> None:
         """Test that validation fails when an input is not connected."""
-        from typing import Any
-
-        from plugboard_schemas import ConnectorSpec
-
-        components: dict[str, dict[str, Any]] = {
-            "a": {"inputs": []},
-            "b": {"inputs": ["in_1", "in_2"]},
-        }
-        connectors = [ConnectorSpec.model_validate(self._conn("a.out", "b.in_1"))]
-        errors = validate_all_inputs_connected(components, connectors)
+        connectors = _make_connector("a.out", "b.in_1")
+        pd = _make_process_dict(
+            components={
+                "a": _make_component("a", outputs=["out"]),
+                "b": _make_component("b", inputs=["in_1", "in_2"]),
+            },
+            connectors=connectors,
+        )
+        errors = validate_all_inputs_connected(pd)
         assert len(errors) == 1
         assert "in_2" in errors[0]
 
     def test_no_inputs_no_errors(self) -> None:
         """Test that validation passes when components have no inputs."""
-        from typing import Any
-
-        from plugboard_schemas import ConnectorSpec
-
-        components: dict[str, dict[str, Any]] = {"a": {"inputs": []}}
-        connectors: list[ConnectorSpec] = []
-        errors = validate_all_inputs_connected(components, connectors)
+        pd = _make_process_dict(
+            components={"a": _make_component("a")},
+        )
+        errors = validate_all_inputs_connected(pd)
         assert errors == []
 
 
 # ---------------------------------------------------------------------------
-# Tests for validate_input_events (runtime utility)
+# Tests for validate_input_events
 # ---------------------------------------------------------------------------
 
 
@@ -288,44 +314,75 @@ class TestValidateInputEvents:
 
     def test_matched_events(self) -> None:
         """Test that validation passes when all input events have producers."""
-        from typing import Any
-
-        components: dict[str, dict[str, Any]] = {
-            "clock": {"input_events": [], "output_events": ["tick"]},
-            "ctrl": {"input_events": ["tick"], "output_events": []},
-        }
-        errors = validate_input_events(components)
+        pd = _make_process_dict(
+            components={
+                "clock": _make_component("clock", output_events=["tick"]),
+                "ctrl": _make_component("ctrl", input_events=["tick"]),
+            },
+        )
+        errors = validate_input_events(pd)
         assert errors == []
 
     def test_unmatched_event(self) -> None:
         """Test that validation fails when input events have no producer."""
-        from typing import Any
-
-        components: dict[str, dict[str, Any]] = {
-            "ctrl": {"input_events": ["tick"], "output_events": []},
-        }
-        errors = validate_input_events(components)
+        pd = _make_process_dict(
+            components={
+                "ctrl": _make_component("ctrl", input_events=["tick"]),
+            },
+        )
+        errors = validate_input_events(pd)
         assert len(errors) == 1
         assert "tick" in errors[0]
 
     def test_no_events(self) -> None:
         """Test that validation passes when components have no events."""
-        from typing import Any
-
-        components: dict[str, dict[str, Any]] = {
-            "a": {"input_events": [], "output_events": []},
-        }
-        errors = validate_input_events(components)
+        pd = _make_process_dict(
+            components={"a": _make_component("a")},
+        )
+        errors = validate_input_events(pd)
         assert errors == []
 
     def test_multiple_unmatched(self) -> None:
         """Test that validation correctly identifies unmatched events."""
-        from typing import Any
-
-        components: dict[str, dict[str, Any]] = {
-            "a": {"input_events": ["evt_x", "evt_y"], "output_events": []},
-            "b": {"input_events": [], "output_events": ["evt_x"]},
-        }
-        errors = validate_input_events(components)
+        pd = _make_process_dict(
+            components={
+                "a": _make_component("a", input_events=["evt_x", "evt_y"]),
+                "b": _make_component("b", output_events=["evt_x"]),
+            },
+        )
+        errors = validate_input_events(pd)
         assert len(errors) == 1
         assert "evt_y" in errors[0]
+
+
+# ---------------------------------------------------------------------------
+# Tests for validate_process (combined validator)
+# ---------------------------------------------------------------------------
+
+
+class TestValidateProcess:
+    """Tests for the combined validate_process utility."""
+
+    def test_valid_process(self) -> None:
+        """Test that a valid process returns no errors."""
+        connectors = _make_connector("a.out_1", "b.in_1")
+        pd = _make_process_dict(
+            components={
+                "a": _make_component("a", outputs=["out_1"]),
+                "b": _make_component("b", inputs=["in_1"]),
+            },
+            connectors=connectors,
+        )
+        errors = validate_process(pd)
+        assert errors == []
+
+    def test_multiple_errors(self) -> None:
+        """Test that multiple validation errors are collected."""
+        pd = _make_process_dict(
+            components={
+                "a": _make_component("a", inputs=["in_1"], input_events=["missing_evt"]),
+            },
+        )
+        errors = validate_process(pd)
+        # Should have at least: unconnected input + unmatched event
+        assert len(errors) >= 2
