@@ -1,24 +1,6 @@
-# AI Agent Instructions for Plugboard Examples
+# AI Agent Instructions for Plugboard Models
 
-This document provides guidelines for AI agents working with Plugboard example code, demonstrations, and tutorials.
-
-## Purpose
-
-These examples demonstrate how to use Plugboard to model and simulate complex processes. Help users build intuitive, well-documented examples that showcase Plugboard's capabilities.
-
-## Example Categories
-
-### Tutorials (`tutorials/`)
-
-Step-by-step learning materials for new users. Focus on:
-- Clear explanations of concepts.
-- Progressive complexity.
-- Runnable code with expected outputs.
-- Markdown documentation alongside code. You can delegate to the `docs` agent to make these updates.
-
-### Demos (`demos/`)
-
-Practical applications are organized by domain into folders.
+This document provides guidelines for AI agents working with specific models implemented in Plugboard.
 
 ## Creating a Plugboard model
 
