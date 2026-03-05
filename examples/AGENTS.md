@@ -226,28 +226,6 @@ Later, load and run via CLI
 plugboard process run my-model.yaml
 ```
 
-## Jupyter Notebooks
-
-Use the following guidelines when creating demo notebooks:
-
-1. **Structure**
-   - Title markdown cell in the same format as the other notebooks, including badges to run on Github/Colab
-   - Clear markdown sections
-   - Code cells with explanations
-   - Visualizations of results
-   - Summary of findings
-
-2. **Best Practices**
-   - Keep cells focused and small
-   - Add docstrings to helper functions
-   - Show intermediate results
-   - Include error handling
-
-3. **Output**
-   - Clear cell output before committing
-   - Generate plots where helpful
-   - Provide interpretation of results
-
 ## Resources
 
 - **Library Components**: `plugboard.library`
