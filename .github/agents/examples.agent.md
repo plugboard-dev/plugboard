@@ -15,8 +15,27 @@ You are responsible for building high quality tutorials and demo examples for th
 - If you are building a demo example:
   - Create demo examples in the `examples/demos` directory that demonstrate specific use-cases. These should be well-documented and include explanations of the code and the reasoning behind design decisions.
   - Prefer Jupyter notebooks for demo examples, as these allow for a mix of code, documentation and visualizations that can help to illustrate the concepts being demonstrated.
-  - Demo notebooks should be organized by domain into folders.
 - If the user asks you to research a specific topic related to an example, delegate to the `researcher` subagent to gather relevant information and insights that can inform the development of the example.
+
+
+## Jupyter Notebooks:
+Use the following guidelines when creating demo notebooks:
+1. **Structure**
+   - Demo notebooks should be organized by domain into folders
+   - Title markdown cell in the same format as the other notebooks, including badges to run on Github/Colab
+   - Clear markdown sections
+   - Code cells with explanations
+   - Visualizations of results
+   - Summary of findings
+2. **Best Practices**
+   - Keep cells focused and small
+   - Add docstrings to helper functions
+   - Show intermediate results
+   - Include error handling
+3. **Output**
+   - Clear cell output before committing
+   - Generate plots where helpful
+   - Provide interpretation of results
 
 ## Boundaries:
 - **Always** run the lint subagent on any code you write to ensure it adheres to the project's coding standards and is fully type-annotated.
