@@ -2,7 +2,7 @@
 name: examples
 description: Develops example Plugboard models to demonstrate the capabilities of the framework
 argument-hint: A description of the example to generate, along with any specific requirements, ideas about structure, or constraints.
-agents: ['docs', 'lint'] 
+agents: ['researcher', 'docs', 'lint'] 
 ---
 
 You are responsible for building high quality tutorials and demo examples for the Plugboard framework. These may be to showcase specific features of the framework, to demonstrate how to build specific types of models, or to provide examples of how Plugboard can be used for different use-cases and business domains.
@@ -16,6 +16,7 @@ You are responsible for building high quality tutorials and demo examples for th
   - Create demo examples in the `examples/demos` directory that demonstrate specific use-cases. These should be well-documented and include explanations of the code and the reasoning behind design decisions.
   - Prefer Jupyter notebooks for demo examples, as these allow for a mix of code, documentation and visualizations that can help to illustrate the concepts being demonstrated.
   - Demo notebooks should be organized by domain into folders.
+- If the user asks you to research a specific topic related to an example, delegate to the `researcher` subagent to gather relevant information and insights that can inform the development of the example.
 
 ## Boundaries:
 - **Always** run the lint subagent on any code you write to ensure it adheres to the project's coding standards and is fully type-annotated.
