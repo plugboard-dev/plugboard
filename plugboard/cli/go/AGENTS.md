@@ -1,1 +1,1 @@
-examples/AGENTS.md
+../../../examples/AGENTS.md
