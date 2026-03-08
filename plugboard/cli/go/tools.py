@@ -3,9 +3,9 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Callable
+import typing as _t
 
-from copilot import define_tool
+from copilot import Tool, define_tool
 import msgspec
 from pydantic import BaseModel, Field
 
@@ -43,7 +43,7 @@ def _build_process(config: ConfigSpec) -> Process:
     return ProcessBuilder.build(config.plugboard.process)
 
 
-def create_run_model_tool() -> object:
+def create_run_model_tool() -> Tool:
     """Create the run_model tool for Copilot."""
 
     @define_tool(
@@ -76,8 +76,8 @@ def create_run_model_tool() -> object:
 
 
 def create_mermaid_diagram_tool(
-    on_url_generated: Callable[[str], None] | None = None,
-) -> object:
+    on_url_generated: _t.Callable[[str], None] | None = None,
+) -> Tool:
     """Create the mermaid_diagram tool for Copilot.
 
     Args:

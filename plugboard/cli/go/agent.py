@@ -6,7 +6,8 @@ from importlib import resources
 from pathlib import Path
 import typing as _t
 
-from copilot import CopilotClient, CopilotSession, PermissionHandler
+from copilot import CopilotClient, CopilotSession, PermissionHandler, SessionConfig
+from copilot.types import UserInputRequest, UserInputResponse
 
 from plugboard.cli.go.tools import (
     create_mermaid_diagram_tool,
@@ -49,13 +50,26 @@ def _load_system_prompt() -> str:
 class PlugboardAgent:
     """Manages the Copilot client and session for the Plugboard Go TUI."""
 
+    _PREFERRED_MODEL_PREFIXES = (
+        "gpt-5-mini",
+        "gpt-4.1",
+        "gpt",
+        "o3",
+        "o1",
+        "claude",
+    )
+
     def __init__(
         self,
         model: str,
         on_assistant_delta: _t.Callable[[str], None] | None = None,
         on_assistant_message: _t.Callable[[str], None] | None = None,
         on_tool_start: _t.Callable[[str], None] | None = None,
-        on_user_input_request: _t.Callable[[dict, dict], _t.Awaitable[dict]] | None = None,
+        on_user_input_request: _t.Callable[
+            [UserInputRequest, dict[str, str]],
+            _t.Awaitable[UserInputResponse],
+        ]
+        | None = None,
         on_mermaid_url: _t.Callable[[str], None] | None = None,
         on_idle: _t.Callable[[], None] | None = None,
     ) -> None:
@@ -78,6 +92,7 @@ class PlugboardAgent:
         """Start the Copilot client and create a session."""
         self._client = CopilotClient({"log_level": "error"})
         await self._client.start()
+        self._model = await self._resolve_model(self._model)
 
         system_prompt = _load_system_prompt()
 
@@ -86,21 +101,44 @@ class PlugboardAgent:
             create_mermaid_diagram_tool(on_url_generated=self._on_mermaid_url),
         ]
 
-        session_config: dict[str, _t.Any] = {
-            "model": self._model,
-            "streaming": True,
-            "tools": tools,
-            "system_message": {
+        session_config = SessionConfig(
+            model=self._model,
+            streaming=True,
+            tools=tools,
+            system_message={
                 "content": system_prompt,
             },
-            "on_permission_request": PermissionHandler.approve_all,
-        }
+            on_permission_request=PermissionHandler.approve_all,
+        )
 
         if self._on_user_input_request_cb is not None:
             session_config["on_user_input_request"] = self._on_user_input_request_cb
 
         self._session = await self._client.create_session(session_config)
         self._session.on(self._handle_event)
+
+    async def _resolve_model(self, requested_model: str) -> str:
+        """Resolve the requested model to an available preferred model."""
+        if self._client is None:
+            return requested_model
+
+        try:
+            models = await self._client.list_models()
+        except Exception:
+            return requested_model
+
+        model_ids = [model.id for model in models] if models else []
+        if not model_ids:
+            return requested_model
+        if requested_model in model_ids:
+            return requested_model
+
+        for prefix in self._PREFERRED_MODEL_PREFIXES:
+            for model_id in model_ids:
+                if model_id.startswith(prefix):
+                    return model_id
+
+        return model_ids[0]
 
     def _handle_event(self, event: _t.Any) -> None:
         """Route session events to callbacks."""
@@ -141,27 +179,8 @@ class PlugboardAgent:
     async def change_model(self, model: str) -> None:
         """Change the model by destroying and recreating the session."""
         self._model = model
-        if self._session is not None:
-            await self._session.destroy()
-        if self._client is not None:
-            system_prompt = _load_system_prompt()
-            tools = [
-                create_run_model_tool(),
-                create_mermaid_diagram_tool(on_url_generated=self._on_mermaid_url),
-            ]
-            session_config: dict[str, _t.Any] = {
-                "model": self._model,
-                "streaming": True,
-                "tools": tools,
-                "system_message": {
-                    "content": system_prompt,
-                },
-                "on_permission_request": PermissionHandler.approve_all,
-            }
-            if self._on_user_input_request_cb is not None:
-                session_config["on_user_input_request"] = self._on_user_input_request_cb
-            self._session = await self._client.create_session(session_config)
-            self._session.on(self._handle_event)
+        await self.stop()
+        await self.start()
 
     async def stop(self) -> None:
         """Clean up the Copilot client and session."""

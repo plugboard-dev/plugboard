@@ -15,7 +15,6 @@ from textual.message import Message
 from textual.reactive import reactive
 from textual.widgets import (
     DirectoryTree,
-    Footer,
     Header,
     Input,
     Markdown,
@@ -26,6 +25,27 @@ from textual.widgets.option_list import Option
 
 from plugboard import __version__
 from plugboard.cli.go.agent import PlugboardAgent
+from plugboard.utils.theme import PlugboardTheme as Theme
+
+
+if _t.TYPE_CHECKING:
+    from copilot.types import UserInputRequest
+
+from copilot.types import UserInputResponse
+
+
+def _theme_css(css: str) -> str:
+    """Substitute theme color placeholders into Textual CSS."""
+    return (
+        css.replace("__PB_BLUE__", Theme.PB_BLUE)
+        .replace("__PB_BLACK__", Theme.PB_BLACK)
+        .replace("__PB_GRAY__", Theme.PB_GRAY)
+        .replace("__PB_ACCENT1__", Theme.PB_ACCENT1)
+        .replace("__PB_ACCENT2__", Theme.PB_ACCENT2)
+        .replace("__PB_ACCENT3__", Theme.PB_ACCENT3)
+        .replace("__PB_WHITE__", Theme.PB_WHITE)
+        .replace("__PB_PINK__", Theme.PB_PINK)
+    )
 
 
 # -- Custom Messages ---------------------------------------------------------
@@ -89,27 +109,35 @@ class AgentStatus(Message):
 class ChatMessage(Static):
     """A single chat message displayed in the conversation."""
 
-    DEFAULT_CSS = """
+    DEFAULT_CSS = _theme_css("""
     ChatMessage {
-        padding: 1 2;
-        margin: 0 0 1 0;
+        padding: 0 2;
+        margin: 0;
     }
     ChatMessage.user {
-        background: #1C0F13;
-        border-left: thick #075D7A;
-        color: #F9F9F9;
+        background: __PB_BLACK__;
+        border-left: thick __PB_BLUE__;
+        color: __PB_WHITE__;
     }
     ChatMessage.assistant {
-        background: #0A3D4D;
-        border-left: thick #CC9C4A;
-        color: #F9F9F9;
+        background: __PB_ACCENT3__;
+        border-left: thick __PB_ACCENT1__;
+        color: __PB_WHITE__;
     }
     ChatMessage.system {
-        background: #1C0F13;
-        border-left: thick #49726A;
-        color: #C2C2C2;
+        background: __PB_BLACK__;
+        border-left: thick __PB_ACCENT3__;
+        color: __PB_GRAY__;
     }
-    """
+    ChatMessage .message-header {
+        margin: 0;
+        padding: 0;
+    }
+    ChatMessage .message-body {
+        margin: 0;
+        padding: 0;
+    }
+    """)
 
     def __init__(
         self,
@@ -119,8 +147,18 @@ class ChatMessage(Static):
     ) -> None:
         super().__init__(**kwargs)
         self._role = role
-        self._content = content
+        self._content: str = content.rstrip()
         self.add_class(role)
+
+    @property
+    def role(self) -> str:
+        """Return the message role."""
+        return self._role
+
+    @property
+    def content(self) -> str:
+        """Return the message content."""
+        return self._content
 
     def compose(self) -> ComposeResult:
         """Compose the chat message widget."""
@@ -138,7 +176,16 @@ class ChatMessage(Static):
 
     def append_content(self, delta: str) -> None:
         """Append streaming content to the message body."""
-        self._content += delta
+        self._content = f"{self._content}{delta}".rstrip()
+        try:
+            md = self.query_one(".message-body", Markdown)
+            md.update(self._content)
+        except NoMatches:
+            pass
+
+    def replace_content(self, content: str) -> None:
+        """Replace the message content."""
+        self._content = content.rstrip()
         try:
             md = self.query_one(".message-body", Markdown)
             md.update(self._content)
@@ -149,16 +196,16 @@ class ChatMessage(Static):
 class ModelSelector(Static):
     """Displays selected model and allows changing it."""
 
-    DEFAULT_CSS = """
+    DEFAULT_CSS = _theme_css("""
     ModelSelector {
         dock: top;
         height: 1;
         padding: 0 1;
-        background: #075D7A;
-        color: #F9F9F9;
+        background: __PB_BLUE__;
+        color: __PB_WHITE__;
         text-style: bold;
     }
-    """
+    """)
 
     model_name: reactive[str] = reactive("gpt-4o")
 
@@ -170,15 +217,14 @@ class ModelSelector(Static):
 class MermaidLink(Static):
     """Displays a link to the mermaid diagram."""
 
-    DEFAULT_CSS = """
+    DEFAULT_CSS = _theme_css("""
     MermaidLink {
-        dock: bottom;
-        height: 1;
+        height: auto;
         padding: 0 1;
-        background: #075D7A;
-        color: #F9F9F9;
+        background: __PB_BLUE__;
+        color: __PB_WHITE__;
     }
-    """
+    """)
 
     url: reactive[str] = reactive("")
 
@@ -189,13 +235,32 @@ class MermaidLink(Static):
         return "No diagram generated yet"
 
 
+class TitleBanner(Static):
+    """Displays the Plugboard title and version."""
+
+    DEFAULT_CSS = _theme_css("""
+    TitleBanner {
+        dock: top;
+        height: 4;
+        padding: 1 2 0 2;
+        background: __PB_BLUE__;
+        color: __PB_WHITE__;
+        content-align: center middle;
+    }
+    """)
+
+    def render(self) -> str:
+        """Render the title banner."""
+        return f"[bold {Theme.PB_ACCENT1}]P L U G B O A R D[/]\n[{Theme.PB_GRAY}]v{__version__}[/]"
+
+
 # -- Model Selection Screen --------------------------------------------------
 
 
 class ModelSelectionOverlay(VerticalScroll):
     """Overlay for selecting a model."""
 
-    DEFAULT_CSS = """
+    DEFAULT_CSS = _theme_css("""
     ModelSelectionOverlay {
         dock: top;
         layer: overlay;
@@ -203,11 +268,11 @@ class ModelSelectionOverlay(VerticalScroll):
         max-height: 20;
         margin: 3 5;
         padding: 1 2;
-        background: #1C0F13;
-        color: #F9F9F9;
-        border: thick #CC9C4A;
+        background: __PB_BLACK__;
+        color: __PB_WHITE__;
+        border: thick __PB_ACCENT1__;
     }
-    """
+    """)
 
     def compose(self) -> ComposeResult:
         """Compose the model selection overlay."""
@@ -239,31 +304,35 @@ class PlugboardGoApp(App[None]):
     TITLE = "Plugboard Go"
     SUB_TITLE = f"v{__version__}"
 
-    CSS = """
+    CSS = _theme_css("""
     Screen {
-        background: #1C0F13;
-        color: #F9F9F9;
+        background: __PB_BLACK__;
+        color: __PB_WHITE__;
     }
 
     Header {
-        background: #075D7A;
-        color: #F9F9F9;
-        border-bottom: solid #CC9C4A;
+        background: __PB_BLUE__;
+        color: __PB_WHITE__;
+        border-bottom: solid __PB_ACCENT1__;
     }
 
-    Footer {
-        background: #075D7A;
-        color: #F9F9F9;
-        border-top: solid #CC9C4A;
+    #shortcut-hint {
+        height: auto;
+        padding: 0 1;
+        background: __PB_BLUE__;
+        color: __PB_WHITE__;
+        border-top: solid __PB_ACCENT1__;
     }
 
     #title-banner {
         dock: top;
-        height: 3;
-        padding: 1 2;
-        background: #075D7A;
-        color: #F9F9F9;
+        height: 4;
+        padding: 1 2 0 2;
+        background: __PB_BLUE__;
+        color: __PB_WHITE__;
         text-align: center;
+        content-align: center middle;
+        text-style: bold;
     }
 
     #main-container {
@@ -274,7 +343,7 @@ class PlugboardGoApp(App[None]):
     #chat-panel {
         width: 3fr;
         height: 1fr;
-        background: #1C0F13;
+        background: __PB_BLACK__;
     }
 
     #sidebar {
@@ -282,38 +351,33 @@ class PlugboardGoApp(App[None]):
         min-width: 30;
         max-width: 50;
         height: 1fr;
-        border-left: thick #CC9C4A;
-        background: #0A3D4D;
+        border-left: thick __PB_ACCENT1__;
+        background: __PB_ACCENT3__;
     }
 
     #chat-scroll {
         height: 1fr;
-        background: #1C0F13;
+        background: __PB_BLACK__;
     }
 
     #chat-input {
-        dock: bottom;
         margin: 0 1;
-        border: solid #075D7A;
-    }
-
-    #chat-input Input {
-        background: #1C0F13;
-        border: solid #075D7A;
-        color: #F9F9F9;
+        background: __PB_BLACK__;
+        border: solid __PB_BLUE__;
+        color: __PB_WHITE__;
     }
 
     #file-tree-label {
         padding: 0 1;
         text-style: bold;
-        background: #075D7A;
-        color: #F9F9F9;
+        background: __PB_BLUE__;
+        color: __PB_WHITE__;
     }
 
     DirectoryTree {
         height: 1fr;
-        background: #0A3D4D;
-        color: #F9F9F9;
+        background: __PB_ACCENT3__;
+        color: __PB_WHITE__;
     }
 
     ModelSelectionOverlay {
@@ -323,7 +387,7 @@ class PlugboardGoApp(App[None]):
     ModelSelectionOverlay.visible {
         display: block;
     }
-    """
+    """)
 
     BINDINGS = [
         Binding(
@@ -347,7 +411,7 @@ class PlugboardGoApp(App[None]):
         self.model_name = model_name
         self._agent: PlugboardAgent | None = None
         self._current_assistant_msg: ChatMessage | None = None
-        self._user_input_future: asyncio.Future[dict] | None = None
+        self._user_input_future: asyncio.Future[UserInputResponse] | None = None
         self._waiting_for_user_input = False
 
     def compose(self) -> ComposeResult:
@@ -361,17 +425,17 @@ class PlugboardGoApp(App[None]):
             "plan the components, connections, and data flow."
         )
         yield Header()
-        # Title banner with Plugboard branding
-        yield Static(
-            f"[bold #CC9C4A]Plugboard[/]  [#C2C2C2]v{__version__}[/]",
-            id="title-banner",
-        )
+        yield TitleBanner(id="title-banner")
         yield ModelSelector(id="model-selector")
         with Horizontal(id="main-container"):
             with Vertical(id="chat-panel"):
                 with VerticalScroll(id="chat-scroll"):
                     yield ChatMessage(welcome, role="system")
                 yield MermaidLink(id="mermaid-link")
+                yield Static(
+                    "[bold]q[/bold] Quit   [bold]m[/bold] Change Model",
+                    id="shortcut-hint",
+                )
                 yield Input(
                     placeholder="Describe your model...",
                     id="chat-input",
@@ -383,7 +447,6 @@ class PlugboardGoApp(App[None]):
                     id="file-tree",
                 )
         yield ModelSelectionOverlay(id="model-overlay")
-        yield Footer()
 
     async def on_mount(self) -> None:
         """Start up the Copilot agent when the app mounts."""
@@ -410,6 +473,12 @@ class PlugboardGoApp(App[None]):
         )
         try:
             await self._agent.start()
+            self.model_name = self._agent.model
+            selector = self.query_one(
+                "#model-selector",
+                ModelSelector,
+            )
+            selector.model_name = self.model_name
             self.post_message(
                 AgentStatus("Connected to GitHub Copilot."),
             )
@@ -438,9 +507,9 @@ class PlugboardGoApp(App[None]):
 
     async def _handle_user_input(
         self,
-        request: dict,
-        invocation: dict,
-    ) -> dict:
+        request: UserInputRequest,
+        invocation: dict[str, str],
+    ) -> UserInputResponse:
         """Handle the agent asking the user a question."""
         question = request.get("question", "")
         choices = request.get("choices")
@@ -539,14 +608,28 @@ class PlugboardGoApp(App[None]):
         """Add a system message to the chat."""
         self._add_chat_message(text, role="system")
 
+    def _append_to_last_message(self, text: str, role: str) -> bool:
+        """Append text to the last message when the role matches."""
+        chat = self.query_one("#chat-scroll", VerticalScroll)
+        messages = list(chat.query(ChatMessage))
+        if not messages or messages[-1].role != role:
+            return False
+        last_message = messages[-1]
+        combined = f"{last_message.content}\n\n{text.rstrip()}".strip()
+        last_message.replace_content(combined)
+        last_message.scroll_visible()
+        return True
+
     def _add_chat_message(
         self,
         text: str,
         role: str = "assistant",
     ) -> None:
         """Add a message to the chat scroll area."""
+        if self._append_to_last_message(text, role):
+            return
         chat = self.query_one("#chat-scroll", VerticalScroll)
-        msg = ChatMessage(text, role=role)
+        msg = ChatMessage(text.rstrip(), role=role)
         chat.mount(msg)
         msg.scroll_visible()
 
@@ -566,7 +649,7 @@ class PlugboardGoApp(App[None]):
         if self._waiting_for_user_input and self._user_input_future is not None:
             self._add_chat_message(text, role="user")
             self._user_input_future.set_result(
-                {"answer": text, "wasFreeform": True},
+                UserInputResponse(answer=text, wasFreeform=True),
             )
             inp = self.query_one("#chat-input", Input)
             inp.placeholder = "Describe your model..."
@@ -600,6 +683,7 @@ class PlugboardGoApp(App[None]):
             overlay.remove_class("visible")
             return
         overlay.add_class("visible")
+        overlay.focus()
         self._fetch_models()
 
     @work(exclusive=True, thread=False)
@@ -630,6 +714,8 @@ class PlugboardGoApp(App[None]):
             ModelSelectionOverlay,
         )
         overlay.set_models(models, self.model_name)
+        option_list = overlay.query_one("#model-list", OptionList)
+        option_list.focus()
 
     @on(OptionList.OptionSelected, "#model-list")
     def handle_model_selected(
@@ -665,6 +751,7 @@ class PlugboardGoApp(App[None]):
                 self._add_system_message(
                     f"Now using model: **{model}**",
                 )
+                self.query_one("#chat-input", Input).focus()
             except Exception as e:
                 self._add_system_message(
                     f"Error changing model: {e}",

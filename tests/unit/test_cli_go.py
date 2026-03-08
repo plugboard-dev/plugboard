@@ -25,31 +25,24 @@ class TestGoCliEntrypoint:
 
     def test_go_missing_copilot_dependency(self) -> None:
         """Should exit with an error when the 'copilot' package is missing."""
-        with patch.dict("sys.modules", {"copilot": None}):
-            # Force reimport so the check re-runs
-            import importlib
-
-            import plugboard.cli.go as go_mod
-
-            importlib.reload(go_mod)
-
+        with patch(
+            "plugboard.utils.dependencies.find_spec",
+            side_effect=lambda name: object() if name == "textual" else None,
+        ):
             result = runner.invoke(app, ["go"])
             assert result.exit_code == 1
-            assert "Missing dependencies" in result.stdout
+            assert "Optional dependency copilot not found" in result.stdout
             assert "pip install plugboard[go]" in result.stdout
 
     def test_go_missing_textual_dependency(self) -> None:
         """Should exit with an error when the 'textual' package is missing."""
-        with patch.dict("sys.modules", {"textual": None}):
-            import importlib
-
-            import plugboard.cli.go as go_mod
-
-            importlib.reload(go_mod)
-
+        with patch(
+            "plugboard.utils.dependencies.find_spec",
+            side_effect=lambda name: None if name == "textual" else object(),
+        ):
             result = runner.invoke(app, ["go"])
             assert result.exit_code == 1
-            assert "Missing dependencies" in result.stdout
+            assert "Optional dependency textual not found" in result.stdout
 
     def test_go_default_model_option(self) -> None:
         """The --model flag should default to gpt-4o."""
@@ -200,6 +193,23 @@ class TestPlugboardAgent:
         assert agent._client is None
         assert agent._session is None
 
+    @pytest.mark.asyncio
+    async def test_change_model_restarts_agent(self) -> None:
+        """change_model() should restart the agent cleanly."""
+        from plugboard.cli.go.agent import PlugboardAgent
+
+        agent = PlugboardAgent(model="gpt-4o")
+
+        with (
+            patch.object(agent, "stop", new=AsyncMock()) as mock_stop,
+            patch.object(agent, "start", new=AsyncMock()) as mock_start,
+        ):
+            await agent.change_model("gpt-5")
+
+        assert agent.model == "gpt-5"
+        mock_stop.assert_awaited_once()
+        mock_start.assert_awaited_once()
+
 
 # ---------------------------------------------------------------------------
 # App widget / message tests
@@ -322,6 +332,16 @@ class TestPlugboardGoApp:
         app2 = PlugboardGoApp(model_name="claude-sonnet-4")
         assert app2.model_name == "claude-sonnet-4"
 
+    def test_app_uses_shared_theme_colors(self) -> None:
+        """App CSS should use the shared theme constants."""
+        from plugboard.cli.go.app import PlugboardGoApp
+        from plugboard.utils.theme import PlugboardTheme
+
+        app = PlugboardGoApp()
+        assert PlugboardTheme.PB_BLUE in app.CSS
+        assert PlugboardTheme.PB_WHITE in app.CSS
+        assert PlugboardTheme.PB_ACCENT1 in app.CSS
+
     def test_app_has_bindings(self) -> None:
         """App should have model-select and quit bindings."""
         from plugboard.cli.go.app import PlugboardGoApp
@@ -352,6 +372,8 @@ class TestPlugboardGoApp:
                 assert app.query_one("#mermaid-link") is not None
                 assert app.query_one("#file-tree") is not None
                 assert app.query_one("#model-overlay") is not None
+                assert app.query_one("#shortcut-hint") is not None
+                assert app.query_one("#title-banner") is not None
 
     @pytest.mark.asyncio
     async def test_app_handles_agent_status_message(self) -> None:
@@ -368,10 +390,33 @@ class TestPlugboardGoApp:
             async with app.run_test(size=(120, 40)) as pilot:  # noqa: F841
                 app.post_message(AgentStatus("Test status"))
                 await asyncio.sleep(0.1)
-                # The system message should have been added
+                # The status message should be merged into the existing
+                # welcome system message rather than creating a new card.
                 chat_scroll = app.query_one("#chat-scroll")
-                # At least the welcome message + status message
                 from plugboard.cli.go.app import ChatMessage
 
                 messages = chat_scroll.query(ChatMessage)
-                assert len(messages) >= 2
+                assert len(messages) == 1
+                assert "Test status" in messages.first()._content
+
+    @pytest.mark.asyncio
+    async def test_app_collapses_consecutive_user_messages(self) -> None:
+        """Consecutive messages with the same role should collapse."""
+        from plugboard.cli.go.app import ChatMessage, PlugboardGoApp
+
+        with patch(
+            "plugboard.cli.go.app.PlugboardAgent",
+        ) as mock_agent_cls:
+            mock_agent = AsyncMock()
+            mock_agent_cls.return_value = mock_agent
+
+            app = PlugboardGoApp(model_name="gpt-4o")
+            async with app.run_test(size=(120, 40)):
+                app._add_chat_message("First user line", role="user")
+                app._add_chat_message("Second user line", role="user")
+
+                chat_scroll = app.query_one("#chat-scroll")
+                messages = list(chat_scroll.query(ChatMessage))
+
+                assert messages[-1].role == "user"
+                assert "First user line\nSecond user line" in messages[-1]._content
