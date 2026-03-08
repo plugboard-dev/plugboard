@@ -15,7 +15,6 @@ from textual.message import Message
 from textual.reactive import reactive
 from textual.widgets import (
     DirectoryTree,
-    Header,
     Input,
     Markdown,
     OptionList,
@@ -193,25 +192,29 @@ class ChatMessage(Static):
             pass
 
 
-class ModelSelector(Static):
-    """Displays selected model and allows changing it."""
+class HeaderBanner(Static):
+    """Combined header showing title, model, and a blank line."""
 
     DEFAULT_CSS = _theme_css("""
-    ModelSelector {
+    HeaderBanner {
         dock: top;
-        height: 1;
+        height: 3;
         padding: 0 1;
         background: __PB_BLUE__;
         color: __PB_WHITE__;
-        text-style: bold;
+        content-align: center middle;
     }
     """)
 
     model_name: reactive[str] = reactive("gpt-4o")
 
     def render(self) -> str:
-        """Render the model selector."""
-        return f"Model: {self.model_name}  (press [bold]m[/bold] to change)"
+        """Render the header banner."""
+        return (
+            f"[bold {Theme.PB_ACCENT1}]PLUGBOARD[/] "
+            f"[{Theme.PB_GRAY}]v{__version__}[/]\n"
+            f"Model: {self.model_name}\n"
+        )
 
 
 class MermaidLink(Static):
@@ -235,23 +238,12 @@ class MermaidLink(Static):
         return "No diagram generated yet"
 
 
-class TitleBanner(Static):
-    """Displays the Plugboard title and version."""
+class FilteredDirectoryTree(DirectoryTree):
+    """A DirectoryTree that hides hidden (dot-prefixed) files."""
 
-    DEFAULT_CSS = _theme_css("""
-    TitleBanner {
-        dock: top;
-        height: 4;
-        padding: 1 2 0 2;
-        background: __PB_BLUE__;
-        color: __PB_WHITE__;
-        content-align: center middle;
-    }
-    """)
-
-    def render(self) -> str:
-        """Render the title banner."""
-        return f"[bold {Theme.PB_ACCENT1}]P L U G B O A R D[/]\n[{Theme.PB_GRAY}]v{__version__}[/]"
+    def filter_paths(self, paths: _t.Iterable[Path]) -> _t.Iterable[Path]:
+        """Filter out hidden files and directories."""
+        return [p for p in paths if not p.name.startswith(".")]
 
 
 # -- Model Selection Screen --------------------------------------------------
@@ -316,23 +308,12 @@ class PlugboardGoApp(App[None]):
         border-bottom: solid __PB_ACCENT1__;
     }
 
-    #shortcut-hint {
+    #footer-bar {
         height: auto;
         padding: 0 1;
         background: __PB_BLUE__;
         color: __PB_WHITE__;
         border-top: solid __PB_ACCENT1__;
-    }
-
-    #title-banner {
-        dock: top;
-        height: 4;
-        padding: 1 2 0 2;
-        background: __PB_BLUE__;
-        color: __PB_WHITE__;
-        text-align: center;
-        content-align: center middle;
-        text-style: bold;
     }
 
     #main-container {
@@ -391,12 +372,12 @@ class PlugboardGoApp(App[None]):
 
     BINDINGS = [
         Binding(
-            "m",
+            "ctrl+m",
             "select_model",
             "Change Model",
             show=True,
         ),
-        Binding("q", "quit", "Quit", show=True),
+        Binding("ctrl+q", "quit", "Quit", show=True),
     ]
 
     model_name: reactive[str] = reactive("gpt-4o")
@@ -413,6 +394,7 @@ class PlugboardGoApp(App[None]):
         self._current_assistant_msg: ChatMessage | None = None
         self._user_input_future: asyncio.Future[UserInputResponse] | None = None
         self._waiting_for_user_input = False
+        self._agent_busy = False
 
     def compose(self) -> ComposeResult:
         """Compose the main application layout."""
@@ -424,17 +406,15 @@ class PlugboardGoApp(App[None]):
             "your model at a high level and I'll help you "
             "plan the components, connections, and data flow."
         )
-        yield Header()
-        yield TitleBanner(id="title-banner")
-        yield ModelSelector(id="model-selector")
+        yield HeaderBanner(id="header-banner")
         with Horizontal(id="main-container"):
             with Vertical(id="chat-panel"):
                 with VerticalScroll(id="chat-scroll"):
                     yield ChatMessage(welcome, role="system")
                 yield MermaidLink(id="mermaid-link")
                 yield Static(
-                    "[bold]q[/bold] Quit   [bold]m[/bold] Change Model",
-                    id="shortcut-hint",
+                    "",
+                    id="footer-bar",
                 )
                 yield Input(
                     placeholder="Describe your model...",
@@ -442,7 +422,7 @@ class PlugboardGoApp(App[None]):
                 )
             with Vertical(id="sidebar"):
                 yield Static("Files", id="file-tree-label")
-                yield DirectoryTree(
+                yield FilteredDirectoryTree(
                     str(Path.cwd()),
                     id="file-tree",
                 )
@@ -450,11 +430,12 @@ class PlugboardGoApp(App[None]):
 
     async def on_mount(self) -> None:
         """Start up the Copilot agent when the app mounts."""
-        selector = self.query_one(
-            "#model-selector",
-            ModelSelector,
+        banner = self.query_one(
+            "#header-banner",
+            HeaderBanner,
         )
-        selector.model_name = self.model_name
+        banner.model_name = self.model_name
+        self._update_footer()
         self._start_agent()
 
     # -- Agent lifecycle ------------------------------------------------------
@@ -474,11 +455,11 @@ class PlugboardGoApp(App[None]):
         try:
             await self._agent.start()
             self.model_name = self._agent.model
-            selector = self.query_one(
-                "#model-selector",
-                ModelSelector,
+            banner = self.query_one(
+                "#header-banner",
+                HeaderBanner,
             )
-            selector.model_name = self.model_name
+            banner.model_name = self.model_name
             self.post_message(
                 AgentStatus("Connected to GitHub Copilot."),
             )
@@ -594,6 +575,8 @@ class PlugboardGoApp(App[None]):
     def on_agent_idle(self, message: AgentIdle) -> None:
         """Reset state when the session goes idle."""
         self._current_assistant_msg = None
+        self._agent_busy = False
+        self._update_footer()
 
     def on_agent_status(
         self,
@@ -607,6 +590,17 @@ class PlugboardGoApp(App[None]):
     def _add_system_message(self, text: str) -> None:
         """Add a system message to the chat."""
         self._add_chat_message(text, role="system")
+
+    def _update_footer(self) -> None:
+        """Update the footer bar with current status."""
+        parts = ["[bold]^Q[/bold] Quit", "[bold]^M[/bold] Change Model"]
+        if self._agent_busy:
+            parts.append(f"[{Theme.PB_ACCENT1}]● Waiting for Copilot...[/]")
+        try:
+            footer = self.query_one("#footer-bar", Static)
+            footer.update("   ".join(parts))
+        except NoMatches:
+            pass
 
     def _append_to_last_message(self, text: str, role: str) -> bool:
         """Append text to the last message when the role matches."""
@@ -656,6 +650,8 @@ class PlugboardGoApp(App[None]):
             return
 
         self._add_chat_message(text, role="user")
+        self._agent_busy = True
+        self._update_footer()
         self._send_to_agent(text)
 
     @work(exclusive=True, thread=False)
@@ -670,6 +666,8 @@ class PlugboardGoApp(App[None]):
             await self._agent.send(text)
         except Exception as e:
             self._add_system_message(f"Error: {e}")
+            self._agent_busy = False
+            self._update_footer()
 
     # -- Model Selection ------------------------------------------------------
 
@@ -726,11 +724,11 @@ class PlugboardGoApp(App[None]):
         model_id = event.option.id
         if model_id and model_id != self.model_name:
             self.model_name = model_id
-            selector = self.query_one(
-                "#model-selector",
-                ModelSelector,
+            banner = self.query_one(
+                "#header-banner",
+                HeaderBanner,
             )
-            selector.model_name = model_id
+            banner.model_name = model_id
             self._add_system_message(
                 f"Switching to model: **{model_id}**...",
             )
