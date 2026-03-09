@@ -9,7 +9,7 @@ import pytest
 
 from plugboard.component import IOController as IO
 from plugboard.events import Event
-from plugboard.process import ProcessBuilder
+from plugboard.process import LocalProcess, ProcessBuilder
 from plugboard.schemas import (
     ComponentSpec,
     ConnectorBuilderArgsSpec,
@@ -133,3 +133,36 @@ async def test_process_builder_build(process_spec: ProcessSpec) -> None:
     with TemporaryDirectory() as tmpdir:
         with pytest.raises(ValueError):
             process.dump(f"{tmpdir}/process.txt")
+
+
+@pytest.mark.asyncio
+async def test_process_dump_with_default_state_and_parameters() -> None:
+    """Test that process.dump works when state and parameters are not explicitly provided."""
+    from plugboard.connector import AsyncioConnector
+    from plugboard.schemas import ConnectorSpec
+
+    class SimpleA(ComponentTestHelper):
+        io = IO(outputs=["out_1"])
+
+        async def step(self) -> None:
+            pass
+
+    class SimpleB(ComponentTestHelper):
+        io = IO(inputs=["in_1"])
+
+        async def step(self) -> None:
+            pass
+
+    process = LocalProcess(
+        components=[SimpleA(name="A"), SimpleB(name="B")],
+        connectors=[AsyncioConnector(spec=ConnectorSpec(source="A.out_1", target="B.in_1"))],
+    )
+    with TemporaryDirectory() as tmpdir:
+        # Must not raise a validation error when state and parameters are not set
+        process.dump(f"{tmpdir}/process.yaml")
+        with open(f"{tmpdir}/process.yaml", "rb") as f:
+            loaded = msgspec.yaml.decode(f.read())
+    reconstructed_spec = ProcessSpec.model_validate(loaded["plugboard"]["process"])
+    assert len(reconstructed_spec.args.components) == 2
+    assert reconstructed_spec.args.state.type == "plugboard.state.DictStateBackend"
+    assert reconstructed_spec.args.parameters == {}
