@@ -90,6 +90,8 @@ These conditional search space functions are supported by Ray Tune and can be de
 2. Write a custom function to define the search space, where each tunable parameter has a name of the form `"{component_name.field_or_arg_name}"`; then
 3. Supply your custom function to the `OptunaSpec` algorithm configuration.
 
+If your search space function accepts an argument named `spec`, Plugboard will pass the [`ProcessSpec`][plugboard.schemas.ProcessSpec] to it. This allows you to inspect the process definition when creating the parameter space, which is useful for example to use the process or component parameters to influence the search space.
+
 For example, the following search space makes the velocity depend on the angle:
 ```python
 --8<-- "examples/tutorials/006_optimisation/hello_tuner.py:custom_search_space"
