@@ -395,13 +395,16 @@ class Component(ABC, ExportMixin):
         otherwise another read attempt is made.
         """
         read_timeout = 1e-3 if self._has_outputs and not self._has_inputs else None
-        done, pending = await asyncio.wait(
-            (
-                asyncio.create_task(self._periodic_status_check()),
-                asyncio.create_task(self.io.read(timeout=read_timeout)),
-            ),
-            return_when=asyncio.FIRST_COMPLETED,
-        )
+        status_task = asyncio.create_task(self._periodic_status_check())
+        io_task = asyncio.create_task(self.io.read(timeout=read_timeout))
+        try:
+            done, pending = await asyncio.wait(
+                (status_task, io_task),
+                return_when=asyncio.FIRST_COMPLETED,
+            )
+        except BaseException:
+            status_task.cancel()
+            raise
         for task in pending:
             task.cancel()
         for task in done:
