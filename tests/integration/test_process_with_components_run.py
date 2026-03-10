@@ -459,6 +459,9 @@ async def test_event_driven_process_shutdown(
     await process.destroy()
 
 
+_SHORT_TIMEOUT = 0.1
+
+
 class ConstraintErrorComponent(ComponentTestHelper):
     """Component that raises a ConstraintError on the first step."""
 
@@ -489,9 +492,6 @@ class BackgroundTaskTracker(ComponentTestHelper):
         while True:
             await asyncio.sleep(_SHORT_TIMEOUT)
             self.background_run_count += 1
-
-
-_SHORT_TIMEOUT = 0.1
 
 
 @pytest.mark.asyncio
