@@ -21,7 +21,6 @@ dependencies = [
     "aio-pika>=9.5.5,<10",
     "aiosqlite>=0.20,<1",
     "annotated-types>=0.7,<1",
-    "async-lru>=2.0,<3",
     "asyncpg>=0.29.0,<1",
     "fsspec>=2024.9.0",
     "httpx>=0.27,<1",
