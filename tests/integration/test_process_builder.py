@@ -50,6 +50,13 @@ class D(ComponentTestHelper):
         pass
 
 
+class E(ComponentTestHelper):
+    io = IO(output_events=[DummyEvent1, DummyEvent2])
+
+    async def step(self) -> None:
+        pass
+
+
 @pytest.fixture
 def process_spec() -> ProcessSpec:
     """Returns a `ProcessSpec` for testing."""
@@ -71,6 +78,10 @@ def process_spec() -> ProcessSpec:
                 ComponentSpec(
                     type="tests.integration.test_process_builder.D",
                     args={"name": "D"},
+                ),
+                ComponentSpec(
+                    type="tests.integration.test_process_builder.E",
+                    args={"name": "E"},
                 ),
             ],
             connectors=[
@@ -103,11 +114,11 @@ async def test_process_builder_build(process_spec: ProcessSpec) -> None:
     # Must build a process with the correct type
     process.__class__.__name__ == process_spec.args.state.type.split(".")[-1]
     # Must build a process with the correct components and connectors
-    assert len(process.components) == 4
+    assert len(process.components) == 5
     # Number of connectors must be sum of: fields in config; user events; and system events
     assert len(process.connectors) == 2 + 2 + 1
     # Must build a process with the correct component names
-    assert process.components.keys() == {"A", "B", "C", "D"}
+    assert process.components.keys() == {"A", "B", "C", "D", "E"}
     # Must build connectors with the correct channel types
     assert all(
         conn.__class__.__name__ == "AsyncioConnector" for conn in process.connectors.values()

@@ -15,9 +15,6 @@ from plugboard.schemas import ConnectorSpec
 from tests.integration.test_process_with_components_run import A, B, C
 
 
-# TODO: Update these tests when we implement full graph validation
-
-
 def filter_logs(logs: list[EventDict], field: str, regex: str) -> list[EventDict]:
     """Filters the log output by applying regex to a field."""
     pattern = re.compile(regex)
@@ -26,19 +23,14 @@ def filter_logs(logs: list[EventDict], field: str, regex: str) -> list[EventDict
 
 @pytest.mark.asyncio
 async def test_missing_connections() -> None:
-    """Tests that missing connections are logged."""
+    """Tests that missing input connections raise ValidationError."""
     p_missing_input = LocalProcess(
         components=[A(name="a", iters=10), C(name="c", path="test-out.csv")],
         # c.in_1 is not connected
         connectors=[AsyncioConnector(spec=ConnectorSpec(source="a.out_1", target="unknown.x"))],
     )
-    with capture_logs() as logs:
+    with pytest.raises(exceptions.ValidationError, match="unconnected inputs"):
         await p_missing_input.init()
-
-    # Must contain an error-level log indicating that input is not connected
-    logs = filter_logs(logs, "log_level", "error")
-    logs = filter_logs(logs, "event", "Input fields not connected")
-    assert logs, "Logs do not indicate missing connection"
 
     p_missing_output = LocalProcess(
         components=[A(name="a", iters=10), B(name="b")],

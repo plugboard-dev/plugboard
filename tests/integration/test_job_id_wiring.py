@@ -206,7 +206,7 @@ async def test_cli_process_run_with_no_job_id(minimal_config_file: Path) -> None
 
 
 @pytest.mark.asyncio
-async def test_direct_process_with_job_id() -> None:
+async def test_direct_process_with_job_id(patch_validate_process: None) -> None:
     """Test building a process directly with a specified job ID."""
     # Create a state backend with a specific job ID
     state: DictStateBackend = DictStateBackend(job_id="Job_direct12345678")
@@ -221,7 +221,7 @@ async def test_direct_process_with_job_id() -> None:
 
 
 @pytest.mark.asyncio
-async def test_direct_process_with_env_var() -> None:
+async def test_direct_process_with_env_var(patch_validate_process: None) -> None:
     """Test building a process without a job ID while environment variable is set."""
     # Set the environment variable to match the job ID to avoid conflict
     job_id: str = "Job_direct12345678"
@@ -240,7 +240,9 @@ async def test_direct_process_with_env_var() -> None:
 
 
 @pytest.mark.asyncio
-async def test_direct_process_with_job_id_and_env_var() -> None:
+async def test_direct_process_with_job_id_and_env_var(
+    patch_validate_process: None,
+) -> None:
     """Test building a process with a job ID while environment variable is set with same value."""
     # Set the environment variable to match the job ID to avoid conflict
     job_id: str = "Job_direct12345678"
@@ -271,7 +273,7 @@ async def test_direct_process_with_conflicting_job_ids() -> None:
 
 
 @pytest.mark.asyncio
-async def test_direct_process_without_job_id() -> None:
+async def test_direct_process_without_job_id(patch_validate_process: None) -> None:
     """Test building a process without specifying a job ID."""
     # Create a state backend without a job ID
     state: DictStateBackend = DictStateBackend()
@@ -289,7 +291,9 @@ async def test_direct_process_without_job_id() -> None:
 
 
 @pytest.mark.asyncio
-async def test_direct_process_without_job_id_multiple_runs() -> None:
+async def test_direct_process_without_job_id_multiple_runs(
+    patch_validate_process: None,
+) -> None:
     """Test building a process without specifying a job ID multiple times."""
     # Create a state backend without a job ID
     state: DictStateBackend = DictStateBackend()
@@ -316,7 +320,9 @@ async def test_direct_process_without_job_id_multiple_runs() -> None:
 
 
 @pytest.mark.asyncio
-async def test_direct_process_without_job_id_multiple_runs_multiprocessing() -> None:
+async def test_direct_process_without_job_id_multiple_runs_multiprocessing(
+    patch_validate_process: None,
+) -> None:
     """Test building a process without a job ID in a multiprocessing context."""
     # Create a state backend without a specific job ID
     state: SqliteStateBackend = SqliteStateBackend()
