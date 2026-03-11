@@ -437,9 +437,9 @@ class IOFieldBuffer(IOBuffer):
 
     def flush(self) -> _t.Iterable:
         """Returns items in the buffer and resets the buffer."""
-        items = self._buf
+        items = self._buf.items()
         self._buf = {}
-        return items.items()
+        return items
 
     def __bool__(self) -> bool:
         return bool(self._buf)
