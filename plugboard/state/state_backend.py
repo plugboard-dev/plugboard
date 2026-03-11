@@ -67,7 +67,6 @@ class StateBackend(ABC, ExportMixin):
         self._ctx.close()
         if not self._initialised_with_job_id:
             self._local_state["job_id"] = None
-        pass
 
     async def __aenter__(self) -> StateBackend:
         """Enters the context manager."""
