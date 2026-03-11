@@ -5,7 +5,6 @@ from __future__ import annotations
 import typing as _t
 
 import aiosqlite
-from async_lru import alru_cache
 import msgspec
 
 from plugboard.exceptions import NotFoundError
@@ -26,6 +25,8 @@ class SqliteStateBackend(StateBackend):
     def __init__(self, db_path: str = "plugboard.db", *args: _t.Any, **kwargs: _t.Any) -> None:
         """Initializes `SqliteStateBackend` with `db_path`."""
         self._db_path: str = db_path
+        self._component_process_cache: dict[str, str] = {}
+        self._connector_process_cache: dict[str, str] = {}
         super().__init__(*args, **kwargs)
 
     async def _get(self, key: str | tuple[str, ...], value: _t.Optional[_t.Any] = None) -> _t.Any:
@@ -51,8 +52,8 @@ class SqliteStateBackend(StateBackend):
         """Destroys the `SqliteStateBackend`."""
         await super().destroy()
         self._get_db_id.cache_clear()
-        self._get_process_id_for_component.cache_clear()
-        self._get_process_id_for_connector.cache_clear()
+        self._component_process_cache.clear()
+        self._connector_process_cache.clear()
 
     async def _fetchone(
         self, statement: str, params: _t.Tuple[_t.Any, ...]
@@ -150,18 +151,18 @@ class SqliteStateBackend(StateBackend):
         process_id: str = await self._get_process_id_for_component(component_id)
         return await self.get_process(process_id)
 
-    @alru_cache(maxsize=128)
     async def _get_process_id_for_component(self, component_id: str) -> str:
         """Returns the database id of the process which a component belongs to.
 
         If a component does not belong to any process, it is associated with a null process.
         """
-        component_db_id = self._get_db_id(component_id)
-        row = await self._fetchone(q.GET_PROCESS_FOR_COMPONENT, (component_db_id,))
-        if row is None:
-            raise NotFoundError(f"No process found for component with ID {component_id}")
-        process_id = row["process_id"]
-        return process_id
+        if component_id not in self._component_process_cache:
+            component_db_id = self._get_db_id(component_id)
+            row = await self._fetchone(q.GET_PROCESS_FOR_COMPONENT, (component_db_id,))
+            if row is None:
+                raise NotFoundError(f"No process found for component with ID {component_id}")
+            self._component_process_cache[component_id] = row["process_id"]
+        return self._component_process_cache[component_id]
 
     async def upsert_component(self, component: Component) -> None:
         """Upserts a component into the state."""
@@ -182,18 +183,18 @@ class SqliteStateBackend(StateBackend):
             raise NotFoundError(f"Component with id {component_id} not found.")
         return component
 
-    @alru_cache(maxsize=128)
     async def _get_process_id_for_connector(self, connector_id: str) -> str:
         """Returns the database id of the process which a connector belongs to.
 
         If a connector does not belong to any process, it is associated with a null process.
         """
-        connector_db_id = self._get_db_id(connector_id)
-        row = await self._fetchone(q.GET_PROCESS_FOR_CONNECTOR, (connector_db_id,))
-        if row is None:
-            raise NotFoundError(f"No process found for connector with ID {connector_id}")
-        process_id = row["process_id"]
-        return process_id
+        if connector_id not in self._connector_process_cache:
+            connector_db_id = self._get_db_id(connector_id)
+            row = await self._fetchone(q.GET_PROCESS_FOR_CONNECTOR, (connector_db_id,))
+            if row is None:
+                raise NotFoundError(f"No process found for connector with ID {connector_id}")
+            self._connector_process_cache[connector_id] = row["process_id"]
+        return self._connector_process_cache[connector_id]
 
     async def upsert_connector(self, connector: Connector) -> None:
         """Upserts a connector into the state."""
