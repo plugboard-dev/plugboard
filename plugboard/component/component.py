@@ -380,7 +380,8 @@ class Component(ABC, ExportMixin):
 
     @cached_property
     def _has_event_outputs(self) -> bool:
-        return bool({evt.safe_type() for evt in self.io.output_events} - {StopEvent.safe_type()})
+        output_events = set([evt.safe_type() for evt in self.io.output_events])
+        return len(output_events - {StopEvent.safe_type()}) > 0
 
     @cached_property
     def _has_outputs(self) -> bool:
