@@ -28,6 +28,7 @@ class RedisChannel(SerdeChannel):
     def __init__(
         self,
         *args: _t.Any,
+        key: str,
         send_fn: _t.Optional[_t.Callable[[bytes], _t.Awaitable[None]]] = None,
         recv_fn: _t.Optional[_t.Callable[[], _t.Awaitable[bytes]]] = None,
         pubsub: _t.Optional[PubSub] = None,
@@ -40,11 +41,13 @@ class RedisChannel(SerdeChannel):
         environment variable.
 
         Args:
+            key: The Redis key for the channel.
             send_fn: Optional; A callable for sending messages to the Redis channel.
             recv_fn: Optional; A callable for receiving messages from the Redis channel.
             pubsub: Optional; The Redis `PubSub` instance, used in pub-sub mode.
         """
         super().__init__(*args, **kwargs)
+        self._key = key
         self._send_fn = send_fn
         self._recv_fn = recv_fn
         self._pubsub = pubsub
@@ -131,7 +134,7 @@ class RedisConnector(Connector):
 
             key = await self._get_key()
             send_fn = self._build_send_fn(redis_client, key)
-            self._send_channel = RedisChannel(send_fn=send_fn)
+            self._send_channel = RedisChannel(key=key, send_fn=send_fn)
             return self._send_channel
 
     def _build_send_fn(
@@ -161,13 +164,13 @@ class RedisConnector(Connector):
                 if self._recv_channel is not None:
                     return self._recv_channel
                 recv_fn = self._build_recv_fn(redis_client, key)
-                channel = RedisChannel(recv_fn=recv_fn)
+                channel = RedisChannel(key=key, recv_fn=recv_fn)
                 self._recv_channel = channel
         else:  # ConnectorMode.PUBSUB
-            pubsub = redis_client.pubsub()
+            pubsub = redis_client.pubsub(ignore_subscribe_messages=True)
             await pubsub.subscribe(key)
             recv_fn = self._build_recv_fn(redis_client, key, pubsub=pubsub)
-            channel = RedisChannel(recv_fn=recv_fn, pubsub=pubsub)
+            channel = RedisChannel(key=key, recv_fn=recv_fn, pubsub=pubsub)
         return channel
 
     def _build_recv_fn(
@@ -183,7 +186,10 @@ class RedisConnector(Connector):
                 raise ValueError("PubSub instance required for PUBSUB mode")
 
             async def recv_fn() -> bytes:
-                message = await pubsub.get_message(ignore_subscribe_messages=True, timeout=None)
+                # NOTE : We use `listen()` here due to non-sensical `get_message()` behaviour with
+                #      : `ignore_subscribe_messages=True`.
+                #      : See: https://github.com/redis/redis-py/issues/733#issuecomment-1956647495
+                message = await asyncio.wait_for(anext(pubsub.listen()), timeout=None)
                 return message["data"]
 
         return recv_fn
