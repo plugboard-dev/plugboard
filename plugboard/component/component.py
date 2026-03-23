@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from abc import ABC
 import asyncio
-from collections import defaultdict, deque
+from collections import defaultdict
 from functools import cached_property, wraps
 import typing as _t
 
@@ -428,7 +428,7 @@ class Component(ABC, ExportMixin):
             self._logger.warning("State backend not connected, skipping status check")
             return
         process_status = await self._state.get_process_status_for_component(self.id)
-        self._logger.info(f"Process status for component {self.id}: {process_status}")
+        self._logger.info("Process status check", component=self.id, status=process_status)
         if process_status == Status.FAILED:
             await self._set_status(Status.STOPPED)
             self._logger.exception("Process in failed state")
@@ -457,21 +457,18 @@ class Component(ABC, ExportMixin):
 
     def _bind_outputs(self) -> None:
         """Binds component fields to output fields."""
-        output_data = {}
-        for field in self.io.outputs:
-            field_default = getattr(self, field, None)
-            output_data[field] = field_default
-        if self._can_step:
-            self.io.buf_fields[_io_key_out].put(output_data.items())
+        if not self._can_step:
+            return
+        output_data = {field: getattr(self, field, None) for field in self.io.outputs}
+        self.io.buf_fields[_io_key_out].put(output_data.items())
 
     async def _handle_events(self) -> None:
         """Handles incoming events."""
+        events = self.io.buf_events[_io_key_in].flush()
         async with asyncio.TaskGroup() as tg:
             # FIXME : If a StopEvent is received, processing of other events may hit
             #       : IOStreamClosedError due to concurrent execution.
-            event_queue = deque(self.io.buf_events[_io_key_in].flush())
-            while event_queue:
-                event = event_queue.popleft()
+            for event in events:
                 tg.create_task(self._handle_event(event))
 
     async def _handle_event(self, event: Event) -> None:
