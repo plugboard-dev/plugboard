@@ -187,7 +187,9 @@ async def test_state_backend_multiprocess(
 
 @pytest_cases.parametrize("setup_backend", [setup_SqliteStateBackend, setup_PostgresStateBackend])
 @pytest.mark.asyncio
-async def test_no_process_found_errors(setup_backend):
+async def test_no_process_found_errors(
+    setup_backend: _t.Callable[[], _t.ContextManager[StateBackend]],
+) -> None:
     """Tests that `StateBackend` raises `NotFoundError` when no process is found."""
     with setup_backend() as backend:
         await backend.init()

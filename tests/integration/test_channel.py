@@ -15,7 +15,6 @@ from plugboard.connector import (
 )
 from plugboard.connector.redis_channel import RedisConnector
 from plugboard.utils import DI
-from plugboard.utils.di import DI
 from plugboard.utils.settings import Settings
 from tests.unit.test_channel import (  # noqa: F401
     TEST_ITEMS,
