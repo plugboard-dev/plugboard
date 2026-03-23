@@ -53,7 +53,7 @@ def _zmq_proxy(
 async def _rabbitmq_conn(
     logger: Singleton[structlog.BoundLogger], url: _t.Optional[str] = None
 ) -> _t.AsyncIterator[aio_pika.abc.AbstractRobustConnection | None]:
-    if url is None:  # pragma: no cover
+    if not url:
         yield None
         return
     try:
@@ -71,7 +71,7 @@ async def _rabbitmq_conn(
 async def _redis_client(
     logger: Singleton[structlog.BoundLogger], url: _t.Optional[str] = None
 ) -> _t.AsyncIterator[_t.Optional["redis.Redis"]]:
-    if url is None:  # pragma: no cover
+    if not url:
         yield None
         return
 
