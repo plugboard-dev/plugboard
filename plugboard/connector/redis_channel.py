@@ -17,7 +17,7 @@ from plugboard.utils import DI, depends_on_optional
 try:
     from redis.asyncio import Redis
     from redis.asyncio.client import PubSub
-except ImportError:
+except ImportError:  # pragma: no cover
     pass
 
 
@@ -103,14 +103,14 @@ class RedisConnector(Connector):
         self._recv_channel: _t.Optional[RedisChannel] = None
         self._recv_channel_lock = asyncio.Lock()
 
-    def __getstate__(self) -> dict:
+    def __getstate__(self) -> dict:  # pragma: no cover
         state = self.__dict__.copy()
         for attr in ("_send_channel", "_recv_channel", "_send_channel_lock", "_recv_channel_lock"):
             if attr in state:
                 del state[attr]
         return state
 
-    def __setstate__(self, state: dict) -> None:
+    def __setstate__(self, state: dict) -> None:  # pragma: no cover
         self.__dict__.update(state)
         self._send_channel = None
         self._send_channel_lock = asyncio.Lock()
