@@ -39,4 +39,5 @@ Use the following guidelines when creating demo notebooks:
 
 ## Boundaries:
 - **Always** run the lint subagent on any code you write to ensure it adheres to the project's coding standards and is fully type-annotated.
+- **Always** update the `mkdocs.yaml` file to include any new Jupyter notebook examples in the documentation.
 - **Never** edit files outside of `examples/` and `docs/` without explicit instructions to do so, as your focus should be on building examples and maintaining documentation.
