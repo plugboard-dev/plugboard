@@ -87,6 +87,35 @@ def test_cli_process_diagram() -> None:
     assert "flowchart" in result.stdout
 
 
+def test_cli_ai_init(tmp_path: Path) -> None:
+    """Tests the ai init command creates AGENTS.md."""
+    result = runner.invoke(app, ["ai", "init", str(tmp_path)])
+    assert result.exit_code == 0
+    assert "Created" in result.stdout
+    # File must exist with expected content
+    agents_md = tmp_path / "AGENTS.md"
+    assert agents_md.exists()
+    content = agents_md.read_text()
+    assert "Plugboard" in content
+
+
+def test_cli_ai_init_already_exists(tmp_path: Path) -> None:
+    """Tests the ai init command fails when AGENTS.md already exists."""
+    (tmp_path / "AGENTS.md").write_text("existing content")
+    result = runner.invoke(app, ["ai", "init", str(tmp_path)])
+    assert result.exit_code == 1
+    # Error is printed to stderr which typer captures in output
+    assert "already exists" in result.output
+
+
+def test_cli_ai_init_default_directory() -> None:
+    """Tests the ai init command uses current directory by default."""
+    with tempfile.TemporaryDirectory() as tmpdir:
+        result = runner.invoke(app, ["ai", "init", tmpdir])
+        assert result.exit_code == 0
+        assert (Path(tmpdir) / "AGENTS.md").exists()
+
+
 def test_cli_server_discover(test_project_dir: Path) -> None:
     """Tests the server discover command."""
     with respx.mock:
