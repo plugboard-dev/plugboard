@@ -111,9 +111,16 @@ def test_cli_ai_init_already_exists(tmp_path: Path) -> None:
 def test_cli_ai_init_default_directory() -> None:
     """Tests the ai init command uses current directory by default."""
     with tempfile.TemporaryDirectory() as tmpdir:
-        result = runner.invoke(app, ["ai", "init", tmpdir])
-        assert result.exit_code == 0
-        assert (Path(tmpdir) / "AGENTS.md").exists()
+        original_cwd = Path.cwd()
+        try:
+            import os
+
+            os.chdir(tmpdir)
+            result = runner.invoke(app, ["ai", "init"])
+            assert result.exit_code == 0
+            assert (Path(tmpdir) / "AGENTS.md").exists()
+        finally:
+            os.chdir(original_cwd)
 
 
 def test_cli_server_discover(test_project_dir: Path) -> None:

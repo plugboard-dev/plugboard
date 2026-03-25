@@ -38,7 +38,7 @@ Ask questions if anything is not clear about the business logic or you require a
 
 Always check whether the functionality you need is already available in the library components in `plugboard.library`. For example, try to use:
 - `FileReader` and `FileWriter` for reading/writing data from CSV or parquet files.
-- `SQLReader` and `SQLReader` for reading/writing data from SQL databases.
+- `SQLReader` and `SQLWriter` for reading/writing data from SQL databases.
 - `LLMChat` for interacting with standard LLMs, e.g. OpenAI, Gemini, etc.
 
 **Using Built-in Components**
@@ -51,7 +51,7 @@ data_loader = FileReader(name="input_data", path="input.csv", field_names=["x", 
 
 **Creating Custom Components**
 
-New components should inherit from `plugboard.componen.Component`. Add logging messages where it would be helpful by using the bound logger `self._logger`.
+New components should inherit from `plugboard.component.Component`. Add logging messages where it would be helpful by using the bound logger `self._logger`.
 
 ```python
 import typing as _t
