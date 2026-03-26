@@ -1,5 +1,7 @@
 """Provides `Tuner` class for optimising Plugboard processes."""
 
+from __future__ import annotations
+
 from functools import partial
 from inspect import isfunction, signature
 import math
