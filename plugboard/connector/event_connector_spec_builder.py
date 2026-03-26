@@ -23,22 +23,10 @@ class EventConnectorSpecBuilder:  # pragma: no cover
         """Returns mapping of connector specs for events handled by components."""
         evt_conn_map: dict[str, ConnectorSpec] = {}
         for component in components:
-            comp_evt_conn_map = EventConnectorSpecBuilder._build_for_component(
-                evt_conn_map, component
-            )
-            evt_conn_map.update(comp_evt_conn_map)
+            for evt in component.io.input_events + component.io.output_events:
+                if evt.type not in evt_conn_map:
+                    evt_conn_map[evt.type] = EventConnectorSpecBuilder._build_for_event(evt.type)
         return evt_conn_map
-
-    @staticmethod
-    def _build_for_component(
-        evt_conn_map: dict[str, ConnectorSpec], component: Component
-    ) -> dict[str, ConnectorSpec]:
-        component_evts = set(component.io.input_events + component.io.output_events)
-        return {
-            evt.type: EventConnectorSpecBuilder._build_for_event(evt.type)
-            for evt in component_evts
-            if evt.type not in evt_conn_map
-        }
 
     @staticmethod
     def _build_for_event(evt_type: str) -> ConnectorSpec:

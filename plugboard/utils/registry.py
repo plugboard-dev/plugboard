@@ -18,6 +18,7 @@ class ClassRegistry(ABC, _t.Generic[T]):
     @classmethod
     def __init_subclass__(cls) -> None:
         cls._classes = {}
+        cls._duplicate_aliases = set()
 
     @classmethod
     def add(cls, plugboard_class: type[T], key: _t.Optional[_t.Hashable] = None) -> None:

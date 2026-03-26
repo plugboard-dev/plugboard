@@ -40,6 +40,16 @@ class ProcessArgsSpec(PlugboardBaseModel, extra="allow"):
     parameters: dict[str, _t.Any] = {}
     state: StateBackendSpec = StateBackendSpec()
 
+    @field_validator("parameters", mode="before")
+    @classmethod
+    def _coerce_parameters(cls, v: _t.Any) -> _t.Any:
+        return v if v is not None else {}
+
+    @field_validator("state", mode="before")
+    @classmethod
+    def _coerce_state(cls, v: _t.Any) -> _t.Any:
+        return v if v is not None else StateBackendSpec()
+
 
 class ProcessSpec(PlugboardBaseModel):
     """Specification of a Plugboard [`Process`][plugboard.process.Process].

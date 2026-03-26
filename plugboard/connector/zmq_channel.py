@@ -136,6 +136,7 @@ class _ZMQPipelineConnector(_ZMQConnector):
 
         self._exchange_addr_task = asyncio.create_task(self._exchange_address())
         _zmq_exchange_addr_tasks.add(self._exchange_addr_task)
+        self._exchange_addr_task.add_done_callback(_zmq_exchange_addr_tasks.discard)
 
     def __getstate__(self) -> dict:
         state = self.__dict__.copy()
@@ -144,7 +145,6 @@ class _ZMQPipelineConnector(_ZMQConnector):
             "_sender_req_lock",
             "_receiver_rep_socket",
             "_receiver_req_lock",
-            "_push_socket",
             "_exchange_addr_task",
             "_send_channel",
             "_recv_channel",
@@ -237,6 +237,7 @@ class _ZMQPubsubConnector(_ZMQConnector):
         self._poller.register(self._xpub_socket, zmq.POLLIN)
         self._poll_task = asyncio.create_task(self._poll())
         _zmq_proxy_tasks.add(self._poll_task)
+        self._poll_task.add_done_callback(_zmq_proxy_tasks.discard)
 
     def __getstate__(self) -> dict:
         state = self.__dict__.copy()
@@ -371,7 +372,6 @@ class ZMQConnector(_ZMQConnector):
                 else:
                     zmq_conn_cls = _ZMQPipelineConnector
             case ConnectorMode.PUBSUB:
-                print(f"{settings=}")
                 if settings.flags.zmq_pubsub_proxy:
                     zmq_conn_cls = _ZMQPubsubConnectorProxy
                 else:

@@ -64,8 +64,3 @@ class EventHandlers:  # pragma: no cover
         raise KeyError(
             f"No handler found for class '{_class.__name__}' and event type '{event.type}'"
         )
-
-    @staticmethod
-    def _get_class_path(class_: _t.Type) -> str:
-        """Get the fully qualified path for a class."""
-        return f"{class_.__module__}.{class_.__name__}"
