@@ -142,6 +142,7 @@ nav:
     - Image processing and model routing: examples/demos/llm/004_image_processing/local-and-remote-image-processing.ipynb
   - Physics-based models:
     - Hot water tank: examples/demos/physics-models/001-hot-water-tank/hot-water-tank.ipynb
+    - Quadruple tank process: examples/demos/physics-models/002-quadruple-tank/quadruple-tank.ipynb
   - Finance:
     - Momentum trading signal: examples/demos/finance/001_momentum_signal/momentum-signal.ipynb
 - API Reference:
