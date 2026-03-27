@@ -18,14 +18,14 @@ updates:
      - dependency-name: "jsonschema"
        versions: [ ">=4.25.0" ]
    groups:
-    python-packages-minor-patches:
+    python-packages-minor-patch:
       patterns:
-         - "*"
+        - "*"
       update-types:
         - "minor"
         - "patch"
     python-packages-major:
       patterns:
-         - "*"
+        - "*"
       update-types:
         - "major"
