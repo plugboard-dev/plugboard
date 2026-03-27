@@ -294,9 +294,7 @@ class Tuner:
                     "Constraint violated during optimisation, stopping early",
                     constraint_error=str(eg),
                 )
-                first_exc = (
-                    _t.cast(ConstraintError, eg.exceptions[0]) if eg.exceptions else None
-                )
+                first_exc = _t.cast(ConstraintError, eg.exceptions[0]) if eg.exceptions else None
                 result = {
                     obj.full_name: (
                         first_exc.objective_value
