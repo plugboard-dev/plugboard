@@ -87,7 +87,7 @@ test = [
     "ray[default,tune]>=2.40.0,<3",
     "respx>=0.21,<1",
     "s3fs>=2024.9.0",
-    "time-machine>=2.15,<3",
+    "time-machine>=2.15,<4",
     "websockets>=14.2,<15",
 ]
 docs = [
