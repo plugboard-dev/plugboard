@@ -61,6 +61,12 @@ Running this code will execute an optimisation job and print out information on 
 !!! tip
     You can impose arbitary constraints on variables within a `Process`. In your `step` method you can raise a [`ConstraintError`][plugboard.exceptions.ConstraintError] to indicate to the `Tuner` that a constraint has been breached. This will cause the trial to be stopped, and the optimisation will continue trying to find parameters that don't cause the constraint violation.
 
+    By default, the objective is set to ±∞ (depending on the optimisation direction) when a constraint is breached. You can override this by passing an `objective_value` to `ConstraintError`:
+    ```python
+    raise ConstraintError("Value too high", objective_value=0.0)
+    ```
+    This is useful when you want violated trials to receive a specific penalty value rather than infinity.
+
 !!! tip
     You can optimise over process parameters if you have them in your model. Set `object_type="process"` and `field_type="parameter"` when specifying your tunable parameter.
 
