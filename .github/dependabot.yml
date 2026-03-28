@@ -24,6 +24,14 @@ updates:
       update-types:
         - "minor"
         - "patch"
+ - package-ecosystem: "uv"
+   directory: "/"
+   schedule:
+     interval: monthly
+   ignore:
+     - dependency-name: "jsonschema"
+       versions: [ ">=4.25.0" ]
+   groups:
     python-packages-major:
       patterns:
         - "*"
