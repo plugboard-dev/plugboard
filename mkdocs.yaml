@@ -145,6 +145,8 @@ nav:
     - Quadruple tank process: examples/demos/physics-models/002-quadruple-tank/quadruple-tank.ipynb
   - Finance:
     - Momentum trading signal: examples/demos/finance/001_momentum_signal/momentum-signal.ipynb
+  - Process control:
+    - Reduced BSM1 wastewater treatment: examples/demos/process-control/001_bsm1_wastewater/bsm1-wastewater.ipynb
   - Transport:
     - Traffic intersection: examples/demos/transport/001_traffic_simulation/traffic-simulation.ipynb
 - API Reference:
