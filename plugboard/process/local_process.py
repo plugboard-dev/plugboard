@@ -44,9 +44,10 @@ class LocalProcess(Process):
         async with asyncio.TaskGroup() as tg:
             for component in self.components.values():
                 tg.create_task(component.io.connect(connectors))
-        # Allow time for connections to be established
-        # TODO : Replace with a more robust mechanism
-        await asyncio.sleep(1)
+        # Wait for connectors that require post-connection setup time
+        async with asyncio.TaskGroup() as tg:
+            for connector in connectors:
+                tg.create_task(connector.wait_until_ready())
 
     async def _connect_state(self) -> None:
         async with asyncio.TaskGroup() as tg:

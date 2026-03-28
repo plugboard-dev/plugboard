@@ -27,6 +27,14 @@ class Connector(ABC, ExportMixin):
         """Returns a `Channel` for receiving messages."""
         pass
 
+    async def wait_until_ready(self) -> None:
+        """Waits until the connector is ready for communication.
+
+        Override in subclasses that require post-connection setup time
+        (e.g. socket binding). The default implementation returns immediately.
+        """
+        pass
+
     @property
     def id(self) -> str:
         """Unique ID for `Connector`."""

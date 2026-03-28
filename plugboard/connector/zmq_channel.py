@@ -102,6 +102,10 @@ class _ZMQConnector(Connector, ABC):
         self._zmq_address = zmq_address
         self._maxsize = maxsize
 
+    async def wait_until_ready(self) -> None:
+        """Waits for ZMQ sockets to be fully established."""
+        await asyncio.sleep(1)
+
     @abstractmethod
     async def connect_send(self) -> ZMQChannel:
         """Returns a `ZMQChannel` for sending messages."""

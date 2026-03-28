@@ -393,8 +393,14 @@ class Component(ABC, ExportMixin):
         Status checks are performed periodically until the read completes. If the process is in a
         failed state, the component status is set to `STOPPED` and a `ProcessStatusError` is raised;
         otherwise another read attempt is made.
+
+        In run() mode, the status check is managed as a single background task rather than
+        creating and cancelling a new task on every step.
         """
         read_timeout = 1e-3 if self._has_outputs and not self._has_inputs else None
+        if self._is_running:
+            await self.io.read(timeout=read_timeout)
+            return
         done, pending = await asyncio.wait(
             (
                 asyncio.create_task(self._periodic_status_check()),
@@ -465,6 +471,8 @@ class Component(ABC, ExportMixin):
     async def _handle_events(self) -> None:
         """Handles incoming events."""
         events = self.io.buf_events[_io_key_in].flush()
+        if not events:
+            return
         async with asyncio.TaskGroup() as tg:
             # FIXME : If a StopEvent is received, processing of other events may hit
             #       : IOStreamClosedError due to concurrent execution.
@@ -497,6 +505,7 @@ class Component(ABC, ExportMixin):
         """Executes component logic for all steps to completion."""
         self._is_running = True
         await self._set_status(Status.RUNNING)
+        _status_task = asyncio.create_task(self._run_status_check_loop())
         try:
             while True:
                 try:
@@ -506,7 +515,32 @@ class Component(ABC, ExportMixin):
             if self.status not in {Status.STOPPED, Status.FAILED}:
                 await self._set_status(Status.COMPLETED)
         finally:
+            _status_task.cancel()
+            try:
+                await _status_task
+            except asyncio.CancelledError:
+                pass
             self._is_running = False
+
+    async def _run_status_check_loop(self) -> None:
+        """Background periodic status check during run() mode.
+
+        Handles process failure detection and event producer graph updates
+        as a single persistent task instead of creating a new task per step.
+        """
+        try:
+            await self._periodic_status_check()
+        except EventStreamClosedError:
+            if len(self.io.inputs) == 0:
+                try:
+                    await self.io.close()
+                except IOStreamClosedError:
+                    pass
+        except ProcessStatusError:
+            try:
+                await self.io.close()
+            except IOStreamClosedError:
+                pass
 
     async def destroy(self) -> None:
         """Performs tear-down actions for `Component`."""

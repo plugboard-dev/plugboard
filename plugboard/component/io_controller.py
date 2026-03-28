@@ -254,10 +254,18 @@ class IOController:
         """Writes data to output channels."""
         if self._is_closed:
             raise IOStreamClosedError("Attempted write on a closed io controller.")
+        has_events = bool(self.buf_events[_io_key_out])
+        has_fields = bool(self.buf_fields[_io_key_out])
+        if not has_events and not has_fields:
+            return
         try:
-            async with asyncio.TaskGroup() as tg:
-                tg.create_task(self._write_events())
-                tg.create_task(self._write_fields())
+            if has_events:
+                async with asyncio.TaskGroup() as tg:
+                    tg.create_task(self._write_events())
+                    if has_fields:
+                        tg.create_task(self._write_fields())
+            else:
+                await self._write_fields()
         except* ChannelClosedError as eg:
             raise self._build_io_stream_error(IODirection.OUTPUT, eg) from eg
 
@@ -265,6 +273,8 @@ class IOController:
         if not self.buf_fields[_io_key_out]:
             return  # Don't attempt to write data if no data added to the output buffer
         buffer = dict(self.buf_fields[_io_key_out].flush())
+        if not self._output_channels:
+            return  # No connected output channels
         async with asyncio.TaskGroup() as tg:
             for (field, _), chan in self._output_channels.items():
                 tg.create_task(self._write_field(field, chan, buffer[field]))
@@ -277,6 +287,8 @@ class IOController:
 
     async def _write_events(self) -> None:
         events = self.buf_events[_io_key_out].flush()
+        if not events:
+            return
         async with asyncio.TaskGroup() as tg:
             for event in events:
                 tg.create_task(self._write_event(event))
