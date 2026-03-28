@@ -145,6 +145,8 @@ nav:
     - Quadruple tank process: examples/demos/physics-models/002-quadruple-tank/quadruple-tank.ipynb
   - Finance:
     - Momentum trading signal: examples/demos/finance/001_momentum_signal/momentum-signal.ipynb
+  - Transport:
+    - Bus bunching: examples/demos/transport/001-bus-terminal/bus-terminal.ipynb
 - API Reference:
   - component: api/component/component.md
   - connector: api/connector/connector.md
