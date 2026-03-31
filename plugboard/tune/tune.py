@@ -289,14 +289,19 @@ class Tuner:
                 result = {
                     obj.full_name: self._get_objective(process, obj) for obj in self._objective
                 }
-            except* ConstraintError as e:
+            except* ConstraintError as eg:
                 modes = self._mode if isinstance(self._mode, list) else [self._mode]
                 self._logger.warning(
                     "Constraint violated during optimisation, stopping early",
-                    constraint_error=str(e),
+                    constraint_error=str(eg),
                 )
+                first_exc = _t.cast(ConstraintError, eg.exceptions[0]) if eg.exceptions else None
                 result = {
-                    obj.full_name: math.inf if mode == "min" else -math.inf
+                    obj.full_name: (
+                        first_exc.objective_value
+                        if first_exc is not None and first_exc.objective_value is not None
+                        else (math.inf if mode == "min" else -math.inf)
+                    )
                     for obj, mode in zip(self._objective, modes)
                 }
 
