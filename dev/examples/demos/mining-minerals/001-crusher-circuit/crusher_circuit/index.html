@@ -10,13 +10,13 @@
       
       
       
-        <link rel="canonical" href="https://docs.plugboard.dev/latest/examples/demos/fundamentals/001_simple_model/simple-model/">
+        <link rel="canonical" href="https://docs.plugboard.dev/latest/examples/demos/mining-minerals/001-crusher-circuit/crusher_circuit/">
       
       
-        <link rel="prev" href="../../../../../usage/topics/">
+        <link rel="prev" href="../../../physics-models/001-hot-water-tank/hot-water-tank/">
       
       
-        <link rel="next" href="../../002_production_line_optimisation/production-line/">
+        <link rel="next" href="../../../finance/001_momentum_signal/momentum-signal/">
       
       
         
@@ -27,7 +27,7 @@
     
     
       
-        <title>Simple 3-node model - Plugboard</title>
+        <title>Crusher circuit simulation with Population Balance Modelling - Plugboard</title>
       
     
     
@@ -92,7 +92,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#simple-3-node-model" class="md-skip">
+        <a href="#crusher-circuit-simulation-with-population-balance-modelling" class="md-skip">
           Skip to content
         </a>
       
@@ -142,7 +142,7 @@ What's new: 🚀 we've open-sourced Plugboard - please <a href="https://github.c
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Simple 3-node model
+              Crusher circuit simulation with Population Balance Modelling
             
           </span>
         </div>
@@ -317,7 +317,7 @@ What's new: 🚀 we've open-sourced Plugboard - please <a href="https://github.c
     
     
       <li class="md-tabs__item md-tabs__item--active">
-        <a href="./" class="md-tabs__link">
+        <a href="../../../fundamentals/001_simple_model/simple-model/" class="md-tabs__link">
           
   
   
@@ -912,10 +912,8 @@ What's new: 🚀 we've open-sourced Plugboard - please <a href="https://github.c
                 
   
   
-    
   
   
-  
     
     
       
@@ -932,11 +930,13 @@ What's new: 🚀 we've open-sourced Plugboard - please <a href="https://github.c
       
     
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_1" checked>
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3_1" >
         
           
           <label class="md-nav__link" for="__nav_3_1" id="__nav_3_1_label" tabindex="0">
@@ -957,7 +957,7 @@ What's new: 🚀 we've open-sourced Plugboard - please <a href="https://github.c
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_1_label" aria-expanded="true">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_1_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_3_1">
             <span class="md-nav__icon md-icon"></span>
             
@@ -972,19 +972,10 @@ What's new: 🚀 we've open-sourced Plugboard - please <a href="https://github.c
                 
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../../../fundamentals/001_simple_model/simple-model/" class="md-nav__link">
         
   
   
@@ -1000,7 +991,6 @@ What's new: 🚀 we've open-sourced Plugboard - please <a href="https://github.c
   
 
       </a>
-      
     </li>
   
 
@@ -1013,7 +1003,7 @@ What's new: 🚀 we've open-sourced Plugboard - please <a href="https://github.c
   
   
     <li class="md-nav__item">
-      <a href="../../002_production_line_optimisation/production-line/" class="md-nav__link">
+      <a href="../../../fundamentals/002_production_line_optimisation/production-line/" class="md-nav__link">
         
   
   
@@ -1041,7 +1031,7 @@ What's new: 🚀 we've open-sourced Plugboard - please <a href="https://github.c
   
   
     <li class="md-nav__item">
-      <a href="../../003_factory_simulation/factory-simulation/" class="md-nav__link">
+      <a href="../../../fundamentals/003_factory_simulation/factory-simulation/" class="md-nav__link">
         
   
   
@@ -1348,8 +1338,10 @@ What's new: 🚀 we've open-sourced Plugboard - please <a href="https://github.c
                 
   
   
+    
   
   
+  
     
     
       
@@ -1362,13 +1354,11 @@ What's new: 🚀 we've open-sourced Plugboard - please <a href="https://github.c
       
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
       
         
         
-          
-        
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3_4" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_4" checked>
         
           
           <label class="md-nav__link" for="__nav_3_4" id="__nav_3_4_label" tabindex="0">
@@ -1389,7 +1379,7 @@ What's new: 🚀 we've open-sourced Plugboard - please <a href="https://github.c
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_4_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_4_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_3_4">
             <span class="md-nav__icon md-icon"></span>
             
@@ -1404,10 +1394,37 @@ What's new: 🚀 we've open-sourced Plugboard - please <a href="https://github.c
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../../../mining-minerals/001-crusher-circuit/crusher_circuit/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Crusher circuit simulation with Population Balance Modelling
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -1423,6 +1440,136 @@ What's new: 🚀 we've open-sourced Plugboard - please <a href="https://github.c
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#population-balance-model-background" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Population Balance Model background
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#particle-size-distribution-data-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Particle Size Distribution data model
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#crusher-model-functions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Crusher model functions
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#screen-model-function" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Screen model function
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#plugboard-components" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Plugboard components
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#define-the-size-classes-and-initial-feed" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Define the size classes and initial feed
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#assemble-and-run-the-process" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Assemble and run the process
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#visualise-results" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Visualise results
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#parameter-optimisation-with-the-tuner" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Parameter optimisation with the Tuner
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#summary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Summary
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -2050,6 +2197,124 @@ What's new: 🚀 we've open-sourced Plugboard - please <a href="https://github.c
     
   
   
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#population-balance-model-background" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Population Balance Model background
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#particle-size-distribution-data-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Particle Size Distribution data model
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#crusher-model-functions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Crusher model functions
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#screen-model-function" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Screen model function
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#plugboard-components" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Plugboard components
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#define-the-size-classes-and-initial-feed" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Define the size classes and initial feed
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#assemble-and-run-the-process" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Assemble and run the process
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#visualise-results" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Visualise results
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#parameter-optimisation-with-the-tuner" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Parameter optimisation with the Tuner
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#summary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Summary
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
 </nav>
                   </div>
                 </div>
@@ -2062,6 +2327,24 @@ What's new: 🚀 we've open-sourced Plugboard - please <a href="https://github.c
               <article class="md-content__inner md-typeset">
                 
                   
+
+  <nav class="md-tags" >
+    
+      
+      
+      
+      
+        <a href="../../../../../usage/topics/#tag:minerals" class="md-tag">minerals</a>
+      
+    
+      
+      
+      
+      
+        <a href="../../../../../usage/topics/#tag:mining" class="md-tag">mining</a>
+      
+    
+  </nav>
 
 
   
@@ -2504,20 +2787,46 @@ span.linenos.special { color: #000000; background-color: #ffffc0; padding-left: 
 </style>
 <!-- End of mermaid configuration --><div class="jupyter-wrapper">
 <div class="jp-Notebook" data-jp-theme-light="true" data-jp-theme-name="JupyterLab Light">
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=0">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h1 id="simple-3-node-model">Simple 3-node model<a class="anchor-link" href="#simple-3-node-model">¶</a></h1><p><a href="https://colab.research.google.com/github/plugboard-dev/plugboard/blob/main/examples/demos/fundamentals/001_simple_model/simple-model.ipynb"><img alt="Open in Colab" src="https://colab.research.google.com/assets/colab-badge.svg"/></a></p>
+<h1 id="crusher-circuit-simulation-with-population-balance-modelling">Crusher circuit simulation with Population Balance Modelling<a class="anchor-link" href="#crusher-circuit-simulation-with-population-balance-modelling">¶</a></h1><p><a href="https://colab.research.google.com/github/plugboard-dev/plugboard/blob/main/examples/demos/physics-models/002-crusher-circuit/crusher_circuit.ipynb"><img alt="Open in Colab" src="https://colab.research.google.com/assets/colab-badge.svg"/></a></p>
 <p><a href="https://codespaces.new/plugboard-dev/plugboard"><img alt="Open in GitHub Codespaces" src="https://github.com/codespaces/badge.svg"/></a></p>
-<p>This model demonstrates how to create different types of component and link them together. We use a built-in plugboard component to load timeseries data from a CSV file. A second node computes a rolling sum of these values. Finally another built-in component saves the output to a different CSV.</p>
+<p>This example demonstrates how to build a dynamic <strong>crusher circuit</strong> simulation using Plugboard, based on the <strong>Population Balance Model (PBM)</strong> approach widely used in mineral processing.</p>
+<p>We model a closed-circuit crushing plant with five interconnected components:</p>
+<ol>
+<li><strong>Feed Source</strong> — provides raw ore with an initial particle size distribution (PSD)</li>
+<li><strong>Crusher</strong> — breaks particles using the Whiten/King crusher model</li>
+<li><strong>Screen</strong> — classifies material into undersize (product) and oversize (recirculated)</li>
+<li><strong>Conveyor</strong> — introduces a transport delay on the recirculation loop (simulates a conveyor belt)</li>
+<li><strong>Product Collector</strong> — accumulates the final product and reports quality metrics</li>
+</ol>
+<p>The model tracks how the particle size distribution and <strong>mass flow</strong> evolve dynamically as the circulating load builds up over time.</p>
+<h3 id="population-balance-model-background">Population Balance Model background<a class="anchor-link" href="#population-balance-model-background">¶</a></h3><p>The PBM is the standard mathematical framework for modelling comminution (size reduction) processes. For crushers, the Whiten model treats the crushing chamber as a series of classification and breakage stages:</p>
+<p>$$P = [B \cdot S + (I - S)] \cdot F$$</p>
+<p>where:</p>
+<ul>
+<li>$F$ is the feed size distribution vector</li>
+<li>$P$ is the product size distribution vector</li>
+<li>$S$ is the <strong>selection (classification) matrix</strong> — probability of a particle being selected for breakage based on crusher geometry</li>
+<li>$B$ is the <strong>breakage matrix</strong> — distribution of daughter fragments produced when a particle breaks</li>
+<li>$I$ is the identity matrix</li>
+</ul>
+<p><strong>Key references:</strong></p>
+<ul>
+<li>Whiten, W.J. (1974). <em>A matrix theory of comminution machines.</em> Chemical Engineering Science, 29(2), 589-599.</li>
+<li>King, R.P. (2001). <em>Modeling and Simulation of Mineral Processing Systems.</em> Butterworth-Heinemann.</li>
+<li>Austin, L.G., Klimpel, R.R., and Luckie, P.T. (1984). <em>Process Engineering of Size Reduction: Ball Milling.</em> SME.</li>
+</ul>
+<p><a href="https://mermaid.live/edit#pako:eNqtk02P2yAQhv8KmmPkdYKJ7RhVq0ppe2qlqrlVvhAYf0i2sTBsm0b57wXb2Vt62O2NmXkf3mGAK0itEDhUnf4lG2Es-fqjHAipENXHK5kaMSInRrtBoYpIJ87YcfLFV0_aGYkfzuZ5swnqzYbcyNPTM5HGTQ2ax_RxESzoqg508H0zPFtP0iAOj-HTXF_YRXv3fRs5m45GKyftY_b7IjjqrkNp9dr7iv2HBqQeXvCi_zW0VbFObY1eZ_4O_n03DhH0aHrRKv8Er6GXEmyDPZbA_VJhJVxnSyiHIBXO6tNlkMCtcRiBd6kb4JXoJh-5UQmLn1pRG9HfJUvys2r92O-5TguFPrqCvYzh7dftZP32_lhVW4e8M51PN9aOE99uQzmuW9u4cyx1v51aFT5K81Jk2yzJDiJhmOVMpIwpeabFoUr2tFL5jiYCbrcIRjH81Pq1Jx8Gk9_AaVrEh2KfJynb5R7KsgguwPM83jN2oLRgLKd54bf4M_O7eH8IjizNEkrTXUY9gPPhvi3feP7NEdQmTHSdEvqrMEd_IxZ4wW5_AcoqT7M"><img alt="" src="https://mermaid.ink/img/pako:eNqtk02P2yAQhv8KmmPkdYKJ7RhVq0ppe2qlqrlVvhAYf0i2sTBsm0b57wXb2Vt62O2NmXkf3mGAK0itEDhUnf4lG2Es-fqjHAipENXHK5kaMSInRrtBoYpIJ87YcfLFV0_aGYkfzuZ5swnqzYbcyNPTM5HGTQ2ax_RxESzoqg508H0zPFtP0iAOj-HTXF_YRXv3fRs5m45GKyftY_b7IjjqrkNp9dr7iv2HBqQeXvCi_zW0VbFObY1eZ_4O_n03DhH0aHrRKv8Er6GXEmyDPZbA_VJhJVxnSyiHIBXO6tNlkMCtcRiBd6kb4JXoJh-5UQmLn1pRG9HfJUvys2r92O-5TguFPrqCvYzh7dftZP32_lhVW4e8M51PN9aOE99uQzmuW9u4cyx1v51aFT5K81Jk2yzJDiJhmOVMpIwpeabFoUr2tFL5jiYCbrcIRjH81Pq1Jx8Gk9_AaVrEh2KfJynb5R7KsgguwPM83jN2oLRgLKd54bf4M_O7eH8IjizNEkrTXUY9gPPhvi3feP7NEdQmTHSdEvqrMEd_IxZ4wW5_AcoqT7M?type=png"/></a></p>
 </div>
 </div>
 </div>
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
-<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=1">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -2536,17 +2845,17 @@ span.linenos.special { color: #000000; background-color: #ffffc0; padding-left: 
 </clipboard-copy>
 </div>
 <div class="highlight-ipynb hl-python"><pre><span></span><span class="c1"># Install plugboard and dependencies for Google Colab</span>
-<span class="err">!</span><span class="n">pip</span> <span class="n">install</span> <span class="o">-</span><span class="n">q</span> <span class="n">plugboard</span>
+<span class="err">!</span><span class="n">pip</span> <span class="n">install</span> <span class="o">-</span><span class="n">q</span> <span class="n">plugboard</span> <span class="n">plotly</span>
 </pre></div>
 <div class="clipboard-copy-txt" id="cell-1"># Install plugboard and dependencies for Google Colab
-!pip install -q plugboard</div>
+!pip install -q plugboard plotly</div>
 </div>
 </div>
 </div>
 </div>
 </div>
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
-<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=2">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -2566,39 +2875,40 @@ span.linenos.special { color: #000000; background-color: #ffffc0; padding-left: 
 </div>
 <div class="highlight-ipynb hl-python"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">_t</span>
 
+<span class="kn">from</span><span class="w"> </span><span class="nn">pydantic</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseModel</span><span class="p">,</span> <span class="n">field_validator</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">plugboard.component</span><span class="w"> </span><span class="kn">import</span> <span class="n">Component</span><span class="p">,</span> <span class="n">IOController</span> <span class="k">as</span> <span class="n">IO</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">plugboard.connector</span><span class="w"> </span><span class="kn">import</span> <span class="n">AsyncioConnector</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">plugboard.component</span><span class="w"> </span><span class="kn">import</span> <span class="n">Component</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">plugboard.component</span><span class="w"> </span><span class="kn">import</span> <span class="n">IOController</span> <span class="k">as</span> <span class="n">IO</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">plugboard.schemas</span><span class="w"> </span><span class="kn">import</span> <span class="n">ComponentArgsDict</span><span class="p">,</span> <span class="n">ConnectorSpec</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">plugboard.process</span><span class="w"> </span><span class="kn">import</span> <span class="n">LocalProcess</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">plugboard.library</span><span class="w"> </span><span class="kn">import</span> <span class="n">FileReader</span><span class="p">,</span> <span class="n">FileWriter</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">plugboard.schemas</span><span class="w"> </span><span class="kn">import</span> <span class="n">ComponentArgsDict</span><span class="p">,</span> <span class="n">ConnectorSpec</span>
 </pre></div>
 <div class="clipboard-copy-txt" id="cell-2">import typing as _t
 
+from pydantic import BaseModel, field_validator
+
+from plugboard.component import Component, IOController as IO
 from plugboard.connector import AsyncioConnector
-from plugboard.component import Component
-from plugboard.component import IOController as IO
-from plugboard.schemas import ComponentArgsDict, ConnectorSpec
 from plugboard.process import LocalProcess
-from plugboard.library import FileReader, FileWriter</div>
+from plugboard.schemas import ComponentArgsDict, ConnectorSpec</div>
 </div>
 </div>
 </div>
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=3">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<p>The <code>FileReader</code> component is provided by Plugboard. It takes the content of a CSV and emits the values row-by-row. Our CSV contains a single <code>value</code> column, so we configure the <code>field_names</code> argument to expect that.</p>
+<h2 id="particle-size-distribution-data-model">Particle Size Distribution data model<a class="anchor-link" href="#particle-size-distribution-data-model">¶</a></h2><p>We define a custom Pydantic model to represent particle size distributions (PSDs) throughout the circuit. This ensures data validation and provides a clean interface for working with size fractions.</p>
+<p>The <code>mass_tonnes</code> field tracks the <strong>absolute mass flow</strong> of each stream, which is critical for correctly modelling the mass-weighted mixing of fresh feed and recirculated material in the crusher.</p>
 </div>
 </div>
 </div>
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
-<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=4">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -2616,27 +2926,137 @@ from plugboard.library import FileReader, FileWriter</div>
 </div>
 </clipboard-copy>
 </div>
-<div class="highlight-ipynb hl-python"><pre><span></span><span class="n">input_data</span> <span class="o">=</span> <span class="n">FileReader</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">"input_data"</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="s2">"input.csv"</span><span class="p">,</span> <span class="n">field_names</span><span class="o">=</span><span class="p">[</span><span class="s2">"value"</span><span class="p">])</span>
+<div class="highlight-ipynb hl-python"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">PSD</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Particle Size Distribution.</span>
+
+<span class="sd">    Tracks the mass fraction retained in each discrete size class,</span>
+<span class="sd">    together with the absolute mass flow (tonnes) of the stream.</span>
+
+<span class="sd">    Size classes are defined by their upper boundary (in mm),</span>
+<span class="sd">    ordered from coarsest to finest.</span>
+<span class="sd">    """</span>
+
+    <span class="n">size_classes</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span>
+    <span class="n">mass_fractions</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span>
+    <span class="n">mass_tonnes</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span>
+
+    <span class="nd">@field_validator</span><span class="p">(</span><span class="s2">"mass_fractions"</span><span class="p">)</span>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">validate_fractions</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">v</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]:</span>
+        <span class="n">total</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">total</span> <span class="o">-</span> <span class="mf">1.0</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mf">1e-6</span> <span class="ow">and</span> <span class="n">total</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="c1"># Normalise to ensure mass balance</span>
+            <span class="k">return</span> <span class="p">[</span><span class="n">f</span> <span class="o">/</span> <span class="n">total</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">v</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">v</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_percentile_size</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">target</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Interpolated percentile passing size (mm)."""</span>
+        <span class="n">cumulative</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">size_classes</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">):</span>
+            <span class="n">prev_cum</span> <span class="o">=</span> <span class="n">cumulative</span>
+            <span class="n">cumulative</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mass_fractions</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">cumulative</span> <span class="o">&gt;=</span> <span class="n">target</span><span class="p">:</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mass_fractions</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">frac</span> <span class="o">=</span> <span class="p">(</span><span class="n">target</span> <span class="o">-</span> <span class="n">prev_cum</span><span class="p">)</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">mass_fractions</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">frac</span> <span class="o">=</span> <span class="mf">0.0</span>
+                <span class="n">lower</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">size_classes</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="k">if</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">size_classes</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span> <span class="k">else</span> <span class="mf">0.0</span>
+                <span class="k">return</span> <span class="n">lower</span> <span class="o">+</span> <span class="n">frac</span> <span class="o">*</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">size_classes</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">-</span> <span class="n">lower</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">size_classes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">d80</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""80th percentile passing size (mm), interpolated."""</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_percentile_size</span><span class="p">(</span><span class="mf">0.80</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">d50</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""50th percentile passing size (mm), interpolated."""</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_percentile_size</span><span class="p">(</span><span class="mf">0.50</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">to_cumulative_passing</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""Return cumulative % passing for each size class."""</span>
+        <span class="n">result</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">cumulative</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">size_classes</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">):</span>
+            <span class="n">cumulative</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mass_fractions</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+            <span class="n">result</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">cumulative</span> <span class="o">*</span> <span class="mi">100</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">result</span>
 </pre></div>
-<div class="clipboard-copy-txt" id="cell-3">input_data = FileReader(name="input_data", path="input.csv", field_names=["value"])</div>
+<div class="clipboard-copy-txt" id="cell-3">class PSD(BaseModel):
+    """Particle Size Distribution.
+
+    Tracks the mass fraction retained in each discrete size class,
+    together with the absolute mass flow (tonnes) of the stream.
+
+    Size classes are defined by their upper boundary (in mm),
+    ordered from coarsest to finest.
+    """
+
+    size_classes: list[float]
+    mass_fractions: list[float]
+    mass_tonnes: float = 1.0
+
+    @field_validator("mass_fractions")
+    @classmethod
+    def validate_fractions(cls, v: list[float]) -&gt; list[float]:
+        total = sum(v)
+        if abs(total - 1.0) &gt; 1e-6 and total &gt; 0:
+            # Normalise to ensure mass balance
+            return [f / total for f in v]
+        return v
+
+    def _percentile_size(self, target: float) -&gt; float:
+        """Interpolated percentile passing size (mm)."""
+        cumulative = 0.0
+        for i in range(len(self.size_classes) - 1, -1, -1):
+            prev_cum = cumulative
+            cumulative += self.mass_fractions[i]
+            if cumulative &gt;= target:
+                if self.mass_fractions[i] &gt; 0:
+                    frac = (target - prev_cum) / self.mass_fractions[i]
+                else:
+                    frac = 0.0
+                lower = self.size_classes[i + 1] if i &lt; len(self.size_classes) - 1 else 0.0
+                return lower + frac * (self.size_classes[i] - lower)
+        return self.size_classes[0]
+
+    @property
+    def d80(self) -&gt; float:
+        """80th percentile passing size (mm), interpolated."""
+        return self._percentile_size(0.80)
+
+    @property
+    def d50(self) -&gt; float:
+        """50th percentile passing size (mm), interpolated."""
+        return self._percentile_size(0.50)
+
+    def to_cumulative_passing(self) -&gt; list[float]:
+        """Return cumulative % passing for each size class."""
+        result: list[float] = []
+        cumulative = 0.0
+        for i in range(len(self.size_classes) - 1, -1, -1):
+            cumulative += self.mass_fractions[i]
+            result.insert(0, cumulative * 100)
+        return result</div>
 </div>
 </div>
 </div>
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=5">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<p>Next, we implement a component to compute a running total using its internal state.</p>
+<h2 id="crusher-model-functions">Crusher model functions<a class="anchor-link" href="#crusher-model-functions">¶</a></h2><p>These helper functions implement the Whiten crusher model. The <strong>selection function</strong> determines which particles are large enough to be broken based on the crusher's closed-side setting (CSS) and open-side setting (OSS). The <strong>breakage function</strong> describes how broken particles distribute across finer size classes.</p>
 </div>
 </div>
 </div>
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
-<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=6">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -2654,40 +3074,257 @@ from plugboard.library import FileReader, FileWriter</div>
 </div>
 </clipboard-copy>
 </div>
-<div class="highlight-ipynb hl-python"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">RunningTotal</span><span class="p">(</span><span class="n">Component</span><span class="p">):</span>
-    <span class="c1"># Define the inputs and outputs of the component</span>
-    <span class="n">io</span> <span class="o">=</span> <span class="n">IO</span><span class="p">(</span><span class="n">inputs</span><span class="o">=</span><span class="p">[</span><span class="s2">"value"</span><span class="p">],</span> <span class="n">outputs</span><span class="o">=</span><span class="p">[</span><span class="s2">"total_value"</span><span class="p">])</span>
+<div class="highlight-ipynb hl-python"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">build_selection_vector</span><span class="p">(</span>
+    <span class="n">size_classes</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">],</span>
+    <span class="n">css</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+    <span class="n">oss</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+    <span class="n">k3</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">2.3</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Build the crusher selection (classification) vector.</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">_t</span><span class="o">.</span><span class="n">Unpack</span><span class="p">[</span><span class="n">ComponentArgsDict</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-        <span class="c1"># Set the initial running total to 0</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_running_total</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="sd">    Implements the Whiten classification function:</span>
+<span class="sd">    - Particles smaller than CSS pass through unbroken (S=0)</span>
+<span class="sd">    - Particles larger than OSS are always broken (S=1)</span>
+<span class="sd">    - Particles between CSS and OSS have a fractional probability</span>
 
-    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">step</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="c1"># The main logic of the component</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_running_total</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">total_value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_running_total</span>
+<span class="sd">    Args:</span>
+<span class="sd">        size_classes: Upper bounds of each size class (mm), coarsest first.</span>
+<span class="sd">        css: Closed-side setting (mm).</span>
+<span class="sd">        oss: Open-side setting (mm).</span>
+<span class="sd">        k3: Shape parameter controlling the classification curve steepness.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Selection probability for each size class.</span>
+<span class="sd">    """</span>
+    <span class="n">selection</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">size_classes</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">d</span> <span class="o">&lt;=</span> <span class="n">css</span><span class="p">:</span>
+            <span class="n">selection</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mf">0.0</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">d</span> <span class="o">&gt;=</span> <span class="n">oss</span><span class="p">:</span>
+            <span class="n">selection</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mf">1.0</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Smooth transition between CSS and OSS</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="p">(</span><span class="n">d</span> <span class="o">-</span> <span class="n">css</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">oss</span> <span class="o">-</span> <span class="n">css</span><span class="p">)</span>
+            <span class="n">selection</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mf">1.0</span> <span class="o">-</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">-</span> <span class="n">x</span><span class="p">)</span> <span class="o">**</span> <span class="n">k3</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">selection</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">build_breakage_matrix</span><span class="p">(</span>
+    <span class="n">size_classes</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">],</span>
+    <span class="n">phi</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.4</span><span class="p">,</span>
+    <span class="n">gamma</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.5</span><span class="p">,</span>
+    <span class="n">beta</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">3.5</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]]:</span>
+<span class="w">    </span><span class="sd">"""Build the breakage distribution matrix (Austin &amp; Luckie, 1972).</span>
+
+<span class="sd">    B[i][j] is the fraction of material broken from size class j</span>
+<span class="sd">    that reports to size class i.</span>
+
+<span class="sd">    The cumulative breakage function is:</span>
+<span class="sd">        B_cum(i,j) = phi * (x_i/x_j)^gamma + (1 - phi) * (x_i/x_j)^beta</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        size_classes: Upper bounds of each size class (mm), coarsest first.</span>
+<span class="sd">        phi: Fraction of breakage due to impact (vs. abrasion).</span>
+<span class="sd">        gamma: Exponent for impact breakage.</span>
+<span class="sd">        beta: Exponent for abrasion breakage.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Lower-triangular breakage matrix B[i][j].</span>
+<span class="sd">    """</span>
+    <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">size_classes</span><span class="p">)</span>
+    <span class="n">B_cum</span> <span class="o">=</span> <span class="p">[[</span><span class="mf">0.0</span><span class="p">]</span> <span class="o">*</span> <span class="n">n</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">)]</span>
+
+    <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">j</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="n">j</span><span class="p">:</span>
+                <span class="n">B_cum</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.0</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">ratio</span> <span class="o">=</span> <span class="n">size_classes</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">/</span> <span class="n">size_classes</span><span class="p">[</span><span class="n">j</span><span class="p">]</span>
+                <span class="n">B_cum</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">phi</span> <span class="o">*</span> <span class="n">ratio</span><span class="o">**</span><span class="n">gamma</span> <span class="o">+</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">-</span> <span class="n">phi</span><span class="p">)</span> <span class="o">*</span> <span class="n">ratio</span><span class="o">**</span><span class="n">beta</span>
+
+    <span class="c1"># Convert cumulative to fractional (incremental) breakage</span>
+    <span class="n">B</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[[</span><span class="mf">0.0</span><span class="p">]</span> <span class="o">*</span> <span class="n">n</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">)]</span>
+    <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">j</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="n">n</span> <span class="o">-</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">B</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">B_cum</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">B</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">B_cum</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span> <span class="o">-</span> <span class="n">B_cum</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">][</span><span class="n">j</span><span class="p">]</span>
+
+    <span class="k">return</span> <span class="n">B</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">apply_crusher</span><span class="p">(</span><span class="n">feed</span><span class="p">:</span> <span class="n">PSD</span><span class="p">,</span> <span class="n">selection</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">],</span> <span class="n">B</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]])</span> <span class="o">-&gt;</span> <span class="n">PSD</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Apply one pass of the Whiten crusher model.</span>
+
+<span class="sd">    P = [B·S + (I - S)] · F</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        feed: Input particle size distribution.</span>
+<span class="sd">        selection: Selection vector (diagonal of S matrix).</span>
+<span class="sd">        B: Breakage matrix.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Product particle size distribution (mass_tonnes preserved).</span>
+<span class="sd">    """</span>
+    <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">feed</span><span class="o">.</span><span class="n">size_classes</span><span class="p">)</span>
+    <span class="n">f</span> <span class="o">=</span> <span class="n">feed</span><span class="o">.</span><span class="n">mass_fractions</span>
+    <span class="n">product</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">]</span> <span class="o">*</span> <span class="n">n</span>
+
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
+        <span class="c1"># Material that passes through unbroken</span>
+        <span class="n">product</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+=</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">-</span> <span class="n">selection</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="o">*</span> <span class="n">f</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+        <span class="c1"># Material generated by breakage of coarser classes</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">i</span><span class="p">):</span>
+            <span class="n">product</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+=</span> <span class="n">B</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span> <span class="o">*</span> <span class="n">selection</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">*</span> <span class="n">f</span><span class="p">[</span><span class="n">j</span><span class="p">]</span>
+
+    <span class="c1"># Normalise to maintain mass balance</span>
+    <span class="n">total</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">product</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">total</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">product</span> <span class="o">=</span> <span class="p">[</span><span class="n">p</span> <span class="o">/</span> <span class="n">total</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">product</span><span class="p">]</span>
+
+    <span class="k">return</span> <span class="n">PSD</span><span class="p">(</span>
+        <span class="n">size_classes</span><span class="o">=</span><span class="n">feed</span><span class="o">.</span><span class="n">size_classes</span><span class="p">,</span>
+        <span class="n">mass_fractions</span><span class="o">=</span><span class="n">product</span><span class="p">,</span>
+        <span class="n">mass_tonnes</span><span class="o">=</span><span class="n">feed</span><span class="o">.</span><span class="n">mass_tonnes</span><span class="p">,</span>
+    <span class="p">)</span>
 </pre></div>
-<div class="clipboard-copy-txt" id="cell-4">class RunningTotal(Component):
-    # Define the inputs and outputs of the component
-    io = IO(inputs=["value"], outputs=["total_value"])
+<div class="clipboard-copy-txt" id="cell-4">def build_selection_vector(
+    size_classes: list[float],
+    css: float,
+    oss: float,
+    k3: float = 2.3,
+) -&gt; list[float]:
+    """Build the crusher selection (classification) vector.
 
-    def __init__(self, **kwargs: _t.Unpack[ComponentArgsDict]) -&gt; None:
-        super().__init__(**kwargs)
-        # Set the initial running total to 0
-        self._running_total = 0
+    Implements the Whiten classification function:
+    - Particles smaller than CSS pass through unbroken (S=0)
+    - Particles larger than OSS are always broken (S=1)
+    - Particles between CSS and OSS have a fractional probability
 
-    async def step(self) -&gt; None:
-        # The main logic of the component
-        self._running_total += self.value
-        self.total_value = self._running_total</div>
+    Args:
+        size_classes: Upper bounds of each size class (mm), coarsest first.
+        css: Closed-side setting (mm).
+        oss: Open-side setting (mm).
+        k3: Shape parameter controlling the classification curve steepness.
+
+    Returns:
+        Selection probability for each size class.
+    """
+    selection: list[float] = []
+    for d in size_classes:
+        if d &lt;= css:
+            selection.append(0.0)
+        elif d &gt;= oss:
+            selection.append(1.0)
+        else:
+            # Smooth transition between CSS and OSS
+            x = (d - css) / (oss - css)
+            selection.append(1.0 - (1.0 - x) ** k3)
+    return selection
+
+
+def build_breakage_matrix(
+    size_classes: list[float],
+    phi: float = 0.4,
+    gamma: float = 1.5,
+    beta: float = 3.5,
+) -&gt; list[list[float]]:
+    """Build the breakage distribution matrix (Austin &amp; Luckie, 1972).
+
+    B[i][j] is the fraction of material broken from size class j
+    that reports to size class i.
+
+    The cumulative breakage function is:
+        B_cum(i,j) = phi * (x_i/x_j)^gamma + (1 - phi) * (x_i/x_j)^beta
+
+    Args:
+        size_classes: Upper bounds of each size class (mm), coarsest first.
+        phi: Fraction of breakage due to impact (vs. abrasion).
+        gamma: Exponent for impact breakage.
+        beta: Exponent for abrasion breakage.
+
+    Returns:
+        Lower-triangular breakage matrix B[i][j].
+    """
+    n = len(size_classes)
+    B_cum = [[0.0] * n for _ in range(n)]
+
+    for j in range(n):
+        for i in range(j, n):
+            if i == j:
+                B_cum[i][j] = 1.0
+            else:
+                ratio = size_classes[i] / size_classes[j]
+                B_cum[i][j] = phi * ratio**gamma + (1.0 - phi) * ratio**beta
+
+    # Convert cumulative to fractional (incremental) breakage
+    B: list[list[float]] = [[0.0] * n for _ in range(n)]
+    for j in range(n):
+        for i in range(j + 1, n):
+            if i == n - 1:
+                B[i][j] = B_cum[i][j]
+            else:
+                B[i][j] = B_cum[i][j] - B_cum[i + 1][j]
+
+    return B
+
+
+def apply_crusher(feed: PSD, selection: list[float], B: list[list[float]]) -&gt; PSD:
+    """Apply one pass of the Whiten crusher model.
+
+    P = [B·S + (I - S)] · F
+
+    Args:
+        feed: Input particle size distribution.
+        selection: Selection vector (diagonal of S matrix).
+        B: Breakage matrix.
+
+    Returns:
+        Product particle size distribution (mass_tonnes preserved).
+    """
+    n = len(feed.size_classes)
+    f = feed.mass_fractions
+    product = [0.0] * n
+
+    for i in range(n):
+        # Material that passes through unbroken
+        product[i] += (1.0 - selection[i]) * f[i]
+        # Material generated by breakage of coarser classes
+        for j in range(i):
+            product[i] += B[i][j] * selection[j] * f[j]
+
+    # Normalise to maintain mass balance
+    total = sum(product)
+    if total &gt; 0:
+        product = [p / total for p in product]
+
+    return PSD(
+        size_classes=feed.size_classes,
+        mass_fractions=product,
+        mass_tonnes=feed.mass_tonnes,
+    )</div>
 </div>
 </div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=7">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h2 id="screen-model-function">Screen model function<a class="anchor-link" href="#screen-model-function">¶</a></h2><p>The <strong>screen partition curve</strong> models the probability of a particle passing through the screen. Rather than a perfect cut, it uses a logistic model that accounts for the gradual transition around the cut-point size ($d_{50c}$) and a bypass fraction of fine material that misreports to the oversize stream.</p>
+<p>$$E_{\text{undersize}}(d) = \frac{1 - \text{bypass}}{1 + (d / d_{50c})^{\alpha}}$$</p>
+<p>This gives exactly 50% passing probability at the cut-point $d_{50c}$, with the sharpness parameter $\alpha$ controlling how steep the transition is (King, 2001).</p>
 </div>
 </div>
 </div>
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
-<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=8">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -2705,27 +3342,92 @@ from plugboard.library import FileReader, FileWriter</div>
 </div>
 </clipboard-copy>
 </div>
-<div class="highlight-ipynb hl-python"><pre><span></span><span class="n">total</span> <span class="o">=</span> <span class="n">RunningTotal</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">"total"</span><span class="p">)</span>
+<div class="highlight-ipynb hl-python"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">screen_partition</span><span class="p">(</span>
+    <span class="n">size_classes</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">],</span>
+    <span class="n">d50c</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+    <span class="n">alpha</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">4.0</span><span class="p">,</span>
+    <span class="n">bypass</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.05</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Calculate screen partition (efficiency) curve.</span>
+
+<span class="sd">    Uses a logistic partition model for the screen. Returns the</span>
+<span class="sd">    fraction of material in each size class that reports to the</span>
+<span class="sd">    undersize (product) stream.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        size_classes: Upper bounds of each size class (mm), coarsest first.</span>
+<span class="sd">        d50c: Corrected cut-point size (mm) — 50% partition size.</span>
+<span class="sd">        alpha: Sharpness of separation (higher = sharper cut).</span>
+<span class="sd">        bypass: Fraction of fines that misreport to oversize.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Efficiency (fraction passing to undersize) for each size class.</span>
+
+<span class="sd">    References:</span>
+<span class="sd">        King, R.P. (2001). Modeling and Simulation of Mineral Processing</span>
+<span class="sd">        Systems, Ch. 8. Butterworth-Heinemann.</span>
+<span class="sd">    """</span>
+    <span class="n">efficiency</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">size_classes</span><span class="p">:</span>
+        <span class="n">e_undersize</span> <span class="o">=</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">-</span> <span class="n">bypass</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">+</span> <span class="p">(</span><span class="n">d</span> <span class="o">/</span> <span class="n">d50c</span><span class="p">)</span> <span class="o">**</span> <span class="n">alpha</span><span class="p">)</span>
+        <span class="n">efficiency</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">e_undersize</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">efficiency</span>
 </pre></div>
-<div class="clipboard-copy-txt" id="cell-5">total = RunningTotal(name="total")</div>
+<div class="clipboard-copy-txt" id="cell-5">def screen_partition(
+    size_classes: list[float],
+    d50c: float,
+    alpha: float = 4.0,
+    bypass: float = 0.05,
+) -&gt; list[float]:
+    """Calculate screen partition (efficiency) curve.
+
+    Uses a logistic partition model for the screen. Returns the
+    fraction of material in each size class that reports to the
+    undersize (product) stream.
+
+    Args:
+        size_classes: Upper bounds of each size class (mm), coarsest first.
+        d50c: Corrected cut-point size (mm) — 50% partition size.
+        alpha: Sharpness of separation (higher = sharper cut).
+        bypass: Fraction of fines that misreport to oversize.
+
+    Returns:
+        Efficiency (fraction passing to undersize) for each size class.
+
+    References:
+        King, R.P. (2001). Modeling and Simulation of Mineral Processing
+        Systems, Ch. 8. Butterworth-Heinemann.
+    """
+    efficiency: list[float] = []
+    for d in size_classes:
+        e_undersize = (1.0 - bypass) / (1.0 + (d / d50c) ** alpha)
+        efficiency.append(e_undersize)
+    return efficiency</div>
 </div>
 </div>
 </div>
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=9">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<p>At this point, it is possible to test the component in the notebook by initialising it, setting its input value, then calling <code>step()</code>.</p>
+<h2 id="plugboard-components">Plugboard components<a class="anchor-link" href="#plugboard-components">¶</a></h2><p>Now we define the Plugboard components that make up our crusher circuit:</p>
+<ol>
+<li><strong><code>FeedSource</code></strong> — generates a steady feed of ore with a given PSD and mass flow rate (tonnes per time step)</li>
+<li><strong><code>Crusher</code></strong> — applies the Whiten PBM model to produce a finer PSD, using mass-weighted mixing of feed and recirculated material</li>
+<li><strong><code>Screen</code></strong> — splits the crusher product into undersize (product) and oversize (recirculated), tracking mass flow through each stream</li>
+<li><strong><code>Conveyor</code></strong> — introduces a transport delay on the recirculation loop (simulates a conveyor belt carrying oversize material back to the crusher)</li>
+<li><strong><code>ProductCollector</code></strong> — accumulates the final product and reports quality metrics</li>
+</ol>
 </div>
 </div>
 </div>
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
-<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=10">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -2743,39 +3445,481 @@ from plugboard.library import FileReader, FileWriter</div>
 </div>
 </clipboard-copy>
 </div>
-<div class="highlight-ipynb hl-python"><pre><span></span><span class="k">await</span> <span class="n">total</span><span class="o">.</span><span class="n">init</span><span class="p">()</span>
-<span class="n">total</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="mi">10</span>  <span class="c1"># Set the value input to 10</span>
-<span class="k">await</span> <span class="n">total</span><span class="o">.</span><span class="n">step</span><span class="p">()</span>  <span class="c1"># Run the component</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">total</span><span class="o">.</span><span class="n">total_value</span><span class="p">)</span>  <span class="c1"># Print the total value output</span>
-<span class="n">total</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="mi">20</span>  <span class="c1"># Set the value input to 20</span>
-<span class="k">await</span> <span class="n">total</span><span class="o">.</span><span class="n">step</span><span class="p">()</span>  <span class="c1"># Run the component</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">total</span><span class="o">.</span><span class="n">total_value</span><span class="p">)</span>  <span class="c1"># Print the total value output</span>
+<div class="highlight-ipynb hl-python"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">FeedSource</span><span class="p">(</span><span class="n">Component</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Generates a feed stream with a fixed particle size distribution.</span>
+
+<span class="sd">    Runs for a set number of time steps, representing batches of ore</span>
+<span class="sd">    arriving at the crushing circuit.</span>
+<span class="sd">    """</span>
+
+    <span class="n">io</span> <span class="o">=</span> <span class="n">IO</span><span class="p">(</span><span class="n">outputs</span><span class="o">=</span><span class="p">[</span><span class="s2">"feed_psd"</span><span class="p">])</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">size_classes</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">],</span>
+        <span class="n">feed_fractions</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">],</span>
+        <span class="n">feed_tonnes</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">100.0</span><span class="p">,</span>
+        <span class="n">total_steps</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">50</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">_t</span><span class="o">.</span><span class="n">Unpack</span><span class="p">[</span><span class="n">ComponentArgsDict</span><span class="p">],</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_psd</span> <span class="o">=</span> <span class="n">PSD</span><span class="p">(</span>
+            <span class="n">size_classes</span><span class="o">=</span><span class="n">size_classes</span><span class="p">,</span>
+            <span class="n">mass_fractions</span><span class="o">=</span><span class="n">feed_fractions</span><span class="p">,</span>
+            <span class="n">mass_tonnes</span><span class="o">=</span><span class="n">feed_tonnes</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_total_steps</span> <span class="o">=</span> <span class="n">total_steps</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_step_count</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">step</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_step_count</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">_total_steps</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">feed_psd</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_psd</span><span class="o">.</span><span class="n">model_dump</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_step_count</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">Crusher</span><span class="p">(</span><span class="n">Component</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Whiten/King crusher model.</span>
+
+<span class="sd">    Receives a feed PSD (fresh feed combined with recirculated oversize)</span>
+<span class="sd">    and applies the PBM to produce a crushed product PSD.  Mass-weighted</span>
+<span class="sd">    mixing ensures the feed-to-recirculation ratio evolves dynamically.</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        css: Closed-side setting (mm) — smallest gap in the crusher.</span>
+<span class="sd">        oss: Open-side setting (mm) — largest gap in the crusher.</span>
+<span class="sd">        k3: Classification curve shape parameter.</span>
+<span class="sd">        phi: Impact fraction in the breakage function.</span>
+<span class="sd">        gamma: Impact breakage exponent.</span>
+<span class="sd">        beta: Abrasion breakage exponent.</span>
+<span class="sd">        n_stages: Number of internal breakage stages (Whiten multi-stage model).</span>
+<span class="sd">    """</span>
+
+    <span class="n">io</span> <span class="o">=</span> <span class="n">IO</span><span class="p">(</span><span class="n">inputs</span><span class="o">=</span><span class="p">[</span><span class="s2">"feed_psd"</span><span class="p">,</span> <span class="s2">"recirc_psd"</span><span class="p">],</span> <span class="n">outputs</span><span class="o">=</span><span class="p">[</span><span class="s2">"product_psd"</span><span class="p">])</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">css</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">12.0</span><span class="p">,</span>
+        <span class="n">oss</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">25.0</span><span class="p">,</span>
+        <span class="n">k3</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">2.3</span><span class="p">,</span>
+        <span class="n">phi</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.4</span><span class="p">,</span>
+        <span class="n">gamma</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.5</span><span class="p">,</span>
+        <span class="n">beta</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">3.5</span><span class="p">,</span>
+        <span class="n">n_stages</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">3</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">_t</span><span class="o">.</span><span class="n">Unpack</span><span class="p">[</span><span class="n">ComponentArgsDict</span><span class="p">],</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_css</span> <span class="o">=</span> <span class="n">css</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_oss</span> <span class="o">=</span> <span class="n">oss</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_k3</span> <span class="o">=</span> <span class="n">k3</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_phi</span> <span class="o">=</span> <span class="n">phi</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_gamma</span> <span class="o">=</span> <span class="n">gamma</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_beta</span> <span class="o">=</span> <span class="n">beta</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_n_stages</span> <span class="o">=</span> <span class="n">n_stages</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_selection</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_breakage</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">step</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">feed</span> <span class="o">=</span> <span class="n">PSD</span><span class="p">(</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">feed_psd</span><span class="p">)</span>
+
+        <span class="c1"># Build matrices on first call (size classes are now known)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_selection</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_selection</span> <span class="o">=</span> <span class="n">build_selection_vector</span><span class="p">(</span>
+                <span class="n">feed</span><span class="o">.</span><span class="n">size_classes</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_css</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_oss</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_k3</span>
+            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_breakage</span> <span class="o">=</span> <span class="n">build_breakage_matrix</span><span class="p">(</span>
+                <span class="n">feed</span><span class="o">.</span><span class="n">size_classes</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_phi</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gamma</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_beta</span>
+            <span class="p">)</span>
+
+        <span class="c1"># Mass-weighted mixing of fresh feed and recirculated oversize</span>
+        <span class="n">recirc</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">recirc_psd</span>
+        <span class="k">if</span> <span class="n">recirc</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">recirc_psd</span> <span class="o">=</span> <span class="n">PSD</span><span class="p">(</span><span class="o">**</span><span class="n">recirc</span><span class="p">)</span>
+            <span class="n">feed_mass</span> <span class="o">=</span> <span class="n">feed</span><span class="o">.</span><span class="n">mass_tonnes</span>
+            <span class="n">recirc_mass</span> <span class="o">=</span> <span class="n">recirc_psd</span><span class="o">.</span><span class="n">mass_tonnes</span>
+            <span class="n">total_mass</span> <span class="o">=</span> <span class="n">feed_mass</span> <span class="o">+</span> <span class="n">recirc_mass</span>
+            <span class="n">w_f</span> <span class="o">=</span> <span class="n">feed_mass</span> <span class="o">/</span> <span class="n">total_mass</span>
+            <span class="n">w_r</span> <span class="o">=</span> <span class="n">recirc_mass</span> <span class="o">/</span> <span class="n">total_mass</span>
+            <span class="n">combined</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="n">w_f</span> <span class="o">*</span> <span class="n">f</span> <span class="o">+</span> <span class="n">w_r</span> <span class="o">*</span> <span class="n">r</span> <span class="k">for</span> <span class="n">f</span><span class="p">,</span> <span class="n">r</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">feed</span><span class="o">.</span><span class="n">mass_fractions</span><span class="p">,</span> <span class="n">recirc_psd</span><span class="o">.</span><span class="n">mass_fractions</span><span class="p">)</span>
+            <span class="p">]</span>
+            <span class="n">feed</span> <span class="o">=</span> <span class="n">PSD</span><span class="p">(</span>
+                <span class="n">size_classes</span><span class="o">=</span><span class="n">feed</span><span class="o">.</span><span class="n">size_classes</span><span class="p">,</span>
+                <span class="n">mass_fractions</span><span class="o">=</span><span class="n">combined</span><span class="p">,</span>
+                <span class="n">mass_tonnes</span><span class="o">=</span><span class="n">total_mass</span><span class="p">,</span>
+            <span class="p">)</span>
+
+        <span class="c1"># Apply multi-stage crushing</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">feed</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_breakage</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">"Breakage matrix not initialised"</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_n_stages</span><span class="p">):</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="n">apply_crusher</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_selection</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_breakage</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">product_psd</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">model_dump</span><span class="p">()</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">Screen</span><span class="p">(</span><span class="n">Component</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Vibrating screen separator.</span>
+
+<span class="sd">    Splits the crusher product into undersize (product) and oversize</span>
+<span class="sd">    (recirculated back to the crusher). Tracks mass flow through each</span>
+<span class="sd">    output stream.</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        d50c: Cut-point size (mm) — particles near this size have 50% chance of passing.</span>
+<span class="sd">        alpha: Sharpness of the separation curve.</span>
+<span class="sd">        bypass: Fraction of fines misreporting to oversize.</span>
+<span class="sd">    """</span>
+
+    <span class="n">io</span> <span class="o">=</span> <span class="n">IO</span><span class="p">(</span><span class="n">inputs</span><span class="o">=</span><span class="p">[</span><span class="s2">"crusher_product"</span><span class="p">],</span> <span class="n">outputs</span><span class="o">=</span><span class="p">[</span><span class="s2">"undersize"</span><span class="p">,</span> <span class="s2">"oversize"</span><span class="p">])</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">d50c</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">15.0</span><span class="p">,</span>
+        <span class="n">alpha</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">4.0</span><span class="p">,</span>
+        <span class="n">bypass</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.05</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">_t</span><span class="o">.</span><span class="n">Unpack</span><span class="p">[</span><span class="n">ComponentArgsDict</span><span class="p">],</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_d50c</span> <span class="o">=</span> <span class="n">d50c</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_alpha</span> <span class="o">=</span> <span class="n">alpha</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_bypass</span> <span class="o">=</span> <span class="n">bypass</span>
+
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">step</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">feed</span> <span class="o">=</span> <span class="n">PSD</span><span class="p">(</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">crusher_product</span><span class="p">)</span>
+        <span class="n">efficiency</span> <span class="o">=</span> <span class="n">screen_partition</span><span class="p">(</span><span class="n">feed</span><span class="o">.</span><span class="n">size_classes</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_d50c</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_alpha</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_bypass</span><span class="p">)</span>
+
+        <span class="n">undersize_fracs</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">oversize_fracs</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">f</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">feed</span><span class="o">.</span><span class="n">mass_fractions</span><span class="p">):</span>
+            <span class="n">undersize_fracs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">f</span> <span class="o">*</span> <span class="n">efficiency</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+            <span class="n">oversize_fracs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">f</span> <span class="o">*</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">-</span> <span class="n">efficiency</span><span class="p">[</span><span class="n">i</span><span class="p">]))</span>
+
+        <span class="c1"># Mass split: proportion reporting to each stream</span>
+        <span class="n">u_total</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">undersize_fracs</span><span class="p">)</span>
+        <span class="n">o_total</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">oversize_fracs</span><span class="p">)</span>
+
+        <span class="n">undersize_mass</span> <span class="o">=</span> <span class="n">feed</span><span class="o">.</span><span class="n">mass_tonnes</span> <span class="o">*</span> <span class="n">u_total</span>
+        <span class="n">oversize_mass</span> <span class="o">=</span> <span class="n">feed</span><span class="o">.</span><span class="n">mass_tonnes</span> <span class="o">*</span> <span class="n">o_total</span>
+
+        <span class="k">if</span> <span class="n">u_total</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">undersize_fracs</span> <span class="o">=</span> <span class="p">[</span><span class="n">u</span> <span class="o">/</span> <span class="n">u_total</span> <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">undersize_fracs</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">o_total</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">oversize_fracs</span> <span class="o">=</span> <span class="p">[</span><span class="n">o</span> <span class="o">/</span> <span class="n">o_total</span> <span class="k">for</span> <span class="n">o</span> <span class="ow">in</span> <span class="n">oversize_fracs</span><span class="p">]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">undersize</span> <span class="o">=</span> <span class="n">PSD</span><span class="p">(</span>
+            <span class="n">size_classes</span><span class="o">=</span><span class="n">feed</span><span class="o">.</span><span class="n">size_classes</span><span class="p">,</span>
+            <span class="n">mass_fractions</span><span class="o">=</span><span class="n">undersize_fracs</span><span class="p">,</span>
+            <span class="n">mass_tonnes</span><span class="o">=</span><span class="n">undersize_mass</span><span class="p">,</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">model_dump</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">oversize</span> <span class="o">=</span> <span class="n">PSD</span><span class="p">(</span>
+            <span class="n">size_classes</span><span class="o">=</span><span class="n">feed</span><span class="o">.</span><span class="n">size_classes</span><span class="p">,</span>
+            <span class="n">mass_fractions</span><span class="o">=</span><span class="n">oversize_fracs</span><span class="p">,</span>
+            <span class="n">mass_tonnes</span><span class="o">=</span><span class="n">oversize_mass</span><span class="p">,</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">model_dump</span><span class="p">()</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">Conveyor</span><span class="p">(</span><span class="n">Component</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Transport delay for the recirculation loop.</span>
+
+<span class="sd">    Simulates a conveyor belt by buffering PSDs in a FIFO queue.</span>
+<span class="sd">    The output is delayed by `delay_steps` time steps, creating</span>
+<span class="sd">    realistic transient dynamics in the circuit.</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        delay_steps: Number of time steps to delay the material.</span>
+<span class="sd">    """</span>
+
+    <span class="n">io</span> <span class="o">=</span> <span class="n">IO</span><span class="p">(</span><span class="n">inputs</span><span class="o">=</span><span class="p">[</span><span class="s2">"input_psd"</span><span class="p">],</span> <span class="n">outputs</span><span class="o">=</span><span class="p">[</span><span class="s2">"output_psd"</span><span class="p">])</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">delay_steps</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">3</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">_t</span><span class="o">.</span><span class="n">Unpack</span><span class="p">[</span><span class="n">ComponentArgsDict</span><span class="p">],</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_delay_steps</span> <span class="o">=</span> <span class="n">delay_steps</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_buffer</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">_t</span><span class="o">.</span><span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="n">delay_steps</span>
+
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">step</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="c1"># Push new material onto the buffer, pop the oldest</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_buffer</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">input_psd</span><span class="p">)</span>
+        <span class="n">delayed</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_buffer</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">output_psd</span> <span class="o">=</span> <span class="n">delayed</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">ProductCollector</span><span class="p">(</span><span class="n">Component</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Collects the final product stream and tracks quality metrics.</span>
+
+<span class="sd">    Records the PSD at each time step and computes running statistics</span>
+<span class="sd">    including the product d80 (80th percentile passing size).</span>
+<span class="sd">    """</span>
+
+    <span class="n">io</span> <span class="o">=</span> <span class="n">IO</span><span class="p">(</span><span class="n">inputs</span><span class="o">=</span><span class="p">[</span><span class="s2">"product_psd"</span><span class="p">],</span> <span class="n">outputs</span><span class="o">=</span><span class="p">[</span><span class="s2">"d80"</span><span class="p">,</span> <span class="s2">"d50"</span><span class="p">])</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">target_d80</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">20.0</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">_t</span><span class="o">.</span><span class="n">Unpack</span><span class="p">[</span><span class="n">ComponentArgsDict</span><span class="p">],</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_target_d80</span> <span class="o">=</span> <span class="n">target_d80</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">psd_history</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">_t</span><span class="o">.</span><span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">step</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">psd</span> <span class="o">=</span> <span class="n">PSD</span><span class="p">(</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">product_psd</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">psd_history</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">psd</span><span class="o">.</span><span class="n">model_dump</span><span class="p">())</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">d80</span> <span class="o">=</span> <span class="n">psd</span><span class="o">.</span><span class="n">d80</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">d50</span> <span class="o">=</span> <span class="n">psd</span><span class="o">.</span><span class="n">d50</span>
 </pre></div>
-<div class="clipboard-copy-txt" id="cell-6">await total.init()
-total.value = 10  # Set the value input to 10
-await total.step()  # Run the component
-print(total.total_value)  # Print the total value output
-total.value = 20  # Set the value input to 20
-await total.step()  # Run the component
-print(total.total_value)  # Print the total value output</div>
+<div class="clipboard-copy-txt" id="cell-6">class FeedSource(Component):
+    """Generates a feed stream with a fixed particle size distribution.
+
+    Runs for a set number of time steps, representing batches of ore
+    arriving at the crushing circuit.
+    """
+
+    io = IO(outputs=["feed_psd"])
+
+    def __init__(
+        self,
+        size_classes: list[float],
+        feed_fractions: list[float],
+        feed_tonnes: float = 100.0,
+        total_steps: int = 50,
+        **kwargs: _t.Unpack[ComponentArgsDict],
+    ) -&gt; None:
+        super().__init__(**kwargs)
+        self._psd = PSD(
+            size_classes=size_classes,
+            mass_fractions=feed_fractions,
+            mass_tonnes=feed_tonnes,
+        )
+        self._total_steps = total_steps
+        self._step_count = 0
+
+    async def step(self) -&gt; None:
+        if self._step_count &lt; self._total_steps:
+            self.feed_psd = self._psd.model_dump()
+            self._step_count += 1
+        else:
+            await self.io.close()
+
+
+class Crusher(Component):
+    """Whiten/King crusher model.
+
+    Receives a feed PSD (fresh feed combined with recirculated oversize)
+    and applies the PBM to produce a crushed product PSD.  Mass-weighted
+    mixing ensures the feed-to-recirculation ratio evolves dynamically.
+
+    Parameters:
+        css: Closed-side setting (mm) — smallest gap in the crusher.
+        oss: Open-side setting (mm) — largest gap in the crusher.
+        k3: Classification curve shape parameter.
+        phi: Impact fraction in the breakage function.
+        gamma: Impact breakage exponent.
+        beta: Abrasion breakage exponent.
+        n_stages: Number of internal breakage stages (Whiten multi-stage model).
+    """
+
+    io = IO(inputs=["feed_psd", "recirc_psd"], outputs=["product_psd"])
+
+    def __init__(
+        self,
+        css: float = 12.0,
+        oss: float = 25.0,
+        k3: float = 2.3,
+        phi: float = 0.4,
+        gamma: float = 1.5,
+        beta: float = 3.5,
+        n_stages: int = 3,
+        **kwargs: _t.Unpack[ComponentArgsDict],
+    ) -&gt; None:
+        super().__init__(**kwargs)
+        self._css = css
+        self._oss = oss
+        self._k3 = k3
+        self._phi = phi
+        self._gamma = gamma
+        self._beta = beta
+        self._n_stages = n_stages
+        self._selection: list[float] | None = None
+        self._breakage: list[list[float]] | None = None
+
+    async def step(self) -&gt; None:
+        feed = PSD(**self.feed_psd)
+
+        # Build matrices on first call (size classes are now known)
+        if self._selection is None:
+            self._selection = build_selection_vector(
+                feed.size_classes, self._css, self._oss, self._k3
+            )
+            self._breakage = build_breakage_matrix(
+                feed.size_classes, self._phi, self._gamma, self._beta
+            )
+
+        # Mass-weighted mixing of fresh feed and recirculated oversize
+        recirc = self.recirc_psd
+        if recirc is not None:
+            recirc_psd = PSD(**recirc)
+            feed_mass = feed.mass_tonnes
+            recirc_mass = recirc_psd.mass_tonnes
+            total_mass = feed_mass + recirc_mass
+            w_f = feed_mass / total_mass
+            w_r = recirc_mass / total_mass
+            combined = [
+                w_f * f + w_r * r for f, r in zip(feed.mass_fractions, recirc_psd.mass_fractions)
+            ]
+            feed = PSD(
+                size_classes=feed.size_classes,
+                mass_fractions=combined,
+                mass_tonnes=total_mass,
+            )
+
+        # Apply multi-stage crushing
+        result = feed
+        if self._breakage is None:
+            raise RuntimeError("Breakage matrix not initialised")
+        for _ in range(self._n_stages):
+            result = apply_crusher(result, self._selection, self._breakage)
+
+        self.product_psd = result.model_dump()
+
+
+class Screen(Component):
+    """Vibrating screen separator.
+
+    Splits the crusher product into undersize (product) and oversize
+    (recirculated back to the crusher). Tracks mass flow through each
+    output stream.
+
+    Parameters:
+        d50c: Cut-point size (mm) — particles near this size have 50% chance of passing.
+        alpha: Sharpness of the separation curve.
+        bypass: Fraction of fines misreporting to oversize.
+    """
+
+    io = IO(inputs=["crusher_product"], outputs=["undersize", "oversize"])
+
+    def __init__(
+        self,
+        d50c: float = 15.0,
+        alpha: float = 4.0,
+        bypass: float = 0.05,
+        **kwargs: _t.Unpack[ComponentArgsDict],
+    ) -&gt; None:
+        super().__init__(**kwargs)
+        self._d50c = d50c
+        self._alpha = alpha
+        self._bypass = bypass
+
+    async def step(self) -&gt; None:
+        feed = PSD(**self.crusher_product)
+        efficiency = screen_partition(feed.size_classes, self._d50c, self._alpha, self._bypass)
+
+        undersize_fracs: list[float] = []
+        oversize_fracs: list[float] = []
+        for i, f in enumerate(feed.mass_fractions):
+            undersize_fracs.append(f * efficiency[i])
+            oversize_fracs.append(f * (1.0 - efficiency[i]))
+
+        # Mass split: proportion reporting to each stream
+        u_total = sum(undersize_fracs)
+        o_total = sum(oversize_fracs)
+
+        undersize_mass = feed.mass_tonnes * u_total
+        oversize_mass = feed.mass_tonnes * o_total
+
+        if u_total &gt; 0:
+            undersize_fracs = [u / u_total for u in undersize_fracs]
+        if o_total &gt; 0:
+            oversize_fracs = [o / o_total for o in oversize_fracs]
+
+        self.undersize = PSD(
+            size_classes=feed.size_classes,
+            mass_fractions=undersize_fracs,
+            mass_tonnes=undersize_mass,
+        ).model_dump()
+        self.oversize = PSD(
+            size_classes=feed.size_classes,
+            mass_fractions=oversize_fracs,
+            mass_tonnes=oversize_mass,
+        ).model_dump()
+
+
+class Conveyor(Component):
+    """Transport delay for the recirculation loop.
+
+    Simulates a conveyor belt by buffering PSDs in a FIFO queue.
+    The output is delayed by `delay_steps` time steps, creating
+    realistic transient dynamics in the circuit.
+
+    Parameters:
+        delay_steps: Number of time steps to delay the material.
+    """
+
+    io = IO(inputs=["input_psd"], outputs=["output_psd"])
+
+    def __init__(
+        self,
+        delay_steps: int = 3,
+        **kwargs: _t.Unpack[ComponentArgsDict],
+    ) -&gt; None:
+        super().__init__(**kwargs)
+        self._delay_steps = delay_steps
+        self._buffer: list[dict[str, _t.Any] | None] = [None] * delay_steps
+
+    async def step(self) -&gt; None:
+        # Push new material onto the buffer, pop the oldest
+        self._buffer.append(self.input_psd)
+        delayed = self._buffer.pop(0)
+        self.output_psd = delayed
+
+
+class ProductCollector(Component):
+    """Collects the final product stream and tracks quality metrics.
+
+    Records the PSD at each time step and computes running statistics
+    including the product d80 (80th percentile passing size).
+    """
+
+    io = IO(inputs=["product_psd"], outputs=["d80", "d50"])
+
+    def __init__(
+        self,
+        target_d80: float = 20.0,
+        **kwargs: _t.Unpack[ComponentArgsDict],
+    ) -&gt; None:
+        super().__init__(**kwargs)
+        self._target_d80 = target_d80
+        self.psd_history: list[dict[str, _t.Any]] = []
+
+    async def step(self) -&gt; None:
+        psd = PSD(**self.product_psd)
+        self.psd_history.append(psd.model_dump())
+        self.d80 = psd.d80
+        self.d50 = psd.d50</div>
 </div>
 </div>
 </div>
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=11">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<p>Now re-instantiate <code>total</code> to reset its state.</p>
+<h2 id="define-the-size-classes-and-initial-feed">Define the size classes and initial feed<a class="anchor-link" href="#define-the-size-classes-and-initial-feed">¶</a></h2><p>We use a standard $\sqrt{2}$ sieve series from 150 mm down to ~4.75 mm, giving 11 size classes. The fresh feed is a typical ROM (run-of-mine) ore distribution with most material in the coarser fractions.</p>
 </div>
 </div>
 </div>
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
-<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=12">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -2793,27 +3937,37 @@ print(total.total_value)  # Print the total value output</div>
 </div>
 </clipboard-copy>
 </div>
-<div class="highlight-ipynb hl-python"><pre><span></span><span class="n">total</span> <span class="o">=</span> <span class="n">RunningTotal</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">"total"</span><span class="p">)</span>
+<div class="highlight-ipynb hl-python"><pre><span></span><span class="c1"># Standard sqrt(2) sieve series from 150 mm down to ~4.75 mm</span>
+<span class="n">SIZE_CLASSES</span> <span class="o">=</span> <span class="p">[</span><span class="mf">150.0</span><span class="p">,</span> <span class="mf">106.0</span><span class="p">,</span> <span class="mf">75.0</span><span class="p">,</span> <span class="mf">53.0</span><span class="p">,</span> <span class="mf">37.5</span><span class="p">,</span> <span class="mf">26.5</span><span class="p">,</span> <span class="mf">19.0</span><span class="p">,</span> <span class="mf">13.2</span><span class="p">,</span> <span class="mf">9.5</span><span class="p">,</span> <span class="mf">6.7</span><span class="p">,</span> <span class="mf">4.75</span><span class="p">]</span>
+
+<span class="c1"># ROM ore feed distribution (mass fractions, coarsest to finest)</span>
+<span class="n">FEED_FRACTIONS</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.05</span><span class="p">,</span> <span class="mf">0.10</span><span class="p">,</span> <span class="mf">0.15</span><span class="p">,</span> <span class="mf">0.20</span><span class="p">,</span> <span class="mf">0.18</span><span class="p">,</span> <span class="mf">0.12</span><span class="p">,</span> <span class="mf">0.08</span><span class="p">,</span> <span class="mf">0.05</span><span class="p">,</span> <span class="mf">0.04</span><span class="p">,</span> <span class="mf">0.02</span><span class="p">,</span> <span class="mf">0.01</span><span class="p">]</span>
 </pre></div>
-<div class="clipboard-copy-txt" id="cell-7">total = RunningTotal(name="total")</div>
+<div class="clipboard-copy-txt" id="cell-7"># Standard sqrt(2) sieve series from 150 mm down to ~4.75 mm
+SIZE_CLASSES = [150.0, 106.0, 75.0, 53.0, 37.5, 26.5, 19.0, 13.2, 9.5, 6.7, 4.75]
+
+# ROM ore feed distribution (mass fractions, coarsest to finest)
+FEED_FRACTIONS = [0.05, 0.10, 0.15, 0.20, 0.18, 0.12, 0.08, 0.05, 0.04, 0.02, 0.01]</div>
 </div>
 </div>
 </div>
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=13">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<p>For the output we can use the built-in <code>FileWriter</code> component, configured to expect an input called <code>value_to_save</code>.</p>
+<h2 id="assemble-and-run-the-process">Assemble and run the process<a class="anchor-link" href="#assemble-and-run-the-process">¶</a></h2><p>The circuit has a <strong>recirculation loop</strong>: screen oversize passes through a <code>Conveyor</code> (with a 3-step transport delay) before feeding back into the crusher. This delay simulates the time for material to travel on a conveyor belt, and creates realistic transient dynamics as the circulating load builds up.</p>
+<p>To break the circular dependency in the loop, we provide <code>initial_values</code> for the <code>recirc_psd</code> input on the Crusher component (set to <code>None</code> on the first step).</p>
+<p>Each stream carries its <strong>absolute mass flow</strong> (in tonnes), so the crusher correctly weights the mixing ratio of fresh feed vs. recirculated oversize.</p>
 </div>
 </div>
 </div>
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
-<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=14">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -2831,27 +3985,114 @@ print(total.total_value)  # Print the total value output</div>
 </div>
 </clipboard-copy>
 </div>
-<div class="highlight-ipynb hl-python"><pre><span></span><span class="n">output_data</span> <span class="o">=</span> <span class="n">FileWriter</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">"output_data"</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="s2">"output.csv"</span><span class="p">,</span> <span class="n">field_names</span><span class="o">=</span><span class="p">[</span><span class="s2">"value_to_save"</span><span class="p">])</span>
+<div class="highlight-ipynb hl-python"><pre><span></span><span class="n">connect</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">src</span><span class="p">,</span> <span class="n">tgt</span><span class="p">:</span> <span class="n">AsyncioConnector</span><span class="p">(</span><span class="n">spec</span><span class="o">=</span><span class="n">ConnectorSpec</span><span class="p">(</span><span class="n">source</span><span class="o">=</span><span class="n">src</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="n">tgt</span><span class="p">))</span>
+
+<span class="n">process</span> <span class="o">=</span> <span class="n">LocalProcess</span><span class="p">(</span>
+    <span class="n">components</span><span class="o">=</span><span class="p">[</span>
+        <span class="n">FeedSource</span><span class="p">(</span>
+            <span class="n">name</span><span class="o">=</span><span class="s2">"feed"</span><span class="p">,</span>
+            <span class="n">size_classes</span><span class="o">=</span><span class="n">SIZE_CLASSES</span><span class="p">,</span>
+            <span class="n">feed_fractions</span><span class="o">=</span><span class="n">FEED_FRACTIONS</span><span class="p">,</span>
+            <span class="n">feed_tonnes</span><span class="o">=</span><span class="mf">100.0</span><span class="p">,</span>
+            <span class="n">total_steps</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span>
+        <span class="p">),</span>
+        <span class="n">Crusher</span><span class="p">(</span>
+            <span class="n">name</span><span class="o">=</span><span class="s2">"crusher"</span><span class="p">,</span>
+            <span class="n">css</span><span class="o">=</span><span class="mf">12.0</span><span class="p">,</span>
+            <span class="n">oss</span><span class="o">=</span><span class="mf">30.0</span><span class="p">,</span>
+            <span class="n">k3</span><span class="o">=</span><span class="mf">2.3</span><span class="p">,</span>
+            <span class="n">n_stages</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+            <span class="n">initial_values</span><span class="o">=</span><span class="p">{</span><span class="s2">"recirc_psd"</span><span class="p">:</span> <span class="p">[</span><span class="kc">None</span><span class="p">]},</span>
+        <span class="p">),</span>
+        <span class="n">Screen</span><span class="p">(</span>
+            <span class="n">name</span><span class="o">=</span><span class="s2">"screen"</span><span class="p">,</span>
+            <span class="n">d50c</span><span class="o">=</span><span class="mf">18.0</span><span class="p">,</span>
+            <span class="n">alpha</span><span class="o">=</span><span class="mf">3.5</span><span class="p">,</span>
+            <span class="n">bypass</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span>
+        <span class="p">),</span>
+        <span class="n">Conveyor</span><span class="p">(</span>
+            <span class="n">name</span><span class="o">=</span><span class="s2">"conveyor"</span><span class="p">,</span>
+            <span class="n">delay_steps</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+        <span class="p">),</span>
+        <span class="n">ProductCollector</span><span class="p">(</span>
+            <span class="n">name</span><span class="o">=</span><span class="s2">"product"</span><span class="p">,</span>
+            <span class="n">target_d80</span><span class="o">=</span><span class="mf">20.0</span><span class="p">,</span>
+        <span class="p">),</span>
+    <span class="p">],</span>
+    <span class="n">connectors</span><span class="o">=</span><span class="p">[</span>
+        <span class="c1"># Fresh feed → Crusher</span>
+        <span class="n">connect</span><span class="p">(</span><span class="s2">"feed.feed_psd"</span><span class="p">,</span> <span class="s2">"crusher.feed_psd"</span><span class="p">),</span>
+        <span class="c1"># Crusher → Screen</span>
+        <span class="n">connect</span><span class="p">(</span><span class="s2">"crusher.product_psd"</span><span class="p">,</span> <span class="s2">"screen.crusher_product"</span><span class="p">),</span>
+        <span class="c1"># Screen undersize → Product</span>
+        <span class="n">connect</span><span class="p">(</span><span class="s2">"screen.undersize"</span><span class="p">,</span> <span class="s2">"product.product_psd"</span><span class="p">),</span>
+        <span class="c1"># Screen oversize → Conveyor → Crusher (recirculation with delay)</span>
+        <span class="n">connect</span><span class="p">(</span><span class="s2">"screen.oversize"</span><span class="p">,</span> <span class="s2">"conveyor.input_psd"</span><span class="p">),</span>
+        <span class="n">connect</span><span class="p">(</span><span class="s2">"conveyor.output_psd"</span><span class="p">,</span> <span class="s2">"crusher.recirc_psd"</span><span class="p">),</span>
+    <span class="p">],</span>
+<span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span>
+    <span class="sa">f</span><span class="s2">"Crusher circuit created: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">process</span><span class="o">.</span><span class="n">components</span><span class="p">)</span><span class="si">}</span><span class="s2"> components, </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">process</span><span class="o">.</span><span class="n">connectors</span><span class="p">)</span><span class="si">}</span><span class="s2"> connectors"</span>
+<span class="p">)</span>
 </pre></div>
-<div class="clipboard-copy-txt" id="cell-8">output_data = FileWriter(name="output_data", path="output.csv", field_names=["value_to_save"])</div>
+<div class="clipboard-copy-txt" id="cell-8">connect = lambda src, tgt: AsyncioConnector(spec=ConnectorSpec(source=src, target=tgt))
+
+process = LocalProcess(
+    components=[
+        FeedSource(
+            name="feed",
+            size_classes=SIZE_CLASSES,
+            feed_fractions=FEED_FRACTIONS,
+            feed_tonnes=100.0,
+            total_steps=50,
+        ),
+        Crusher(
+            name="crusher",
+            css=12.0,
+            oss=30.0,
+            k3=2.3,
+            n_stages=2,
+            initial_values={"recirc_psd": [None]},
+        ),
+        Screen(
+            name="screen",
+            d50c=18.0,
+            alpha=3.5,
+            bypass=0.05,
+        ),
+        Conveyor(
+            name="conveyor",
+            delay_steps=3,
+        ),
+        ProductCollector(
+            name="product",
+            target_d80=20.0,
+        ),
+    ],
+    connectors=[
+        # Fresh feed → Crusher
+        connect("feed.feed_psd", "crusher.feed_psd"),
+        # Crusher → Screen
+        connect("crusher.product_psd", "screen.crusher_product"),
+        # Screen undersize → Product
+        connect("screen.undersize", "product.product_psd"),
+        # Screen oversize → Conveyor → Crusher (recirculation with delay)
+        connect("screen.oversize", "conveyor.input_psd"),
+        connect("conveyor.output_psd", "crusher.recirc_psd"),
+    ],
+)
+
+print(
+    f"Crusher circuit created: {len(process.components)} components, {len(process.connectors)} connectors"
+)</div>
 </div>
 </div>
-</div>
-</div>
-</div>
-</div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
-<div class="jp-Cell-inputWrapper" tabindex="0">
-<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
-</div>
-<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
-</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<p>Now connect the components together in a <code>LocalProcess</code>.</p>
 </div>
 </div>
 </div>
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
-<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=15">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -2869,51 +4110,24 @@ print(total.total_value)  # Print the total value output</div>
 </div>
 </clipboard-copy>
 </div>
-<div class="highlight-ipynb hl-python"><pre><span></span><span class="n">process</span> <span class="o">=</span> <span class="n">LocalProcess</span><span class="p">(</span>
-    <span class="n">components</span><span class="o">=</span><span class="p">[</span><span class="n">input_data</span><span class="p">,</span> <span class="n">total</span><span class="p">,</span> <span class="n">output_data</span><span class="p">],</span>
-    <span class="n">connectors</span><span class="o">=</span><span class="p">[</span>
-        <span class="c1"># Connect input_data to total</span>
-        <span class="n">AsyncioConnector</span><span class="p">(</span>
-            <span class="n">spec</span><span class="o">=</span><span class="n">ConnectorSpec</span><span class="p">(</span><span class="n">source</span><span class="o">=</span><span class="s2">"input_data.value"</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="s2">"total.value"</span><span class="p">),</span>
-        <span class="p">),</span>
-        <span class="c1"># Connect total to output_data</span>
-        <span class="n">AsyncioConnector</span><span class="p">(</span>
-            <span class="n">spec</span><span class="o">=</span><span class="n">ConnectorSpec</span><span class="p">(</span><span class="n">source</span><span class="o">=</span><span class="s2">"total.total_value"</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="s2">"output_data.value_to_save"</span><span class="p">),</span>
-        <span class="p">),</span>
-    <span class="p">],</span>
-<span class="p">)</span>
+<div class="highlight-ipynb hl-python"><pre><span></span><span class="c1"># Visualise the process as a diagram</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">plugboard.diagram</span><span class="w"> </span><span class="kn">import</span> <span class="n">MermaidDiagram</span>
+
+<span class="n">diagram_url</span> <span class="o">=</span> <span class="n">MermaidDiagram</span><span class="o">.</span><span class="n">from_process</span><span class="p">(</span><span class="n">process</span><span class="p">)</span><span class="o">.</span><span class="n">url</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">diagram_url</span><span class="p">)</span>
 </pre></div>
-<div class="clipboard-copy-txt" id="cell-9">process = LocalProcess(
-    components=[input_data, total, output_data],
-    connectors=[
-        # Connect input_data to total
-        AsyncioConnector(
-            spec=ConnectorSpec(source="input_data.value", target="total.value"),
-        ),
-        # Connect total to output_data
-        AsyncioConnector(
-            spec=ConnectorSpec(source="total.total_value", target="output_data.value_to_save"),
-        ),
-    ],
-)</div>
+<div class="clipboard-copy-txt" id="cell-9"># Visualise the process as a diagram
+from plugboard.diagram import MermaidDiagram
+
+diagram_url = MermaidDiagram.from_process(process).url
+print(diagram_url)</div>
 </div>
 </div>
-</div>
-</div>
-</div>
-</div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
-<div class="jp-Cell-inputWrapper" tabindex="0">
-<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
-</div>
-<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
-</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<p>Now we can initialise and run the simulation.</p>
 </div>
 </div>
 </div>
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
-<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=16">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -2931,29 +4145,39 @@ print(total.total_value)  # Print the total value output</div>
 </div>
 </clipboard-copy>
 </div>
-<div class="highlight-ipynb hl-python"><pre><span></span><span class="k">async</span> <span class="k">with</span> <span class="n">process</span><span class="p">:</span>
+<div class="highlight-ipynb hl-python"><pre><span></span><span class="c1"># Run the simulation</span>
+<span class="k">async</span> <span class="k">with</span> <span class="n">process</span><span class="p">:</span>
     <span class="k">await</span> <span class="n">process</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="s2">"Simulation complete!"</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Final product d80: </span><span class="si">{</span><span class="n">process</span><span class="o">.</span><span class="n">components</span><span class="p">[</span><span class="s1">'product'</span><span class="p">]</span><span class="o">.</span><span class="n">d80</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2"> mm"</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Final product d50: </span><span class="si">{</span><span class="n">process</span><span class="o">.</span><span class="n">components</span><span class="p">[</span><span class="s1">'product'</span><span class="p">]</span><span class="o">.</span><span class="n">d50</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2"> mm"</span><span class="p">)</span>
 </pre></div>
-<div class="clipboard-copy-txt" id="cell-10">async with process:
-    await process.run()</div>
+<div class="clipboard-copy-txt" id="cell-10"># Run the simulation
+async with process:
+    await process.run()
+
+print("Simulation complete!")
+print(f"Final product d80: {process.components['product'].d80:.2f} mm")
+print(f"Final product d50: {process.components['product'].d50:.2f} mm")</div>
 </div>
 </div>
 </div>
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=17">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<p>Finally check we have the output data saved in <code>output.csv</code>.</p>
+<h2 id="visualise-results">Visualise results<a class="anchor-link" href="#visualise-results">¶</a></h2><p>Let's plot the evolution of the product size metrics and mass flow over time. The <strong>conveyor delay</strong> creates distinct step-changes in the circulating load, and we can see the circuit gradually approach steady state.</p>
 </div>
 </div>
 </div>
 </div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
-<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=18">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -2971,11 +4195,619 @@ print(total.total_value)  # Print the total value output</div>
 </div>
 </clipboard-copy>
 </div>
-<div class="highlight-ipynb hl-python"><pre><span></span><span class="err">!</span><span class="n">cat</span> <span class="n">output</span><span class="o">.</span><span class="n">csv</span>
+<div class="highlight-ipynb hl-python"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">plotly.graph_objects</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">go</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">plotly.subplots</span><span class="w"> </span><span class="kn">import</span> <span class="n">make_subplots</span>
+
+<span class="n">collector</span> <span class="o">=</span> <span class="n">process</span><span class="o">.</span><span class="n">components</span><span class="p">[</span><span class="s2">"product"</span><span class="p">]</span>
+<span class="n">history</span> <span class="o">=</span> <span class="n">collector</span><span class="o">.</span><span class="n">psd_history</span>
+
+<span class="c1"># Extract metrics</span>
+<span class="n">d80_values</span> <span class="o">=</span> <span class="p">[</span><span class="n">PSD</span><span class="p">(</span><span class="o">**</span><span class="n">h</span><span class="p">)</span><span class="o">.</span><span class="n">d80</span> <span class="k">for</span> <span class="n">h</span> <span class="ow">in</span> <span class="n">history</span><span class="p">]</span>
+<span class="n">d50_values</span> <span class="o">=</span> <span class="p">[</span><span class="n">PSD</span><span class="p">(</span><span class="o">**</span><span class="n">h</span><span class="p">)</span><span class="o">.</span><span class="n">d50</span> <span class="k">for</span> <span class="n">h</span> <span class="ow">in</span> <span class="n">history</span><span class="p">]</span>
+<span class="n">mass_values</span> <span class="o">=</span> <span class="p">[</span><span class="n">PSD</span><span class="p">(</span><span class="o">**</span><span class="n">h</span><span class="p">)</span><span class="o">.</span><span class="n">mass_tonnes</span> <span class="k">for</span> <span class="n">h</span> <span class="ow">in</span> <span class="n">history</span><span class="p">]</span>
+<span class="n">steps</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">d80_values</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span>
+
+<span class="n">fig</span> <span class="o">=</span> <span class="n">make_subplots</span><span class="p">(</span>
+    <span class="n">rows</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+    <span class="n">cols</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+    <span class="n">subplot_titles</span><span class="o">=</span><span class="p">(</span>
+        <span class="s2">"Product size metrics over time"</span><span class="p">,</span>
+        <span class="s2">"Product mass flow over time"</span><span class="p">,</span>
+        <span class="s2">"Final cumulative PSD"</span><span class="p">,</span>
+        <span class="s2">"Circulating load ratio"</span><span class="p">,</span>
+    <span class="p">),</span>
+    <span class="n">vertical_spacing</span><span class="o">=</span><span class="mf">0.15</span><span class="p">,</span>
+    <span class="n">horizontal_spacing</span><span class="o">=</span><span class="mf">0.12</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="c1"># --- Plot 1: d80/d50 evolution ---</span>
+<span class="n">fig</span><span class="o">.</span><span class="n">add_trace</span><span class="p">(</span>
+    <span class="n">go</span><span class="o">.</span><span class="n">Scatter</span><span class="p">(</span>
+        <span class="n">x</span><span class="o">=</span><span class="n">steps</span><span class="p">,</span>
+        <span class="n">y</span><span class="o">=</span><span class="n">d80_values</span><span class="p">,</span>
+        <span class="n">name</span><span class="o">=</span><span class="s2">"d80"</span><span class="p">,</span>
+        <span class="n">line</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">color</span><span class="o">=</span><span class="s2">"#2196F3"</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mi">2</span><span class="p">),</span>
+    <span class="p">),</span>
+    <span class="n">row</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+    <span class="n">col</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">fig</span><span class="o">.</span><span class="n">add_trace</span><span class="p">(</span>
+    <span class="n">go</span><span class="o">.</span><span class="n">Scatter</span><span class="p">(</span>
+        <span class="n">x</span><span class="o">=</span><span class="n">steps</span><span class="p">,</span>
+        <span class="n">y</span><span class="o">=</span><span class="n">d50_values</span><span class="p">,</span>
+        <span class="n">name</span><span class="o">=</span><span class="s2">"d50"</span><span class="p">,</span>
+        <span class="n">line</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">color</span><span class="o">=</span><span class="s2">"#FF9800"</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mi">2</span><span class="p">),</span>
+    <span class="p">),</span>
+    <span class="n">row</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+    <span class="n">col</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="c1"># --- Plot 2: Mass flow ---</span>
+<span class="n">fig</span><span class="o">.</span><span class="n">add_trace</span><span class="p">(</span>
+    <span class="n">go</span><span class="o">.</span><span class="n">Scatter</span><span class="p">(</span>
+        <span class="n">x</span><span class="o">=</span><span class="n">steps</span><span class="p">,</span>
+        <span class="n">y</span><span class="o">=</span><span class="n">mass_values</span><span class="p">,</span>
+        <span class="n">name</span><span class="o">=</span><span class="s2">"Product mass (t)"</span><span class="p">,</span>
+        <span class="n">line</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">color</span><span class="o">=</span><span class="s2">"#4CAF50"</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mi">2</span><span class="p">),</span>
+        <span class="n">fill</span><span class="o">=</span><span class="s2">"tozeroy"</span><span class="p">,</span>
+        <span class="n">fillcolor</span><span class="o">=</span><span class="s2">"rgba(76, 175, 80, 0.1)"</span><span class="p">,</span>
+    <span class="p">),</span>
+    <span class="n">row</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+    <span class="n">col</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">fig</span><span class="o">.</span><span class="n">add_hline</span><span class="p">(</span>
+    <span class="n">y</span><span class="o">=</span><span class="mf">100.0</span><span class="p">,</span>
+    <span class="n">line_dash</span><span class="o">=</span><span class="s2">"dash"</span><span class="p">,</span>
+    <span class="n">line_color</span><span class="o">=</span><span class="s2">"gray"</span><span class="p">,</span>
+    <span class="n">annotation_text</span><span class="o">=</span><span class="s2">"Feed rate (100 t)"</span><span class="p">,</span>
+    <span class="n">row</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+    <span class="n">col</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="c1"># --- Plot 3: Final cumulative PSD ---</span>
+<span class="n">final_psd</span> <span class="o">=</span> <span class="n">PSD</span><span class="p">(</span><span class="o">**</span><span class="n">history</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+<span class="n">cum_passing</span> <span class="o">=</span> <span class="n">final_psd</span><span class="o">.</span><span class="n">to_cumulative_passing</span><span class="p">()</span>
+
+<span class="n">fig</span><span class="o">.</span><span class="n">add_trace</span><span class="p">(</span>
+    <span class="n">go</span><span class="o">.</span><span class="n">Scatter</span><span class="p">(</span>
+        <span class="n">x</span><span class="o">=</span><span class="n">final_psd</span><span class="o">.</span><span class="n">size_classes</span><span class="p">,</span>
+        <span class="n">y</span><span class="o">=</span><span class="n">cum_passing</span><span class="p">,</span>
+        <span class="n">name</span><span class="o">=</span><span class="s2">"Cumulative % passing"</span><span class="p">,</span>
+        <span class="n">line</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">color</span><span class="o">=</span><span class="s2">"#9C27B0"</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mi">2</span><span class="p">),</span>
+        <span class="n">marker</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">6</span><span class="p">),</span>
+    <span class="p">),</span>
+    <span class="n">row</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+    <span class="n">col</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="c1"># --- Plot 4: Circulating load ratio ---</span>
+<span class="n">circ_load</span> <span class="o">=</span> <span class="p">[(</span><span class="mf">100.0</span> <span class="o">-</span> <span class="n">m</span><span class="p">)</span> <span class="o">/</span> <span class="mf">100.0</span> <span class="o">*</span> <span class="mi">100</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">mass_values</span><span class="p">]</span>
+<span class="n">fig</span><span class="o">.</span><span class="n">add_trace</span><span class="p">(</span>
+    <span class="n">go</span><span class="o">.</span><span class="n">Scatter</span><span class="p">(</span>
+        <span class="n">x</span><span class="o">=</span><span class="n">steps</span><span class="p">,</span>
+        <span class="n">y</span><span class="o">=</span><span class="n">circ_load</span><span class="p">,</span>
+        <span class="n">name</span><span class="o">=</span><span class="s2">"Circulating load (%)"</span><span class="p">,</span>
+        <span class="n">line</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">color</span><span class="o">=</span><span class="s2">"#F44336"</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mi">2</span><span class="p">),</span>
+    <span class="p">),</span>
+    <span class="n">row</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+    <span class="n">col</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">fig</span><span class="o">.</span><span class="n">update_xaxes</span><span class="p">(</span><span class="n">title_text</span><span class="o">=</span><span class="s2">"Time step"</span><span class="p">,</span> <span class="n">row</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">col</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">fig</span><span class="o">.</span><span class="n">update_yaxes</span><span class="p">(</span><span class="n">title_text</span><span class="o">=</span><span class="s2">"Size (mm)"</span><span class="p">,</span> <span class="n">row</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">col</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">fig</span><span class="o">.</span><span class="n">update_xaxes</span><span class="p">(</span><span class="n">title_text</span><span class="o">=</span><span class="s2">"Time step"</span><span class="p">,</span> <span class="n">row</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">col</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+<span class="n">fig</span><span class="o">.</span><span class="n">update_yaxes</span><span class="p">(</span><span class="n">title_text</span><span class="o">=</span><span class="s2">"Mass (tonnes)"</span><span class="p">,</span> <span class="n">row</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">col</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+<span class="n">fig</span><span class="o">.</span><span class="n">update_xaxes</span><span class="p">(</span><span class="n">title_text</span><span class="o">=</span><span class="s2">"Particle size (mm)"</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="s2">"log"</span><span class="p">,</span> <span class="n">row</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">col</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">fig</span><span class="o">.</span><span class="n">update_yaxes</span><span class="p">(</span><span class="n">title_text</span><span class="o">=</span><span class="s2">"Cumulative % passing"</span><span class="p">,</span> <span class="nb">range</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">105</span><span class="p">],</span> <span class="n">row</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">col</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">fig</span><span class="o">.</span><span class="n">update_xaxes</span><span class="p">(</span><span class="n">title_text</span><span class="o">=</span><span class="s2">"Time step"</span><span class="p">,</span> <span class="n">row</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">col</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+<span class="n">fig</span><span class="o">.</span><span class="n">update_yaxes</span><span class="p">(</span><span class="n">title_text</span><span class="o">=</span><span class="s2">"Circulating load (%)"</span><span class="p">,</span> <span class="n">row</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">col</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+
+<span class="n">fig</span><span class="o">.</span><span class="n">update_layout</span><span class="p">(</span>
+    <span class="n">height</span><span class="o">=</span><span class="mi">700</span><span class="p">,</span>
+    <span class="n">width</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span>
+    <span class="n">title_text</span><span class="o">=</span><span class="s2">"Crusher Circuit — Dynamic Simulation Results"</span><span class="p">,</span>
+    <span class="n">showlegend</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">fig</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
-<div class="clipboard-copy-txt" id="cell-11">!cat output.csv</div>
+<div class="clipboard-copy-txt" id="cell-11">import plotly.graph_objects as go
+from plotly.subplots import make_subplots
+
+collector = process.components["product"]
+history = collector.psd_history
+
+# Extract metrics
+d80_values = [PSD(**h).d80 for h in history]
+d50_values = [PSD(**h).d50 for h in history]
+mass_values = [PSD(**h).mass_tonnes for h in history]
+steps = list(range(1, len(d80_values) + 1))
+
+fig = make_subplots(
+    rows=2,
+    cols=2,
+    subplot_titles=(
+        "Product size metrics over time",
+        "Product mass flow over time",
+        "Final cumulative PSD",
+        "Circulating load ratio",
+    ),
+    vertical_spacing=0.15,
+    horizontal_spacing=0.12,
+)
+
+# --- Plot 1: d80/d50 evolution ---
+fig.add_trace(
+    go.Scatter(
+        x=steps,
+        y=d80_values,
+        name="d80",
+        line=dict(color="#2196F3", width=2),
+    ),
+    row=1,
+    col=1,
+)
+fig.add_trace(
+    go.Scatter(
+        x=steps,
+        y=d50_values,
+        name="d50",
+        line=dict(color="#FF9800", width=2),
+    ),
+    row=1,
+    col=1,
+)
+
+# --- Plot 2: Mass flow ---
+fig.add_trace(
+    go.Scatter(
+        x=steps,
+        y=mass_values,
+        name="Product mass (t)",
+        line=dict(color="#4CAF50", width=2),
+        fill="tozeroy",
+        fillcolor="rgba(76, 175, 80, 0.1)",
+    ),
+    row=1,
+    col=2,
+)
+fig.add_hline(
+    y=100.0,
+    line_dash="dash",
+    line_color="gray",
+    annotation_text="Feed rate (100 t)",
+    row=1,
+    col=2,
+)
+
+# --- Plot 3: Final cumulative PSD ---
+final_psd = PSD(**history[-1])
+cum_passing = final_psd.to_cumulative_passing()
+
+fig.add_trace(
+    go.Scatter(
+        x=final_psd.size_classes,
+        y=cum_passing,
+        name="Cumulative % passing",
+        line=dict(color="#9C27B0", width=2),
+        marker=dict(size=6),
+    ),
+    row=2,
+    col=1,
+)
+
+# --- Plot 4: Circulating load ratio ---
+circ_load = [(100.0 - m) / 100.0 * 100 for m in mass_values]
+fig.add_trace(
+    go.Scatter(
+        x=steps,
+        y=circ_load,
+        name="Circulating load (%)",
+        line=dict(color="#F44336", width=2),
+    ),
+    row=2,
+    col=2,
+)
+
+fig.update_xaxes(title_text="Time step", row=1, col=1)
+fig.update_yaxes(title_text="Size (mm)", row=1, col=1)
+fig.update_xaxes(title_text="Time step", row=1, col=2)
+fig.update_yaxes(title_text="Mass (tonnes)", row=1, col=2)
+fig.update_xaxes(title_text="Particle size (mm)", type="log", row=2, col=1)
+fig.update_yaxes(title_text="Cumulative % passing", range=[0, 105], row=2, col=1)
+fig.update_xaxes(title_text="Time step", row=2, col=2)
+fig.update_yaxes(title_text="Circulating load (%)", row=2, col=2)
+
+fig.update_layout(
+    height=700,
+    width=1000,
+    title_text="Crusher Circuit — Dynamic Simulation Results",
+    showlegend=True,
+)
+fig.show()</div>
 </div>
 </div>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=19">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="CodeMirror cm-s-jupyter">
+<div class="zeroclipboard-container">
+<clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-12">
+<div>
+<span class="notice" hidden="">Copied!</span>
+<svg aria-hidden="true" class="clipboard-copy-icon" data-view-component="true" height="20" version="1.1" viewbox="0 0 16 16" width="20">
+<path d="M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 010 1.5h-1.5a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-1.5a.75.75 0 011.5 0v1.5A1.75 1.75 0 019.25 16h-7.5A1.75 1.75 0 010 14.25v-7.5z" fill="currentColor" fill-rule="evenodd"></path>
+<path d="M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0114.25 11h-7.5A1.75 1.75 0 015 9.25v-7.5zm1.75-.25a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-7.5a.25.25 0 00-.25-.25h-7.5z" fill="currentColor" fill-rule="evenodd"></path>
+</svg>
+</div>
+</clipboard-copy>
+</div>
+<div class="highlight-ipynb hl-python"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+
+<span class="n">psd_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span>
+    <span class="p">{</span>
+        <span class="s2">"Size (mm)"</span><span class="p">:</span> <span class="n">final_psd</span><span class="o">.</span><span class="n">size_classes</span><span class="p">,</span>
+        <span class="s2">"Mass %"</span><span class="p">:</span> <span class="p">[</span><span class="n">frac</span> <span class="o">*</span> <span class="mi">100</span> <span class="k">for</span> <span class="n">frac</span> <span class="ow">in</span> <span class="n">final_psd</span><span class="o">.</span><span class="n">mass_fractions</span><span class="p">],</span>
+        <span class="s2">"Cum. passing %"</span><span class="p">:</span> <span class="n">cum_passing</span><span class="p">,</span>
+    <span class="p">}</span>
+<span class="p">)</span><span class="o">.</span><span class="n">round</span><span class="p">({</span><span class="s2">"Size (mm)"</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">"Mass %"</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span> <span class="s2">"Cum. passing %"</span><span class="p">:</span> <span class="mi">2</span><span class="p">})</span>
+
+<span class="n">psd_df</span>
+</pre></div>
+<div class="clipboard-copy-txt" id="cell-12">import pandas as pd
+
+psd_df = pd.DataFrame(
+    {
+        "Size (mm)": final_psd.size_classes,
+        "Mass %": [frac * 100 for frac in final_psd.mass_fractions],
+        "Cum. passing %": cum_passing,
+    }
+).round({"Size (mm)": 1, "Mass %": 2, "Cum. passing %": 2})
+
+psd_df</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=20">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h2 id="parameter-optimisation-with-the-tuner">Parameter optimisation with the Tuner<a class="anchor-link" href="#parameter-optimisation-with-the-tuner">¶</a></h2><p>Now let's use Plugboard's built-in <code>Tuner</code> to find the optimal crusher and screen settings. The Tuner uses <a href="https://docs.ray.io/en/latest/tune/index.html">Ray Tune</a> with <a href="https://optuna.org/">Optuna</a> to efficiently search the parameter space.</p>
+<p><strong>Objective:</strong> Minimise the product d80 (we want a finer product).</p>
+<p><strong>Parameters to optimise:</strong></p>
+<ul>
+<li><strong>Crusher CSS</strong> (6–20 mm): Controls the finest gap of the crusher</li>
+<li><strong>Crusher OSS</strong> (20–50 mm): Controls the coarsest gap of the crusher</li>
+<li><strong>Screen cut-point</strong> (8–25 mm): Controls where the screen separates undersize from oversize</li>
+</ul>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=21">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="CodeMirror cm-s-jupyter">
+<div class="zeroclipboard-container">
+<clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-13">
+<div>
+<span class="notice" hidden="">Copied!</span>
+<svg aria-hidden="true" class="clipboard-copy-icon" data-view-component="true" height="20" version="1.1" viewbox="0 0 16 16" width="20">
+<path d="M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 010 1.5h-1.5a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-1.5a.75.75 0 011.5 0v1.5A1.75 1.75 0 019.25 16h-7.5A1.75 1.75 0 010 14.25v-7.5z" fill="currentColor" fill-rule="evenodd"></path>
+<path d="M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0114.25 11h-7.5A1.75 1.75 0 015 9.25v-7.5zm1.75-.25a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-7.5a.25.25 0 00-.25-.25h-7.5z" fill="currentColor" fill-rule="evenodd"></path>
+</svg>
+</div>
+</clipboard-copy>
+</div>
+<div class="highlight-ipynb hl-python"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">plugboard.schemas</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">FloatParameterSpec</span><span class="p">,</span>
+    <span class="n">ObjectiveSpec</span><span class="p">,</span>
+    <span class="n">ProcessArgsSpec</span><span class="p">,</span>
+    <span class="n">ProcessSpec</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">plugboard.tune</span><span class="w"> </span><span class="kn">import</span> <span class="n">Tuner</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">crusher_circuit_components</span>  <span class="c1"># Import the component classes into the registry for use in the Tuner process spec</span>
+
+<span class="c1"># Rebuild the process as a spec using the classes from crusher_circuit.py.</span>
+<span class="c1"># The Tuner needs to reconstruct the process for each trial, so the component</span>
+<span class="c1"># types must reference an importable module rather than inline notebook classes.</span>
+<span class="n">process_spec</span> <span class="o">=</span> <span class="n">ProcessSpec</span><span class="p">(</span>
+    <span class="n">args</span><span class="o">=</span><span class="n">ProcessArgsSpec</span><span class="p">(</span>
+        <span class="n">components</span><span class="o">=</span><span class="p">[</span>
+            <span class="p">{</span>
+                <span class="s2">"type"</span><span class="p">:</span> <span class="s2">"crusher_circuit_components.FeedSource"</span><span class="p">,</span>
+                <span class="s2">"args"</span><span class="p">:</span> <span class="p">{</span>
+                    <span class="s2">"name"</span><span class="p">:</span> <span class="s2">"feed"</span><span class="p">,</span>
+                    <span class="s2">"size_classes"</span><span class="p">:</span> <span class="n">SIZE_CLASSES</span><span class="p">,</span>
+                    <span class="s2">"feed_fractions"</span><span class="p">:</span> <span class="n">FEED_FRACTIONS</span><span class="p">,</span>
+                    <span class="s2">"feed_tonnes"</span><span class="p">:</span> <span class="mf">100.0</span><span class="p">,</span>
+                    <span class="s2">"total_steps"</span><span class="p">:</span> <span class="mi">50</span><span class="p">,</span>
+                <span class="p">},</span>
+            <span class="p">},</span>
+            <span class="p">{</span>
+                <span class="s2">"type"</span><span class="p">:</span> <span class="s2">"crusher_circuit_components.Crusher"</span><span class="p">,</span>
+                <span class="s2">"args"</span><span class="p">:</span> <span class="p">{</span>
+                    <span class="s2">"name"</span><span class="p">:</span> <span class="s2">"crusher"</span><span class="p">,</span>
+                    <span class="s2">"css"</span><span class="p">:</span> <span class="mf">12.0</span><span class="p">,</span>
+                    <span class="s2">"oss"</span><span class="p">:</span> <span class="mf">30.0</span><span class="p">,</span>
+                    <span class="s2">"k3"</span><span class="p">:</span> <span class="mf">2.3</span><span class="p">,</span>
+                    <span class="s2">"n_stages"</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
+                    <span class="s2">"initial_values"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"recirc_psd"</span><span class="p">:</span> <span class="p">[</span><span class="kc">None</span><span class="p">]},</span>
+                <span class="p">},</span>
+            <span class="p">},</span>
+            <span class="p">{</span>
+                <span class="s2">"type"</span><span class="p">:</span> <span class="s2">"crusher_circuit_components.Screen"</span><span class="p">,</span>
+                <span class="s2">"args"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"name"</span><span class="p">:</span> <span class="s2">"screen"</span><span class="p">,</span> <span class="s2">"d50c"</span><span class="p">:</span> <span class="mf">18.0</span><span class="p">,</span> <span class="s2">"alpha"</span><span class="p">:</span> <span class="mf">3.5</span><span class="p">,</span> <span class="s2">"bypass"</span><span class="p">:</span> <span class="mf">0.05</span><span class="p">},</span>
+            <span class="p">},</span>
+            <span class="p">{</span>
+                <span class="s2">"type"</span><span class="p">:</span> <span class="s2">"crusher_circuit_components.Conveyor"</span><span class="p">,</span>
+                <span class="s2">"args"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"name"</span><span class="p">:</span> <span class="s2">"conveyor"</span><span class="p">,</span> <span class="s2">"delay_steps"</span><span class="p">:</span> <span class="mi">3</span><span class="p">},</span>
+            <span class="p">},</span>
+            <span class="p">{</span>
+                <span class="s2">"type"</span><span class="p">:</span> <span class="s2">"crusher_circuit_components.ProductCollector"</span><span class="p">,</span>
+                <span class="s2">"args"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"name"</span><span class="p">:</span> <span class="s2">"product"</span><span class="p">,</span> <span class="s2">"target_d80"</span><span class="p">:</span> <span class="mf">20.0</span><span class="p">},</span>
+            <span class="p">},</span>
+        <span class="p">],</span>
+        <span class="n">connectors</span><span class="o">=</span><span class="p">[</span>
+            <span class="p">{</span><span class="s2">"source"</span><span class="p">:</span> <span class="s2">"feed.feed_psd"</span><span class="p">,</span> <span class="s2">"target"</span><span class="p">:</span> <span class="s2">"crusher.feed_psd"</span><span class="p">},</span>
+            <span class="p">{</span><span class="s2">"source"</span><span class="p">:</span> <span class="s2">"crusher.product_psd"</span><span class="p">,</span> <span class="s2">"target"</span><span class="p">:</span> <span class="s2">"screen.crusher_product"</span><span class="p">},</span>
+            <span class="p">{</span><span class="s2">"source"</span><span class="p">:</span> <span class="s2">"screen.undersize"</span><span class="p">,</span> <span class="s2">"target"</span><span class="p">:</span> <span class="s2">"product.product_psd"</span><span class="p">},</span>
+            <span class="p">{</span><span class="s2">"source"</span><span class="p">:</span> <span class="s2">"screen.oversize"</span><span class="p">,</span> <span class="s2">"target"</span><span class="p">:</span> <span class="s2">"conveyor.input_psd"</span><span class="p">},</span>
+            <span class="p">{</span><span class="s2">"source"</span><span class="p">:</span> <span class="s2">"conveyor.output_psd"</span><span class="p">,</span> <span class="s2">"target"</span><span class="p">:</span> <span class="s2">"crusher.recirc_psd"</span><span class="p">},</span>
+        <span class="p">],</span>
+    <span class="p">),</span>
+    <span class="nb">type</span><span class="o">=</span><span class="s2">"plugboard.process.LocalProcess"</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+<div class="clipboard-copy-txt" id="cell-13">from plugboard.schemas import (
+    FloatParameterSpec,
+    ObjectiveSpec,
+    ProcessArgsSpec,
+    ProcessSpec,
+)
+from plugboard.tune import Tuner
+import crusher_circuit_components  # Import the component classes into the registry for use in the Tuner process spec
+
+# Rebuild the process as a spec using the classes from crusher_circuit.py.
+# The Tuner needs to reconstruct the process for each trial, so the component
+# types must reference an importable module rather than inline notebook classes.
+process_spec = ProcessSpec(
+    args=ProcessArgsSpec(
+        components=[
+            {
+                "type": "crusher_circuit_components.FeedSource",
+                "args": {
+                    "name": "feed",
+                    "size_classes": SIZE_CLASSES,
+                    "feed_fractions": FEED_FRACTIONS,
+                    "feed_tonnes": 100.0,
+                    "total_steps": 50,
+                },
+            },
+            {
+                "type": "crusher_circuit_components.Crusher",
+                "args": {
+                    "name": "crusher",
+                    "css": 12.0,
+                    "oss": 30.0,
+                    "k3": 2.3,
+                    "n_stages": 2,
+                    "initial_values": {"recirc_psd": [None]},
+                },
+            },
+            {
+                "type": "crusher_circuit_components.Screen",
+                "args": {"name": "screen", "d50c": 18.0, "alpha": 3.5, "bypass": 0.05},
+            },
+            {
+                "type": "crusher_circuit_components.Conveyor",
+                "args": {"name": "conveyor", "delay_steps": 3},
+            },
+            {
+                "type": "crusher_circuit_components.ProductCollector",
+                "args": {"name": "product", "target_d80": 20.0},
+            },
+        ],
+        connectors=[
+            {"source": "feed.feed_psd", "target": "crusher.feed_psd"},
+            {"source": "crusher.product_psd", "target": "screen.crusher_product"},
+            {"source": "screen.undersize", "target": "product.product_psd"},
+            {"source": "screen.oversize", "target": "conveyor.input_psd"},
+            {"source": "conveyor.output_psd", "target": "crusher.recirc_psd"},
+        ],
+    ),
+    type="plugboard.process.LocalProcess",
+)</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=22">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="CodeMirror cm-s-jupyter">
+<div class="zeroclipboard-container">
+<clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-14">
+<div>
+<span class="notice" hidden="">Copied!</span>
+<svg aria-hidden="true" class="clipboard-copy-icon" data-view-component="true" height="20" version="1.1" viewbox="0 0 16 16" width="20">
+<path d="M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 010 1.5h-1.5a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-1.5a.75.75 0 011.5 0v1.5A1.75 1.75 0 019.25 16h-7.5A1.75 1.75 0 010 14.25v-7.5z" fill="currentColor" fill-rule="evenodd"></path>
+<path d="M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0114.25 11h-7.5A1.75 1.75 0 015 9.25v-7.5zm1.75-.25a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-7.5a.25.25 0 00-.25-.25h-7.5z" fill="currentColor" fill-rule="evenodd"></path>
+</svg>
+</div>
+</clipboard-copy>
+</div>
+<div class="highlight-ipynb hl-python"><pre><span></span><span class="n">tuner</span> <span class="o">=</span> <span class="n">Tuner</span><span class="p">(</span>
+    <span class="n">objective</span><span class="o">=</span><span class="n">ObjectiveSpec</span><span class="p">(</span>
+        <span class="n">object_name</span><span class="o">=</span><span class="s2">"product"</span><span class="p">,</span>
+        <span class="n">field_type</span><span class="o">=</span><span class="s2">"field"</span><span class="p">,</span>
+        <span class="n">field_name</span><span class="o">=</span><span class="s2">"d80"</span><span class="p">,</span>
+    <span class="p">),</span>
+    <span class="n">parameters</span><span class="o">=</span><span class="p">[</span>
+        <span class="n">FloatParameterSpec</span><span class="p">(</span>
+            <span class="n">object_type</span><span class="o">=</span><span class="s2">"component"</span><span class="p">,</span>
+            <span class="n">object_name</span><span class="o">=</span><span class="s2">"crusher"</span><span class="p">,</span>
+            <span class="n">field_type</span><span class="o">=</span><span class="s2">"arg"</span><span class="p">,</span>
+            <span class="n">field_name</span><span class="o">=</span><span class="s2">"css"</span><span class="p">,</span>
+            <span class="n">lower</span><span class="o">=</span><span class="mf">6.0</span><span class="p">,</span>
+            <span class="n">upper</span><span class="o">=</span><span class="mf">20.0</span><span class="p">,</span>
+        <span class="p">),</span>
+        <span class="n">FloatParameterSpec</span><span class="p">(</span>
+            <span class="n">object_type</span><span class="o">=</span><span class="s2">"component"</span><span class="p">,</span>
+            <span class="n">object_name</span><span class="o">=</span><span class="s2">"crusher"</span><span class="p">,</span>
+            <span class="n">field_type</span><span class="o">=</span><span class="s2">"arg"</span><span class="p">,</span>
+            <span class="n">field_name</span><span class="o">=</span><span class="s2">"oss"</span><span class="p">,</span>
+            <span class="n">lower</span><span class="o">=</span><span class="mf">20.0</span><span class="p">,</span>
+            <span class="n">upper</span><span class="o">=</span><span class="mf">50.0</span><span class="p">,</span>
+        <span class="p">),</span>
+        <span class="n">FloatParameterSpec</span><span class="p">(</span>
+            <span class="n">object_type</span><span class="o">=</span><span class="s2">"component"</span><span class="p">,</span>
+            <span class="n">object_name</span><span class="o">=</span><span class="s2">"screen"</span><span class="p">,</span>
+            <span class="n">field_type</span><span class="o">=</span><span class="s2">"arg"</span><span class="p">,</span>
+            <span class="n">field_name</span><span class="o">=</span><span class="s2">"d50c"</span><span class="p">,</span>
+            <span class="n">lower</span><span class="o">=</span><span class="mf">8.0</span><span class="p">,</span>
+            <span class="n">upper</span><span class="o">=</span><span class="mf">25.0</span><span class="p">,</span>
+        <span class="p">),</span>
+    <span class="p">],</span>
+    <span class="n">num_samples</span><span class="o">=</span><span class="mi">30</span><span class="p">,</span>
+    <span class="n">max_concurrent</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span>
+    <span class="n">mode</span><span class="o">=</span><span class="s2">"min"</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">result</span> <span class="o">=</span> <span class="n">tuner</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">spec</span><span class="o">=</span><span class="n">process_spec</span><span class="p">)</span>
+</pre></div>
+<div class="clipboard-copy-txt" id="cell-14">tuner = Tuner(
+    objective=ObjectiveSpec(
+        object_name="product",
+        field_type="field",
+        field_name="d80",
+    ),
+    parameters=[
+        FloatParameterSpec(
+            object_type="component",
+            object_name="crusher",
+            field_type="arg",
+            field_name="css",
+            lower=6.0,
+            upper=20.0,
+        ),
+        FloatParameterSpec(
+            object_type="component",
+            object_name="crusher",
+            field_type="arg",
+            field_name="oss",
+            lower=20.0,
+            upper=50.0,
+        ),
+        FloatParameterSpec(
+            object_type="component",
+            object_name="screen",
+            field_type="arg",
+            field_name="d50c",
+            lower=8.0,
+            upper=25.0,
+        ),
+    ],
+    num_samples=30,
+    max_concurrent=4,
+    mode="min",
+)
+
+result = tuner.run(spec=process_spec)</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=23">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea">
+<div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
+<div class="CodeMirror cm-s-jupyter">
+<div class="zeroclipboard-container">
+<clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-15">
+<div>
+<span class="notice" hidden="">Copied!</span>
+<svg aria-hidden="true" class="clipboard-copy-icon" data-view-component="true" height="20" version="1.1" viewbox="0 0 16 16" width="20">
+<path d="M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 010 1.5h-1.5a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-1.5a.75.75 0 011.5 0v1.5A1.75 1.75 0 019.25 16h-7.5A1.75 1.75 0 010 14.25v-7.5z" fill="currentColor" fill-rule="evenodd"></path>
+<path d="M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0114.25 11h-7.5A1.75 1.75 0 015 9.25v-7.5zm1.75-.25a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-7.5a.25.25 0 00-.25-.25h-7.5z" fill="currentColor" fill-rule="evenodd"></path>
+</svg>
+</div>
+</clipboard-copy>
+</div>
+<div class="highlight-ipynb hl-python"><pre><span></span><span class="c1"># Display the optimal parameters found</span>
+<span class="n">best_css</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s2">"component.crusher.arg.css"</span><span class="p">]</span>
+<span class="n">best_oss</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s2">"component.crusher.arg.oss"</span><span class="p">]</span>
+<span class="n">best_d50c</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s2">"component.screen.arg.d50c"</span><span class="p">]</span>
+<span class="n">best_d80</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">metrics</span><span class="p">[</span><span class="s2">"component.product.field.d80"</span><span class="p">]</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="s2">"="</span> <span class="o">*</span> <span class="mi">50</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">"OPTIMISATION RESULTS"</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">"="</span> <span class="o">*</span> <span class="mi">50</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"  Crusher CSS:      </span><span class="si">{</span><span class="n">best_css</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2"> mm"</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"  Crusher OSS:      </span><span class="si">{</span><span class="n">best_oss</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2"> mm"</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"  Screen cut-point: </span><span class="si">{</span><span class="n">best_d50c</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2"> mm"</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"  Product d80:      </span><span class="si">{</span><span class="n">best_d80</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2"> mm"</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">"="</span> <span class="o">*</span> <span class="mi">50</span><span class="p">)</span>
+</pre></div>
+<div class="clipboard-copy-txt" id="cell-15"># Display the optimal parameters found
+best_css = result.config["component.crusher.arg.css"]
+best_oss = result.config["component.crusher.arg.oss"]
+best_d50c = result.config["component.screen.arg.d50c"]
+best_d80 = result.metrics["component.product.field.d80"]
+
+print("=" * 50)
+print("OPTIMISATION RESULTS")
+print("=" * 50)
+print(f"  Crusher CSS:      {best_css:.1f} mm")
+print(f"  Crusher OSS:      {best_oss:.1f} mm")
+print(f"  Screen cut-point: {best_d50c:.1f} mm")
+print(f"  Product d80:      {best_d80:.2f} mm")
+print("=" * 50)</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=24">
+<div class="jp-Cell-inputWrapper" tabindex="0">
+<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
+</div>
+<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
+</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
+<h2 id="summary">Summary<a class="anchor-link" href="#summary">¶</a></h2><p>This example demonstrated how to:</p>
+<ol>
+<li><strong>Model a physical process</strong> — using the Population Balance Model (Whiten/King approach) to simulate crushing and screening</li>
+<li><strong>Use custom data structures</strong> — a Pydantic <code>PSD</code> model to track particle size distributions and mass flow with built-in validation</li>
+<li><strong>Build a recirculating circuit</strong> — using <code>initial_values</code> to break the circular dependency in a closed-loop process</li>
+<li><strong>Simulate transport delays</strong> — using a <code>Conveyor</code> component with a FIFO buffer to model conveyor belt transport time</li>
+<li><strong>Visualise dynamic behaviour</strong> — tracking how the product quality and circulating load evolve over time</li>
+<li><strong>Optimise process parameters</strong> — using the <code>Tuner</code> to search for the crusher and screen settings that produce the finest product</li>
+</ol>
+<p>The Whiten crusher model and screen efficiency equations used here are standard tools in mineral processing engineering. For production use, these models would typically be calibrated against plant data from sampling surveys.</p>
 </div>
 </div>
 </div>
@@ -2993,6 +4825,9 @@ print(total.total_value)  # Print the total value output</div>
 
 
 
+
+  
+  
 
 
 
