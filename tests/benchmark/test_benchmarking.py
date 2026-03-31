@@ -1,9 +1,6 @@
 """Benchmark tests for Plugboard processes."""
 
-import asyncio
-
 import pytest
-from pytest_codspeed import BenchmarkFixture
 
 from plugboard.connector import AsyncioConnector, Connector, RayConnector, ZMQConnector
 from plugboard.process import LocalProcess, Process, RayProcess
@@ -34,50 +31,19 @@ def _build_process(connector_cls: type[Connector], process_cls: type[Process]) -
     return process_cls(components=components, connectors=connectors)
 
 
-@pytest.mark.parametrize(
-    "connector_cls, process_cls",
-    CONNECTOR_PROCESS_PARAMS,
-    ids=CONNECTOR_PROCESS_IDS,
-)
-def test_benchmark_process_run(
-    benchmark: BenchmarkFixture,
-    connector_cls: type[Connector],
-    process_cls: type[Process],
-    ray_ctx: None,
-) -> None:
-    """Benchmark running of a Plugboard Process."""
-
-    def _setup() -> tuple[tuple[Process], dict]:
-        async def _init() -> Process:
-            process = _build_process(connector_cls, process_cls)
-            await process.init()
-            return process
-
-        return (asyncio.run(_init()),), {}
-
-    def _run(process: Process) -> None:
-        asyncio.run(process.run())
-
-    benchmark.pedantic(_run, setup=_setup, rounds=5)
-
-
 @pytest.mark.benchmark
 @pytest.mark.parametrize(
     "connector_cls, process_cls",
     CONNECTOR_PROCESS_PARAMS,
     ids=CONNECTOR_PROCESS_IDS,
 )
-def test_benchmark_process_lifecycle(
+@pytest.mark.asyncio
+async def test_benchmark_process_lifecycle(
     connector_cls: type[Connector],
     process_cls: type[Process],
     ray_ctx: None,
 ) -> None:
     """Benchmark the full lifecycle (init, run, destroy) of a Plugboard Process."""
-
-    async def _lifecycle() -> None:
-        process = _build_process(connector_cls, process_cls)
-        await process.init()
-        await process.run()
-        await process.destroy()
-
-    asyncio.run(_lifecycle())
+    process = _build_process(connector_cls, process_cls)
+    async with process:
+        process.run()
