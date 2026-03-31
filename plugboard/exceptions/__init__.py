@@ -98,9 +98,18 @@ class ValidationError(Exception):
 
 
 class ConstraintError(Exception):
-    """Raised when a constraint is violated."""
+    """Raised when a constraint is violated.
 
-    pass
+    Args:
+        *args: Standard exception arguments.
+        objective_value: Optional; A custom value to assign to the objective when this constraint
+            is violated. If not provided, the tuner will assign plus or minus infinity depending
+            on the optimisation direction.
+    """
+
+    def __init__(self, *args: object, objective_value: float | None = None) -> None:
+        super().__init__(*args)
+        self.objective_value = objective_value
 
 
 class ProcessStatusError(Exception):
