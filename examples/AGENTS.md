@@ -1,24 +1,6 @@
-# AI Agent Instructions for Plugboard Examples
+# AI Agent Instructions for Plugboard Models
 
-This document provides guidelines for AI agents working with Plugboard example code, demonstrations, and tutorials.
-
-## Purpose
-
-These examples demonstrate how to use Plugboard to model and simulate complex processes. Help users build intuitive, well-documented examples that showcase Plugboard's capabilities.
-
-## Example Categories
-
-### Tutorials (`tutorials/`)
-
-Step-by-step learning materials for new users. Focus on:
-- Clear explanations of concepts.
-- Progressive complexity.
-- Runnable code with expected outputs.
-- Markdown documentation alongside code. You can delegate to the `docs` agent to make these updates.
-
-### Demos (`demos/`)
-
-Practical applications are organized by domain into folders.
+This document provides guidelines for AI agents working with specific models implemented in Plugboard.
 
 ## Creating a Plugboard model
 
@@ -38,7 +20,7 @@ Ask questions if anything is not clear about the business logic or you require a
 
 Always check whether the functionality you need is already available in the library components in `plugboard.library`. For example, try to use:
 - `FileReader` and `FileWriter` for reading/writing data from CSV or parquet files.
-- `SQLReader` and `SQLReader` for reading/writing data from SQL databases.
+- `SQLReader` and `SQLWriter` for reading/writing data from SQL databases.
 - `LLMChat` for interacting with standard LLMs, e.g. OpenAI, Gemini, etc.
 
 **Using Built-in Components**
@@ -51,7 +33,7 @@ data_loader = FileReader(name="input_data", path="input.csv", field_names=["x", 
 
 **Creating Custom Components**
 
-New components should inherit from `plugboard.componen.Component`. Add logging messages where it would be helpful by using the bound logger `self._logger`.
+New components should inherit from `plugboard.component.Component`. Add logging messages where it would be helpful by using the bound logger `self._logger`.
 
 ```python
 import typing as _t
@@ -243,28 +225,6 @@ Later, load and run via CLI
 ```sh
 plugboard process run my-model.yaml
 ```
-
-## Jupyter Notebooks
-
-Use the following guidelines when creating demo notebooks:
-
-1. **Structure**
-   - Title markdown cell in the same format as the other notebooks, including badges to run on Github/Colab
-   - Clear markdown sections
-   - Code cells with explanations
-   - Visualizations of results
-   - Summary of findings
-
-2. **Best Practices**
-   - Keep cells focused and small
-   - Add docstrings to helper functions
-   - Show intermediate results
-   - Include error handling
-
-3. **Output**
-   - Clear cell output before committing
-   - Generate plots where helpful
-   - Provide interpretation of results
 
 ## Resources
 

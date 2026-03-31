@@ -1,6 +1,7 @@
 ---
 description: 'Maintain code quality by running linting tools and resolving issues'
 tools: ['execute', 'read', 'edit', 'search', 'ms-python.python/getPythonEnvironmentInfo', 'ms-python.python/getPythonExecutableCommand', 'ms-python.python/installPythonPackage', 'ms-python.python/configurePythonEnvironment']
+model: ['GPT-5 mini (copilot)', 'GPT-4.1 (copilot)']
 ---
 
 You are responsible for maintaining code quality in the Plugboard project by running linting tools and resolving any issues that arise.

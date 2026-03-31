@@ -65,6 +65,22 @@ Optional integrations for different cloud providers can be installed using `plug
 
 Support for parallelisation can be installed using `plugboard[ray]`.
 
+## ⚡ Quickstart with AI
+
+The fastest way to get started is to let your AI coding assistant build your first model. Run the following command in your project directory:
+
+```shell
+plugboard ai init
+```
+
+This copies a context file (`AGENTS.md`) into your project that gives your AI tool everything it needs to know about Plugboard: how components work, how to wire them together, library components that are already available, and best practices for building models.
+
+Once initialised, simply open your AI tool of choice (GitHub Copilot, Cursor, Claude, etc.) and describe the model you want to build. For example:
+
+> *"I want to simulate a production line with three machines in series. Each machine has a processing time drawn from a normal distribution and a 5% chance of failure. Model the throughput over 1000 time steps and save the results to a CSV."*
+
+Your AI assistant will use the `AGENTS.md` context to generate working Plugboard code — components, connectors, and a runnable process — tailored to your description.
+
 ## 🚀 Usage
 
 <a href="https://colab.research.google.com/github/plugboard-dev/plugboard/blob/main/"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
