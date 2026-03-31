@@ -129,6 +129,7 @@ nav:
     - Event-driven models: examples/tutorials/event-driven-models.md
     - Tuning a process: examples/tutorials/tuning-a-process.md
   - Configuration: usage/configuration.md
+  - AI-Assisted Development: usage/ai.md
   - Topics: usage/topics.md
 - Demos:
   - Fundamentals:

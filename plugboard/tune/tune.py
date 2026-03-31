@@ -1,12 +1,12 @@
 """Provides `Tuner` class for optimising Plugboard processes."""
 
+from __future__ import annotations
+
 from functools import partial
 from inspect import isfunction, signature
 import math
 from pydoc import locate
 import typing as _t
-
-import ray.tune.search.optuna
 
 from plugboard.component.component import Component, ComponentRegistry
 from plugboard.exceptions import ConstraintError
@@ -27,6 +27,7 @@ try:
     import optuna.storages
     import ray.tune
     import ray.tune.search
+    import ray.tune.search.optuna
 except ImportError:  # pragma: no cover
     pass
 
