@@ -4653,6 +4653,19 @@ the <code>ProcessSpec</code> will be passed to it.</p>
               </div>
             </td>
           </tr>
+          <tr class="doc-section-item">
+            <td><code><span title="plugboard_schemas.OptunaSpec.points_to_evaluate">points_to_evaluate</span></code></td>
+            <td>
+                  <code><span title="list">list</span>[<span title="dict">dict</span>[<span title="str">str</span>, <span title="typing.Any">Any</span>]] | None</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Optional; A list of initial parameter configurations to evaluate
+first. Each entry is a dict mapping parameter full names to values. Useful for
+providing a warm start when exploring large or heavily constrained search spaces.</p>
+              </div>
+            </td>
+          </tr>
       </tbody>
     </table>
 
