@@ -46,4 +46,4 @@ async def test_benchmark_process_lifecycle(
     """Benchmark the full lifecycle (init, run, destroy) of a Plugboard Process."""
     process = _build_process(connector_cls, process_cls)
     async with process:
-        process.run()
+        await process.run()
