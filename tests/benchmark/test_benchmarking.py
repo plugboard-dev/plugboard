@@ -1,7 +1,6 @@
 """Benchmark tests for Plugboard processes."""
 
 import pytest
-from pytest_codspeed import BenchmarkFixture
 
 from plugboard.connector import AsyncioConnector, Connector, RayConnector, ZMQConnector
 from plugboard.process import LocalProcess, Process, RayProcess
@@ -50,14 +49,4 @@ async def test_benchmark_process_lifecycle(
         await process.run()
 
 
-def test_codspeed_benchmark(benchmark: BenchmarkFixture) -> None:
-    """Run the benchmark for the process lifecycle."""
-    import time
-
-    def _setup():
-        time.sleep(0.5)  # Simulate setup time
-
-    def _run():
-        time.sleep(1)  # Simulate the process lifecycle time
-
-    benchmark.pedantic(_run, setup=_setup, rounds=3, iterations=1)
+# TODO: Reinstate run-only tests depending on https://github.com/CodSpeedHQ/pytest-codspeed/issues/113
