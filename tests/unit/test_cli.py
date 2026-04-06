@@ -140,7 +140,7 @@ async def test_cli_process_run_with_invalid_process_type() -> None:
     )
     # CLI must exit with error
     assert result.exit_code == 1
-    assert "Invalid process type" in result.stdout
+    assert "Invalid process type" in result.stderr
 
 
 def test_cli_ai_init(tmp_path: Path) -> None:
