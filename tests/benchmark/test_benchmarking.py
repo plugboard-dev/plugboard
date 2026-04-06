@@ -68,7 +68,7 @@ def test_benchmark_process_run(
     def setup() -> None:
         uvloop.run(process.init())
 
-    def _run(process: Process) -> None:
+    def _run() -> None:
         uvloop.run(process.run())
 
     benchmark.pedantic(_run, rounds=5)
