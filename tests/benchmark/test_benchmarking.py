@@ -56,6 +56,7 @@ async def test_benchmark_process_lifecycle(
     CONNECTOR_PROCESS_PARAMS,
     ids=CONNECTOR_PROCESS_IDS,
 )
+@pytest.mark.asyncio
 def test_benchmark_process_run(
     benchmark: BenchmarkFixture,
     connector_cls: type[Connector],
