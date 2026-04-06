@@ -8,21 +8,24 @@
 
 <div align="center" class="badge-section">
   <br>
-  <a href="https://pypi.org/project/plugboard/", alt="PyPI version">
+  <a href="https://pypi.org/project/plugboard/" alt="PyPI version">
     <img alt="PyPI" src="https://img.shields.io/pypi/v/plugboard?labelColor=075D7A&color=CC9C4A"></a>
-  <a href="https://www.python.org/", alt="Python versions">
+  <a href="https://www.python.org/" alt="Python versions">
     <img alt="Python" src="https://img.shields.io/pypi/pyversions/plugboard?labelColor=075D7A&color=CC9C4A"></a>
-  <a href="https://github.com/plugboard-dev/plugboard?tab=Apache-2.0-1-ov-file#readme", alt="License">
+  <a href="https://github.com/plugboard-dev/plugboard?tab=Apache-2.0-1-ov-file#readme" alt="License">
     <img alt="License" src="https://img.shields.io/github/license/plugboard-dev/plugboard?labelColor=075D7A&color=CC9C4A"></a>
-  <a href="https://github.com/plugboard-dev/plugboard", alt="Typed">
+  <a href="https://github.com/plugboard-dev/plugboard" alt="Typed">
     <img alt="Typed" src="https://img.shields.io/pypi/types/plugboard?labelColor=075D7A&color=CC9C4A"></a>
   <br>
-  <a href="https://github.com/plugboard-dev/plugboard/actions/workflows/lint-test.yaml", alt="Lint and test">
+  <a href="https://github.com/plugboard-dev/plugboard/actions/workflows/lint-test.yaml" alt="Lint and test">
     <img alt="Lint and Test" src="https://github.com/plugboard-dev/plugboard/actions/workflows/lint-test.yaml/badge.svg"></a>
-  <a href="https://github.com/plugboard-dev/plugboard/actions/workflows/docs.yaml", alt="Documentation">
-    <img alt="Docs" src="https://github.com/plugboard-dev/plugboard/actions/workflows/docs.yaml/badge.svg"></a>
+  <a href="https://github.com/plugboard-dev/plugboard/actions/workflows/github-code-scanning/codeql" alt="CodeQL">
+    <img alt="CodeQL" src="https://github.com/plugboard-dev/plugboard/actions/workflows/github-code-scanning/codeql/badge.svg"></a>
   <a href="https://codecov.io/gh/plugboard-dev/plugboard" >
     <img src="https://codecov.io/gh/plugboard-dev/plugboard/graph/badge.svg?token=4LU4K6TOLQ"/></a>
+  <br>
+  <a href="https://docs.plugboard.dev" alt="Documentation">
+    <img alt="Docs" src="https://github.com/plugboard-dev/plugboard/actions/workflows/docs.yaml/badge.svg"></a>
 </div>
 
 <hr>
@@ -61,6 +64,22 @@ python -m pip install plugboard
 Optional integrations for different cloud providers can be installed using `plugboard[aws]`, `plugboard[azure]` or `plugboard[gcp]`.
 
 Support for parallelisation can be installed using `plugboard[ray]`.
+
+## ⚡ Quickstart with AI
+
+The fastest way to get started is to let your AI coding assistant build your first model. Run the following command in your project directory:
+
+```shell
+plugboard ai init
+```
+
+This copies a context file (`AGENTS.md`) into your project that gives your AI tool everything it needs to know about Plugboard: how components work, how to wire them together, library components that are already available, and best practices for building models.
+
+Once initialised, simply open your AI tool of choice (GitHub Copilot, Cursor, Claude, etc.) and describe the model you want to build. For example:
+
+> *"I want to simulate a production line with three machines in series. Each machine has a processing time drawn from a normal distribution and a 5% chance of failure. Model the throughput over 1000 time steps and save the results to a CSV."*
+
+Your AI assistant will use the `AGENTS.md` context to generate working Plugboard code — components, connectors, and a runnable process — tailored to your description.
 
 ## 🚀 Usage
 

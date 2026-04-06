@@ -7,7 +7,7 @@ from plugboard.component import Component
 from plugboard.component.io_controller import IODirection
 from plugboard.connector import Connector
 from plugboard.process.process import Process
-from plugboard.schemas import Status
+from plugboard.schemas import Resource, Status
 from plugboard.state import RayStateBackend, StateBackend
 from plugboard.utils import build_actor_wrapper, depends_on_optional, gather_except, gen_rand_str
 
@@ -48,6 +48,7 @@ class RayProcess(Process):
             c.id: self._create_component_actor(c)
             for c in components
         }
+        self._tasks: dict[str, ray.ObjectRef] = {}
 
         super().__init__(
             components=components,
@@ -61,9 +62,18 @@ class RayProcess(Process):
         name = component.id
         args = component.export()["args"]
         actor_cls = build_actor_wrapper(component.__class__)
-        return ray.remote(num_cpus=0, name=name, namespace=self._namespace)(  # type: ignore
-            actor_cls
-        ).remote(**args)
+
+        # Get resource requirements from component
+        resources = component.resources
+        if resources is None:
+            # Use default resources if not specified
+            resources = Resource()
+
+        ray_options = resources.to_ray_options()
+        ray_options["name"] = name
+        ray_options["namespace"] = self._namespace
+
+        return ray.remote(**ray_options)(actor_cls).remote(**args)  # type: ignore
 
     async def _update_component_attributes(self) -> None:
         """Updates attributes on local components from remote actors."""
@@ -133,15 +143,27 @@ class RayProcess(Process):
         self._logger.info("Starting process run")
         coros = [component.run.remote() for component in self._component_actors.values()]
         try:
+            self._tasks = {comp.id: ref for comp, ref in zip(self.components.values(), coros)}
             await gather_except(*coros)
-        except Exception:
+        except* ray.exceptions.TaskCancelledError:
+            # Ray tasks were cancelled, now call cancel on components to update status
+            ray.get([component.cancel.remote() for component in self._component_actors.values()])
+        except* Exception:
             await self._set_status(Status.FAILED)
             raise
         else:
-            await self._set_status(Status.COMPLETED)
+            if self.status == Status.RUNNING:
+                await self._set_status(Status.COMPLETED)
         finally:
+            self._remove_signal_handlers()
             await self._update_component_attributes()
         self._logger.info("Process run complete")
+
+    def cancel(self) -> None:
+        """Cancels the process run."""
+        for task in self._tasks.values():
+            ray.cancel(task)
+        super().cancel()
 
     async def destroy(self) -> None:
         """Performs tear-down actions for the `RayProcess` and its `Component`s."""

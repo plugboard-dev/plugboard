@@ -70,3 +70,61 @@ Specifying the process type and channel builder type in the YAML is the only cha
 
 1. Tell Plugboard to use a [`RayProcess`][plugboard.process.RayProcess] instead of the default [`LocalProcess`][plugboard.process.LocalProcess].
 2. Also change the connector builder to [`RayConnector`][plugboard.connector.RayConnector], which will build [`RayChannel`][plugboard.connector.RayChannel] objects when creating the `Process`.
+
+## Specifying resource requirements
+
+When running components on Ray, you can specify resource requirements for each component to control how Ray allocates computational resources. This is particularly useful when you have components with different resource needs (e.g., CPU-intensive vs GPU-intensive tasks) and you are running on a Ray cluster.
+
+!!! tip
+    Normally Ray will start automatically when you are using Plugboard locally. If you want to start a separate Ray instance, for example so that you can control the configuration options, you can launch it from the [CLI](https://docs.ray.io/en/latest/ray-core/starting-ray.html). For example, this command will start a Ray instance with enough resources to run the example below.
+
+    ```sh
+    uv run ray start --head --num-cpus=4 --num-gpus=1 --resources='{"custom_hardware": 5}'
+    ```
+
+### Declaring resources at component definition
+
+The recommended way to specify resource requirements is to declare them as a class attribute when defining your component. This makes the [`Resource`][plugboard.schemas.Resource] requirements explicit and part of the component's definition:
+
+```python
+--8<-- "examples/tutorials/004_using_ray/resources_example.py:definition"
+```
+
+1. Declare resources when defining the class.
+
+### Overriding resources at instantiation
+
+You can also override resource requirements when creating component instances. This is useful when you want to use the same component class with different resource requirements:
+
+```python
+--8<-- "examples/tutorials/004_using_ray/resources_example.py:77:77"
+```
+
+1. Pass a [`Resource`][plugboard.schemas.Resource] object to override the CPU requirements for this component.
+
+### Example
+
+For example, you can specify [`Resource`][plugboard.schemas.Resource] requirements like this when defining components:
+
+```python
+--8<-- "examples/tutorials/004_using_ray/resources_example.py:resources"
+```
+
+1. Override the resource requirement on this instance.
+2. Use resources specified in class definition.
+3. Use default resources.
+
+Or override them in YAML configuration:
+
+```yaml
+--8<-- "examples/tutorials/004_using_ray/resources-example.yaml:11:"
+```
+
+1. Override DataProducer to require 1 CPU (instead of the default 0.001).
+2. CPUIntensiveTask already declares cpu: 2.0 at the class level, so this matches the class definition.
+3. Add 512MB memory requirement to CPUIntensiveTask (extending the class-level resources).
+4. Requires 0.5 CPU, specified in Kubernetes-style format (500 milli CPUs). This matches the class-level declaration.
+5. Requires 1 GPU, matching the class-level declaration.
+6. Add a custom resource called `custom_hardware`. This needs to be specified in the configuration of your Ray cluster to make it available.
+
+See the [Ray documentation](https://docs.ray.io/en/latest/ray-core/scheduling/resources.html) for more information about specifying resource requirements.

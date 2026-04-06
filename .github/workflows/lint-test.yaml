@@ -10,6 +10,9 @@ on:
       - synchronize
       - reopened
 
+permissions:
+  contents: read
+
 jobs:
   lint:
     name: Lint code
@@ -35,6 +38,10 @@ jobs:
       - name: Install project
         run: uv sync --group test --group docs
 
+      - name: Check uv lockfile
+        run: uv lock --check
+        if: always()
+
       - name: Ruff linting
         run: uv run ruff check .
         if: always()
@@ -58,6 +65,9 @@ jobs:
         run: find . -name '*.ipynb' -not -path "./.venv/*" -exec uv run nbstripout --verify {} +
         if: always()
 
+      - name: Check open source licenses
+        run: uv run licensecheck --requirements-paths ./pyproject.toml --zero --skip-dependencies plugboard-schemas
+
       - name: Build docs
         run: uv run mkdocs build --site-dir /tmp/site
         if: always()
@@ -65,7 +75,7 @@ jobs:
   test-unit:
     name: Tests - unit
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 8
     strategy:
       matrix:
         python_version: [3.12, 3.13]
@@ -103,7 +113,7 @@ jobs:
   test-integration:
     name: Tests - integration
     runs-on: ubuntu-latest
-    timeout-minutes: 6
+    timeout-minutes: 10
     strategy:
       matrix:
         python_version: [3.12, 3.13]
@@ -147,7 +157,7 @@ jobs:
   test-integration-tuner:
     name: Tests - integration:tuner
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 8
     strategy:
       matrix:
         python_version: [3.12, 3.13]

@@ -61,6 +61,12 @@ Running this code will execute an optimisation job and print out information on 
 !!! tip
     You can impose arbitary constraints on variables within a `Process`. In your `step` method you can raise a [`ConstraintError`][plugboard.exceptions.ConstraintError] to indicate to the `Tuner` that a constraint has been breached. This will cause the trial to be stopped, and the optimisation will continue trying to find parameters that don't cause the constraint violation.
 
+    By default, the objective is set to ±∞ (depending on the optimisation direction) when a constraint is breached. You can override this by passing an `objective_value` to `ConstraintError`:
+    ```python
+    raise ConstraintError("Value too high", objective_value=0.0)
+    ```
+    This is useful when you want violated trials to receive a specific penalty value rather than infinity.
+
 !!! tip
     You can optimise over process parameters if you have them in your model. Set `object_type="process"` and `field_type="parameter"` when specifying your tunable parameter.
 
@@ -89,6 +95,8 @@ These conditional search space functions are supported by Ray Tune and can be de
 1. Setup the [`Tuner`][plugboard.tune.Tuner], defining your parameters as usual;
 2. Write a custom function to define the search space, where each tunable parameter has a name of the form `"{component_name.field_or_arg_name}"`; then
 3. Supply your custom function to the `OptunaSpec` algorithm configuration.
+
+If your search space function accepts an argument named `spec`, Plugboard will pass the [`ProcessSpec`][plugboard.schemas.ProcessSpec] to it. This allows you to inspect the process definition when creating the parameter space, which is useful for example to use the process or component parameters to influence the search space.
 
 For example, the following search space makes the velocity depend on the angle:
 ```python

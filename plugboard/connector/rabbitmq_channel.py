@@ -120,7 +120,7 @@ class RabbitMQConnector(Connector):
 
     def __getstate__(self) -> dict:
         state = self.__dict__.copy()
-        for attr in ("_send_channel", "_recv_channel", "_recv_channel_lock"):
+        for attr in ("_send_channel", "_send_channel_lock", "_recv_channel", "_recv_channel_lock"):
             if attr in state:
                 del state[attr]
         return state

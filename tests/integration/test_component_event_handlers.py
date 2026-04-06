@@ -10,7 +10,7 @@ import pytest_cases
 
 from plugboard.component import Component, IOController
 from plugboard.connector import AsyncioConnector, Connector, ConnectorBuilder
-from plugboard.events import Event, EventConnectorBuilder
+from plugboard.events import Event
 from plugboard.schemas import ConnectorSpec
 from tests.conftest import zmq_connector_cls
 
@@ -84,10 +84,9 @@ def connector_cls(_connector_cls: _t.Type[Connector]) -> _t.Type[Connector]:
 
 
 @pytest.fixture
-def event_connectors(connector_cls: _t.Type[Connector]) -> EventConnectorBuilder:
+def connector_builder(connector_cls: _t.Type[Connector]) -> ConnectorBuilder:
     """Fixture for an event connectors instance."""
-    connector_builder = ConnectorBuilder(connector_cls=connector_cls)
-    return EventConnectorBuilder(connector_builder=connector_builder)
+    return ConnectorBuilder(connector_cls=connector_cls)
 
 
 @pytest.mark.asyncio
@@ -115,7 +114,7 @@ def event_connectors(connector_cls: _t.Type[Connector]) -> EventConnectorBuilder
     ],
 )
 async def test_component_event_handlers(
-    io_controller_kwargs: dict, event_connectors: EventConnectorBuilder
+    io_controller_kwargs: dict, connector_builder: ConnectorBuilder
 ) -> None:
     """Test that event handlers are registered and called correctly for components."""
 
@@ -124,8 +123,8 @@ async def test_component_event_handlers(
 
     a = _A(name="a")
 
-    event_connectors_map = event_connectors.build([a])
-    connectors = list(event_connectors_map.values())
+    connectors = connector_builder.build_event_connectors([a])
+    event_connectors_map = {conn.spec.source.entity: conn for conn in connectors}
 
     await a.io.connect(connectors)
 
@@ -133,7 +132,7 @@ async def test_component_event_handlers(
     assert a.event_B_count == 0
 
     evt_A = EventTypeA(data=EventTypeAData(x=2), source="test-driver")
-    chan_A = await event_connectors_map[evt_A.type].connect_send()
+    chan_A = await event_connectors_map[evt_A.safe_type()].connect_send()
     await chan_A.send(evt_A)
     await a.step()
 
@@ -141,7 +140,7 @@ async def test_component_event_handlers(
     assert a.event_B_count == 0
 
     evt_B = EventTypeB(data=EventTypeBData(y=4), source="test-driver")
-    chan_B = await event_connectors_map[evt_B.type].connect_send()
+    chan_B = await event_connectors_map[evt_B.safe_type()].connect_send()
     await chan_B.send(evt_B)
     await a.step()
 
@@ -163,7 +162,7 @@ async def field_connectors(connector_cls: _t.Type[Connector]) -> list[Connector]
 
 @pytest.mark.asyncio
 async def test_component_event_handlers_with_field_inputs(
-    event_connectors: EventConnectorBuilder,
+    connector_builder: ConnectorBuilder,
     field_connectors: list[Connector],
 ) -> None:
     """Test that event handlers are registered and called correctly for components."""
@@ -178,8 +177,9 @@ async def test_component_event_handlers_with_field_inputs(
 
     a = _A(name="a")
 
-    event_connectors_map = event_connectors.build([a])
-    connectors = list(event_connectors_map.values()) + field_connectors
+    event_connectors = connector_builder.build_event_connectors([a])
+    event_connectors_map = {conn.spec.source.entity: conn for conn in event_connectors}
+    connectors = event_connectors + field_connectors
 
     # FIXME : With `ZMQConnector` both send and recv side must be connected to avoid hanging.
     #       : See https://github.com/plugboard-dev/plugboard/issues/101.
@@ -199,7 +199,7 @@ async def test_component_event_handlers_with_field_inputs(
 
     # After sending one event of type A, the event_A_count should be 2
     evt_A = EventTypeA(data=EventTypeAData(x=2), source="test-driver")
-    chan_A = await event_connectors_map[evt_A.type].connect_send()
+    chan_A = await event_connectors_map[evt_A.safe_type()].connect_send()
     await chan_A.send(evt_A)
     await a.step()
 
@@ -210,7 +210,7 @@ async def test_component_event_handlers_with_field_inputs(
 
     # After sending one event of type B, the event_B_count should be 4
     evt_B = EventTypeB(data=EventTypeBData(y=4), source="test-driver")
-    chan_B = await event_connectors_map[evt_B.type].connect_send()
+    chan_B = await event_connectors_map[evt_B.safe_type()].connect_send()
     await chan_B.send(evt_B)
     await a.step()
 

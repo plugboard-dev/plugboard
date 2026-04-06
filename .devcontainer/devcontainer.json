@@ -46,7 +46,9 @@
 				"python.testing.unittestEnabled": false,
 				"python.testing.pytestEnabled": true,
 				"ruff.fixAll": true,
-				"ruff.organizeImports": true
+				"ruff.organizeImports": true,
+				"chat.useAgentsMdFile": true,
+				"chat.useNestedAgentsMdFiles": true
 			}
 		}
 	}

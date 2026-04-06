@@ -6,6 +6,7 @@ from abc import ABC, abstractmethod
 import typing as _t
 
 from plugboard.connector.channel import Channel
+from plugboard.connector.connector_builder import ConnectorBuilder
 from plugboard.schemas import ConnectorSpec
 from plugboard.utils import ExportMixin
 
@@ -39,3 +40,8 @@ class Connector(ABC, ExportMixin):
             "id": self.id,
             "spec": self.spec.model_dump(),
         }
+
+    @classmethod
+    def builder(cls, *args: _t.Any, **kwargs: _t.Any) -> ConnectorBuilder:
+        """Returns a `ConnectorBuilder` for this `Connector` class."""
+        return ConnectorBuilder(cls, *args, **kwargs)

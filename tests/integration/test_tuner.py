@@ -17,6 +17,7 @@ from plugboard.schemas import (
     IntParameterSpec,
     ObjectiveSpec,
     OptunaSpec,
+    ProcessSpec,
 )
 from plugboard.tune import Tuner
 from tests.conftest import ComponentTestHelper
@@ -30,6 +31,16 @@ class ConstrainedB(B):
         """Override step to apply a constraint."""
         if self.in_1 > 10:
             raise ConstraintError("Input must not be greater than 10")
+        await super().step()
+
+
+class ConstrainedBWithObjectiveValue(B):
+    """Component with a constraint that provides a custom objective value."""
+
+    async def step(self) -> None:
+        """Override step to apply a constraint with a custom objective value."""
+        if self.in_1 > 10:
+            raise ConstraintError("Input must not be greater than 10", objective_value=0.0)
         await super().step()
 
 
@@ -68,7 +79,21 @@ def custom_space(trial: Trial) -> dict[str, _t.Any] | None:
         trial.suggest_float(f"list_param_{i}", -5.0, -5.0 + float(i)) for i in range(n_list)
     ]
     # Set existing parameter
-    trial.suggest_int("a.iters", 1, 10)
+    trial.suggest_int("component.a.arg.iters", 1, 10)
+    # Use the return value to set the list parameter
+    return {"component.d.arg.list_param": list_param}
+
+
+def custom_space_with_process_spec(trial: Trial, spec: ProcessSpec) -> dict[str, _t.Any] | None:
+    """Custom space function that also takes the process spec."""
+    # Process spec can be used to obtain parameters or other information to define the search space
+    iters = spec.args.parameters["max_iters"]
+    n_list = trial.suggest_int("n_list", 1, 10)
+    list_param = [
+        trial.suggest_float(f"list_param_{i}", -5.0, -5.0 + float(i)) for i in range(n_list)
+    ]
+    # Set existing parameter
+    trial.suggest_int("component.a.arg.iters", 1, iters)
     # Use the return value to set the list parameter
     return {"component.d.arg.list_param": list_param}
 
@@ -174,7 +199,7 @@ async def test_multi_objective_tune(config: dict, ray_ctx: None) -> None:
                 categories=[1, -1],
             ),
         ],
-        num_samples=10,
+        num_samples=20,
         mode=["max", "min"],
         max_concurrent=2,
     )
@@ -281,7 +306,59 @@ async def test_tune_with_constraint(config: dict, ray_ctx: None) -> None:
 
 @pytest.mark.tuner
 @pytest.mark.asyncio
-async def test_custom_space_tune(dynamic_param_config: dict, ray_ctx: None) -> None:
+async def test_tune_with_constraint_objective_value(config: dict, ray_ctx: None) -> None:
+    """Tests that a ConstraintError with objective_value uses that value instead of infinity."""
+    spec = ConfigSpec.model_validate(config)
+    process_spec = spec.plugboard.process
+    # Replace component B with a version that provides a custom objective value on constraint
+    process_spec.args.components[
+        1
+    ].type = "tests.integration.test_tuner.ConstrainedBWithObjectiveValue"
+    tuner = Tuner(
+        objective=ObjectiveSpec(
+            object_type="component",
+            object_name="c",
+            field_type="field",
+            field_name="in_1",
+        ),
+        parameters=[
+            IntParameterSpec(
+                object_type="component",
+                object_name="a",
+                field_type="arg",
+                field_name="iters",
+                lower=5,
+                upper=15,
+            )
+        ],
+        num_samples=12,
+        mode="max",
+        max_concurrent=2,
+        algorithm=OptunaSpec(),
+    )
+    best_result = tuner.run(
+        spec=process_spec,
+    )
+    result = tuner.result_grid
+    # There must be no failed trials
+    assert not any(t.error for t in result)
+    # Optimum must be at or below 10 (constraint threshold)
+    assert best_result.metrics["component.c.field.in_1"] <= 10
+    # When constraint is violated the custom objective_value (0.0) must be used, not -inf
+    # The constraint raises when in_1 > 10; in_1 = iters - 1, so iters > 11 violates it
+    assert all(
+        t.metrics["component.c.field.in_1"] == 0.0
+        for t in result
+        if t.config["component.a.arg.iters"] > 11
+    )
+
+
+@pytest.mark.tuner
+@pytest.mark.asyncio
+@pytest.mark.parametrize("space_func", [custom_space, custom_space_with_process_spec])
+async def test_custom_space_tune(
+    dynamic_param_config: dict, ray_ctx: None, space_func: _t.Callable
+) -> None:
     """Tests tuning with a custom search space."""
     spec = ConfigSpec.model_validate(dynamic_param_config)
     process_spec = spec.plugboard.process
@@ -312,7 +389,7 @@ async def test_custom_space_tune(dynamic_param_config: dict, ray_ctx: None) -> N
         num_samples=10,
         mode="max",
         max_concurrent=2,
-        algorithm=OptunaSpec(space="tests.integration.test_tuner.custom_space"),
+        algorithm=OptunaSpec(space=f"tests.integration.test_tuner.{space_func.__name__}"),
     )
     tuner.run(
         spec=process_spec,
@@ -327,3 +404,6 @@ async def test_custom_space_tune(dynamic_param_config: dict, ray_ctx: None) -> N
         if r.config["n_list"] < 5:
             # When n_list < 5, all list_param values are negative
             assert all(v < 0.0 for v in r.config["component.d.arg.list_param"])
+        if space_func.__name__ == "custom_space_with_process_spec":
+            # The iters parameter must be set based on the process params
+            assert r.config["component.a.arg.iters"] <= process_spec.args.parameters["max_iters"]

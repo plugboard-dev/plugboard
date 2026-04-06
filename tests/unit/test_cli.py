@@ -4,15 +4,42 @@ Note: Tests which run async code synchronously from CLI entrypoints must be
 marked async so that they do not interfere with pytest-asyncio's event loop.
 """
 
+from pathlib import Path
+import tempfile
+import typing as _t
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+import respx
 from typer.testing import CliRunner
 
 from plugboard.cli import app
+from plugboard.cli.ai import _AGENTS_MD
 
 
 runner = CliRunner()
+
+
+def test_cli_version() -> None:
+    """Tests the version command."""
+    result = runner.invoke(app, ["version"])
+    # CLI must run without error
+    assert result.exit_code == 0
+    # Must output version information
+    assert "Plugboard version:" in result.stdout
+    assert "Platform:" in result.stdout
+    assert "Python version:" in result.stdout
+
+
+@pytest.fixture
+def test_project_dir() -> _t.Iterator[Path]:
+    """Create a minimal Python package for testing."""
+    with tempfile.TemporaryDirectory() as tmpdir:
+        project_dir = Path(tmpdir) / "test_project"
+        project_dir.mkdir()
+        (project_dir / "__init__.py").write_text("")
+        (project_dir / "test_file.py").write_text("")
+        yield project_dir
 
 
 @pytest.mark.asyncio
@@ -114,3 +141,102 @@ async def test_cli_process_run_with_invalid_process_type() -> None:
     # CLI must exit with error
     assert result.exit_code == 1
     assert "Invalid process type" in result.stdout
+
+
+def test_cli_ai_init(tmp_path: Path) -> None:
+    """Tests the ai init command creates AGENTS.md."""
+    result = runner.invoke(app, ["ai", "init", str(tmp_path)])
+    assert result.exit_code == 0
+    assert "Created" in result.stdout
+    # File must exist with expected content
+    agents_md = tmp_path / "AGENTS.md"
+    assert agents_md.exists()
+    content = agents_md.read_text()
+    assert "Plugboard" in content
+
+
+def test_cli_ai_init_already_exists(tmp_path: Path) -> None:
+    """Tests the ai init command fails when AGENTS.md already exists."""
+    (tmp_path / "AGENTS.md").write_text("existing content")
+    result = runner.invoke(app, ["ai", "init", str(tmp_path)])
+    assert result.exit_code == 1
+    # Error is printed to stderr which typer captures in output
+    assert "already exists" in result.output
+
+
+def test_cli_ai_init_default_directory() -> None:
+    """Tests the ai init command uses current directory by default."""
+    with tempfile.TemporaryDirectory() as tmpdir:
+        original_cwd = Path.cwd()
+        try:
+            import os
+
+            os.chdir(tmpdir)
+            result = runner.invoke(app, ["ai", "init"])
+            assert result.exit_code == 0
+            assert (Path(tmpdir) / "AGENTS.md").exists()
+        finally:
+            os.chdir(original_cwd)
+
+
+def test_cli_ai_agents_template_is_packaged_file() -> None:
+    """Tests the AI template is a real package file rather than a symlink."""
+    assert _AGENTS_MD.exists()
+    assert _AGENTS_MD.is_file()
+    assert not _AGENTS_MD.is_symlink()
+
+
+def test_cli_server_discover(test_project_dir: Path) -> None:
+    """Tests the server discover command."""
+    with respx.mock:
+        # Mock all the API endpoints
+        component_route = respx.post("http://test:8000/types/component").respond(
+            json={"status": "ok"}
+        )
+        connector_route = respx.post("http://test:8000/types/connector").respond(
+            json={"status": "ok"}
+        )
+        event_route = respx.post("http://test:8000/types/event").respond(json={"status": "ok"})
+        process_route = respx.post("http://test:8000/types/process").respond(json={"status": "ok"})
+
+        result = runner.invoke(
+            app,
+            [
+                "server",
+                "discover",
+                str(test_project_dir),
+                "--api-url",
+                "http://test:8000",
+            ],
+        )
+
+        # CLI must run without error
+        assert result.exit_code == 0
+        assert "Discovery complete" in result.stdout
+
+        # At minimum, should have discovered plugboard's built-in types
+        # The exact number may vary, but we expect some calls to each endpoint
+        assert component_route.called
+        assert connector_route.called
+        assert event_route.called
+        assert process_route.called
+
+
+def test_cli_server_discover_with_env_var(test_project_dir: Path) -> None:
+    """Tests the server discover command with environment variable."""
+    with respx.mock:
+        # Mock all the API endpoints with the env var URL
+        respx.post("http://env-test:9000/types/component").respond(json={"status": "ok"})
+        respx.post("http://env-test:9000/types/connector").respond(json={"status": "ok"})
+        respx.post("http://env-test:9000/types/event").respond(json={"status": "ok"})
+        respx.post("http://env-test:9000/types/process").respond(json={"status": "ok"})
+
+        result = runner.invoke(
+            app,
+            ["server", "discover", str(test_project_dir)],
+            env={"PLUGBOARD_API_URL": "http://env-test:9000"},
+        )
+
+        # CLI must run without error
+        assert result.exit_code == 0
+        assert "Discovery complete" in result.stdout

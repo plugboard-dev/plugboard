@@ -11,6 +11,7 @@ from .entities import Entity
 
 
 DEFAULT_STATE_BACKEND_CLS_PATH: str = "plugboard.state.DictStateBackend"
+RAY_STATE_BACKEND_CLS_PATH: str = "plugboard.state.RayStateBackend"
 
 
 class Status(StrEnum):

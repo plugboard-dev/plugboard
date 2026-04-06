@@ -16,6 +16,8 @@ env:
 jobs:
   publish:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - name: checkout gh-pages
         uses: actions/checkout@v4

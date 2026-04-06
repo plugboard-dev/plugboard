@@ -1,0 +1,1 @@
+../plugboard/cli/ai/AGENTS.md

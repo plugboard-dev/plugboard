@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from abc import ABC
 import asyncio
-from collections import defaultdict, deque
+from collections import defaultdict
 from functools import cached_property, wraps
 import typing as _t
 
@@ -20,7 +20,7 @@ from plugboard.exceptions import (
     UnrecognisedEventError,
     ValidationError,
 )
-from plugboard.schemas import Status
+from plugboard.schemas import Resource, Status
 from plugboard.state import StateBackend
 from plugboard.utils import DI, ClassRegistry, ExportMixin, is_on_ray_worker
 
@@ -41,10 +41,14 @@ class Component(ABC, ExportMixin):
         io: The `IOController` for the component, specifying inputs, outputs, and events.
         exports: Optional; The exportable fields from the component during distributed runs
             in addition to input and output fields.
+        resources: Resource requirements for the component. Can be declared as a class attribute
+            to set default resource requirements, which can be overridden in the constructor.
+            Defaults to `Resource()` (0.001 CPU, 0 GPU, 0 memory).
     """
 
     io: IO = IO(input_events=[StopEvent], output_events=[StopEvent])
     exports: _t.Optional[list[str]] = None
+    resources: Resource = Resource()
 
     _implements_step: bool = False
 
@@ -56,7 +60,19 @@ class Component(ABC, ExportMixin):
         parameters: _t.Optional[dict[str, _t.Any]] = None,
         state: _t.Optional[StateBackend] = None,
         constraints: _t.Optional[dict] = None,
+        resources: _t.Optional[Resource] = None,
     ) -> None:
+        """Initialize a Component instance.
+
+        Args:
+            name: The name of the component.
+            initial_values: Optional; Initial values for the component's inputs.
+            parameters: Optional; Parameters for the component.
+            state: Optional; State backend for the component.
+            constraints: Optional; Constraints for the component.
+            resources: Optional; Resource requirements for the component. If not provided,
+                uses the class-level `resources` attribute as default.
+        """
         self.name = name
         self._initial_values = initial_values or {}
         self._constraints = constraints or {}
@@ -67,7 +83,7 @@ class Component(ABC, ExportMixin):
         setattr(self, "init", self._handle_init_wrapper())
         setattr(self, "step", self._handle_step_wrapper())
 
-        if is_on_ray_worker():
+        if is_on_ray_worker():  # pragma: no cover
             # Required until https://github.com/ray-project/ray/issues/42823 is resolved
             try:
                 self.__class__._configure_io()
@@ -81,6 +97,12 @@ class Component(ABC, ExportMixin):
             output_events=self.__class__.io.output_events,
             namespace=self.name,
             component=self,
+        )
+        self.resources = resources or Resource(
+            cpu=self.__class__.resources.cpu,
+            gpu=self.__class__.resources.gpu,
+            memory=self.__class__.resources.memory,
+            resources=self.__class__.resources.resources,
         )
         self._event_producers: dict[str, set[str]] = defaultdict(set)
         self._status = Status.CREATED
@@ -110,6 +132,10 @@ class Component(ABC, ExportMixin):
     def status(self) -> Status:
         """Gets the status of the component."""
         return self._status
+
+    async def cancel(self) -> None:
+        """Called from the `Process` to set correct status."""
+        await self._set_status(Status.STOPPED)
 
     @property
     def parameters(self) -> dict[str, _t.Any]:
@@ -402,7 +428,7 @@ class Component(ABC, ExportMixin):
             self._logger.warning("State backend not connected, skipping status check")
             return
         process_status = await self._state.get_process_status_for_component(self.id)
-        self._logger.info(f"Process status for component {self.id}: {process_status}")
+        self._logger.info("Process status check", component=self.id, status=process_status)
         if process_status == Status.FAILED:
             await self._set_status(Status.STOPPED)
             self._logger.exception("Process in failed state")
@@ -431,21 +457,18 @@ class Component(ABC, ExportMixin):
 
     def _bind_outputs(self) -> None:
         """Binds component fields to output fields."""
-        output_data = {}
-        for field in self.io.outputs:
-            field_default = getattr(self, field, None)
-            output_data[field] = field_default
-        if self._can_step:
-            self.io.buf_fields[_io_key_out].put(output_data.items())
+        if not self._can_step:
+            return
+        output_data = {field: getattr(self, field, None) for field in self.io.outputs}
+        self.io.buf_fields[_io_key_out].put(output_data.items())
 
     async def _handle_events(self) -> None:
         """Handles incoming events."""
+        events = self.io.buf_events[_io_key_in].flush()
         async with asyncio.TaskGroup() as tg:
             # FIXME : If a StopEvent is received, processing of other events may hit
             #       : IOStreamClosedError due to concurrent execution.
-            event_queue = deque(self.io.buf_events[_io_key_in].flush())
-            while event_queue:
-                event = event_queue.popleft()
+            for event in events:
                 tg.create_task(self._handle_event(event))
 
     async def _handle_event(self, event: Event) -> None:

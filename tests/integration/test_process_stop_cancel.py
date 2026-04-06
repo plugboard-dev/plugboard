@@ -1,15 +1,23 @@
-"""Integration tests for gracefully stopping a running event driven Process with Components."""
+"""Integration tests for gracefully stopping or cancelling a Process."""
 # ruff: noqa: D101,D102,D103
 
 import asyncio
+import os
+import signal
 import typing as _t
 
 import pytest
 import pytest_cases
 
 from plugboard.component import Component, IOController as IO
-from plugboard.connector import AsyncioConnector, Connector, ConnectorBuilder, RabbitMQConnector
-from plugboard.events import EventConnectorBuilder, StopEvent
+from plugboard.connector import (
+    AsyncioConnector,
+    Connector,
+    ConnectorBuilder,
+    RabbitMQConnector,
+    RayConnector,
+)
+from plugboard.events import StopEvent
 from plugboard.process import LocalProcess, Process, RayProcess
 from plugboard.schemas import ConnectorSpec, Status
 from tests.conftest import ComponentTestHelper, zmq_connector_cls
@@ -63,8 +71,8 @@ class B(ComponentTestHelper):
 async def test_process_stop_event(
     process_cls: type[Process], connector_cls: type[Connector], ray_ctx: None
 ) -> None:
+    """Tests that an event-driven Process can be stopped gracefully via a StopEvent."""
     connector_builder = ConnectorBuilder(connector_cls=connector_cls)
-    event_connectors = EventConnectorBuilder(connector_builder=connector_builder)
 
     max_iters = 25
     iters_before_stop = 15
@@ -80,13 +88,14 @@ async def test_process_stop_event(
     ]
     field_connectors: list[Connector] = [conn_ab1, conn_ab2, conn_ab3, conn_ab4, conn_ab5]
 
-    event_connectors_map = event_connectors.build(components)
-    connectors: list[Connector] = list(event_connectors_map.values()) + field_connectors
+    event_connectors = connector_builder.build_event_connectors(components)
+    event_connectors_map = {conn.spec.source.entity: conn for conn in event_connectors}
+    connectors: list[Connector] = event_connectors + field_connectors
 
     process = process_cls(components, connectors)
 
     async with process:
-        stop_evt_conn = event_connectors_map[StopEvent.type]
+        stop_evt_conn = event_connectors_map[StopEvent.safe_type()]
         stop_chan = await stop_evt_conn.connect_send()
 
         async def stop_after() -> None:
@@ -125,3 +134,46 @@ async def test_process_stop_event(
         # outputs from A before shutting down the IOController, hence n.
         for c in [comp_b1, comp_b2, comp_b3, comp_b4, comp_b5]:
             assert c.in_1 == pytest.approx(iters_before_stop, abs=STOP_TOLERANCE)
+
+
+@pytest.mark.asyncio
+@pytest_cases.parametrize(
+    "process_cls, connector_cls",
+    [
+        (LocalProcess, AsyncioConnector),
+        (RayProcess, RayConnector),
+    ],
+)
+async def test_process_cancel(
+    process_cls: type[Process], connector_cls: type[Connector], ray_ctx: None
+) -> None:
+    """Tests that a running Process can be stopped gracefully via SIGINT."""
+    max_iters = 5
+    sleep_time = 1
+    interrupt_after_seconds = 0.5
+
+    comp_a = A(iters=max_iters, sleep_time=sleep_time, name="comp_a")
+    comp_b = B(name="comp_b")
+    components: list[Component] = [comp_a, comp_b]
+
+    conn_ab = connector_cls(spec=ConnectorSpec(source="comp_a.out_1", target="comp_b.in_1"))
+
+    process = process_cls(components, [conn_ab])
+
+    async with process:
+
+        async def stop_after() -> None:
+            pid = os.getpid()
+            await asyncio.sleep(interrupt_after_seconds)
+            os.kill(pid, signal.SIGINT)
+
+        async with asyncio.TaskGroup() as tg:
+            tg.create_task(process.run())
+            tg.create_task(stop_after())
+
+    # Process must be in STOPPED status and component A must not have reached max iters
+    assert process.status == Status.STOPPED
+    assert comp_a.out_1 < max_iters
+    # All components must be in STOPPED status
+    for c in components:
+        assert c.status == Status.STOPPED

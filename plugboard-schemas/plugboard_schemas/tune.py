@@ -19,14 +19,20 @@ class OptunaSpec(PlugboardBaseModel):
         type: The algorithm type to load.
         space: Optional; A function defining the search space. Use this to define more complex
             search spaces that cannot be represented using the built-in parameter types.
+            The function must accept a `trial` argument. If it also accepts a `spec` argument,
+            the `ProcessSpec` will be passed to it.
         study_name: Optional; The name of the study.
         storage: Optional; The storage URI to save the optimisation results to.
+        points_to_evaluate: Optional; A list of initial parameter configurations to evaluate
+            first. Each entry is a dict mapping parameter full names to values. Useful for
+            providing a warm start when exploring large or heavily constrained search spaces.
     """
 
     type: _t.Literal["ray.tune.search.optuna.OptunaSearch"] = "ray.tune.search.optuna.OptunaSearch"
     space: str | None = None
     study_name: str | None = None
     storage: str | None = None
+    points_to_evaluate: list[dict[str, _t.Any]] | None = None
 
 
 class BaseFieldSpec(PlugboardBaseModel, ABC):
