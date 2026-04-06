@@ -65,10 +65,10 @@ def test_benchmark_process_run(
     """Benchmark running of a Plugboard Process."""
     process = _build_process(connector_cls, process_cls)
 
-    def setup() -> None:
+    def _setup() -> None:
         uvloop.run(process.init())
 
     def _run() -> None:
         uvloop.run(process.run())
 
-    benchmark.pedantic(_run, rounds=5)
+    benchmark.pedantic(_run, setup=_setup, rounds=5)
