@@ -1,5 +1,7 @@
 """Benchmark tests for Plugboard processes."""
 
+import asyncio
+
 import pytest
 from pytest_codspeed import BenchmarkFixture
 import uvloop
@@ -56,7 +58,6 @@ async def test_benchmark_process_lifecycle(
     CONNECTOR_PROCESS_PARAMS,
     ids=CONNECTOR_PROCESS_IDS,
 )
-@pytest.mark.asyncio
 def test_benchmark_process_run(
     benchmark: BenchmarkFixture,
     connector_cls: type[Connector],
@@ -64,12 +65,22 @@ def test_benchmark_process_run(
     ray_ctx: None,
 ) -> None:
     """Benchmark running of a Plugboard Process."""
-    process = _build_process(connector_cls, process_cls)
 
-    def _setup() -> None:
-        uvloop.run(process.init())
+    async def _setup_process() -> Process:
+        process = _build_process(connector_cls, process_cls)
+        await process.init()
+        return process
 
-    def _run() -> None:
-        uvloop.run(process.run())
+    def _setup() -> tuple[tuple[asyncio.Runner, Process], dict[str, object]]:
+        runner = asyncio.Runner(loop_factory=uvloop.new_event_loop)
+        process = runner.run(_setup_process())
+        return (runner, process), {}
 
-    benchmark.pedantic(_run, setup=_setup, rounds=5)
+    def _run(runner: asyncio.Runner, process: Process) -> None:
+        runner.run(process.run())
+
+    def _teardown(runner: asyncio.Runner, process: Process) -> None:
+        runner.run(process.destroy())
+        runner.close()
+
+    benchmark.pedantic(_run, setup=_setup, teardown=_teardown, rounds=5)
