@@ -14,6 +14,7 @@ import respx
 from typer.testing import CliRunner
 
 from plugboard.cli import app
+from plugboard.cli.ai import _AGENTS_MD
 
 
 runner = CliRunner()
@@ -121,6 +122,13 @@ def test_cli_ai_init_default_directory() -> None:
             assert (Path(tmpdir) / "AGENTS.md").exists()
         finally:
             os.chdir(original_cwd)
+
+
+def test_cli_ai_agents_template_is_packaged_file() -> None:
+    """Tests the AI template is a real package file rather than a symlink."""
+    assert _AGENTS_MD.exists()
+    assert _AGENTS_MD.is_file()
+    assert not _AGENTS_MD.is_symlink()
 
 
 def test_cli_server_discover(test_project_dir: Path) -> None:
