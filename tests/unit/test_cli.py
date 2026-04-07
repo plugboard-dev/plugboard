@@ -131,18 +131,6 @@ async def test_cli_process_run_with_ray_override() -> None:
         assert process_spec.args.state.type == "plugboard.state.RayStateBackend"
 
 
-@pytest.mark.asyncio
-async def test_cli_process_run_with_invalid_process_type() -> None:
-    """Tests the process run command with invalid --process-type."""
-    result = runner.invoke(
-        app,
-        ["process", "run", "tests/data/minimal-process.yaml", "--process-type", "invalid"],
-    )
-    # CLI must exit with error
-    assert result.exit_code == 1
-    assert "Invalid process type" in result.stderr
-
-
 def test_cli_ai_init(tmp_path: Path) -> None:
     """Tests the ai init command creates AGENTS.md."""
     result = runner.invoke(app, ["ai", "init", str(tmp_path)])

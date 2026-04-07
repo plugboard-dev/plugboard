@@ -93,7 +93,7 @@ def run(
         ),
     ] = None,
     process_type: Annotated[
-        _t.Optional[str],
+        _t.Optional[_t.Literal["local", "ray"]],
         typer.Option(
             "--process-type",
             help=(
@@ -111,16 +111,9 @@ def run(
         config_spec.plugboard.process.args.state.args.job_id = job_id
 
     if process_type is not None:
-        # Validate and normalize process type
-        process_type_lower = process_type.lower()
-        if process_type_lower not in ["local", "ray"]:
-            stderr.print(
-                f"[red]Invalid process type: {process_type}. Must be 'local' or 'ray'.[/red]"
-            )
-            raise typer.Exit(1)
         # Use the ProcessSpec method to override the process type
         config_spec.plugboard.process = config_spec.plugboard.process.override_process_type(
-            process_type_lower  # type: ignore[arg-type]
+            process_type  # type: ignore[arg-type]
         )
 
     with Progress(
