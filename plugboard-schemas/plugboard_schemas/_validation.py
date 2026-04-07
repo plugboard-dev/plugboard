@@ -15,6 +15,7 @@ from collections import defaultdict
 import typing as _t
 
 from ._graph import simple_cycles
+from ._validator_registry import validator
 
 
 def _build_component_graph(
@@ -70,6 +71,7 @@ def _get_edges_in_cycle(
     return cycle_edges
 
 
+@validator
 def validate_all_inputs_connected(
     process_dict: dict[str, _t.Any],
 ) -> list[str]:
@@ -103,6 +105,7 @@ def validate_all_inputs_connected(
     return errors
 
 
+@validator
 def validate_input_events(
     process_dict: dict[str, _t.Any],
 ) -> list[str]:
@@ -133,6 +136,7 @@ def validate_input_events(
     return errors
 
 
+@validator
 def validate_no_unresolved_cycles(
     process_dict: dict[str, _t.Any],
 ) -> list[str]:
@@ -180,24 +184,4 @@ def validate_no_unresolved_cycles(
                 f"Circular connection detected without initial values: {cycle_str}. "
                 f"Set initial_values on a component input within the loop to resolve."
             )
-    return errors
-
-
-def validate_process(process_dict: dict[str, _t.Any]) -> list[str]:
-    """Run all topology validation checks on a process.
-
-    This is the main validation entry point.  It accepts the output of
-    ``process.dict()`` and runs every available check, returning a
-    combined list of error messages.
-
-    Args:
-        process_dict: The output of ``process.dict()``.
-
-    Returns:
-        List of error messages.  An empty list indicates a valid topology.
-    """
-    errors: list[str] = []
-    errors.extend(validate_all_inputs_connected(process_dict))
-    errors.extend(validate_input_events(process_dict))
-    errors.extend(validate_no_unresolved_cycles(process_dict))
     return errors
