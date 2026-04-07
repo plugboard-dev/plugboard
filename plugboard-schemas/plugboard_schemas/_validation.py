@@ -54,13 +54,19 @@ def _get_edges_in_cycle(
     Returns:
         List of connector spec dicts that are part of the cycle.
     """
+    conn_map: dict[tuple[str, str], dict[str, _t.Any]] = {
+        (spec["source"]["entity"], spec["target"]["entity"]): spec
+        for conn_info in connectors.values()
+        if (spec := conn_info["spec"])
+    }
     cycle_edges: list[dict[str, _t.Any]] = []
     for i, node in enumerate(cycle):
         next_node = cycle[(i + 1) % len(cycle)]
-        for conn_info in connectors.values():
-            spec = conn_info["spec"]
-            if spec["source"]["entity"] == node and spec["target"]["entity"] == next_node:
-                cycle_edges.append(spec)
+        try:
+            spec = conn_map[(node, next_node)]
+        except KeyError:
+            raise ValueError(f"Cycle edge not found: {node} -> {next_node}")
+        cycle_edges.append(spec)
     return cycle_edges
 
 
