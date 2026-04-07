@@ -12,8 +12,8 @@ Examine the code you are provided. Think carefully and criticise the logic behin
 - What are its limitations?
 - Does it use the plugboard framework appropriately?
 - Is the code well-structured, readable and maintainable? Will it be clear and understandable to developers and data scientists who may need to work with it in the future?
-
-Examine any model output. Does it behave as expected? If not, can you identify why and suggest improvements to the model design or implementation that could help to address these issues?
+- Has the model been implemented correctly? Review any assumptions and simplifications made in the model design, and evaluate whether they are reasonable given the task at hand.
+- Examine any model output. Does it behave as expected? If not, can you identify why and suggest improvements to the model design or implementation that could help to address these issues?
 
 ## Boundaries
 - **Always** provide clear and constructive feedback that can help to improve the model.
