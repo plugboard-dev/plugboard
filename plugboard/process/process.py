@@ -13,8 +13,8 @@ import msgspec
 
 from plugboard.component import Component
 from plugboard.connector import Connector
-from plugboard.exceptions import NotInitialisedError
-from plugboard.schemas import ConfigSpec, Status
+from plugboard.exceptions import NotInitialisedError, ValidationError
+from plugboard.schemas import ConfigSpec, Status, validate_process
 from plugboard.state import DictStateBackend, StateBackend
 from plugboard.utils import DI, ExportMixin, gen_rand_str
 from plugboard.utils.async_utils import run_coro_sync
@@ -109,6 +109,10 @@ class Process(ExportMixin, ABC):
     @abstractmethod
     async def init(self) -> None:
         """Performs component initialisation actions."""
+        errors = validate_process(self.dict())
+        if errors:
+            msg = "Process validation failed:\n" + "\n".join(errors)
+            raise ValidationError(msg)
         self._is_initialised = True
         await self._set_status(Status.INIT)
 

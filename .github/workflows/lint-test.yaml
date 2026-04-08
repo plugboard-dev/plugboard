@@ -3,7 +3,7 @@ name: Lint and test
 on:
   push:
     branches:
-      - 'main'
+      - "main"
   pull_request:
     types:
       - opened
@@ -137,13 +137,14 @@ jobs:
 
       - name: Run backing services
         run: |
-          docker compose up postgres rabbitmq -d
+          docker compose up -d
           sleep 10 # Wait for services to start
 
       - name: Run integration tests
         run: COVERAGE_FILE=.coverage.py${{ matrix.python_version }}.integration uv run coverage run -m pytest ./tests/integration/ -m "not tuner"
         env:
           RABBITMQ_URL: amqp://user:password@localhost:5672/
+          REDIS_URL: redis://default:password@localhost:6379/
           RAY_ENABLE_UV_RUN_RUNTIME_ENV: 0
           PLUGBOARD_IO_READ_TIMEOUT: 5.0
 
@@ -153,7 +154,7 @@ jobs:
           name: coverage-integration-py${{ matrix.python_version }}
           include-hidden-files: true
           path: .coverage.py${{ matrix.python_version }}.integration*
-  
+
   test-integration-tuner:
     name: Tests - integration:tuner
     runs-on: ubuntu-latest
@@ -183,6 +184,7 @@ jobs:
         run: COVERAGE_FILE=.coverage.py${{ matrix.python_version }}.integration.tuner uv run coverage run -m pytest ./tests/integration/ -m "tuner"
         env:
           RABBITMQ_URL: amqp://user:password@localhost:5672/
+          REDIS_URL: redis://default:password@localhost:6379/
           RAY_ENABLE_UV_RUN_RUNTIME_ENV: 0
           PLUGBOARD_IO_READ_TIMEOUT: 5.0
 

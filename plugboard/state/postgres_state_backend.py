@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import typing as _t
 
-from async_lru import alru_cache
 import asyncpg
 import msgspec
 
@@ -32,6 +31,8 @@ class PostgresStateBackend(StateBackend):
         """Initializes `PostgresStateBackend` with `db_url`."""
         self._db_url: str = db_url
         self._pool: asyncpg.Pool | None = None
+        self._component_process_cache: dict[str, str] = {}
+        self._connector_process_cache: dict[str, str] = {}
         super().__init__(*args, **kwargs)
 
     def __getstate__(self) -> dict:
@@ -75,8 +76,8 @@ class PostgresStateBackend(StateBackend):
         if self._pool:
             await self._pool.close()
         self._get_db_id.cache_clear()
-        self._get_process_id_for_component.cache_clear()
-        self._get_process_id_for_connector.cache_clear()
+        self._component_process_cache.clear()
+        self._connector_process_cache.clear()
 
     async def _fetchone(
         self, statement: str, params: _t.Tuple[_t.Any, ...]
@@ -182,13 +183,14 @@ class PostgresStateBackend(StateBackend):
         process_id: str = await self._get_process_id_for_component(component_id)
         return await self.get_process(process_id)
 
-    @alru_cache(maxsize=128)
     async def _get_process_id_for_component(self, component_id: str) -> str:
-        component_db_id = self._get_db_id(component_id)
-        row = await self._fetchone(q.GET_PROCESS_FOR_COMPONENT, (component_db_id,))
-        if row is None or row["process_id"] is None:
-            raise NotFoundError(f"No process found for component with ID {component_id}")
-        return row["process_id"]
+        if component_id not in self._component_process_cache:
+            component_db_id = self._get_db_id(component_id)
+            row = await self._fetchone(q.GET_PROCESS_FOR_COMPONENT, (component_db_id,))
+            if row is None or row["process_id"] is None:
+                raise NotFoundError(f"No process found for component with ID {component_id}")
+            self._component_process_cache[component_id] = row["process_id"]
+        return self._component_process_cache[component_id]
 
     async def upsert_component(self, component: Component) -> None:
         """Upserts a component into the state."""
@@ -212,14 +214,15 @@ class PostgresStateBackend(StateBackend):
             raise NotFoundError(f"Component with id {component_id} not found.")
         return component
 
-    @alru_cache(maxsize=128)
     async def _get_process_id_for_connector(self, connector_id: str) -> str:
         """Returns the process id for a connector."""
-        connector_db_id = self._get_db_id(connector_id)
-        row = await self._fetchone(q.GET_PROCESS_FOR_CONNECTOR, (connector_db_id,))
-        if row is None or row["process_id"] is None:
-            raise NotFoundError(f"No process found for connector with ID {connector_id}")
-        return row["process_id"]
+        if connector_id not in self._connector_process_cache:
+            connector_db_id = self._get_db_id(connector_id)
+            row = await self._fetchone(q.GET_PROCESS_FOR_CONNECTOR, (connector_db_id,))
+            if row is None or row["process_id"] is None:
+                raise NotFoundError(f"No process found for connector with ID {connector_id}")
+            self._connector_process_cache[connector_id] = row["process_id"]
+        return self._connector_process_cache[connector_id]
 
     async def upsert_connector(self, connector: Connector) -> None:
         """Upserts a connector into the state."""
