@@ -365,6 +365,10 @@ class Component(ABC, ExportMixin):
     def _has_field_inputs(self) -> bool:
         return len(self.io.inputs) > 0
 
+    @property
+    def _has_connected_field_inputs(self) -> bool:
+        return len(self.io._input_channels) > 0
+
     @cached_property
     def _has_event_inputs(self) -> bool:
         input_events = set([evt.safe_type() for evt in self.io.input_events])
@@ -409,8 +413,9 @@ class Component(ABC, ExportMixin):
             task.cancel()
         for task in done:
             exc = task.exception()
-            if isinstance(exc, EventStreamClosedError) and len(self.io.inputs) == 0:
+            if isinstance(exc, EventStreamClosedError) and not self._has_connected_field_inputs:
                 await self.io.close()  # Call close for final wait and flush event buffer
+                raise IOStreamClosedError(str(exc)) from exc
             elif exc is not None:
                 raise exc
 
@@ -422,7 +427,7 @@ class Component(ABC, ExportMixin):
             # TODO : Eventually producer graph update will be event driven. For now,
             #      : the update is performed periodically, so it's called here along
             #      : with the status check.
-            if len(self.io.inputs) == 0:
+            if not self._has_connected_field_inputs:
                 await self._update_producer_graph()
 
     async def _status_check(self) -> None:

@@ -23,6 +23,7 @@ from plugboard.connector import (
 )
 from plugboard.events import Event
 from plugboard.exceptions import ConstraintError, NotInitialisedError, ProcessStatusError
+from plugboard.library import FileWriter
 from plugboard.process import LocalProcess, Process, RayProcess
 from plugboard.schemas import ConnectorSpec, Status
 from tests.conftest import ComponentTestHelper, zmq_connector_cls
@@ -455,6 +456,85 @@ async def test_event_driven_process_shutdown(
     assert controller.ticks_received == list(range(ticks))
     assert actuator.ticks_received == list(range(ticks))
     assert actuator.actions == [f"do_{i}" for i in range(ticks)]
+
+    await process.destroy()
+
+
+class MessageEventData(BaseModel):
+    """Data for a file-writer event."""
+
+    message: str
+
+
+class MessageEvent(Event):
+    """Event carrying a file-writer message."""
+
+    type: _t.ClassVar[str] = "message_event"
+    data: MessageEventData
+
+
+class MessageEventGenerator(ComponentTestHelper):
+    """Produces a fixed number of message events."""
+
+    io = IO(output_events=[MessageEvent])
+
+    def __init__(self, iters: int, *args: _t.Any, **kwargs: _t.Any) -> None:
+        super().__init__(*args, **kwargs)
+        self._iters = iters
+
+    async def init(self) -> None:
+        await super().init()
+        self._seq = iter(range(self._iters))
+
+    async def step(self) -> None:
+        try:
+            idx = next(self._seq)
+        except StopIteration:
+            await self.io.close()
+        else:
+            evt = MessageEvent(
+                source=self.name,
+                data=MessageEventData(message=f"Message {idx}"),
+            )
+            self.io.queue_event(evt)
+            await super().step()
+
+
+class EventReaderFileWriter(FileWriter):
+    """`FileWriter` variant that populates inputs from events."""
+
+    io = IO(input_events=[MessageEvent])
+
+    @MessageEvent.handler
+    async def handle_message(self, event: MessageEvent) -> None:
+        self.message = event.data.message
+
+
+@pytest.mark.asyncio
+async def test_event_driven_file_writer_reuse(tmp_path: Path) -> None:
+    """Test that field-input components can be reused in event-driven processes."""
+    output_path = tmp_path / "output_messages.csv"
+    components = [
+        MessageEventGenerator(iters=3, name="message_event_generator"),
+        EventReaderFileWriter(
+            path=output_path,
+            name="event_reader_file_writer",
+            field_names=["message"],
+        ),
+    ]
+    event_connectors = AsyncioConnector.builder().build_event_connectors(components)
+    process = LocalProcess(components=components, connectors=event_connectors)
+
+    await process.init()
+    await process.run()
+
+    assert process.status == Status.COMPLETED
+    assert output_path.read_text().splitlines() == [
+        "message",
+        "Message 0",
+        "Message 1",
+        "Message 2",
+    ]
 
     await process.destroy()
 
