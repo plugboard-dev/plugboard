@@ -345,6 +345,8 @@ class Component(ABC, ExportMixin):
             with self._job_id_ctx():
                 await self._set_status(Status.RUNNING, publish=not self._is_running)
                 await self._io_read_with_status_check()
+                if self.io.is_closed:
+                    return
                 await self._handle_events()
                 self._bind_inputs()
                 if self._can_step:
@@ -415,7 +417,6 @@ class Component(ABC, ExportMixin):
             exc = task.exception()
             if isinstance(exc, EventStreamClosedError) and not self._has_connected_field_inputs:
                 await self.io.close()  # Call close for final wait and flush event buffer
-                raise IOStreamClosedError(str(exc)) from exc
             elif exc is not None:
                 raise exc
 
