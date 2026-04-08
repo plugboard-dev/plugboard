@@ -46,6 +46,11 @@ from plugboard_schemas import (
     TuneArgsDict,
     TuneArgsSpec,
     TuneSpec,
+    simple_cycles,
+    validate_all_inputs_connected,
+    validate_input_events,
+    validate_no_unresolved_cycles,
+    validate_process,
 )
 
 
@@ -86,4 +91,9 @@ __all__ = [
     "TuneArgsDict",
     "TuneArgsSpec",
     "TuneSpec",
+    "simple_cycles",
+    "validate_all_inputs_connected",
+    "validate_input_events",
+    "validate_no_unresolved_cycles",
+    "validate_process",
 ]

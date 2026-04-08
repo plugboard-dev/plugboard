@@ -8,6 +8,7 @@ import msgspec
 import pytest
 from ray.tune.search.optuna import OptunaSearch
 
+from plugboard.exceptions import ConstraintError
 from plugboard.schemas import (
     CategoricalParameterSpec,
     ConfigSpec,
@@ -131,3 +132,58 @@ def test_optuna_storage_uri_conversion(temp_dir: str) -> None:
         tuner.run(spec=MagicMock())
         passed_alg = mock_tuner_cls.call_args.kwargs["tune_config"].search_alg
         assert isinstance(passed_alg, OptunaSearch)
+
+
+def test_optuna_points_to_evaluate(config: dict) -> None:
+    """Test that points_to_evaluate is passed through to the OptunaSearch algorithm."""
+    spec = ConfigSpec.model_validate(config)
+    process_spec = spec.plugboard.process
+    points = [{"component.a.arg.x": 7, "component.a.arg.y": 0.3}]
+    tuner = Tuner(
+        objective=ObjectiveSpec(
+            object_type="component",
+            object_name="c",
+            field_type="field",
+            field_name="in_1",
+        ),
+        parameters=[
+            IntParameterSpec(
+                object_type="component",
+                object_name="a",
+                field_type="arg",
+                field_name="x",
+                lower=6,
+                upper=8,
+            ),
+            FloatParameterSpec(
+                object_type="component",
+                object_name="a",
+                field_type="arg",
+                field_name="y",
+                lower=0.1,
+                upper=0.5,
+            ),
+        ],
+        num_samples=3,
+        mode="max",
+        algorithm=OptunaSpec(points_to_evaluate=points),
+    )
+    with patch("ray.tune.Tuner") as mock_tuner_cls:
+        tuner.run(spec=process_spec)
+        search_alg = mock_tuner_cls.call_args.kwargs["tune_config"].search_alg
+        # The underlying OptunaSearch must have received the points_to_evaluate
+        assert isinstance(search_alg, OptunaSearch)
+        assert search_alg._points_to_evaluate == points
+
+
+def test_constraint_error_objective_value() -> None:
+    """Test that ConstraintError stores an optional objective_value."""
+    # Default (no objective_value): backward compatible usage
+    err = ConstraintError("constraint violated")
+    assert err.objective_value is None
+    assert str(err) == "constraint violated"
+
+    # With objective_value keyword argument
+    err_with_value = ConstraintError("constraint violated", objective_value=5.0)
+    assert err_with_value.objective_value == 5.0
+    assert str(err_with_value) == "constraint violated"

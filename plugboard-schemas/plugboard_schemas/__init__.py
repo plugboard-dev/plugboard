@@ -9,6 +9,13 @@ This includes:
 from importlib.metadata import version
 
 from ._common import PlugboardBaseModel
+from ._graph import simple_cycles
+from ._validation import (
+    validate_all_inputs_connected,
+    validate_input_events,
+    validate_no_unresolved_cycles,
+)
+from ._validator_registry import validate_process, validator
 from .component import ComponentArgsDict, ComponentArgsSpec, ComponentSpec, Resource
 from .config import ConfigSpec, ProcessConfigSpec
 from .connector import (
@@ -85,4 +92,10 @@ __all__ = [
     "TuneArgsDict",
     "TuneArgsSpec",
     "TuneSpec",
+    "simple_cycles",
+    "validator",
+    "validate_all_inputs_connected",
+    "validate_input_events",
+    "validate_no_unresolved_cycles",
+    "validate_process",
 ]

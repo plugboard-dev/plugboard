@@ -23,12 +23,16 @@ class OptunaSpec(PlugboardBaseModel):
             the `ProcessSpec` will be passed to it.
         study_name: Optional; The name of the study.
         storage: Optional; The storage URI to save the optimisation results to.
+        points_to_evaluate: Optional; A list of initial parameter configurations to evaluate
+            first. Each entry is a dict mapping parameter full names to values. Useful for
+            providing a warm start when exploring large or heavily constrained search spaces.
     """
 
     type: _t.Literal["ray.tune.search.optuna.OptunaSearch"] = "ray.tune.search.optuna.OptunaSearch"
     space: str | None = None
     study_name: str | None = None
     storage: str | None = None
+    points_to_evaluate: list[dict[str, _t.Any]] | None = None
 
 
 class BaseFieldSpec(PlugboardBaseModel, ABC):
