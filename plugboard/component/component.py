@@ -346,7 +346,8 @@ class Component(ABC, ExportMixin):
                 await self._set_status(Status.RUNNING, publish=not self._is_running)
                 await self._io_read_with_status_check()
                 # Event-driven consumers can close here when their producer graph is exhausted.
-                # Return before rebinding inputs so stale field values are not replayed.
+                # Return before rebinding inputs so the last event-populated field values are not
+                # replayed as if they were fresh inputs in another step.
                 if self.io.is_closed:
                     return
                 await self._handle_events()
@@ -372,7 +373,7 @@ class Component(ABC, ExportMixin):
     @property
     def _has_connected_field_inputs(self) -> bool:
         """Whether any declared field inputs are connected via input channels."""
-        return len(self.io._input_channels) > 0
+        return self.io.has_connected_field_inputs
 
     @cached_property
     def _has_event_inputs(self) -> bool:

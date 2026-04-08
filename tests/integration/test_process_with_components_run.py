@@ -501,7 +501,7 @@ class MessageEventGenerator(ComponentTestHelper):
 
 
 class EventReaderFileWriter(FileWriter):
-    """`FileWriter` variant that relies on IO inheritance to reuse `message` via events."""
+    """`FileWriter` variant that adds event handling instead of a connector for `message`."""
 
     io = IO(input_events=[MessageEvent])
 

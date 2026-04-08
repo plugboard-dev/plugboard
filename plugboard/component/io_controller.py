@@ -86,6 +86,11 @@ class IOController:
         """Returns `True` if the `IOController` is closed, `False` otherwise."""
         return self._is_closed
 
+    @property
+    def has_connected_field_inputs(self) -> bool:
+        """Returns whether any field inputs are connected via channels."""
+        return len(self._input_channels) > 0
+
     @cached_property
     def _has_field_inputs(self) -> bool:
         return len(self._input_channels) > 0
