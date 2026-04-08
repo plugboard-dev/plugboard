@@ -4,11 +4,13 @@ import typing as _t
 
 import pytest
 import pytest_asyncio
+import pytest_cases
 from ray.util.multiprocessing import Pool
 import uvloop
 
 from plugboard.component import Component, IOController
 from plugboard.connector import Connector, ZMQConnector
+from plugboard.exceptions import NotFoundError
 from plugboard.process import LocalProcess
 from plugboard.schemas import ConnectorSpec
 from plugboard.state import DictStateBackend, StateBackend
@@ -181,3 +183,17 @@ async def test_state_backend_multiprocess(
     for conn in [conn_1, conn_2, conn_3, conn_4]:
         state_data_conn = await state_backend.get_connector(conn.id)
         assert state_data_conn["times_upserted"] == 2
+
+
+@pytest_cases.parametrize("setup_backend", [setup_SqliteStateBackend, setup_PostgresStateBackend])
+@pytest.mark.asyncio
+async def test_no_process_found_errors(
+    setup_backend: _t.Callable[[], _t.ContextManager[StateBackend]],
+) -> None:
+    """Tests that `StateBackend` raises `NotFoundError` when no process is found."""
+    with setup_backend() as backend:
+        await backend.init()
+        with pytest.raises(NotFoundError, match="No process found for component"):
+            await backend._get_process_id_for_component("nonexistent_component")
+        with pytest.raises(NotFoundError, match="No process found for connector"):
+            await backend._get_process_id_for_connector("nonexistent_connector")

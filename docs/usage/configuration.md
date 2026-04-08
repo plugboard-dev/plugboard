@@ -22,6 +22,7 @@ Plugboard can make use of a message broker for data exchange between components 
 | Option Name                | Description                                              | Default Value |
 |----------------------------|----------------------------------------------------------|---------------|
 | `RABBITMQ_URL`      | URL for RabbitMQ AMQP message broker (must include credentials if required)  | |
+| `REDIS_URL`         | URL for Redis message broker (must include credentials if required)  | |
 
 ## Job ID
 
