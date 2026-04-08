@@ -88,6 +88,23 @@ def test_cli_process_diagram() -> None:
     assert "flowchart" in result.stdout
 
 
+def test_cli_process_validate() -> None:
+    """Tests the process validate command."""
+    result = runner.invoke(app, ["process", "validate", "tests/data/minimal-process.yaml"])
+    # CLI must run without error for a valid config
+    assert result.exit_code == 0
+    assert "Validation passed" in result.stdout
+
+
+def test_cli_process_validate_invalid() -> None:
+    """Tests the process validate command with an invalid process."""
+    with patch("plugboard.cli.process.validate_process") as mock_validate:
+        mock_validate.return_value = ["Component 'x' has unconnected inputs: ['in_1']"]
+        result = runner.invoke(app, ["process", "validate", "tests/data/minimal-process.yaml"])
+        assert result.exit_code == 1
+        assert "Validation failed" in result.stderr
+
+
 def test_cli_ai_init(tmp_path: Path) -> None:
     """Tests the ai init command creates AGENTS.md."""
     result = runner.invoke(app, ["ai", "init", str(tmp_path)])
