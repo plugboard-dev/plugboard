@@ -461,7 +461,7 @@ async def test_event_driven_process_shutdown(
 
 
 class MessageEventData(BaseModel):
-    """Data for a file-writer event."""
+    """Data for a message event."""
 
     message: str
 
@@ -501,7 +501,7 @@ class MessageEventGenerator(ComponentTestHelper):
 
 
 class EventReaderFileWriter(FileWriter):
-    """`FileWriter` variant that reuses the inherited `message` input via events."""
+    """`FileWriter` variant that relies on IO inheritance to reuse `message` via events."""
 
     io = IO(input_events=[MessageEvent])
 

@@ -371,6 +371,7 @@ class Component(ABC, ExportMixin):
 
     @property
     def _has_connected_field_inputs(self) -> bool:
+        """Whether any declared field inputs are connected via input channels."""
         return len(self.io._input_channels) > 0
 
     @cached_property
