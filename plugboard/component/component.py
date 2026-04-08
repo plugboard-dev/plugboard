@@ -345,7 +345,7 @@ class Component(ABC, ExportMixin):
             with self._job_id_ctx():
                 await self._set_status(Status.RUNNING, publish=not self._is_running)
                 await self._io_read_with_status_check()
-                # Event-driven consumers can close here when their producer graph is exhausted.
+                # IO can close here when an event-only producer graph is exhausted.
                 # Return before rebinding inputs so the last event-populated field values are not
                 # replayed as if they were fresh inputs in another step.
                 if self.io.is_closed:

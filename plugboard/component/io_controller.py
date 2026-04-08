@@ -91,9 +91,9 @@ class IOController:
         """Returns whether any field inputs are connected via channels."""
         return len(self._input_channels) > 0
 
-    @cached_property
+    @property
     def _has_field_inputs(self) -> bool:
-        return len(self._input_channels) > 0
+        return self.has_connected_field_inputs
 
     @cached_property
     def _has_event_inputs(self) -> bool:
