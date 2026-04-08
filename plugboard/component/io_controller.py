@@ -91,17 +91,13 @@ class IOController:
         """Returns whether any field inputs are connected via channels."""
         return len(self._input_channels) > 0
 
-    @property
-    def _has_field_inputs(self) -> bool:
-        return self.has_connected_field_inputs
-
     @cached_property
     def _has_event_inputs(self) -> bool:
         return len(self._input_event_channels) > 0
 
     @cached_property
     def _has_inputs(self) -> bool:
-        return self._has_field_inputs or self._has_event_inputs
+        return self.has_connected_field_inputs or self._has_event_inputs
 
     async def read(self, timeout: float | None = None) -> None:
         """Reads data and/or events from input channels.
@@ -144,7 +140,7 @@ class IOController:
 
     def _set_read_tasks(self) -> list[asyncio.Task]:
         read_tasks: list[asyncio.Task] = []
-        if self._has_field_inputs:
+        if self.has_connected_field_inputs:
             if _fields_read_task not in self._read_tasks:
                 read_fields_task = asyncio.create_task(self._read_fields(), name=_fields_read_task)
                 self._read_tasks[_fields_read_task] = read_fields_task
@@ -379,7 +375,7 @@ class IOController:
 
     def _create_input_field_group_tasks(self) -> None:
         """Groups input field channels by field name and launches read tasks for group inputs."""
-        if not self._has_field_inputs:
+        if not self.has_connected_field_inputs:
             return
         field_channels: dict[str, list[tuple[_t_field_key, Channel]]] = defaultdict(list)
         for key, chan in self._input_channels.items():
