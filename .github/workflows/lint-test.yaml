@@ -3,7 +3,7 @@ name: Lint and test
 on:
   push:
     branches:
-      - 'main'
+      - "main"
   pull_request:
     types:
       - opened
@@ -95,7 +95,7 @@ jobs:
           cache-dependency-glob: "uv.lock"
 
       - name: Install project
-        run: uv sync --group test --extra redis
+        run: uv sync --group test
 
       - name: Run unit tests
         run: COVERAGE_FILE=.coverage.py${{ matrix.python_version }}.unit uv run coverage run -m pytest ./tests/unit/
@@ -133,7 +133,7 @@ jobs:
           cache-dependency-glob: "uv.lock"
 
       - name: Install project
-        run: uv sync --group test --extra redis
+        run: uv sync --group test
 
       - name: Run backing services
         run: |
@@ -154,7 +154,7 @@ jobs:
           name: coverage-integration-py${{ matrix.python_version }}
           include-hidden-files: true
           path: .coverage.py${{ matrix.python_version }}.integration*
-  
+
   test-integration-tuner:
     name: Tests - integration:tuner
     runs-on: ubuntu-latest
@@ -178,7 +178,7 @@ jobs:
           cache-dependency-glob: "uv.lock"
 
       - name: Install project
-        run: uv sync --group test --extra redis
+        run: uv sync --group test
 
       - name: Run tuner tests
         run: COVERAGE_FILE=.coverage.py${{ matrix.python_version }}.integration.tuner uv run coverage run -m pytest ./tests/integration/ -m "tuner"
