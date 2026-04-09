@@ -92,6 +92,16 @@ def run(
             help="Job ID for the process. If not provided, a random job ID will be generated.",
         ),
     ] = None,
+    process_type: Annotated[
+        _t.Optional[_t.Literal["local", "ray"]],
+        typer.Option(
+            "--process-type",
+            help=(
+                "Override the process type. "
+                "Options: 'local' for LocalProcess, 'ray' for RayProcess."
+            ),
+        ),
+    ] = None,
 ) -> None:
     """Run a Plugboard process."""
     config_spec = _read_yaml(config)
@@ -99,6 +109,12 @@ def run(
     if job_id is not None:
         # Override job ID in config file if set
         config_spec.plugboard.process.args.state.args.job_id = job_id
+
+    if process_type is not None:
+        # Use the ProcessSpec method to override the process type
+        config_spec.plugboard.process = config_spec.plugboard.process.override_process_type(
+            process_type  # type: ignore[arg-type]
+        )
 
     with Progress(
         SpinnerColumn("arrow3"),

@@ -20,6 +20,7 @@ from .component import ComponentArgsDict, ComponentArgsSpec, ComponentSpec, Reso
 from .config import ConfigSpec, ProcessConfigSpec
 from .connector import (
     DEFAULT_CONNECTOR_CLS_PATH,
+    RAY_CONNECTOR_CLS_PATH,
     ConnectorBuilderArgsDict,
     ConnectorBuilderArgsSpec,
     ConnectorBuilderSpec,
@@ -83,6 +84,7 @@ __all__ = [
     "ProcessSpec",
     "ProcessArgsDict",
     "ProcessArgsSpec",
+    "RAY_CONNECTOR_CLS_PATH",
     "RAY_STATE_BACKEND_CLS_PATH",
     "Resource",
     "StateBackendSpec",
