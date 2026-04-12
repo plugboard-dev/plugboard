@@ -43,7 +43,8 @@ class DataWriter(Component, ABC):
             **kwargs: Additional keyword arguments for [`Component`][plugboard.component.Component].
         """
         super().__init__(**kwargs)
-        self._buffer: dict[str, deque] = defaultdict(deque)
+        self._accum_buffer: dict[str, deque] = defaultdict(deque)
+        self._write_buffer: dict[str, deque] = defaultdict(deque)
         self._chunk_size = chunk_size
         self.io = IOController(
             inputs=field_names,
@@ -54,6 +55,8 @@ class DataWriter(Component, ABC):
             component=self,
         )
         self._task: _t.Optional[Task] = None
+        self._pending_fields: set[str] = set(field_names)
+        self._new_row_added: bool = False
 
     def __init_subclass__(cls, *args: _t.Any, **kwargs: _t.Any) -> None:
         try:
@@ -78,20 +81,31 @@ class DataWriter(Component, ABC):
         super()._bind_inputs()
         for field in self._field_inputs:
             value = getattr(self, field, None)
-            self._buffer[field].append(value)
+            self._accum_buffer[field].append(value)
+            self._pending_fields.discard(field)
+        if not self._pending_fields:
+            for field in self.io.inputs:
+                self._write_buffer[field].append(self._accum_buffer[field].popleft())
+                if len(self._accum_buffer[field]) == 0:
+                    self._pending_fields.add(field)
+            self._new_row_added = True
+
+    @property
+    def _can_step(self) -> bool:
+        return self._new_row_added
 
     async def _save_chunk(self) -> None:
         """Write data from the buffer."""
         if self._task is not None:
             await self._task
         # Create task to save next chunk of data
-        chunk = await self._convert(self._buffer)
+        chunk = await self._convert(self._write_buffer)
         self._task = asyncio.create_task(self._save(chunk))
-        self._buffer = defaultdict(deque)
+        self._write_buffer = defaultdict(deque)
 
     async def step(self) -> None:
         """Trigger save when buffer is at target size."""
-        if self._chunk_size and len(self._buffer[self.io.inputs[0]]) >= self._chunk_size:
+        if self._chunk_size and len(self._write_buffer[self.io.inputs[0]]) >= self._chunk_size:
             await self._save_chunk()
 
     async def run(self) -> None:
