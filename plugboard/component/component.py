@@ -345,11 +345,6 @@ class Component(ABC, ExportMixin):
             with self._job_id_ctx():
                 await self._set_status(Status.RUNNING, publish=not self._is_running)
                 await self._io_read_with_status_check()
-                # IO can close here once all producers for the component's event-only inputs have
-                # finished emitting. Return before rebinding inputs so the last event-populated
-                # field values are not replayed as if they were fresh inputs in another step.
-                if self.io.is_closed:
-                    return
                 await self._handle_events()
                 self._bind_inputs()
                 if self._can_step:

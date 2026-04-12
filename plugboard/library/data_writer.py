@@ -76,9 +76,10 @@ class DataWriter(Component, ABC):
     def _bind_inputs(self) -> None:
         """Binds input fields to component fields and append to internal buffer."""
         super()._bind_inputs()
-        for field in self.io.inputs:
-            value = getattr(self, field, None)
-            self._buffer[field].append(value)
+        if self._field_inputs_ready:
+            for field in self.io.inputs:
+                value = getattr(self, field, None)
+                self._buffer[field].append(value)
 
     async def _save_chunk(self) -> None:
         """Write data from the buffer."""
