@@ -356,7 +356,7 @@ class Component(ABC, ExportMixin):
                         raise e
                 self._bind_outputs()
                 await self.io.write()
-                self._field_inputs_ready = False
+                self._reset_input_trackers()
                 await self._set_status(Status.WAITING, publish=not self._is_running)
 
         return _wrapper
@@ -461,7 +461,10 @@ class Component(ABC, ExportMixin):
             field_default = getattr(self, field, None)
             value = self._field_inputs.get(field, field_default)
             setattr(self, field, value)
+
+    def _reset_input_trackers(self) -> None:
         self._field_inputs = {}
+        self._field_inputs_ready = False
 
     def _bind_outputs(self) -> None:
         """Binds component fields to output fields."""
