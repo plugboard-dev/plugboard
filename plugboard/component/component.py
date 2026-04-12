@@ -460,7 +460,7 @@ class Component(ABC, ExportMixin):
         for field in self.io.inputs:
             field_default = getattr(self, field, None)
             value = self._field_inputs.get(field, field_default)
-            setattr(self, field, value)
+            super().__setattr__(field, value)
 
     def _reset_input_trackers(self) -> None:
         self._field_inputs = {}
