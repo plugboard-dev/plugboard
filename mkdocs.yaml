@@ -142,11 +142,17 @@ nav:
     - Rock paper scissors: examples/demos/llm/003_rock_paper_scissors/rock-paper-scissors.ipynb
     - Image processing and model routing: examples/demos/llm/004_image_processing/local-and-remote-image-processing.ipynb
   - Physics-based models:
-    - Hot water tank: examples/demos/physics-models/001-hot-water-tank/hot-water-tank.ipynb
+    - Hot water tank: examples/demos/physics-models/001_hot_water_tank/hot-water-tank.ipynb
+    - Quadruple tank process: examples/demos/physics-models/002_quadruple_tank/quadruple-tank.ipynb
   - Mining and mineral processing:
-    - Crusher circuit: examples/demos/mining-minerals/001-crusher-circuit/crusher_circuit.ipynb
+    - Crusher circuit: examples/demos/mining-minerals/001_crusher_circuit/crusher_circuit.ipynb
   - Finance:
     - Momentum trading signal: examples/demos/finance/001_momentum_signal/momentum-signal.ipynb
+  - Process control:
+    - Reduced BSM1 wastewater treatment: examples/demos/process-control/001_bsm1_wastewater/bsm1-wastewater.ipynb
+  - Transport:
+    - Traffic intersection: examples/demos/transport/001_traffic_simulation/traffic-simulation.ipynb
+    - Bus terminal: examples/demos/transport/002_bus_terminal/bus-terminal.ipynb
 - API Reference:
   - component: api/component/component.md
   - connector: api/connector/connector.md
