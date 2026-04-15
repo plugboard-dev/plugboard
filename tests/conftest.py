@@ -42,7 +42,6 @@ def ray_ctx() -> _t.Iterator[None]:
 
     Includes a small amount of resources to allow testing of resource-constrained components.
     """
-    os.environ.setdefault("RAY_DASHBOARD_INCLUDE", "false")
     import ray
 
     ray.init(num_cpus=5, num_gpus=1, resources={"custom_hardware": 10}, include_dashboard=False)
