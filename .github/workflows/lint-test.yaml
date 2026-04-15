@@ -19,7 +19,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python_version: [3.12, 3.13]
+        python_version: [3.12, 3.13, 3.14]
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -78,7 +78,7 @@ jobs:
     timeout-minutes: 8
     strategy:
       matrix:
-        python_version: [3.12, 3.13]
+        python_version: [3.12, 3.13, 3.14]
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -116,7 +116,7 @@ jobs:
     timeout-minutes: 10
     strategy:
       matrix:
-        python_version: [3.12, 3.13]
+        python_version: [3.12, 3.13, 3.14]
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -161,7 +161,7 @@ jobs:
     timeout-minutes: 8
     strategy:
       matrix:
-        python_version: [3.12, 3.13]
+        python_version: [3.12, 3.13, 3.14]
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -201,7 +201,7 @@ jobs:
     timeout-minutes: 5
     strategy:
       matrix:
-        python_version: [3.12, 3.13]
+        python_version: [3.12, 3.13, 3.14]
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -231,7 +231,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python_version: [3.12, 3.13]
+        python_version: [3.12, 3.13, 3.14]
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -277,7 +277,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python_version: [3.12, 3.13]
+        python_version: [3.12, 3.13, 3.14]
     steps:
       - name: Checkout
         uses: actions/checkout@v4
