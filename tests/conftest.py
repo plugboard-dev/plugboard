@@ -22,7 +22,7 @@ from plugboard.utils.di import DI
 from plugboard.utils.settings import Settings
 
 
-_PYTEST_ASYNCIO_SUPPORTS_LOOP_FACTORY_HOOK = hasattr(
+_HAS_LOOP_FACTORY_HOOK = hasattr(
     getattr(pytest_asyncio, "plugin", None),
     "PytestAsyncioSpecs",
 )
@@ -38,7 +38,7 @@ def pytest_asyncio_loop_factories(
     return {"uvloop": uvloop.new_event_loop}
 
 
-if not _PYTEST_ASYNCIO_SUPPORTS_LOOP_FACTORY_HOOK:
+if not _HAS_LOOP_FACTORY_HOOK:
 
     @pytest.fixture(scope="session")
     def event_loop_policy() -> uvloop.EventLoopPolicy:
