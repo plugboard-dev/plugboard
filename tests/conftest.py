@@ -143,3 +143,13 @@ class ComponentTestHelper(Component, ABC):
             }
         )
         return data
+
+
+@pytest.fixture
+def patch_validate_process() -> _t.Iterator[None]:
+    """Patch process validation for tests that don't require functional processes."""
+    with (
+        patch("plugboard.schemas.validate_process", return_value=[]),
+        patch("plugboard.process.process.validate_process", return_value=[]),
+    ):
+        yield

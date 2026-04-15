@@ -8,7 +8,12 @@ from typing_extensions import Self
 
 from ._common import PlugboardBaseModel
 from .component import ComponentSpec
-from .connector import DEFAULT_CONNECTOR_CLS_PATH, ConnectorBuilderSpec, ConnectorSpec
+from .connector import (
+    DEFAULT_CONNECTOR_CLS_PATH,
+    RAY_CONNECTOR_CLS_PATH,
+    ConnectorBuilderSpec,
+    ConnectorSpec,
+)
 from .state import DEFAULT_STATE_BACKEND_CLS_PATH, RAY_STATE_BACKEND_CLS_PATH, StateBackendSpec
 
 
@@ -96,3 +101,52 @@ class ProcessSpec(PlugboardBaseModel):
                 "plugboard.process.ray_process.RayProcess": "plugboard.process.RayProcess",
             }.get(value, value)
         return value
+
+    def override_process_type(self, process_type: _t.Literal["local", "ray"]) -> Self:
+        """Override the process type and update connector/state to be compatible.
+
+        Args:
+            process_type: The process type to use ("local" or "ray")
+
+        Returns:
+            A new ProcessSpec with the overridden process type and compatible settings
+        """
+        # Map process type to full class path
+        type_map = {
+            "local": "plugboard.process.LocalProcess",
+            "ray": "plugboard.process.RayProcess",
+        }
+        new_process_type = type_map[process_type]
+
+        # Map of connector types that should be replaced
+        connector_type_map = {
+            "ray": {DEFAULT_CONNECTOR_CLS_PATH: RAY_CONNECTOR_CLS_PATH},
+            "local": {RAY_CONNECTOR_CLS_PATH: DEFAULT_CONNECTOR_CLS_PATH},
+        }
+
+        # Map of state types that should be replaced
+        state_type_map = {
+            "ray": {DEFAULT_STATE_BACKEND_CLS_PATH: RAY_STATE_BACKEND_CLS_PATH},
+            "local": {RAY_STATE_BACKEND_CLS_PATH: DEFAULT_STATE_BACKEND_CLS_PATH},
+        }
+
+        # Prepare updates
+        updates: dict[str, _t.Any] = {"type": new_process_type}
+
+        # Update connector if needed
+        current_connector_type = self.connector_builder.type
+        if current_connector_type in connector_type_map[process_type]:
+            new_connector_type = connector_type_map[process_type][current_connector_type]
+            updates["connector_builder"] = self.connector_builder.model_copy(
+                update={"type": new_connector_type}
+            )
+
+        # Update state if needed
+        current_state_type = self.args.state.type
+        if current_state_type in state_type_map[process_type]:
+            new_state_type = state_type_map[process_type][current_state_type]
+            new_state = self.args.state.model_copy(update={"type": new_state_type})
+            updates["args"] = self.args.model_copy(update={"state": new_state})
+
+        # Apply updates and return new instance
+        return self.model_copy(update=updates)

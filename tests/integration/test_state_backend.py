@@ -230,7 +230,10 @@ async def test_state_backend_upsert_connector(
 
 @pytest.mark.asyncio
 async def test_state_backend_process_init(
-    state_backend: StateBackend, B_components: list[Component], B_connectors: list[Connector]
+    state_backend: StateBackend,
+    B_components: list[Component],
+    B_connectors: list[Connector],
+    patch_validate_process: None,
 ) -> None:
     """Tests `StateBackend` connected up correctly on `Process.init`."""
     comp_b1, comp_b2 = B_components
@@ -258,7 +261,10 @@ async def test_state_backend_process_init(
 
 @pytest.mark.asyncio
 async def test_state_backend_process_status(
-    state_backend: StateBackend, B_components: list[Component], B_connectors: list[Connector]
+    state_backend: StateBackend,
+    B_components: list[Component],
+    B_connectors: list[Connector],
+    patch_validate_process: None,
 ) -> None:
     """Tests `StateBackend` process status updates."""
     comp_b1, comp_b2 = B_components
@@ -299,7 +305,9 @@ async def test_state_backend_process_status(
 
 
 @pytest.mark.asyncio
-async def test_state_backend_process_parameters(state_backend: StateBackend) -> None:
+async def test_state_backend_process_parameters(
+    state_backend: StateBackend, patch_validate_process: None
+) -> None:
     """Tests `StateBackend` process parameters storage and retrieval."""
     parameters = {"param_1": 10, "param_2": "value"}
     component_a = A(name="ComponentA")

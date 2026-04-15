@@ -11,6 +11,7 @@ from ._common import PlugboardBaseModel
 
 
 DEFAULT_CONNECTOR_CLS_PATH: str = "plugboard.connector.AsyncioConnector"
+RAY_CONNECTOR_CLS_PATH: str = "plugboard.connector.RayConnector"
 
 
 class ConnectorMode(StrEnum):

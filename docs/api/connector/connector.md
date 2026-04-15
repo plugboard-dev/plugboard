@@ -11,5 +11,7 @@
       - RabbitMQChannel
       - RayConnector
       - RayChannel
+      - RedisConnector
+      - RedisChannel
       - ZMQConnector
       - ZMQChannel

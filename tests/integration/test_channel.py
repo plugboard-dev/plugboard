@@ -4,6 +4,8 @@ import os
 import typing as _t
 from unittest.mock import patch
 
+from plugboard_schemas.connector import ConnectorMode, ConnectorSpec
+import pytest
 import pytest_cases
 
 from plugboard.connector import (
@@ -11,7 +13,8 @@ from plugboard.connector import (
     RabbitMQConnector,
     ZMQConnector,
 )
-from plugboard.utils.di import DI
+from plugboard.connector.redis_channel import RedisConnector
+from plugboard.utils import DI
 from plugboard.utils.settings import Settings
 from tests.unit.test_channel import (  # noqa: F401
     TEST_ITEMS,
@@ -38,14 +41,36 @@ def zmq_connector_cls(zmq_pubsub_proxy: bool) -> _t.Iterator[_t.Type[ZMQConnecto
 
 
 @pytest_cases.fixture
-@pytest_cases.parametrize("_connector_cls", [RabbitMQConnector, zmq_connector_cls])
+@pytest_cases.parametrize("_connector_cls", [RabbitMQConnector, zmq_connector_cls, RedisConnector])
 def connector_cls(_connector_cls: type[Connector]) -> type[Connector]:
     """Fixture for `Connector` of various types."""
     return _connector_cls
 
 
 @pytest_cases.fixture
-@pytest_cases.parametrize("_connector_cls_mp", [RabbitMQConnector, zmq_connector_cls])
+@pytest_cases.parametrize(
+    "_connector_cls_mp", [RabbitMQConnector, zmq_connector_cls, RedisConnector]
+)
 def connector_cls_mp(_connector_cls_mp: type[Connector]) -> type[Connector]:
     """Fixture for `Connector` of various types for use in multiprocess context."""
     return _connector_cls_mp
+
+
+@pytest_cases.parametrize("connector_cls", [RabbitMQConnector, RedisConnector])
+async def test_channel_broker_url_unset(connector_cls: type[Connector], job_id_ctx: str) -> None:
+    """Test that attempting to connect a channel without the broker URL set raises an error."""
+    spec = ConnectorSpec(mode=ConnectorMode.PIPELINE, source="test.send", target="test.recv")
+    with patch.dict(
+        os.environ,
+        {
+            "RABBITMQ_URL": "",
+            "REDIS_URL": "",
+        },
+    ):
+        with DI.override_providers_sync({"settings": Settings()}):
+            if connector_cls is RabbitMQConnector:
+                with pytest.raises(RuntimeError, match="RabbitMQ connection not available"):
+                    await connector_cls(spec=spec).connect_send()
+            elif connector_cls is RedisConnector:
+                with pytest.raises(RuntimeError, match="Redis client not available"):
+                    await connector_cls(spec=spec).connect_send()
