@@ -356,7 +356,7 @@ class Component(ABC, ExportMixin):
                         raise e
                 self._bind_outputs()
                 await self.io.write()
-                self._field_inputs_ready = False
+                self._reset_input_trackers()
                 await self._set_status(Status.WAITING, publish=not self._is_running)
 
         return _wrapper
@@ -364,6 +364,11 @@ class Component(ABC, ExportMixin):
     @cached_property
     def _has_field_inputs(self) -> bool:
         return len(self.io.inputs) > 0
+
+    @property
+    def _has_connected_field_inputs(self) -> bool:
+        """Whether any declared field inputs are connected via input channels."""
+        return self.io.has_connected_field_inputs
 
     @cached_property
     def _has_event_inputs(self) -> bool:
@@ -409,7 +414,7 @@ class Component(ABC, ExportMixin):
             task.cancel()
         for task in done:
             exc = task.exception()
-            if isinstance(exc, EventStreamClosedError) and len(self.io.inputs) == 0:
+            if isinstance(exc, EventStreamClosedError) and not self._has_connected_field_inputs:
                 await self.io.close()  # Call close for final wait and flush event buffer
             elif exc is not None:
                 raise exc
@@ -422,7 +427,7 @@ class Component(ABC, ExportMixin):
             # TODO : Eventually producer graph update will be event driven. For now,
             #      : the update is performed periodically, so it's called here along
             #      : with the status check.
-            if len(self.io.inputs) == 0:
+            if not self._has_connected_field_inputs:
                 await self._update_producer_graph()
 
     async def _status_check(self) -> None:
@@ -455,8 +460,11 @@ class Component(ABC, ExportMixin):
         for field in self.io.inputs:
             field_default = getattr(self, field, None)
             value = self._field_inputs.get(field, field_default)
-            setattr(self, field, value)
+            super().__setattr__(field, value)
+
+    def _reset_input_trackers(self) -> None:
         self._field_inputs = {}
+        self._field_inputs_ready = False
 
     def _bind_outputs(self) -> None:
         """Binds component fields to output fields."""

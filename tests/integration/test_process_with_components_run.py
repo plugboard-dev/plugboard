@@ -23,6 +23,7 @@ from plugboard.connector import (
 )
 from plugboard.events import Event
 from plugboard.exceptions import ConstraintError, NotInitialisedError, ProcessStatusError
+from plugboard.library import FileWriter
 from plugboard.process import LocalProcess, Process, RayProcess
 from plugboard.schemas import ConnectorSpec, Status
 from tests.conftest import ComponentTestHelper, zmq_connector_cls
@@ -459,6 +460,99 @@ async def test_event_driven_process_shutdown(
     await process.destroy()
 
 
+class MessageEventData(BaseModel):
+    """Data for a message event."""
+
+    message: str
+
+
+class MessageEvent(Event):
+    """Event carrying a file-writer message."""
+
+    type: _t.ClassVar[str] = "message_event"
+    data: MessageEventData
+
+
+class MessageEventGenerator(ComponentTestHelper):
+    """Produces a fixed number of message events."""
+
+    io = IO(output_events=[MessageEvent])
+
+    def __init__(
+        self,
+        iters: int,
+        *args: _t.Any,
+        delay: float = 0.0,
+        start: int = 0,
+        stride: int = 1,
+        **kwargs: _t.Any,
+    ) -> None:
+        super().__init__(*args, **kwargs)
+        self._iters = iters
+        self._delay = delay
+        self._start = start
+        self._stride = stride
+
+    async def init(self) -> None:
+        await super().init()
+        self._seq = iter(range(self._start, self._start + self._iters * self._stride, self._stride))
+
+    async def step(self) -> None:
+        # Optional delay to simulate staggered event arrival
+        if self._delay > 0.0:
+            await asyncio.sleep(self._delay)
+        try:
+            idx = next(self._seq)
+        except StopIteration:
+            await self.io.close()
+        else:
+            evt = MessageEvent(
+                source=self.name,
+                data=MessageEventData(message=f"Message {idx}"),
+            )
+            self.io.queue_event(evt)
+            await super().step()
+
+
+class EventReaderFileWriter(FileWriter):
+    """`FileWriter` variant that adds event handling instead of a connector for `message`."""
+
+    io = IO(input_events=[MessageEvent])
+
+    @MessageEvent.handler
+    async def handle_message(self, event: MessageEvent) -> None:
+        self.message = event.data.message
+
+
+@pytest.mark.asyncio
+async def test_event_driven_file_writer_reuse(tmp_path: Path) -> None:
+    """Test that field-input components can be reused in event-driven processes."""
+    output_path = tmp_path / "output_messages.csv"
+    components = [
+        MessageEventGenerator(iters=3, name="message_event_generator"),
+        EventReaderFileWriter(
+            path=output_path,
+            name="event_reader_file_writer",
+            field_names=["message"],
+        ),
+    ]
+    event_connectors = AsyncioConnector.builder().build_event_connectors(components)
+    process = LocalProcess(components=components, connectors=event_connectors)
+
+    await process.init()
+    await process.run()
+
+    assert process.status == Status.COMPLETED
+    assert output_path.read_text().splitlines() == [
+        "message",
+        "Message 0",
+        "Message 1",
+        "Message 2",
+    ]
+
+    await process.destroy()
+
+
 _SHORT_TIMEOUT = 0.1
 
 
@@ -536,3 +630,88 @@ async def test_constraint_error_stops_background_status_check() -> None:
         )
 
         await process.destroy()
+
+
+class StaggeredEventFileWriter(FileWriter):
+    """`FileWriter` variant that adds event handling instead of a connector for `message`."""
+
+    io = IO(input_events=[MessageEvent])
+
+    def __init__(self, *args: _t.Any, field_names: list[str], **kwargs: _t.Any) -> None:
+        super().__init__(*args, field_names=field_names, **kwargs)
+        self.step_count: int = 0
+        self.step_for_message: dict[str, int] = {}
+
+    @MessageEvent.handler
+    async def handle_message(self, event: MessageEvent) -> None:
+        msg = event.data.message
+        match event.source:
+            case "mg1":
+                self.mg1 = msg
+            case "mg2":
+                self.mg2 = msg
+            case "mg3":
+                self.mg3 = msg
+            case _:
+                raise ValueError(f"Unexpected event source: {event.source}")
+        self.step_for_message[msg] = self.step_count
+        self.step_count += 1
+
+
+@pytest.mark.asyncio
+@pytest_cases.parametrize(
+    "process_cls, connector_cls",
+    [
+        (LocalProcess, AsyncioConnector),
+    ],
+)
+async def test_data_writer_handles_staggered_input_events(
+    process_cls: type[Process], connector_cls: type[Connector], tmp_path: Path, ray_ctx: None
+) -> None:
+    """Test that a FileWriter can handle input events arriving in different steps.
+
+    Input messages with data for different fields may arrive in different steps. The FileWriter
+    should write out a new row only when all required fields have received data, and should not
+    overwrite field values if only a subset of fields receive new data in a step.
+    """
+    output_path = tmp_path / "staggered_output_messages.csv"
+
+    writer = StaggeredEventFileWriter(
+        path=output_path, field_names=["mg1", "mg2", "mg3"], name="writer"
+    )
+    components = [
+        # 3 inputs with different delays
+        MessageEventGenerator(iters=10, delay=0.005, start=0, stride=3, name="mg1"),
+        MessageEventGenerator(iters=10, delay=0.010, start=1, stride=3, name="mg2"),
+        MessageEventGenerator(iters=10, delay=0.020, start=2, stride=3, name="mg3"),
+        writer,
+    ]
+
+    async with process_cls(
+        components=components,
+        connectors=AsyncioConnector.builder().build_event_connectors(components),
+    ) as process:
+        await process.run()
+
+    with output_path.open() as f:
+        content = f.read().splitlines()
+
+    assert len(content) == 11  # header + 10 rows of data
+    assert content[0] == "mg1,mg2,mg3"
+    assert content[1] == "Message 0,Message 1,Message 2"
+    assert content[2] == "Message 3,Message 4,Message 5"
+    assert content[3] == "Message 6,Message 7,Message 8"
+    assert content[4] == "Message 9,Message 10,Message 11"
+    assert content[5] == "Message 12,Message 13,Message 14"
+    assert content[6] == "Message 15,Message 16,Message 17"
+    assert content[7] == "Message 18,Message 19,Message 20"
+    assert content[8] == "Message 21,Message 22,Message 23"
+    assert content[9] == "Message 24,Message 25,Message 26"
+    assert content[10] == "Message 27,Message 28,Message 29"
+
+    # Verify that messages from different generators were received in different steps
+    assert writer.step_count == 30
+    assert len(writer.step_for_message) == 30
+    assert len(set(writer.step_for_message.values())) == 30, (
+        "Expected each message to be received in a different step"
+    )

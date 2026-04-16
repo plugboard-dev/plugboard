@@ -18,6 +18,9 @@ from ._graph import simple_cycles
 from ._validator_registry import validator
 
 
+_SYSTEM_STOP_EVENT = "system_stop"
+
+
 def _build_component_graph(
     connectors: dict[str, dict[str, _t.Any]],
 ) -> dict[str, set[str]]:
@@ -98,9 +101,11 @@ def validate_all_inputs_connected(
     for comp_name, comp_data in components.items():
         io = comp_data.get("io", {})
         all_inputs = set(io.get("inputs", []))
+        input_events = set(io.get("input_events", []))
+        has_non_system_input_events = bool(input_events - {_SYSTEM_STOP_EVENT})
         connected = connected_inputs.get(comp_name, set())
         unconnected = all_inputs - connected
-        if unconnected:
+        if unconnected and not has_non_system_input_events:
             errors.append(f"Component '{comp_name}' has unconnected inputs: {sorted(unconnected)}")
     return errors
 
