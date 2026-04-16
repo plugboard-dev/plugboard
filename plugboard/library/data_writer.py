@@ -113,7 +113,7 @@ class DataWriter(Component, ABC):
 
     async def step(self) -> None:
         """Trigger save when buffer is at target size."""
-        if self._chunk_size and len(self._write_buffer[self.io.inputs[0]]) >= self._chunk_size:
+        if self._chunk_size and len(self._buffer[self.io.inputs[0]]) >= self._chunk_size:
             await self._save_chunk()
 
     async def run(self) -> None:
