@@ -1,35 +1,77 @@
-"""Simple benchmark tests for Plugboard models."""
+"""Benchmark tests for Plugboard processes."""
 
-import asyncio
+import pytest
+from pytest_codspeed import BenchmarkFixture
+import uvloop
 
-from pytest_benchmark.fixture import BenchmarkFixture
-
-from plugboard.connector import AsyncioConnector
-from plugboard.process import LocalProcess, Process
+from plugboard.connector import AsyncioConnector, Connector, RayConnector, ZMQConnector
+from plugboard.process import LocalProcess, Process, RayProcess
 from plugboard.schemas import ConnectorSpec
 from tests.integration.test_process_with_components_run import A, B
 
 
-def _setup_process() -> tuple[tuple[Process], dict]:
-    comp_a = A(name="comp_a", iters=1000)
+ITERS = 1000
+
+CONNECTOR_PROCESS_PARAMS = [
+    (AsyncioConnector, LocalProcess),
+    (ZMQConnector, LocalProcess),
+    (RayConnector, RayProcess),
+]
+CONNECTOR_PROCESS_IDS = ["asyncio", "zmq", "ray"]
+
+
+def _build_process(connector_cls: type[Connector], process_cls: type[Process]) -> Process:
+    """Build a process with the given connector and process class."""
+    comp_a = A(name="comp_a", iters=ITERS)
     comp_b1 = B(name="comp_b1", factor=1)
     comp_b2 = B(name="comp_b2", factor=2)
     components = [comp_a, comp_b1, comp_b2]
     connectors = [
-        AsyncioConnector(spec=ConnectorSpec(source="comp_a.out_1", target="comp_b1.in_1")),
-        AsyncioConnector(spec=ConnectorSpec(source="comp_b1.out_1", target="comp_b2.in_1")),
+        connector_cls(spec=ConnectorSpec(source="comp_a.out_1", target="comp_b1.in_1")),
+        connector_cls(spec=ConnectorSpec(source="comp_b1.out_1", target="comp_b2.in_1")),
     ]
-    process = LocalProcess(components=components, connectors=connectors)
-    # Initialise process so that this is excluded from the benchmark timing
-    asyncio.run(process.init())
-    # Return args and kwargs tuple for benchmark.pedantic
-    return (process,), {}
+    return process_cls(components=components, connectors=connectors)
 
 
-def _run_process(process: Process) -> None:
-    asyncio.run(process.run())
+@pytest.mark.benchmark
+@pytest.mark.parametrize(
+    "connector_cls, process_cls",
+    CONNECTOR_PROCESS_PARAMS,
+    ids=CONNECTOR_PROCESS_IDS,
+)
+@pytest.mark.asyncio
+async def test_benchmark_process_lifecycle(
+    connector_cls: type[Connector],
+    process_cls: type[Process],
+    ray_ctx: None,
+) -> None:
+    """Benchmark the full lifecycle (init, run, destroy) of a Plugboard Process."""
+    process = _build_process(connector_cls, process_cls)
+    async with process:
+        await process.run()
 
 
-def test_benchmark_process_run(benchmark: BenchmarkFixture) -> None:
-    """Benchmark the running of a Plugboard Process."""
-    benchmark.pedantic(_run_process, setup=_setup_process, rounds=5)
+@pytest.mark.parametrize(
+    "connector_cls, process_cls",
+    CONNECTOR_PROCESS_PARAMS,
+    ids=CONNECTOR_PROCESS_IDS,
+)
+def test_benchmark_process_run(
+    benchmark: BenchmarkFixture,
+    connector_cls: type[Connector],
+    process_cls: type[Process],
+    ray_ctx: None,
+) -> None:
+    """Benchmark running of a Plugboard Process."""
+    process = _build_process(connector_cls, process_cls)
+
+    def setup() -> None:
+        uvloop.run(process.init())
+
+    def _run() -> None:
+        uvloop.run(process.run())
+
+    def teardown() -> None:
+        uvloop.run(process.destroy())
+
+    benchmark.pedantic(_run, setup=setup, teardown=teardown, rounds=5)
