@@ -116,6 +116,10 @@ fallback_version = "0.0.0"
 [tool.uv]
 package = true
 default-groups = ["all"]
+required-environments = [
+    # AARCH64 linux support required for Codspeed benchmarks
+    "sys_platform == 'linux' and platform_machine == 'aarch64'"
+]
 
 [tool.uv.workspace]
 members = ["plugboard-schemas"]
