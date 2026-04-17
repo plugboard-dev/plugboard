@@ -13,7 +13,7 @@ from typing_extensions import Annotated
 
 from plugboard.diagram import MermaidDiagram
 from plugboard.process import Process, ProcessBuilder
-from plugboard.schemas import ConfigSpec
+from plugboard.schemas import ConfigSpec, validate_process
 from plugboard.tune import Tuner
 from plugboard.utils import add_sys_path, run_coro_sync
 
@@ -92,6 +92,16 @@ def run(
             help="Job ID for the process. If not provided, a random job ID will be generated.",
         ),
     ] = None,
+    process_type: Annotated[
+        _t.Optional[_t.Literal["local", "ray"]],
+        typer.Option(
+            "--process-type",
+            help=(
+                "Override the process type. "
+                "Options: 'local' for LocalProcess, 'ray' for RayProcess."
+            ),
+        ),
+    ] = None,
 ) -> None:
     """Run a Plugboard process."""
     config_spec = _read_yaml(config)
@@ -99,6 +109,12 @@ def run(
     if job_id is not None:
         # Override job ID in config file if set
         config_spec.plugboard.process.args.state.args.job_id = job_id
+
+    if process_type is not None:
+        # Use the ProcessSpec method to override the process type
+        config_spec.plugboard.process = config_spec.plugboard.process.override_process_type(
+            process_type  # type: ignore[arg-type]
+        )
 
     with Progress(
         SpinnerColumn("arrow3"),
@@ -164,3 +180,31 @@ def diagram(
     diagram = MermaidDiagram.from_process(process)
     md = Markdown(f"```\n{diagram.diagram}\n```\n[Editable diagram]({diagram.url}) (external link)")
     print(md)
+
+
+@app.command()
+def validate(
+    config: Annotated[
+        Path,
+        typer.Argument(
+            exists=True,
+            file_okay=True,
+            dir_okay=False,
+            writable=False,
+            readable=True,
+            resolve_path=True,
+            help="Path to the YAML configuration file.",
+        ),
+    ],
+) -> None:
+    """Validate a Plugboard process configuration."""
+    config_spec = _read_yaml(config)
+    with add_sys_path(config.parent):
+        process = _build_process(config_spec)
+    errors = validate_process(process.dict())
+    if errors:
+        stderr.print("[red]Validation failed:[/red]")
+        for error in errors:
+            stderr.print(f"  • {error}")
+        raise typer.Exit(1)
+    print("[green]Validation passed[/green]")

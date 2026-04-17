@@ -14,6 +14,7 @@ import respx
 from typer.testing import CliRunner
 
 from plugboard.cli import app
+from plugboard.cli.ai import _AGENTS_MD
 
 
 runner = CliRunner()
@@ -87,6 +88,66 @@ def test_cli_process_diagram() -> None:
     assert "flowchart" in result.stdout
 
 
+@pytest.mark.asyncio
+async def test_cli_process_run_with_local_override() -> None:
+    """Tests the process run command with --process-type local."""
+    with patch("plugboard.cli.process.ProcessBuilder") as mock_process_builder:
+        mock_process = AsyncMock()
+        mock_process_builder.build.return_value = mock_process
+        result = runner.invoke(
+            app,
+            ["process", "run", "tests/data/minimal-process.yaml", "--process-type", "local"],
+        )
+        # CLI must run without error
+        assert result.exit_code == 0
+        assert "Process complete" in result.stdout
+        # Process must be built with LocalProcess type
+        mock_process_builder.build.assert_called_once()
+        call_args = mock_process_builder.build.call_args
+        process_spec = call_args[0][0]
+        assert process_spec.type == "plugboard.process.LocalProcess"
+        assert process_spec.connector_builder.type == "plugboard.connector.AsyncioConnector"
+
+
+@pytest.mark.asyncio
+async def test_cli_process_run_with_ray_override() -> None:
+    """Tests the process run command with --process-type ray."""
+    with patch("plugboard.cli.process.ProcessBuilder") as mock_process_builder:
+        mock_process = AsyncMock()
+        mock_process_builder.build.return_value = mock_process
+        result = runner.invoke(
+            app,
+            ["process", "run", "tests/data/minimal-process.yaml", "--process-type", "ray"],
+        )
+        # CLI must run without error
+        assert result.exit_code == 0
+        assert "Process complete" in result.stdout
+        # Process must be built with RayProcess type
+        mock_process_builder.build.assert_called_once()
+        call_args = mock_process_builder.build.call_args
+        process_spec = call_args[0][0]
+        assert process_spec.type == "plugboard.process.RayProcess"
+        assert process_spec.connector_builder.type == "plugboard.connector.RayConnector"
+        assert process_spec.args.state.type == "plugboard.state.RayStateBackend"
+
+
+def test_cli_process_validate() -> None:
+    """Tests the process validate command."""
+    result = runner.invoke(app, ["process", "validate", "tests/data/minimal-process.yaml"])
+    # CLI must run without error for a valid config
+    assert result.exit_code == 0
+    assert "Validation passed" in result.stdout
+
+
+def test_cli_process_validate_invalid() -> None:
+    """Tests the process validate command with an invalid process."""
+    with patch("plugboard.cli.process.validate_process") as mock_validate:
+        mock_validate.return_value = ["Component 'x' has unconnected inputs: ['in_1']"]
+        result = runner.invoke(app, ["process", "validate", "tests/data/minimal-process.yaml"])
+        assert result.exit_code == 1
+        assert "Validation failed" in result.stderr
+
+
 def test_cli_ai_init(tmp_path: Path) -> None:
     """Tests the ai init command creates AGENTS.md."""
     result = runner.invoke(app, ["ai", "init", str(tmp_path)])
@@ -121,6 +182,13 @@ def test_cli_ai_init_default_directory() -> None:
             assert (Path(tmpdir) / "AGENTS.md").exists()
         finally:
             os.chdir(original_cwd)
+
+
+def test_cli_ai_agents_template_is_packaged_file() -> None:
+    """Tests the AI template is a real package file rather than a symlink."""
+    assert _AGENTS_MD.exists()
+    assert _AGENTS_MD.is_file()
+    assert not _AGENTS_MD.is_symlink()
 
 
 def test_cli_server_discover(test_project_dir: Path) -> None:
