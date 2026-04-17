@@ -1,6 +1,8 @@
 """Benchmark tests for Plugboard processes."""
 
 import pytest
+from pytest_codspeed import BenchmarkFixture
+import uvloop
 
 from plugboard.connector import AsyncioConnector, Connector, RayConnector, ZMQConnector
 from plugboard.process import LocalProcess, Process, RayProcess
@@ -49,4 +51,24 @@ async def test_benchmark_process_lifecycle(
         await process.run()
 
 
-# TODO: Reinstate run-only tests depending on https://github.com/CodSpeedHQ/pytest-codspeed/issues/113
+@pytest.mark.parametrize(
+    "connector_cls, process_cls",
+    CONNECTOR_PROCESS_PARAMS,
+    ids=CONNECTOR_PROCESS_IDS,
+)
+def test_benchmark_process_run(
+    benchmark: BenchmarkFixture,
+    connector_cls: type[Connector],
+    process_cls: type[Process],
+    ray_ctx: None,
+) -> None:
+    """Benchmark running of a Plugboard Process."""
+    process = _build_process(connector_cls, process_cls)
+
+    def setup() -> None:
+        uvloop.run(process.init())
+
+    def _run(process: Process) -> None:
+        uvloop.run(process.run())
+
+    benchmark.pedantic(_run, setup=setup, rounds=5)
