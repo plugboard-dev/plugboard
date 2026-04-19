@@ -76,28 +76,3 @@ def test_benchmark_process_run(
         uvloop.run(process.run())
 
     benchmark.pedantic(_run, setup=_setup, rounds=5)
-
-
-def _setup_process() -> tuple[tuple[Process], dict]:
-    comp_a = A(name="comp_a", iters=1000)
-    comp_b1 = B(name="comp_b1", factor=1)
-    comp_b2 = B(name="comp_b2", factor=2)
-    components = [comp_a, comp_b1, comp_b2]
-    connectors = [
-        AsyncioConnector(spec=ConnectorSpec(source="comp_a.out_1", target="comp_b1.in_1")),
-        AsyncioConnector(spec=ConnectorSpec(source="comp_b1.out_1", target="comp_b2.in_1")),
-    ]
-    process = LocalProcess(components=components, connectors=connectors)
-    # Initialise process so that this is excluded from the benchmark timing
-    uvloop.run(process.init())
-    # Return args and kwargs tuple for benchmark.pedantic
-    return (process,), {}
-
-
-def _run_process(process: Process) -> None:
-    uvloop.run(process.run())
-
-
-def test_temp(benchmark: BenchmarkFixture) -> None:
-    """Benchmark the running of a Plugboard Process."""
-    benchmark.pedantic(_run_process, setup=_setup_process, rounds=5)
