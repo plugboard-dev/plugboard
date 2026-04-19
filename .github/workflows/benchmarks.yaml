@@ -15,7 +15,7 @@ on:
 jobs:
   benchmark:
     name: Run benchmarks
-    runs-on: codspeed-macro
+    runs-on: ubuntu-latest
     permissions:
       contents: read
       id-token: write
@@ -43,6 +43,5 @@ jobs:
           RAY_ENABLE_UV_RUN_RUNTIME_ENV: 0
           PLUGBOARD_IO_READ_TIMEOUT: 5.0
         with:
-          mode: walltime
           run: uv run pytest tests/benchmark/ --codspeed
 
