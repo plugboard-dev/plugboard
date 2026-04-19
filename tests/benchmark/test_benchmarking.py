@@ -63,15 +63,16 @@ def test_benchmark_process_run(
     ray_ctx: None,
 ) -> None:
     """Benchmark running of a Plugboard Process."""
-    process = _build_process(connector_cls, process_cls)
 
-    def setup() -> None:
-        uvloop.run(process.init())
+    def _setup() -> tuple[tuple[Process], dict]:
+        async def _init() -> Process:
+            process = _build_process(connector_cls, process_cls)
+            await process.init()
+            return process
 
-    def _run() -> None:
+        return (uvloop.run(_init()),), {}
+
+    def _run(process: Process) -> None:
         uvloop.run(process.run())
 
-    def teardown() -> None:
-        uvloop.run(process.destroy())
-
-    benchmark.pedantic(_run, setup=setup, teardown=teardown, rounds=5)
+    benchmark.pedantic(_run, setup=_setup, rounds=5)
