@@ -91,20 +91,21 @@ async def test_component_resources_in_ray_process(ray_ctx: None) -> None:
         initial_values={"a": [5]},
     )
     connectors = [RayConnector(spec=ConnectorSpec(source="test.b", target="test.a"))]
+    available_resources_before = ray.available_resources()
 
     process = RayProcess(components=[component], connectors=connectors)
 
     async with process:
-        component_actor = process._component_actors["test"]
-        actor_state = ray._private.state.actors(component_actor._ray_actor_id.hex())  # type: ignore[attr-defined]  # noqa: SLF001
-
-        assert actor_state["State"] == "ALIVE"
+        component_actor = ray.get_actor("test", namespace=process._namespace)
+        assert component_actor is not None
         # Verify the component actor has reserved the correct resources.
-        cluster_resources = ray.cluster_resources()
         available_resources = ray.available_resources()
-        assert cluster_resources["CPU"] - available_resources["CPU"] == pytest.approx(1.0)
-        assert cluster_resources["memory"] - available_resources["memory"] == pytest.approx(
-            1.0 * 1024 * 1024
+        assert available_resources_before["CPU"] - available_resources["CPU"] == pytest.approx(
+            1.0
+        )
+        assert (
+            available_resources_before["memory"] - available_resources["memory"]
+            == pytest.approx(1.0 * 1024 * 1024)
         )
         await process.run()
 
