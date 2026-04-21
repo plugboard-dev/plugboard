@@ -4,7 +4,7 @@
 import typing as _t
 
 import pytest
-from ray.util.state import list_actors
+import ray
 
 from plugboard.component import Component, IOController as IO
 from plugboard.connector import RayConnector
@@ -95,12 +95,17 @@ async def test_component_resources_in_ray_process(ray_ctx: None) -> None:
     process = RayProcess(components=[component], connectors=connectors)
 
     async with process:
-        actors = list_actors(detail=True)
-        component_actor = next(a for a in actors if a.name == "test")
-        # Verify the component actor has the correct resources
-        assert component_actor.required_resources is not None
-        assert component_actor.required_resources["CPU"] == 1.0
-        assert component_actor.required_resources["memory"] == 1.0 * 1024 * 1024
+        component_actor = process._component_actors["test"]
+        actor_state = ray._private.state.actors(component_actor._ray_actor_id.hex())  # type: ignore[attr-defined]  # noqa: SLF001
+
+        assert actor_state["State"] == "ALIVE"
+        # Verify the component actor has reserved the correct resources.
+        cluster_resources = ray.cluster_resources()
+        available_resources = ray.available_resources()
+        assert cluster_resources["CPU"] - available_resources["CPU"] == pytest.approx(1.0)
+        assert cluster_resources["memory"] - available_resources["memory"] == pytest.approx(
+            1.0 * 1024 * 1024
+        )
         await process.run()
 
     assert component.b == 10
