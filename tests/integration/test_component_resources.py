@@ -100,8 +100,12 @@ async def test_component_resources_in_ray_process(ray_ctx: None) -> None:
         assert component_actor is not None
         # Verify the component actor has reserved the correct resources.
         available_resources = ray.available_resources()
-        cpu_reserved = available_resources_before["CPU"] - available_resources["CPU"]
-        memory_reserved = available_resources_before["memory"] - available_resources["memory"]
+        cpu_reserved = available_resources_before.get("CPU", 0.0) - available_resources.get(
+            "CPU", 0.0
+        )
+        memory_reserved = available_resources_before.get("memory", 0.0) - available_resources.get(
+            "memory", 0.0
+        )
         assert cpu_reserved == pytest.approx(1.0)
         assert memory_reserved == pytest.approx(1.0 * 1024 * 1024)
         await process.run()
