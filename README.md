@@ -32,7 +32,7 @@
 
 Plugboard is an **event-driven modelling and orchestration framework** in Python for simulating and driving complex processes with many interconnected stateful components.
 
-You can use it to **define models** in Python and **connect them together easily** so that data automatically moves between them. After running your model on a laptop, you can then scale out on multiple processors, or go to a compute cluster in the cloud.
+You can use it to **define models** in Python and **connect them together easily** so that data automatically moves between them. After running your model on a laptop, you can then scale out on multiple processors or go to a compute cluster in the cloud thanks to the integration with the [Ray](https://www.ray.io/) framework.
 
 Some examples of what you can build with Plugboard include:
 
@@ -215,7 +215,6 @@ For more information including a detailed API reference and step-by-step usage e
 Plugboard is under active development, with new features in the works:
 
 - Support for strongly typed data messages and validation based on pydantic.
-- Support for different parallelisation patterns such as: single-threaded with coroutines, single-host multi process, or distributed with Ray in Kubernetes.
 - Data exchange between components with popular messaging technologies like RabbitMQ and Google Pub/Sub.
 - Support for different message exchange patterns such as: one-to-one, one-to-many, many-to-one etc via a broker; or peer-to-peer with http requests.
 
