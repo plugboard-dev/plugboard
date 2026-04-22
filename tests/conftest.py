@@ -10,7 +10,6 @@ from unittest.mock import patch
 import pytest
 import pytest_asyncio
 import pytest_cases
-import ray
 from that_depends import ContextScopes, container_context
 import uvloop
 
@@ -62,7 +61,9 @@ def ray_ctx() -> _t.Iterator[None]:
 
     Includes a small amount of resources to allow testing of resource-constrained components.
     """
-    ray.init(num_cpus=5, num_gpus=1, resources={"custom_hardware": 10}, include_dashboard=True)
+    import ray
+
+    ray.init(num_cpus=5, num_gpus=1, resources={"custom_hardware": 10}, include_dashboard=False)
     yield
     ray.shutdown()
 
