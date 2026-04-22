@@ -215,8 +215,6 @@ For more information including a detailed API reference and step-by-step usage e
 Plugboard is under active development, with new features in the works:
 
 - Support for strongly typed data messages and validation based on pydantic.
-- Data exchange between components with popular messaging technologies like RabbitMQ and Google Pub/Sub.
-- Support for different message exchange patterns such as: one-to-one, one-to-many, many-to-one etc via a broker; or peer-to-peer with http requests.
 
 ## 👋 Contributions
 
