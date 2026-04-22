@@ -2658,7 +2658,7 @@ What's new: 🚀 we've open-sourced Plugboard - please <a href="https://github.c
 <hr>
 
 <p>Plugboard is an <strong>event-driven modelling and orchestration framework</strong> in Python for simulating and driving complex processes with many interconnected stateful components.</p>
-<p>You can use it to <strong>define models</strong> in Python and <strong>connect them together easily</strong> so that data automatically moves between them. After running your model on a laptop, you can then scale out on multiple processors, or go to a compute cluster in the cloud.</p>
+<p>You can use it to <strong>define models</strong> in Python and <strong>connect them together easily</strong> so that data automatically moves between them. After running your model on a laptop, you can then scale out on multiple processors or go to a compute cluster in the cloud thanks to the integration with the <a href="https://www.ray.io/">Ray</a> framework.</p>
 <p>Some examples of what you can build with Plugboard include:</p>
 <ul>
 <li>Digital twin models of complex processes:<ul>
@@ -2679,8 +2679,9 @@ What's new: 🚀 we've open-sourced Plugboard - please <a href="https://github.c
 <li><strong>YAML model specification</strong> format for saving model definitions, allowing you to run the same model locally or in cloud infrastructure;</li>
 <li>A <strong>command line interface</strong> for executing models;</li>
 <li>Built to handle the <strong>data intensive simulation</strong> requirements of industrial process applications;</li>
-<li>Modern implementation with <strong>Python 3.12 and above</strong> based around <strong>asyncio</strong> with complete type annotation coverage;</li>
+<li>Modern implementation with <strong>Python 3.12+</strong> based around <strong>asyncio</strong> with complete type annotation coverage;</li>
 <li>Built-in integrations for <strong>loading/saving data</strong> from cloud storage and SQL databases;</li>
+<li>Built-in <strong>LLM integrations</strong> for building AI-augmented process models with support for multiple providers;</li>
 <li><strong>Detailed logging</strong> of component inputs, outputs and state for monitoring and process mining or surrogate modelling use-cases.</li>
 </ul>
 <h2 id="installation">🔌 Installation</h2>
@@ -2688,7 +2689,8 @@ What's new: 🚀 we've open-sourced Plugboard - please <a href="https://github.c
 <div class="language-shell highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>python<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>plugboard
 </span></code></pre></div></p>
 <p>Optional integrations for different cloud providers can be installed using <code>plugboard[aws]</code>, <code>plugboard[azure]</code> or <code>plugboard[gcp]</code>.</p>
-<p>Support for parallelisation can be installed using <code>plugboard[ray]</code>.</p>
+<p>Support for parallelisation and hyperparameter optimisation can be installed using <code>plugboard[ray]</code>.</p>
+<p>Additional optional extras: <code>plugboard[llm]</code> for LLM components, <code>plugboard[redis]</code> for Redis-based connectors, and <code>plugboard[websockets]</code> for WebSocket I/O.</p>
 <h2 id="quickstart-with-ai">⚡ Quickstart with AI</h2>
 <p>The fastest way to get started is to let your AI coding assistant build your first model. Run the following command in your project directory:</p>
 <div class="language-shell highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>plugboard<span class="w"> </span>ai<span class="w"> </span>init
@@ -2743,12 +2745,14 @@ What's new: 🚀 we've open-sourced Plugboard - please <a href="https://github.c
 </span><span id="__span-2-37"><a id="__codelineno-2-37" name="__codelineno-2-37" href="#__codelineno-2-37"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">_f</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
 </span></code></pre></div></p>
 <p>There is also a <code>@component</code> decorator which simplifies creating <code>Component</code>s for small stateless transform type functions. A component instance can be created by calling the <code>.component</code> method of the object returned by the decorator. The wrapped function can be sync or async and will be called as the step method with the named inputs being passed in. Inputs must be specified matching function args. Outputs must be specified and the function must return a dictionary where the keys match the outputs.
-<div class="language-python highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="nd">@component</span><span class="p">(</span><span class="n">inputs</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;in_1&quot;</span><span class="p">],</span> <span class="n">outputs</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;out_1&quot;</span><span class="p">])</span>
-</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="k">def</span><span class="w"> </span><span class="nf">pow2</span><span class="p">(</span><span class="n">in_1</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
-</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>  <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;out_1&quot;</span><span class="p">:</span> <span class="n">in_1</span> <span class="o">**</span> <span class="mi">2</span><span class="p">}</span>
-</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>
-</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="n">result</span> <span class="o">=</span> <span class="n">pow2</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>  <span class="c1"># Preserves original function call -&gt; result = {&quot;out_1&quot;: 4}</span>
-</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="n">comp_pow2</span> <span class="o">=</span> <span class="n">pow2</span><span class="o">.</span><span class="n">component</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;component-pow2&quot;</span><span class="p">)</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">plugboard.component</span><span class="w"> </span><span class="kn">import</span> <span class="n">component</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="nd">@component</span><span class="p">(</span><span class="n">inputs</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;in_1&quot;</span><span class="p">],</span> <span class="n">outputs</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;out_1&quot;</span><span class="p">])</span>
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="k">def</span><span class="w"> </span><span class="nf">pow2</span><span class="p">(</span><span class="n">in_1</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]:</span>
+</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>  <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;out_1&quot;</span><span class="p">:</span> <span class="n">in_1</span> <span class="o">**</span> <span class="mi">2</span><span class="p">}</span>
+</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>
+</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a><span class="n">result</span> <span class="o">=</span> <span class="n">pow2</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>  <span class="c1"># Preserves original function call -&gt; result = {&quot;out_1&quot;: 4}</span>
+</span><span id="__span-3-8"><a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a><span class="n">comp_pow2</span> <span class="o">=</span> <span class="n">pow2</span><span class="o">.</span><span class="n">component</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;component-pow2&quot;</span><span class="p">)</span>
 </span></code></pre></div></p>
 <p>Now we take these components, connect them up as a <code>Process</code>, and fire off the model. Using the <code>Process</code> context handler takes care of calling <code>init</code> at the beginning and <code>destroy</code> at the end for all <code>Component</code>s. Calling <code>Process.run</code> triggers all the components to start iterating through all their inputs until a termination condition is reached. Simulations proceed in an event-driven manner: when inputs arrive, the components are triggered to step forward in time. The framework handles the details of the inter-component communication, you just need to specify the logic of your components, and the connections between them.
 <div class="language-python highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">plugboard.connector</span><span class="w"> </span><span class="kn">import</span> <span class="n">AsyncioConnector</span>
@@ -2807,14 +2811,11 @@ What's new: 🚀 we've open-sourced Plugboard - please <a href="https://github.c
 <div class="language-shell highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>plugboard<span class="w"> </span>process<span class="w"> </span>run<span class="w"> </span>my-model.yaml
 </span></code></pre></div></p>
 <h2 id="documentation">📖 Documentation</h2>
-<p>For more information including a detailed API reference and step-by-step usage examples, refer to the <a href="https://docs.plugboard.dev">documentation site</a>. We recommend diving into the <a href="https://docs.plugboard.dev/latest/examples/tutorials/hello-world/">tutorials</a> for a step-by-step to getting started.</p>
+<p>For more information including a detailed API reference and step-by-step usage examples, refer to the <a href="https://docs.plugboard.dev">documentation site</a>. We recommend diving into the <a href="https://docs.plugboard.dev/latest/examples/tutorials/hello-world/">tutorials</a> for a step-by-step guide to getting started.</p>
 <h2 id="roadmap">🐾 Roadmap</h2>
 <p>Plugboard is under active development, with new features in the works:</p>
 <ul>
 <li>Support for strongly typed data messages and validation based on pydantic.</li>
-<li>Support for different parallelisation patterns such as: single-threaded with coroutines, single-host multi process, or distributed with Ray in Kubernetes.</li>
-<li>Data exchange between components with popular messaging technologies like RabbitMQ and Google Pub/Sub.</li>
-<li>Support for different message exchange patterns such as: one-to-one, one-to-many, many-to-one etc via a broker; or peer-to-peer with http requests.</li>
 </ul>
 <h2 id="contributions">👋 Contributions</h2>
 <p>Contributions are welcomed and warmly received! For bug fixes and smaller feature requests feel free to open an issue on this repo. For any larger changes please get in touch with us to discuss first. More information for developers can be found in <a href="https://docs.plugboard.dev/latest/contributing/">the contributing section</a> of the docs.</p>
