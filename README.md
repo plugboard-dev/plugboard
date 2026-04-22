@@ -50,8 +50,9 @@ Some examples of what you can build with Plugboard include:
 - **YAML model specification** format for saving model definitions, allowing you to run the same model locally or in cloud infrastructure;
 - A **command line interface** for executing models;
 - Built to handle the **data intensive simulation** requirements of industrial process applications;
-- Modern implementation with **Python 3.12 and above** based around **asyncio** with complete type annotation coverage;
+- Modern implementation with **Python 3.12+** based around **asyncio** with complete type annotation coverage;
 - Built-in integrations for **loading/saving data** from cloud storage and SQL databases;
+- Built-in **LLM integrations** for building AI-augmented process models with support for multiple providers;
 - **Detailed logging** of component inputs, outputs and state for monitoring and process mining or surrogate modelling use-cases.
 
 ## 🔌 Installation
@@ -63,7 +64,9 @@ python -m pip install plugboard
 
 Optional integrations for different cloud providers can be installed using `plugboard[aws]`, `plugboard[azure]` or `plugboard[gcp]`.
 
-Support for parallelisation can be installed using `plugboard[ray]`.
+Support for parallelisation and hyperparameter optimisation can be installed using `plugboard[ray]`.
+
+Additional optional extras: `plugboard[llm]` for LLM components, `plugboard[redis]` for Redis-based connectors, and `plugboard[websockets]` for WebSocket I/O.
 
 ## ⚡ Quickstart with AI
 
@@ -132,8 +135,10 @@ class B(Component):
 
 There is also a `@component` decorator which simplifies creating `Component`s for small stateless transform type functions. A component instance can be created by calling the `.component` method of the object returned by the decorator. The wrapped function can be sync or async and will be called as the step method with the named inputs being passed in. Inputs must be specified matching function args. Outputs must be specified and the function must return a dictionary where the keys match the outputs.
 ```python
+from plugboard.component import component
+
 @component(inputs=["in_1"], outputs=["out_1"])
-def pow2(in_1: int) -> int:
+def pow2(in_1: int) -> dict[str, int]:
   return {"out_1": in_1 ** 2}
 
 result = pow2(2)  # Preserves original function call -> result = {"out_1": 4}
@@ -208,7 +213,7 @@ plugboard process run my-model.yaml
 
 ## 📖 Documentation
 
-For more information including a detailed API reference and step-by-step usage examples, refer to the [documentation site](https://docs.plugboard.dev). We recommend diving into the [tutorials](https://docs.plugboard.dev/latest/examples/tutorials/hello-world/) for a step-by-step to getting started.
+For more information including a detailed API reference and step-by-step usage examples, refer to the [documentation site](https://docs.plugboard.dev). We recommend diving into the [tutorials](https://docs.plugboard.dev/latest/examples/tutorials/hello-world/) for a step-by-step guide to getting started.
 
 ## 🐾 Roadmap
 
