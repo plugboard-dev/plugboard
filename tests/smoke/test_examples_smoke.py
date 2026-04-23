@@ -10,7 +10,14 @@ import pytest
 
 
 SMOKE_TEST_TIMEOUT = 90
+MAX_TRANSIENT_NETWORK_RETRIES = 1
 PROJECT_ROOT = Path(__file__).parent.parent.parent
+TRANSIENT_NETWORK_ERROR_SIGNATURES = (
+    "ConnectError",
+    "ReadTimeout",
+    "RemoteProtocolError",
+    "Server disconnected without sending a response",
+)
 
 
 @pytest.fixture(scope="module", autouse=True)
@@ -51,7 +58,7 @@ def test_tutorial_file_runs(file_and_dir: Tuple[Path, Path]) -> None:
     """Test that a tutorial file runs without errors."""
     py_file, working_dir = file_and_dir
 
-    try:
+    def _run_tutorial() -> tuple[subprocess.Popen[str], str, str]:
         process = subprocess.Popen(  # noqa: S603
             [sys.executable, py_file.name],
             cwd=working_dir,
@@ -67,8 +74,32 @@ def test_tutorial_file_runs(file_and_dir: Tuple[Path, Path]) -> None:
             pytest.skip(
                 f"{py_file.relative_to(PROJECT_ROOT)} timed out after {SMOKE_TEST_TIMEOUT} seconds"
             )
+        return process, stdout, stderr
+
+    def _has_transient_network_error(*outputs: str) -> bool:
+        for output in outputs:
+            for signature in TRANSIENT_NETWORK_ERROR_SIGNATURES:
+                if signature in output:
+                    return True
+        return False
+
+    try:
+        process, stdout, stderr = _run_tutorial()
+        retries = 0
+        while (
+            process.returncode != 0
+            and retries < MAX_TRANSIENT_NETWORK_RETRIES
+            and _has_transient_network_error(stdout, stderr)
+        ):
+            retries += 1
+            process, stdout, stderr = _run_tutorial()
 
         if process.returncode != 0:
+            if _has_transient_network_error(stdout, stderr):
+                pytest.skip(
+                    f"{py_file.relative_to(PROJECT_ROOT)} failed due to a transient external "
+                    "network error"
+                )
             error_msg = (
                 f"Tutorial file {py_file.relative_to(PROJECT_ROOT)} "
                 f"failed to run successfully.\n"
