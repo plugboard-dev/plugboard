@@ -77,11 +77,11 @@ def test_tutorial_file_runs(file_and_dir: Tuple[Path, Path]) -> None:
         return process, stdout, stderr
 
     def _has_transient_network_error(*outputs: str) -> bool:
-        return any(
-            signature in output
-            for output in outputs
-            for signature in TRANSIENT_NETWORK_ERROR_SIGNATURES
-        )
+        for output in outputs:
+            for signature in TRANSIENT_NETWORK_ERROR_SIGNATURES:
+                if signature in output:
+                    return True
+        return False
 
     try:
         process, stdout, stderr = _run_tutorial()
