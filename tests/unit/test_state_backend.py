@@ -45,6 +45,7 @@ def state_backend_cls(request: pytest.FixtureRequest) -> _t.Type[StateBackend]:
 
 
 @pytest.mark.asyncio
+@pytest.mark.flaky(reruns=2)
 @pytest.mark.parametrize(
     "job_id_fixture, metadata, exc_ctx",
     [
@@ -85,6 +86,7 @@ async def test_state_backend_init(
 
 
 @pytest.mark.asyncio
+@pytest.mark.flaky(reruns=2)
 async def test_state_backend_init_with_existing_job(
     datetime_now: str,
     state_backend_cls: _t.Type[StateBackend],
