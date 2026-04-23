@@ -23,7 +23,7 @@ from plugboard.utils.settings import Settings
 
 @contextmanager
 def override_settings(settings: Settings) -> _t.Iterator[None]:
-    """Temporarily override DI settings for a test."""
+    """Temporarily override DI settings for a test and always reset the override."""
     DI.settings.override_sync(settings)
     try:
         yield
