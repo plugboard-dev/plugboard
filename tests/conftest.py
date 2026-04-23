@@ -1,6 +1,7 @@
 """Configuration for the test suite."""
 
 from abc import ABC
+import asyncio
 import multiprocessing
 import os
 import typing as _t
@@ -20,10 +21,10 @@ from plugboard.utils.di import DI
 from plugboard.utils.settings import Settings
 
 
-@pytest.fixture(scope="session")
-def event_loop_policy() -> uvloop.EventLoopPolicy:
-    """Set uvloop as the event loop policy for the test session."""
-    return uvloop.EventLoopPolicy()
+@pytest.hookimpl(optionalhook=True)
+def pytest_asyncio_loop_factories() -> dict[str, _t.Callable[[], asyncio.AbstractEventLoop]]:
+    """Configure pytest-asyncio to create event loops with uvloop."""
+    return {"uvloop": uvloop.new_event_loop}
 
 
 @pytest.fixture(scope="session", autouse=True)
