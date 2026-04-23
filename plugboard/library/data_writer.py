@@ -43,6 +43,7 @@ class DataWriter(Component, ABC):
             **kwargs: Additional keyword arguments for [`Component`][plugboard.component.Component].
         """
         super().__init__(**kwargs)
+        # Use a single buffer to track everything
         self._buffer: dict[str, deque] = defaultdict(deque)
         self._chunk_size = chunk_size
         self.io = IOController(
@@ -76,18 +77,39 @@ class DataWriter(Component, ABC):
     def _bind_inputs(self) -> None:
         """Binds input fields to component fields and append to internal buffer."""
         super()._bind_inputs()
-        for field in self.io.inputs:
+        for field in self._field_inputs:
             value = getattr(self, field, None)
             self._buffer[field].append(value)
 
+    @property
+    def _completed_rows(self) -> int:
+        """Calculates how many fully formed rows exist in the buffer."""
+        if not self.io.inputs:
+            return 0
+        return min((len(self._buffer[f]) for f in self.io.inputs), default=0)
+
+    @property
+    def _can_step(self) -> bool:
+        """We can step if we have at least one fully formed row."""
+        return self._completed_rows > 0
+
     async def _save_chunk(self) -> None:
-        """Write data from the buffer."""
+        """Write completed data rows from the buffer."""
+        completed_rows = self._completed_rows
+        if completed_rows == 0:
+            return
+
         if self._task is not None:
             await self._task
-        # Create task to save next chunk of data
-        chunk = await self._convert(self._buffer)
+
+        # Extract only the completed rows into a new chunk
+        chunk_data = {
+            field: deque([self._buffer[field].popleft() for _ in range(completed_rows)])
+            for field in self.io.inputs
+        }
+
+        chunk = await self._convert(chunk_data)
         self._task = asyncio.create_task(self._save(chunk))
-        self._buffer = defaultdict(deque)
 
     async def step(self) -> None:
         """Trigger save when buffer is at target size."""

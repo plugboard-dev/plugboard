@@ -303,6 +303,21 @@ class TestValidateAllInputsConnected:
         errors = validate_all_inputs_connected(pd)
         assert errors == []
 
+    def test_missing_inputs_allowed_for_event_driven_component_reuse(self) -> None:
+        """Unconnected inputs are allowed when non-system input events can populate them."""
+        pd = _make_process_dict(
+            components={
+                "producer": _make_component("producer", output_events=["message_event"]),
+                "writer": _make_component(
+                    "writer",
+                    inputs=["message"],
+                    input_events=["system_stop", "message_event"],
+                ),
+            },
+        )
+        errors = validate_all_inputs_connected(pd)
+        assert errors == []
+
 
 # ---------------------------------------------------------------------------
 # Tests for validate_input_events
