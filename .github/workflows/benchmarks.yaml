@@ -15,7 +15,7 @@ jobs:
       pull-requests: write
     strategy:
       matrix:
-        python_version: [3.12]
+        python_version: [3.14]
     steps:
       - name: Checkout branch
         uses: actions/checkout@v4
@@ -80,4 +80,3 @@ jobs:
               repo: context.repo.repo,
               body: require('fs').readFileSync('${{ env.PR_COMMENT }}').toString()
             });
-

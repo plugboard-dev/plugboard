@@ -1,7 +1,7 @@
 """Configuration for the test suite."""
 
 from abc import ABC
-from asyncio.events import BaseDefaultEventLoopPolicy
+import asyncio
 import multiprocessing
 import os
 import typing as _t
@@ -10,7 +10,6 @@ from unittest.mock import patch
 import pytest
 import pytest_asyncio
 import pytest_cases
-import ray
 from that_depends import ContextScopes, container_context
 import uvloop
 
@@ -22,10 +21,10 @@ from plugboard.utils.di import DI
 from plugboard.utils.settings import Settings
 
 
-@pytest.fixture(scope="session")
-def event_loop_policy() -> BaseDefaultEventLoopPolicy:
-    """Set uvloop as the event loop policy for the test session."""
-    return uvloop.EventLoopPolicy()
+@pytest.hookimpl(optionalhook=True)
+def pytest_asyncio_loop_factories() -> dict[str, _t.Callable[[], asyncio.AbstractEventLoop]]:
+    """Configure pytest-asyncio to create event loops with uvloop."""
+    return {"uvloop": uvloop.new_event_loop}
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -44,7 +43,9 @@ def ray_ctx() -> _t.Iterator[None]:
 
     Includes a small amount of resources to allow testing of resource-constrained components.
     """
-    ray.init(num_cpus=5, num_gpus=1, resources={"custom_hardware": 10}, include_dashboard=True)
+    import ray
+
+    ray.init(num_cpus=5, num_gpus=1, resources={"custom_hardware": 10}, include_dashboard=False)
     yield
     ray.shutdown()
 
