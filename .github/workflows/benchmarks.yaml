@@ -18,6 +18,10 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+      pull-requests: write
+    strategy:
+      matrix:
+        python_version: [3.14]
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -44,4 +48,3 @@ jobs:
         with:
           mode: simulation
           run: uv run pytest tests/benchmark/ --codspeed
-
