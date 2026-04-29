@@ -95,6 +95,7 @@ class Component(ABC, ExportMixin):
             initial_values=self._initial_values,
             input_events=self.__class__.io.input_events,
             output_events=self.__class__.io.output_events,
+            event_field_coverage=self.__class__.io.event_field_coverage,
             namespace=self.name,
             component=self,
         )

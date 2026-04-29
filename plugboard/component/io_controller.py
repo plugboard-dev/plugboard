@@ -38,6 +38,7 @@ class IOController:
         initial_values: _t.Optional[dict[str, _t.Iterable]] = None,
         input_events: _t.Optional[list[_t.Type[Event]]] = None,
         output_events: _t.Optional[list[_t.Type[Event]]] = None,
+        event_field_coverage: _t.Optional[dict[str, list[str]]] = None,
         namespace: str = IO_NS_UNSET,
         component: _t.Optional[Component] = None,
     ) -> None:
@@ -47,6 +48,7 @@ class IOController:
         self.initial_values = initial_values or {}
         self.input_events = input_events or []
         self.output_events = output_events or []
+        self.event_field_coverage = event_field_coverage or {}
         if set(self.initial_values.keys()) - set(self.inputs):
             raise ValueError("Initial values must be for input fields only.")
         self._component = component
@@ -411,6 +413,7 @@ class IOController:
             "input_events": [e.safe_type() for e in self.input_events],
             "output_events": [e.safe_type() for e in self.output_events],
             "initial_values": {k: list(v) for k, v in self._initial_values.items()},
+            "event_field_coverage": {k: list(v) for k, v in self.event_field_coverage.items()},
         }
 
 

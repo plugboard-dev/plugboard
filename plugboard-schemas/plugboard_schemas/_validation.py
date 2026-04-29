@@ -14,8 +14,6 @@ from __future__ import annotations
 from collections import defaultdict
 import typing as _t
 
-from plugboard.events.event_handlers import EventHandlers
-
 from ._graph import simple_cycles
 from ._validator_registry import validator
 
@@ -76,24 +74,6 @@ def _get_edges_in_cycle(
     return cycle_edges
 
 
-def _get_event_field_coverage(comp_data: dict[str, _t.Any]) -> set[str]:
-    """Get the fields populated by the handler for a specific component and event type."""
-    io = comp_data.get("io", {})
-    try:
-        comp_cls_path = comp_data["__export"]["type"]
-    except KeyError as e:
-        raise ValueError(f"Component data missing '__export.type': {comp_data}") from e
-    input_events = set(io.get("input_events", []))
-    non_system_input_events = input_events - {_SYSTEM_STOP_EVENT}
-    event_covered_fields = set().union(
-        *[
-            EventHandlers.get_field_coverage(comp_cls_path, evt_type)
-            for evt_type in non_system_input_events
-        ]
-    )
-    return event_covered_fields
-
-
 @validator
 def validate_all_inputs_connected(
     process_dict: dict[str, _t.Any],
@@ -124,7 +104,7 @@ def validate_all_inputs_connected(
         connected = connected_inputs.get(comp_name, set())
         unconnected = all_inputs - connected
         if unconnected:
-            event_covered_fields = _get_event_field_coverage(comp_data)
+            event_covered_fields = set().union(*io.get("event_field_coverage", {}).values())
             unconnected -= event_covered_fields
         if unconnected:
             errors.append(f"Component '{comp_name}' has unconnected inputs: {sorted(unconnected)}")
