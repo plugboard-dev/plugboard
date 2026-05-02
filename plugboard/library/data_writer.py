@@ -51,6 +51,7 @@ class DataWriter(Component, ABC):
             outputs=None,
             input_events=self.__class__.io.input_events,
             output_events=self.__class__.io.output_events,
+            event_field_coverage=self.__class__.io.event_field_coverage,
             namespace=self.name,
             component=self,
         )
