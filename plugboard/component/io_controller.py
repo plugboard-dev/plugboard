@@ -51,8 +51,24 @@ class IOController:
         self.event_field_coverage = event_field_coverage or {}
         if set(self.initial_values.keys()) - set(self.inputs):
             raise ValueError("Initial values must be for input fields only.")
-        self._component = component
 
+        self._component = component
+        self._initial_values = {k: deque(v) for k, v in self.initial_values.items()}
+        self._input_event_types = {Event.safe_type(evt.type) for evt in self.input_events}
+        self._output_event_types = {Event.safe_type(evt.type) for evt in self.output_events}
+
+        self._logger = DI.logger.resolve_sync().bind(
+            cls=self.__class__.__name__, namespace=self.namespace
+        )
+        self._logger.info("IOController created")
+
+        # Initialise channel stores
+        self._input_channels: dict[tuple[str, str], Channel] = {}
+        self._output_channels: dict[tuple[str, str], Channel] = {}
+        self._input_event_channels: dict[str, Channel] = {}
+        self._output_event_channels: dict[str, Channel] = {}
+
+        # Initialise buffers
         self.buf_fields: dict[str, IOBuffer] = {
             _io_key_in: IOFieldBuffer(),
             _io_key_out: IOFieldBuffer(),
@@ -62,21 +78,9 @@ class IOController:
             _io_key_out: IOEventBuffer(),
         }
 
-        self._input_channels: dict[tuple[str, str], Channel] = {}
-        self._output_channels: dict[tuple[str, str], Channel] = {}
-        self._input_event_channels: dict[str, Channel] = {}
-        self._output_event_channels: dict[str, Channel] = {}
-        self._input_event_types = {Event.safe_type(evt.type) for evt in self.input_events}
-        self._output_event_types = {Event.safe_type(evt.type) for evt in self.output_events}
-        self._initial_values = {k: deque(v) for k, v in self.initial_values.items()}
-        self._read_tasks: dict[str | _t_field_key, asyncio.Task] = {}
+        # Initialise orchestration state
         self._is_closed = False
-
-        self._logger = DI.logger.resolve_sync().bind(
-            cls=self.__class__.__name__, namespace=self.namespace
-        )
-        self._logger.info("IOController created")
-
+        self._read_tasks: dict[str | _t_field_key, asyncio.Task] = {}
         self._received_fields: dict[str, _t.Any] = {}
         self._received_fields_lock = asyncio.Lock()
         self._received_events: deque[Event] = deque()

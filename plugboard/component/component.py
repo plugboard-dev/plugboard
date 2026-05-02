@@ -144,10 +144,9 @@ class Component(ABC, ExportMixin):
         return self._parameters
 
     @classmethod
-    def _configure_io(cls) -> None:
-        # Get all parent classes that are Component subclasses
+    def _get_aggregated_io_args(cls) -> tuple[dict[str, set], list[str]]:
+        """Get combined set of all io arguments and exports from this class and all parents."""
         parent_comps = cls._get_component_bases()
-        # Create combined set of all io arguments from this class and all parents
         io_args: dict[str, set] = defaultdict(set)
         exports: list[str] = []
         for c in parent_comps + [cls]:
@@ -158,12 +157,23 @@ class Component(ABC, ExportMixin):
                 io_args["output_events"].update(c_io.output_events)
             if c_exports := getattr(c, "exports"):
                 exports.extend(c_exports)
-        # Get event field coverage from all handlers in this class and all parents
+        return io_args, exports
+
+    @classmethod
+    def _get_event_field_coverage(cls) -> dict[str, list[str]]:
+        """Get event field coverage from all handlers in this class and all parents."""
         event_field_coverage = {}
         for attr_name in dir(cls):
             attr = getattr(cls, attr_name, None)
             if callable(attr) and hasattr(attr, "_event_field_coverage"):
                 event_field_coverage.update(attr._event_field_coverage)
+        return event_field_coverage
+
+    @classmethod
+    def _configure_io(cls) -> None:
+        # Get all parent classes that are Component subclasses
+        io_args, exports = cls._get_aggregated_io_args()
+        event_field_coverage = cls._get_event_field_coverage()
         # Set io arguments for subclass
         cls.io = IO(
             inputs=sorted(io_args["inputs"], key=str),
