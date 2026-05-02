@@ -54,12 +54,6 @@ class EventHandlers:  # pragma: no cover
         class_name = qualname_parts[-2]  # Last part is the method name
         return f"{module_name}.{class_name}"
 
-    @staticmethod
-    def _iter_mro(_class: _t.Type) -> _t.Iterator[str]:
-        """Iterate over class MRO, yielding fully qualified class paths."""
-        for base_class in _class.__mro__:
-            yield f"{base_class.__module__}.{base_class.__name__}"
-
     @classmethod
     def get(cls, _class: _t.Type, event: _t.Type[Event] | Event) -> AsyncCallable:
         """Retrieve a handler for a specific class and event type.
