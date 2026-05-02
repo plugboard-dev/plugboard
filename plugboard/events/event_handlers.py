@@ -36,13 +36,12 @@ class EventHandlers:  # pragma: no cover
         def decorator(method: AsyncCallable) -> AsyncCallable:
             class_path = cls._get_class_path_for_method(method)
             cls._handlers[class_path][event.type] = method
+
             if populates_fields is not None:
-                comp_cls = method.__self__.__class__
-                if not hasattr(comp_cls, "io"):
-                    raise ValueError(
-                        "populates_fields must be specified on method of Component subclass."
-                    )
-                comp_cls.io.event_field_coverage[event.type] = populates_fields
+                if not hasattr(method, "_event_field_coverage"):
+                    setattr(method, "_event_field_coverage", {})
+                getattr(method, "_event_field_coverage")[event.type] = populates_fields
+
             return method
 
         return decorator

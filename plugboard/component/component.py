@@ -158,12 +158,19 @@ class Component(ABC, ExportMixin):
                 io_args["output_events"].update(c_io.output_events)
             if c_exports := getattr(c, "exports"):
                 exports.extend(c_exports)
+        # Get event field coverage from all handlers in this class and all parents
+        event_field_coverage = {}
+        for attr_name in dir(cls):
+            attr = getattr(cls, attr_name, None)
+            if callable(attr) and hasattr(attr, "_event_field_coverage"):
+                event_field_coverage.update(attr._event_field_coverage)
         # Set io arguments for subclass
         cls.io = IO(
             inputs=sorted(io_args["inputs"], key=str),
             outputs=sorted(io_args["outputs"], key=str),
             input_events=sorted(io_args["input_events"], key=str),
             output_events=sorted(io_args["output_events"], key=str),
+            event_field_coverage=event_field_coverage,
         )
         # Set exports for subclass
         cls.exports = sorted(set(exports))
