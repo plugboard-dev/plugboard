@@ -43,7 +43,6 @@ class DataWriter(Component, ABC):
             **kwargs: Additional keyword arguments for [`Component`][plugboard.component.Component].
         """
         super().__init__(**kwargs)
-        # Use a single buffer to track everything
         self._buffer: dict[str, deque] = defaultdict(deque)
         self._chunk_size = chunk_size
         self.io = IOController(
