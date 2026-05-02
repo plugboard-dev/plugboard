@@ -75,9 +75,28 @@ class Event(PlugboardBaseModel, ABC):
         """Returns a safe event type string for use in broker topic strings."""
         return (event_type or cls.type).replace(".", "_").replace("-", "_")
 
+    @_t.overload
     @classmethod
-    def handler(cls, method: AsyncCallable) -> AsyncCallable:
+    def handler(cls, method: AsyncCallable) -> AsyncCallable: ...
+
+    @_t.overload
+    @classmethod
+    def handler(
+        cls, *, populates_fields: _t.Optional[list[str]] = None
+    ) -> _t.Callable[[AsyncCallable], AsyncCallable]: ...
+
+    @classmethod
+    def handler(
+        cls,
+        method: _t.Optional[AsyncCallable] = None,
+        *,
+        populates_fields: _t.Optional[list[str]] = None,
+    ) -> _t.Union[AsyncCallable, _t.Callable[[AsyncCallable], AsyncCallable]]:
         """Registers a class method as an event handler."""
+        if method is None:
+            # Invoked as @Event.handler(populates_fields=[...])
+            return EventHandlers.add(cls, populates_fields=populates_fields)
+        # Invoked as @Event.handler
         return EventHandlers.add(cls)(method)
 
 
