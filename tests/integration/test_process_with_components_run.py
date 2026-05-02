@@ -519,7 +519,7 @@ class EventReaderFileWriter(FileWriter):
 
     io = IO(input_events=[MessageEvent])
 
-    @MessageEvent.handler
+    @MessageEvent.handler(populates_fields=["message"])
     async def handle_message(self, event: MessageEvent) -> None:
         self.message = event.data.message
 
@@ -642,7 +642,7 @@ class StaggeredEventFileWriter(FileWriter):
         self.step_count: int = 0
         self.step_for_message: dict[str, int] = {}
 
-    @MessageEvent.handler
+    @MessageEvent.handler(populates_fields=["mg1", "mg2", "mg3"])
     async def handle_message(self, event: MessageEvent) -> None:
         msg = event.data.message
         match event.source:
