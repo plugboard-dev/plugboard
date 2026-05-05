@@ -16,6 +16,7 @@ from plugboard.connector import (
 from plugboard.connector.redis_channel import RedisConnector
 from plugboard.utils import DI
 from plugboard.utils.settings import Settings
+from tests.conftest import override_settings
 from tests.unit.test_channel import (  # noqa: F401
     TEST_ITEMS,
     test_channel,
@@ -28,16 +29,11 @@ from tests.unit.test_channel import (  # noqa: F401
 def zmq_connector_cls(zmq_pubsub_proxy: bool) -> _t.Iterator[_t.Type[ZMQConnector]]:
     """Returns the ZMQConnector class with the specified proxy setting.
 
-    Patches the env var `PLUGBOARD_FLAGS_ZMQ_PUBSUB_PROXY` to control the proxy setting.
+    Overrides settings to control the proxy setting without mutating process env.
     """
-    with patch.dict(
-        os.environ,
-        {"PLUGBOARD_FLAGS_ZMQ_PUBSUB_PROXY": str(zmq_pubsub_proxy)},
-    ):
-        testing_settings = Settings()
-        DI.settings.override_sync(testing_settings)
+    testing_settings = Settings.model_validate({"flags": {"zmq_pubsub_proxy": zmq_pubsub_proxy}})
+    with override_settings(testing_settings):
         yield ZMQConnector
-        DI.settings.reset_override_sync()
 
 
 @pytest_cases.fixture
