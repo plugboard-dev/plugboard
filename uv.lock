@@ -4078,7 +4078,7 @@ all = [
     { name = "ruff", specifier = ">=0.5,<1" },
     { name = "s3fs", specifier = ">=2024.9.0" },
     { name = "time-machine", specifier = ">=2.15,<4" },
-    { name = "types-aiofiles", specifier = ">=24.1,<25" },
+    { name = "types-aiofiles", specifier = ">=24.1,<26" },
     { name = "websockets", specifier = ">=14.2,<17" },
     { name = "xenon", specifier = ">=0.9.3,<1" },
 ]
@@ -4094,7 +4094,7 @@ dev = [
     { name = "pre-commit", specifier = ">=3.8,<5" },
     { name = "radon", specifier = ">=6.0.1,<7" },
     { name = "ruff", specifier = ">=0.5,<1" },
-    { name = "types-aiofiles", specifier = ">=24.1,<25" },
+    { name = "types-aiofiles", specifier = ">=24.1,<26" },
     { name = "xenon", specifier = ">=0.9.3,<1" },
 ]
 docs = [
@@ -5799,11 +5799,11 @@ wheels = [
 
 [[package]]
 name = "types-aiofiles"
-version = "24.1.0.20250822"
+version = "25.1.0.20260409"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/19/48/c64471adac9206cc844afb33ed311ac5a65d2f59df3d861e0f2d0cad7414/types_aiofiles-24.1.0.20250822.tar.gz", hash = "sha256:9ab90d8e0c307fe97a7cf09338301e3f01a163e39f3b529ace82466355c84a7b", size = 14484, upload-time = "2025-08-22T03:02:23.039Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/6c/66/9e62a2692792bc96c0f423f478149f4a7b84720704c546c8960b0a047c89/types_aiofiles-25.1.0.20260409.tar.gz", hash = "sha256:49e67d72bdcf9fe406f5815758a78dc34a1249bb5aa2adba78a80aec0a775435", size = 14812, upload-time = "2026-04-09T04:22:35.308Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/bc/8e/5e6d2215e1d8f7c2a94c6e9d0059ae8109ce0f5681956d11bb0a228cef04/types_aiofiles-24.1.0.20250822-py3-none-any.whl", hash = "sha256:0ec8f8909e1a85a5a79aed0573af7901f53120dd2a29771dd0b3ef48e12328b0", size = 14322, upload-time = "2025-08-22T03:02:21.918Z" },
+    { url = "https://files.pythonhosted.org/packages/27/d0/28236f869ba4dfb223ecdbc267eb2bdb634b81a561dd992230a4f9ec48fa/types_aiofiles-25.1.0.20260409-py3-none-any.whl", hash = "sha256:923fedb532c772cc0f62e0ce4282725afa82ca5b41cabd9857f06b55e5eee8de", size = 14372, upload-time = "2026-04-09T04:22:34.328Z" },
 ]
 
 [[package]]
