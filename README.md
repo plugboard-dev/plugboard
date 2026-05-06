@@ -23,6 +23,8 @@
     <img alt="CodeQL" src="https://github.com/plugboard-dev/plugboard/actions/workflows/github-code-scanning/codeql/badge.svg"></a>
   <a href="https://codecov.io/gh/plugboard-dev/plugboard" >
     <img src="https://codecov.io/gh/plugboard-dev/plugboard/graph/badge.svg?token=4LU4K6TOLQ"/></a>
+  <a href="https://codspeed.io/plugboard-dev/plugboard?utm_source=badge">
+    <img src="https://img.shields.io/endpoint?url=https://codspeed.io/badge.json" alt="CodSpeed Badge"/></a>
   <br>
   <a href="https://docs.plugboard.dev" alt="Documentation">
     <img alt="Docs" src="https://github.com/plugboard-dev/plugboard/actions/workflows/docs.yaml/badge.svg"></a>
