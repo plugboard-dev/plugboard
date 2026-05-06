@@ -11,6 +11,7 @@ import pytest_cases
 from plugboard.component import Component, IOController
 from plugboard.connector import AsyncioConnector, Connector, ConnectorBuilder
 from plugboard.events import Event
+from plugboard.events.event import StopEvent
 from plugboard.schemas import ConnectorSpec
 from tests.conftest import zmq_connector_cls
 
@@ -272,3 +273,106 @@ async def test_component_event_handlers_with_field_inputs(
     assert getattr(a, "in_2", None) == 6
 
     await a.io.close()
+
+
+class B(Component):
+    """B test component."""
+
+    io = IOController(inputs=["a", "b"], input_events=[EventTypeA, EventTypeB])
+
+    def __init__(self: _t.Self, *args: _t.Any, **kwargs: _t.Any) -> None:
+        super().__init__(*args, **kwargs)
+        self.hist_a: list[int] = []
+        self.hist_b: list[int] = []
+
+    async def step(self) -> None:
+        """A test step."""
+        pass
+
+    @EventTypeA.handler(populates_fields=["a"])
+    async def event_A_handler(self, evt: EventTypeA) -> None:
+        """A test event handler."""
+        self.a = evt.data.x
+        self.hist_a.append(self.a)
+
+    @EventTypeB.handler(populates_fields=["b"])
+    async def event_B_handler(self, evt: EventTypeB) -> None:
+        """A test event handler."""
+        self.b = evt.data.y
+        self.hist_b.append(self.b)
+
+
+async def test_component_event_handlers_populates_fields(
+    connector_builder: ConnectorBuilder,
+) -> None:
+    """Test that event handlers can populate fields for components."""
+    b = B(name="b")
+
+    assert b.io.event_field_coverage == {
+        EventTypeA.safe_type(): ["a"],
+        EventTypeB.safe_type(): ["b"],
+    }
+
+    assert b.io.dict() == {
+        "namespace": "b",
+        "inputs": ["a", "b"],
+        "outputs": [],
+        "input_events": [StopEvent.safe_type(), EventTypeA.safe_type(), EventTypeB.safe_type()],
+        "output_events": [StopEvent.safe_type()],
+        "event_field_coverage": {
+            EventTypeA.safe_type(): ["a"],
+            EventTypeB.safe_type(): ["b"],
+        },
+        "initial_values": {},
+    }
+
+    connectors = connector_builder.build_event_connectors([b])
+    event_connectors_map = {conn.spec.source.entity: conn for conn in connectors}
+
+    await b.io.connect(connectors)
+
+    assert b.hist_a == []
+    assert b.hist_b == []
+    assert getattr(b, "a", None) is None
+    assert getattr(b, "b", None) is None
+
+    chan_A = await event_connectors_map[EventTypeA.safe_type()].connect_send()
+    chan_B = await event_connectors_map[EventTypeB.safe_type()].connect_send()
+
+    evt_A = EventTypeA(data=EventTypeAData(x=2), source="test-driver")
+    await chan_A.send(evt_A)
+    await b.step()
+
+    assert b.hist_a == [2]
+    assert b.hist_b == []
+    assert getattr(b, "a", None) == 2
+    assert getattr(b, "b", None) is None
+
+    evt_B = EventTypeB(data=EventTypeBData(y=4), source="test-driver")
+    await chan_B.send(evt_B)
+    await b.step()
+
+    assert b.hist_a == [2]
+    assert b.hist_b == [4]
+    assert getattr(b, "a", None) == 2
+    assert getattr(b, "b", None) == 4
+
+    evt_A = EventTypeA(data=EventTypeAData(x=3), source="test-driver")
+    await chan_A.send(evt_A)
+    await b.step()
+
+    assert b.hist_a == [2, 3]
+    assert b.hist_b == [4]
+    assert getattr(b, "a", None) == 3
+    assert getattr(b, "b", None) == 4
+
+    evt_B = EventTypeB(data=EventTypeBData(y=5), source="test-driver")
+    await chan_B.send(evt_B)
+    await b.step()
+
+    assert b.hist_a == [2, 3]
+    assert b.hist_b == [4, 5]
+    assert getattr(b, "a", None) == 3
+    assert getattr(b, "b", None) == 5
+
+    await b.io.close()

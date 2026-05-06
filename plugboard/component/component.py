@@ -95,6 +95,7 @@ class Component(ABC, ExportMixin):
             initial_values=self._initial_values,
             input_events=self.__class__.io.input_events,
             output_events=self.__class__.io.output_events,
+            event_field_coverage=self.__class__.io.event_field_coverage,
             namespace=self.name,
             component=self,
         )
@@ -143,10 +144,9 @@ class Component(ABC, ExportMixin):
         return self._parameters
 
     @classmethod
-    def _configure_io(cls) -> None:
-        # Get all parent classes that are Component subclasses
+    def _get_aggregated_io_args(cls) -> tuple[dict[str, set], list[str]]:
+        """Get combined set of all io arguments and exports from this class and all parents."""
         parent_comps = cls._get_component_bases()
-        # Create combined set of all io arguments from this class and all parents
         io_args: dict[str, set] = defaultdict(set)
         exports: list[str] = []
         for c in parent_comps + [cls]:
@@ -157,12 +157,30 @@ class Component(ABC, ExportMixin):
                 io_args["output_events"].update(c_io.output_events)
             if c_exports := getattr(c, "exports"):
                 exports.extend(c_exports)
+        return io_args, exports
+
+    @classmethod
+    def _get_event_field_coverage(cls) -> dict[str, list[str]]:
+        """Get event field coverage from all handlers in this class and all parents."""
+        event_field_coverage = {}
+        for attr_name in dir(cls):
+            attr = getattr(cls, attr_name, None)
+            if callable(attr) and hasattr(attr, "_event_field_coverage"):
+                event_field_coverage.update(attr._event_field_coverage)
+        return event_field_coverage
+
+    @classmethod
+    def _configure_io(cls) -> None:
+        # Get all parent classes that are Component subclasses
+        io_args, exports = cls._get_aggregated_io_args()
+        event_field_coverage = cls._get_event_field_coverage()
         # Set io arguments for subclass
         cls.io = IO(
             inputs=sorted(io_args["inputs"], key=str),
             outputs=sorted(io_args["outputs"], key=str),
             input_events=sorted(io_args["input_events"], key=str),
             output_events=sorted(io_args["output_events"], key=str),
+            event_field_coverage=event_field_coverage,
         )
         # Set exports for subclass
         cls.exports = sorted(set(exports))
@@ -356,7 +374,7 @@ class Component(ABC, ExportMixin):
                         raise e
                 self._bind_outputs()
                 await self.io.write()
-                self._field_inputs_ready = False
+                self._reset_input_trackers()
                 await self._set_status(Status.WAITING, publish=not self._is_running)
 
         return _wrapper
@@ -364,6 +382,11 @@ class Component(ABC, ExportMixin):
     @cached_property
     def _has_field_inputs(self) -> bool:
         return len(self.io.inputs) > 0
+
+    @property
+    def _has_connected_field_inputs(self) -> bool:
+        """Whether any declared field inputs are connected via input channels."""
+        return self.io.has_connected_field_inputs
 
     @cached_property
     def _has_event_inputs(self) -> bool:
@@ -409,7 +432,7 @@ class Component(ABC, ExportMixin):
             task.cancel()
         for task in done:
             exc = task.exception()
-            if isinstance(exc, EventStreamClosedError) and len(self.io.inputs) == 0:
+            if isinstance(exc, EventStreamClosedError) and not self._has_connected_field_inputs:
                 await self.io.close()  # Call close for final wait and flush event buffer
             elif exc is not None:
                 raise exc
@@ -422,7 +445,7 @@ class Component(ABC, ExportMixin):
             # TODO : Eventually producer graph update will be event driven. For now,
             #      : the update is performed periodically, so it's called here along
             #      : with the status check.
-            if len(self.io.inputs) == 0:
+            if not self._has_connected_field_inputs:
                 await self._update_producer_graph()
 
     async def _status_check(self) -> None:
@@ -455,8 +478,11 @@ class Component(ABC, ExportMixin):
         for field in self.io.inputs:
             field_default = getattr(self, field, None)
             value = self._field_inputs.get(field, field_default)
-            setattr(self, field, value)
+            super().__setattr__(field, value)
+
+    def _reset_input_trackers(self) -> None:
         self._field_inputs = {}
+        self._field_inputs_ready = False
 
     def _bind_outputs(self) -> None:
         """Binds component fields to output fields."""
