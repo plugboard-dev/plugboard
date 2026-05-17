@@ -228,6 +228,8 @@ def test_cli_ai_agents_template_is_packaged_file() -> None:
     ("as_package", "include_hidden_dir", "expected_component_name"),
     [
         (True, False, None),
+        (True, True, None),
+        (False, False, "VisibleComponent"),
         (False, True, "VisibleComponent"),
     ],
 )
@@ -268,6 +270,7 @@ def test_cli_server_discover(
 
         # CLI must run without error
         assert result.exit_code == 0
+        assert result.exception is None
         assert "Discovery complete" in result.stdout
 
         # At minimum, should have discovered plugboard's built-in types
@@ -277,7 +280,6 @@ def test_cli_server_discover(
         assert event_route.called
         assert process_route.called
         if expected_component_name is not None:
-            assert result.exception is None
             assert any(
                 json.loads(call.request.content)["name"] == expected_component_name
                 for call in component_route.calls
