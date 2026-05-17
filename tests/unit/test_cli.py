@@ -154,11 +154,17 @@ def test_cli_ai_init(tmp_path: Path) -> None:
     assert result.exit_code == 0
     assert "Created" in result.stdout
     agents_md = tmp_path / "AGENTS.md"
-    skill_md = tmp_path / "skills" / "create-yaml-config" / "SKILLS.md"
+    skills_dir = tmp_path / "skills"
+    skill_files = sorted(skills_dir.glob("*/SKILLS.md"))
     assert agents_md.exists()
-    assert skill_md.exists()
+    assert len(skill_files) == 4
     assert "serialisable" in agents_md.read_text()
-    assert "process.dump" in skill_md.read_text()
+    assert "process.dump" in (skills_dir / "create-yaml-config" / "SKILLS.md").read_text()
+    process_diagram_skill = skills_dir / "process-diagram" / "SKILLS.md"
+    run_process_skill = skills_dir / "run-process-scenario" / "SKILLS.md"
+    assert "plugboard process diagram" in process_diagram_skill.read_text()
+    assert "plugboard process run" in run_process_skill.read_text()
+    assert "`tune` section" in (skills_dir / "configure-tune" / "SKILLS.md").read_text()
 
 
 def test_cli_ai_init_already_exists(tmp_path: Path) -> None:

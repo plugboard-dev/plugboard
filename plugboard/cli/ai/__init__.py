@@ -37,10 +37,10 @@ def init(
 
     agents_target = directory / "AGENTS.md"
     skills_target = directory / "skills"
-    conflicts = [path.name for path in (agents_target, skills_target) if path.exists()]
+    existing_paths = [path.name for path in (agents_target, skills_target) if path.exists()]
 
-    if conflicts:
-        existing = ", ".join(conflicts)
+    if existing_paths:
+        existing = ", ".join(existing_paths)
         stderr.print(
             "[red]Cannot initialise AI files[/red]: "
             f"{existing} already exists in the target directory."
