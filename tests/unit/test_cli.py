@@ -7,6 +7,7 @@ marked async so that they do not interfere with pytest-asyncio's event loop.
 import json
 from pathlib import Path
 import tempfile
+import textwrap
 import typing as _t
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -233,11 +234,16 @@ def test_cli_server_discover_ignores_hidden_directories(tmp_path: Path) -> None:
     project_dir = tmp_path / "test_project"
     project_dir.mkdir()
     (project_dir / "test_file.py").write_text(
-        "from plugboard.component import Component, IOController as IO\n\n"
-        "class VisibleComponent(Component):\n"
-        "    io = IO(outputs=['out'])\n\n"
-        "    async def step(self) -> None:\n"
-        "        self.out = 1\n"
+        textwrap.dedent("""
+        from plugboard.component import Component, IOController as IO
+
+
+        class VisibleComponent(Component):
+            io = IO(outputs=["out"])
+
+            async def step(self) -> None:
+                self.out = 1
+        """).strip()
     )
     hidden_dir = project_dir / ".venv"
     hidden_dir.mkdir()
@@ -263,6 +269,7 @@ def test_cli_server_discover_ignores_hidden_directories(tmp_path: Path) -> None:
         )
 
     assert result.exit_code == 0
+    assert result.exception is None
     assert "Discovery complete" in result.stdout
     assert any(
         json.loads(call.request.content)["name"] == "VisibleComponent"
