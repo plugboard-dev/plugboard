@@ -22,6 +22,41 @@ from plugboard.cli.ai import _AGENTS_MD
 runner = CliRunner()
 
 
+def _create_test_project(
+    base_path: Path,
+    *,
+    as_package: bool = True,
+    include_hidden_dir: bool = False,
+) -> Path:
+    """Create a minimal Python project for CLI discovery tests."""
+    project_dir = base_path / "test_project"
+    project_dir.mkdir()
+
+    if as_package:
+        (project_dir / "__init__.py").write_text("")
+        (project_dir / "test_file.py").write_text("")
+    else:
+        (project_dir / "test_file.py").write_text(
+            textwrap.dedent("""
+            from plugboard.component import Component, IOController as IO
+
+
+            class VisibleComponent(Component):
+                io = IO(outputs=["out"])
+
+                async def step(self) -> None:
+                    self.out = 1
+            """).strip()
+        )
+
+    if include_hidden_dir:
+        hidden_dir = project_dir / ".venv"
+        hidden_dir.mkdir()
+        (hidden_dir / "bad_module.py").write_text('raise RuntimeError("should not import")')
+
+    return project_dir
+
+
 def test_cli_version() -> None:
     """Tests the version command."""
     result = runner.invoke(app, ["version"])
@@ -37,11 +72,7 @@ def test_cli_version() -> None:
 def test_project_dir() -> _t.Iterator[Path]:
     """Create a minimal Python package for testing."""
     with tempfile.TemporaryDirectory() as tmpdir:
-        project_dir = Path(tmpdir) / "test_project"
-        project_dir.mkdir()
-        (project_dir / "__init__.py").write_text("")
-        (project_dir / "test_file.py").write_text("")
-        yield project_dir
+        yield _create_test_project(Path(tmpdir))
 
 
 @pytest.mark.asyncio
@@ -193,8 +224,26 @@ def test_cli_ai_agents_template_is_packaged_file() -> None:
     assert not _AGENTS_MD.is_symlink()
 
 
-def test_cli_server_discover(test_project_dir: Path) -> None:
+@pytest.mark.parametrize(
+    ("as_package", "include_hidden_dir", "expected_component_name"),
+    [
+        (True, False, None),
+        (False, True, "VisibleComponent"),
+    ],
+)
+def test_cli_server_discover(
+    tmp_path: Path,
+    as_package: bool,
+    include_hidden_dir: bool,
+    expected_component_name: str | None,
+) -> None:
     """Tests the server discover command."""
+    project_dir = _create_test_project(
+        tmp_path,
+        as_package=as_package,
+        include_hidden_dir=include_hidden_dir,
+    )
+
     with respx.mock:
         # Mock all the API endpoints
         component_route = respx.post("http://test:8000/types/component").respond(
@@ -211,7 +260,7 @@ def test_cli_server_discover(test_project_dir: Path) -> None:
             [
                 "server",
                 "discover",
-                str(test_project_dir),
+                str(project_dir),
                 "--api-url",
                 "http://test:8000",
             ],
@@ -227,54 +276,12 @@ def test_cli_server_discover(test_project_dir: Path) -> None:
         assert connector_route.called
         assert event_route.called
         assert process_route.called
-
-
-def test_cli_server_discover_ignores_hidden_directories(tmp_path: Path) -> None:
-    """Tests the server discover command ignores hidden directories like .venv."""
-    project_dir = tmp_path / "test_project"
-    project_dir.mkdir()
-    (project_dir / "test_file.py").write_text(
-        textwrap.dedent("""
-        from plugboard.component import Component, IOController as IO
-
-
-        class VisibleComponent(Component):
-            io = IO(outputs=["out"])
-
-            async def step(self) -> None:
-                self.out = 1
-        """).strip()
-    )
-    hidden_dir = project_dir / ".venv"
-    hidden_dir.mkdir()
-    (hidden_dir / "bad_module.py").write_text('raise RuntimeError("should not import")')
-
-    with respx.mock:
-        component_route = respx.post("http://test:8000/types/component").respond(
-            json={"status": "ok"}
-        )
-        respx.post("http://test:8000/types/connector").respond(json={"status": "ok"})
-        respx.post("http://test:8000/types/event").respond(json={"status": "ok"})
-        respx.post("http://test:8000/types/process").respond(json={"status": "ok"})
-
-        result = runner.invoke(
-            app,
-            [
-                "server",
-                "discover",
-                str(project_dir),
-                "--api-url",
-                "http://test:8000",
-            ],
-        )
-
-    assert result.exit_code == 0
-    assert result.exception is None
-    assert "Discovery complete" in result.stdout
-    assert any(
-        json.loads(call.request.content)["name"] == "VisibleComponent"
-        for call in component_route.calls
-    )
+        if expected_component_name is not None:
+            assert result.exception is None
+            assert any(
+                json.loads(call.request.content)["name"] == expected_component_name
+                for call in component_route.calls
+            )
 
 
 def test_cli_server_discover_with_env_var(test_project_dir: Path) -> None:

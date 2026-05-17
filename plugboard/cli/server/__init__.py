@@ -2,7 +2,6 @@
 
 import importlib
 import inspect
-import os
 from pathlib import Path
 import typing as _t
 
@@ -43,22 +42,29 @@ async def _post_to_api(url: str, data: dict) -> None:
 def _import_recursive(path: Path, base_package: _t.Optional[str] = None) -> None:
     """Import all modules recursively from the given path."""
     logger = DI.logger.resolve_sync()
-    for root, dirs, files in os.walk(path):
-        # Update dirs in place so os.walk skips hidden directories like .venv.
-        dirs[:] = [directory for directory in dirs if not directory.startswith(".")]
-        for file in files:
-            if file.endswith(".py") and not file.startswith("__"):
-                # Construct module name
-                rel_path = os.path.relpath(os.path.join(root, file), path)
-                module_name = rel_path.replace(os.sep, ".")[:-3]
 
-                if base_package:
-                    module_name = f"{base_package}.{module_name}"
+    def _walk(current_path: Path) -> None:
+        for child in current_path.iterdir():
+            if child.name.startswith("."):
+                continue
 
-                try:
-                    importlib.import_module(module_name)
-                except (ModuleNotFoundError, ImportError, SyntaxError) as e:
-                    logger.warning(f"Failed to import module {module_name}: {e}")
+            if child.is_dir():
+                _walk(child)
+                continue
+
+            if child.suffix != ".py" or child.name.startswith("__"):
+                continue
+
+            module_name = ".".join(child.relative_to(path).with_suffix("").parts)
+            if base_package:
+                module_name = f"{base_package}.{module_name}"
+
+            try:
+                importlib.import_module(module_name)
+            except (ModuleNotFoundError, ImportError, SyntaxError) as e:
+                logger.warning(f"Failed to import module {module_name}: {e}")
+
+    _walk(path)
 
 
 def _get_all_subclasses(cls: type) -> set:
