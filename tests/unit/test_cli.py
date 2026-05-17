@@ -4,6 +4,7 @@ Note: Tests which run async code synchronously from CLI entrypoints must be
 marked async so that they do not interfere with pytest-asyncio's event loop.
 """
 
+import json
 from pathlib import Path
 import tempfile
 import typing as _t
@@ -231,13 +232,21 @@ def test_cli_server_discover_ignores_hidden_directories(tmp_path: Path) -> None:
     """Tests the server discover command ignores hidden directories like .venv."""
     project_dir = tmp_path / "test_project"
     project_dir.mkdir()
-    (project_dir / "test_file.py").write_text("")
+    (project_dir / "test_file.py").write_text(
+        "from plugboard.component import Component, IOController as IO\n\n"
+        "class VisibleComponent(Component):\n"
+        "    io = IO(outputs=['out'])\n\n"
+        "    async def step(self) -> None:\n"
+        "        self.out = 1\n"
+    )
     hidden_dir = project_dir / ".venv"
     hidden_dir.mkdir()
     (hidden_dir / "bad_module.py").write_text('raise RuntimeError("should not import")')
 
     with respx.mock:
-        respx.post("http://test:8000/types/component").respond(json={"status": "ok"})
+        component_route = respx.post("http://test:8000/types/component").respond(
+            json={"status": "ok"}
+        )
         respx.post("http://test:8000/types/connector").respond(json={"status": "ok"})
         respx.post("http://test:8000/types/event").respond(json={"status": "ok"})
         respx.post("http://test:8000/types/process").respond(json={"status": "ok"})
@@ -255,6 +264,10 @@ def test_cli_server_discover_ignores_hidden_directories(tmp_path: Path) -> None:
 
     assert result.exit_code == 0
     assert "Discovery complete" in result.stdout
+    assert any(
+        json.loads(call.request.content)["name"] == "VisibleComponent"
+        for call in component_route.calls
+    )
 
 
 def test_cli_server_discover_with_env_var(test_project_dir: Path) -> None:

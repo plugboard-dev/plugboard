@@ -44,6 +44,7 @@ def _import_recursive(path: Path, base_package: _t.Optional[str] = None) -> None
     """Import all modules recursively from the given path."""
     logger = DI.logger.resolve_sync()
     for root, dirs, files in os.walk(path):
+        # Update dirs in place so os.walk skips hidden directories like .venv.
         dirs[:] = [directory for directory in dirs if not directory.startswith(".")]
         for file in files:
             if file.endswith(".py") and not file.startswith("__"):
