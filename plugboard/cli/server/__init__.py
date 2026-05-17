@@ -49,8 +49,8 @@ def _import_recursive(path: Path, base_package: _t.Optional[str] = None) -> None
         for file in files:
             if file.endswith(".py") and not file.startswith("__"):
                 # Construct module name
-                rel_path = os.path.relpath(os.path.join(root, file), path)
-                module_name = rel_path.replace(os.sep, ".")[:-3]
+                rel_path = Path(root, file).relative_to(path)
+                module_name = ".".join(rel_path.with_suffix("").parts)
 
                 if base_package:
                     module_name = f"{base_package}.{module_name}"
