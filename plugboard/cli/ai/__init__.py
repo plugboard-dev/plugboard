@@ -42,7 +42,8 @@ def init(
     if conflicts:
         existing = ", ".join(conflicts)
         stderr.print(
-            f"[red]Cannot initialise AI files[/red]: {existing} already exists in the target directory."
+            "[red]Cannot initialise AI files[/red]: "
+            f"{existing} already exists in the target directory."
         )
         raise typer.Exit(1)
 
