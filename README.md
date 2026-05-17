@@ -76,7 +76,7 @@ The fastest way to get started is to let your AI coding assistant build your fir
 plugboard ai init
 ```
 
-This copies a context file (`AGENTS.md`) into your project that gives your AI tool everything it needs to know about Plugboard: how components work, how to wire them together, library components that are already available, and best practices for building models.
+This copies a context file (`AGENTS.md`) and a `skills/` directory into your project so your AI tool has Plugboard-specific guidance for structuring models, keeping component arguments YAML-friendly, exporting configs, generating diagrams, running scenarios, and setting up tuning.
 
 Once initialised, simply open your AI tool of choice (GitHub Copilot, Cursor, Claude, etc.) and describe the model you want to build. For example:
 

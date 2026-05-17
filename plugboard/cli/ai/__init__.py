@@ -14,28 +14,39 @@ app = typer.Typer(
 stderr = Console(stderr=True)
 
 _AGENTS_MD = Path(__file__).parent / "AGENTS.md"
+_SKILLS_DIR = Path(__file__).parent / "skills"
 
 
 @app.command()
 def init(
     directory: Path = typer.Argument(
         default=None,
-        help="Target directory for the AGENTS.md file. Defaults to the current working directory.",
+        help=(
+            "Target directory for the AGENTS.md file and skills directory. "
+            "Defaults to the current working directory."
+        ),
         exists=True,
         file_okay=False,
         dir_okay=True,
         resolve_path=True,
     ),
 ) -> None:
-    """Initialise a project with an AGENTS.md file for AI-assisted development."""
+    """Initialise a project with Plugboard AI guidance files."""
     if directory is None:
         directory = Path.cwd()
 
-    target = directory / "AGENTS.md"
+    agents_target = directory / "AGENTS.md"
+    skills_target = directory / "skills"
+    conflicts = [path.name for path in (agents_target, skills_target) if path.exists()]
 
-    if target.exists():
-        stderr.print("[red]AGENTS.md already exists[/red] in the target directory.")
+    if conflicts:
+        existing = ", ".join(conflicts)
+        stderr.print(
+            f"[red]Cannot initialise AI files[/red]: {existing} already exists in the target directory."
+        )
         raise typer.Exit(1)
 
-    shutil.copy2(_AGENTS_MD, target)
-    print(f"[green]Created[/green] {target}")
+    shutil.copy2(_AGENTS_MD, agents_target)
+    shutil.copytree(_SKILLS_DIR, skills_target)
+    print(f"[green]Created[/green] {agents_target}")
+    print(f"[green]Created[/green] {skills_target}")

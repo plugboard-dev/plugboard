@@ -14,7 +14,7 @@ import respx
 from typer.testing import CliRunner
 
 from plugboard.cli import app
-from plugboard.cli.ai import _AGENTS_MD
+from plugboard.cli.ai import _AGENTS_MD, _SKILLS_DIR
 
 
 runner = CliRunner()
@@ -149,15 +149,16 @@ def test_cli_process_validate_invalid() -> None:
 
 
 def test_cli_ai_init(tmp_path: Path) -> None:
-    """Tests the ai init command creates AGENTS.md."""
+    """Tests the ai init command creates AGENTS.md and skills."""
     result = runner.invoke(app, ["ai", "init", str(tmp_path)])
     assert result.exit_code == 0
     assert "Created" in result.stdout
-    # File must exist with expected content
     agents_md = tmp_path / "AGENTS.md"
+    skill_md = tmp_path / "skills" / "create-yaml-config" / "SKILLS.md"
     assert agents_md.exists()
-    content = agents_md.read_text()
-    assert "Plugboard" in content
+    assert skill_md.exists()
+    assert "serialisable" in agents_md.read_text()
+    assert "process.dump" in skill_md.read_text()
 
 
 def test_cli_ai_init_already_exists(tmp_path: Path) -> None:
@@ -165,8 +166,15 @@ def test_cli_ai_init_already_exists(tmp_path: Path) -> None:
     (tmp_path / "AGENTS.md").write_text("existing content")
     result = runner.invoke(app, ["ai", "init", str(tmp_path)])
     assert result.exit_code == 1
-    # Error is printed to stderr which typer captures in output
     assert "already exists" in result.output
+
+
+def test_cli_ai_init_fails_when_skills_directory_exists(tmp_path: Path) -> None:
+    """Tests the ai init command fails when the skills directory already exists."""
+    (tmp_path / "skills").mkdir()
+    result = runner.invoke(app, ["ai", "init", str(tmp_path)])
+    assert result.exit_code == 1
+    assert "skills" in result.output
 
 
 def test_cli_ai_init_default_directory() -> None:
@@ -180,15 +188,26 @@ def test_cli_ai_init_default_directory() -> None:
             result = runner.invoke(app, ["ai", "init"])
             assert result.exit_code == 0
             assert (Path(tmpdir) / "AGENTS.md").exists()
+            assert (Path(tmpdir) / "skills" / "process-diagram" / "SKILLS.md").exists()
         finally:
             os.chdir(original_cwd)
 
 
 def test_cli_ai_agents_template_is_packaged_file() -> None:
-    """Tests the AI template is a real package file rather than a symlink."""
+    """Tests the AGENTS template is a real package file rather than a symlink."""
     assert _AGENTS_MD.exists()
     assert _AGENTS_MD.is_file()
     assert not _AGENTS_MD.is_symlink()
+
+
+def test_cli_ai_skills_templates_are_packaged_files() -> None:
+    """Tests the skills templates are real package files rather than symlinks."""
+    skill_files = sorted(_SKILLS_DIR.glob("*/SKILLS.md"))
+    assert skill_files
+    for skill_file in skill_files:
+        assert skill_file.exists()
+        assert skill_file.is_file()
+        assert not skill_file.is_symlink()
 
 
 def test_cli_server_discover(test_project_dir: Path) -> None:
