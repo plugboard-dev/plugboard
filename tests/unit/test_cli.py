@@ -227,6 +227,36 @@ def test_cli_server_discover(test_project_dir: Path) -> None:
         assert process_route.called
 
 
+def test_cli_server_discover_ignores_hidden_directories(tmp_path: Path) -> None:
+    """Tests the server discover command ignores hidden directories like .venv."""
+    project_dir = tmp_path / "test_project"
+    project_dir.mkdir()
+    (project_dir / "test_file.py").write_text("")
+    hidden_dir = project_dir / ".venv"
+    hidden_dir.mkdir()
+    (hidden_dir / "bad_module.py").write_text('raise RuntimeError("should not import")')
+
+    with respx.mock:
+        respx.post("http://test:8000/types/component").respond(json={"status": "ok"})
+        respx.post("http://test:8000/types/connector").respond(json={"status": "ok"})
+        respx.post("http://test:8000/types/event").respond(json={"status": "ok"})
+        respx.post("http://test:8000/types/process").respond(json={"status": "ok"})
+
+        result = runner.invoke(
+            app,
+            [
+                "server",
+                "discover",
+                str(project_dir),
+                "--api-url",
+                "http://test:8000",
+            ],
+        )
+
+    assert result.exit_code == 0
+    assert "Discovery complete" in result.stdout
+
+
 def test_cli_server_discover_with_env_var(test_project_dir: Path) -> None:
     """Tests the server discover command with environment variable."""
     with respx.mock:
