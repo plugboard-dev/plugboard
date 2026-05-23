@@ -95,6 +95,7 @@ def _make_component(
     outputs: list[str] | None = None,
     input_events: list[str] | None = None,
     output_events: list[str] | None = None,
+    event_field_coverage: dict[str, list[str]] | None = None,
     initial_values: dict[str, _t.Any] | None = None,
 ) -> dict[str, _t.Any]:
     """Build a component dict matching process.dict() format."""
@@ -108,6 +109,7 @@ def _make_component(
             "outputs": outputs or [],
             "input_events": input_events or [],
             "output_events": output_events or [],
+            "event_field_coverage": event_field_coverage or {},
             "initial_values": initial_values or {},
         },
     }
@@ -299,6 +301,22 @@ class TestValidateAllInputsConnected:
         """Test that validation passes when components have no inputs."""
         pd = _make_process_dict(
             components={"a": _make_component("a")},
+        )
+        errors = validate_all_inputs_connected(pd)
+        assert errors == []
+
+    def test_event_covered_fields(self) -> None:
+        """Unconnected inputs are allowed when non-system input events can populate them."""
+        pd = _make_process_dict(
+            components={
+                "producer": _make_component("producer", output_events=["message_event"]),
+                "writer": _make_component(
+                    "writer",
+                    inputs=["message"],
+                    input_events=["system_stop", "message_event"],
+                    event_field_coverage={"message_event": ["message"]},
+                ),
+            },
         )
         errors = validate_all_inputs_connected(pd)
         assert errors == []
