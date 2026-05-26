@@ -1,4 +1,9 @@
-# Skill: Add a `tune` section to a Plugboard YAML config
+---
+name: configure-tune
+description: Add and shape a tune section in a Plugboard YAML configuration.
+---
+
+# Add a `tune` section to a Plugboard YAML config
 
 ## Use this skill when
 

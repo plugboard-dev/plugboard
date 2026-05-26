@@ -149,22 +149,33 @@ def test_cli_process_validate_invalid() -> None:
 
 
 def test_cli_ai_init(tmp_path: Path) -> None:
-    """Tests the ai init command creates AGENTS.md and skills."""
+    """Tests the ai init command creates AGENTS.md and agent-style skills."""
     result = runner.invoke(app, ["ai", "init", str(tmp_path)])
     assert result.exit_code == 0
     assert "Created" in result.stdout
     agents_md = tmp_path / "AGENTS.md"
-    skills_dir = tmp_path / "skills"
-    skill_files = sorted(skills_dir.glob("*/SKILLS.md"))
+    skills_dir = tmp_path / ".agents" / "skills"
+    skill_files = sorted(skills_dir.glob("*/SKILL.md"))
     assert agents_md.exists()
     assert len(skill_files) == 4
     assert "serialisable" in agents_md.read_text()
-    assert "process.dump" in (skills_dir / "create-yaml-config" / "SKILLS.md").read_text()
-    process_diagram_skill = skills_dir / "process-diagram" / "SKILLS.md"
-    run_process_skill = skills_dir / "run-process-scenario" / "SKILLS.md"
+    yaml_skill = skills_dir / "create-yaml-config" / "SKILL.md"
+    process_diagram_skill = skills_dir / "process-diagram" / "SKILL.md"
+    run_process_skill = skills_dir / "run-process-scenario" / "SKILL.md"
+    tune_skill = skills_dir / "configure-tune" / "SKILL.md"
+    assert yaml_skill.read_text().startswith("---\nname: create-yaml-config\n")
+    assert "process.dump" in yaml_skill.read_text()
     assert "plugboard process diagram" in process_diagram_skill.read_text()
     assert "plugboard process run" in run_process_skill.read_text()
-    assert "`tune` section" in (skills_dir / "configure-tune" / "SKILLS.md").read_text()
+    assert "`tune` section" in tune_skill.read_text()
+
+
+def test_cli_ai_init_github_style(tmp_path: Path) -> None:
+    """Tests the ai init command creates GitHub-style skills when requested."""
+    result = runner.invoke(app, ["ai", "init", "--style", "github", str(tmp_path)])
+    assert result.exit_code == 0
+    assert (tmp_path / "AGENTS.md").exists()
+    assert (tmp_path / ".github" / "skills" / "process-diagram" / "SKILL.md").exists()
 
 
 def test_cli_ai_init_already_exists(tmp_path: Path) -> None:
@@ -176,8 +187,8 @@ def test_cli_ai_init_already_exists(tmp_path: Path) -> None:
 
 
 def test_cli_ai_init_fails_when_skills_directory_exists(tmp_path: Path) -> None:
-    """Tests the ai init command fails when the skills directory already exists."""
-    (tmp_path / "skills").mkdir()
+    """Tests the ai init command fails when the selected skills directory already exists."""
+    (tmp_path / ".agents" / "skills").mkdir(parents=True)
     result = runner.invoke(app, ["ai", "init", str(tmp_path)])
     assert result.exit_code == 1
     assert "skills" in result.output
@@ -194,7 +205,7 @@ def test_cli_ai_init_default_directory() -> None:
             result = runner.invoke(app, ["ai", "init"])
             assert result.exit_code == 0
             assert (Path(tmpdir) / "AGENTS.md").exists()
-            assert (Path(tmpdir) / "skills" / "process-diagram" / "SKILLS.md").exists()
+            assert (Path(tmpdir) / ".agents" / "skills" / "process-diagram" / "SKILL.md").exists()
         finally:
             os.chdir(original_cwd)
 
@@ -208,7 +219,7 @@ def test_cli_ai_agents_template_is_packaged_file() -> None:
 
 def test_cli_ai_skills_templates_are_packaged_files() -> None:
     """Tests the skills templates are real package files rather than symlinks."""
-    skill_files = sorted(_SKILLS_DIR.glob("*/SKILLS.md"))
+    skill_files = sorted(_SKILLS_DIR.glob("*/SKILL.md"))
     assert skill_files
     for skill_file in skill_files:
         assert skill_file.exists()

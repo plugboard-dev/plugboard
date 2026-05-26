@@ -1,4 +1,9 @@
-# Skill: Create a diagram from a Plugboard process
+---
+name: process-diagram
+description: Generate a Mermaid diagram from a Plugboard YAML process configuration.
+---
+
+# Create a diagram from a Plugboard process
 
 ## Use this skill when
 
@@ -11,7 +16,7 @@ Create a diagram from a Plugboard process using the CLI.
 
 ## Instructions
 
-1. Work from a YAML config whenever possible. If the process only exists in Python, first create a YAML config using the `skills/create-yaml-config/SKILLS.md` guidance.
+1. Work from a YAML config whenever possible. If the process only exists in Python, first use the `create-yaml-config` skill at `../create-yaml-config/SKILL.md`.
 2. Confirm which YAML config should be used. If the user wants the diagram saved to a file, plan to capture the CLI output.
 3. Run:
 

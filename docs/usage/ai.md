@@ -4,7 +4,7 @@ Plugboard ships with tooling to help AI coding agents understand how to build mo
 
 ## Initialising a project
 
-The `plugboard ai init` command creates an `AGENTS.md` file and a `skills/` directory in your project directory. Together they give AI coding agents the context they need to help you build, export, visualise, run, and tune Plugboard models.
+The `plugboard ai init` command creates an `AGENTS.md` file and installs Agent Skills in your project directory. Together they give AI coding agents the context they need to help you build, export, visualise, run, and tune Plugboard models.
 
 `AGENTS.md` is a convention used by AI coding tools (such as [Claude Code](https://docs.anthropic.com/en/docs/agents-and-tools/claude-code/overview), [Codex](https://openai.com/index/codex/), and [Gemini CLI](https://github.com/google-gemini/gemini-cli)) to discover project-specific instructions automatically.
 
@@ -22,8 +22,14 @@ To create the file in a specific directory:
 plugboard ai init /path/to/project
 ```
 
+To choose where the skills are installed:
+
+```bash
+plugboard ai init --style github
+```
+
 !!! note
-    The command will not overwrite an existing `AGENTS.md` file or `skills/` directory. If either already exists in the target directory, the command exits with an error.
+    The command will not overwrite an existing `AGENTS.md` file or the selected skills directory. If either already exists in the target directory, the command exits with an error.
 
 ### What's installed?
 
@@ -37,7 +43,13 @@ The generated `AGENTS.md` covers:
 - **Event-driven models** — defining custom [`Event`][plugboard.events.Event] types, emitting events, and writing event handlers.
 - **Exporting models** — saving process definitions to YAML and running them via the CLI.
 
-The generated `skills/` directory includes reusable task guides for:
+The generated skills use the Agent Skills `SKILL.md` format with frontmatter, and are installed into one of these directories:
+
+- `.agents/skills/` for `--style agents` (default)
+- `.github/skills/` for `--style github`
+- `.claude/skills/` for `--style claude`
+
+The generated skills include reusable task guides for:
 
 - creating a YAML config from a model defined in Python
 - generating a process diagram with `plugboard process diagram`

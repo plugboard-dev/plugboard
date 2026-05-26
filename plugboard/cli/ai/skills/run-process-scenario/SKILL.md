@@ -1,4 +1,9 @@
-# Skill: Run a Plugboard process for a specific scenario
+---
+name: run-process-scenario
+description: Update a Plugboard YAML config for a requested scenario and run it with the CLI.
+---
+
+# Run a Plugboard process for a specific scenario
 
 ## Use this skill when
 
@@ -11,7 +16,7 @@ Create or update a YAML config for the requested scenario, then run it with `plu
 
 ## Instructions
 
-1. Make sure a YAML config exists for the model. If the model only exists in Python, create the YAML first using the `skills/create-yaml-config/SKILLS.md` guidance.
+1. Make sure a YAML config exists for the model. If the model only exists in Python, create the YAML first by using the `create-yaml-config` skill at `../create-yaml-config/SKILL.md`.
 2. Ask for any missing scenario inputs before running anything.
 3. Update the YAML config with the exact parameter values the user requested.
 4. Preserve a clear component structure that matches the real-world model. Do not collapse multiple entities into one component just to make the config shorter.

@@ -1,4 +1,9 @@
-# Skill: Create a YAML config from a Python-defined Plugboard model
+---
+name: create-yaml-config
+description: Create a YAML configuration from a Plugboard process defined in Python code.
+---
+
+# Create a YAML config from a Python-defined Plugboard model
 
 ## Use this skill when
 

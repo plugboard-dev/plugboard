@@ -32,12 +32,18 @@ Use this sequence when helping a user plan, implement, and run a Plugboard model
 
 ## Skill files
 
-Additional task-specific instructions are available in `./skills/`. When a user asks for one of these tasks, read the matching `SKILLS.md` file and follow it:
+Additional task-specific instructions are available in a style-specific skills directory. Depending on the setup, look under one of:
 
-- `skills/create-yaml-config/SKILLS.md`
-- `skills/process-diagram/SKILLS.md`
-- `skills/run-process-scenario/SKILLS.md`
-- `skills/configure-tune/SKILLS.md`
+- `./.agents/skills/`
+- `./.github/skills/`
+- `./.claude/skills/`
+
+When a user asks for one of these tasks, read the matching `SKILL.md` file and follow it:
+
+- `create-yaml-config/SKILL.md`
+- `process-diagram/SKILL.md`
+- `run-process-scenario/SKILL.md`
+- `configure-tune/SKILL.md`
 
 ## Planning a model
 
