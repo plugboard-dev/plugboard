@@ -38,6 +38,7 @@ class IOController:
         initial_values: _t.Optional[dict[str, _t.Iterable]] = None,
         input_events: _t.Optional[list[_t.Type[Event]]] = None,
         output_events: _t.Optional[list[_t.Type[Event]]] = None,
+        event_field_coverage: _t.Optional[dict[str, list[str]]] = None,
         namespace: str = IO_NS_UNSET,
         component: _t.Optional[Component] = None,
     ) -> None:
@@ -47,10 +48,27 @@ class IOController:
         self.initial_values = initial_values or {}
         self.input_events = input_events or []
         self.output_events = output_events or []
+        self.event_field_coverage = event_field_coverage or {}
         if set(self.initial_values.keys()) - set(self.inputs):
             raise ValueError("Initial values must be for input fields only.")
-        self._component = component
 
+        self._component = component
+        self._initial_values = {k: deque(v) for k, v in self.initial_values.items()}
+        self._input_event_types = {Event.safe_type(evt.type) for evt in self.input_events}
+        self._output_event_types = {Event.safe_type(evt.type) for evt in self.output_events}
+
+        self._logger = DI.logger.resolve_sync().bind(
+            cls=self.__class__.__name__, namespace=self.namespace
+        )
+        self._logger.info("IOController created")
+
+        # Initialise channel stores
+        self._input_channels: dict[tuple[str, str], Channel] = {}
+        self._output_channels: dict[tuple[str, str], Channel] = {}
+        self._input_event_channels: dict[str, Channel] = {}
+        self._output_event_channels: dict[str, Channel] = {}
+
+        # Initialise buffers
         self.buf_fields: dict[str, IOBuffer] = {
             _io_key_in: IOFieldBuffer(),
             _io_key_out: IOFieldBuffer(),
@@ -60,21 +78,9 @@ class IOController:
             _io_key_out: IOEventBuffer(),
         }
 
-        self._input_channels: dict[tuple[str, str], Channel] = {}
-        self._output_channels: dict[tuple[str, str], Channel] = {}
-        self._input_event_channels: dict[str, Channel] = {}
-        self._output_event_channels: dict[str, Channel] = {}
-        self._input_event_types = {Event.safe_type(evt.type) for evt in self.input_events}
-        self._output_event_types = {Event.safe_type(evt.type) for evt in self.output_events}
-        self._initial_values = {k: deque(v) for k, v in self.initial_values.items()}
-        self._read_tasks: dict[str | _t_field_key, asyncio.Task] = {}
+        # Initialise orchestration state
         self._is_closed = False
-
-        self._logger = DI.logger.resolve_sync().bind(
-            cls=self.__class__.__name__, namespace=self.namespace
-        )
-        self._logger.info("IOController created")
-
+        self._read_tasks: dict[str | _t_field_key, asyncio.Task] = {}
         self._received_fields: dict[str, _t.Any] = {}
         self._received_fields_lock = asyncio.Lock()
         self._received_events: deque[Event] = deque()
@@ -86,8 +92,9 @@ class IOController:
         """Returns `True` if the `IOController` is closed, `False` otherwise."""
         return self._is_closed
 
-    @cached_property
-    def _has_field_inputs(self) -> bool:
+    @property
+    def has_connected_field_inputs(self) -> bool:
+        """Returns whether any field inputs are connected via channels."""
         return len(self._input_channels) > 0
 
     @cached_property
@@ -96,7 +103,7 @@ class IOController:
 
     @cached_property
     def _has_inputs(self) -> bool:
-        return self._has_field_inputs or self._has_event_inputs
+        return self.has_connected_field_inputs or self._has_event_inputs
 
     async def read(self, timeout: float | None = None) -> None:
         """Reads data and/or events from input channels.
@@ -139,7 +146,7 @@ class IOController:
 
     def _set_read_tasks(self) -> list[asyncio.Task]:
         read_tasks: list[asyncio.Task] = []
-        if self._has_field_inputs:
+        if self.has_connected_field_inputs:
             if _fields_read_task not in self._read_tasks:
                 read_fields_task = asyncio.create_task(self._read_fields(), name=_fields_read_task)
                 self._read_tasks[_fields_read_task] = read_fields_task
@@ -374,7 +381,7 @@ class IOController:
 
     def _create_input_field_group_tasks(self) -> None:
         """Groups input field channels by field name and launches read tasks for group inputs."""
-        if not self._has_field_inputs:
+        if not self.has_connected_field_inputs:
             return
         field_channels: dict[str, list[tuple[_t_field_key, Channel]]] = defaultdict(list)
         for key, chan in self._input_channels.items():
@@ -410,6 +417,7 @@ class IOController:
             "input_events": [e.safe_type() for e in self.input_events],
             "output_events": [e.safe_type() for e in self.output_events],
             "initial_values": {k: list(v) for k, v in self._initial_values.items()},
+            "event_field_coverage": {k: list(v) for k, v in self.event_field_coverage.items()},
         }
 
 
