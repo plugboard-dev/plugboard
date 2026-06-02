@@ -899,10 +899,10 @@ What's new: 🚀 we've open-sourced Plugboard - please <a href="https://github.c
 </li>
         
           <li class="md-nav__item">
-  <a href="#whats-in-the-file" class="md-nav__link">
+  <a href="#whats-installed" class="md-nav__link">
     <span class="md-ellipsis">
       
-        What's in the file?
+        What's installed?
       
     </span>
   </a>
@@ -2443,10 +2443,10 @@ What's new: 🚀 we've open-sourced Plugboard - please <a href="https://github.c
 </li>
         
           <li class="md-nav__item">
-  <a href="#whats-in-the-file" class="md-nav__link">
+  <a href="#whats-installed" class="md-nav__link">
     <span class="md-ellipsis">
       
-        What's in the file?
+        What's installed?
       
     </span>
   </a>
@@ -2492,7 +2492,7 @@ What's new: 🚀 we've open-sourced Plugboard - please <a href="https://github.c
 <h1 id="ai-assisted-development">AI-Assisted Development</h1>
 <p>Plugboard ships with tooling to help AI coding agents understand how to build models using the framework. The <code>plugboard ai</code> command group provides utilities for setting up AI-assisted development workflows.</p>
 <h2 id="initialising-a-project">Initialising a project</h2>
-<p>The <code>plugboard ai init</code> command creates an <code>AGENTS.md</code> file in your project directory. This file gives AI coding agents the context they need to help you build Plugboard models — covering how to create components, assemble processes, use events, and follow best practices.</p>
+<p>The <code>plugboard ai init</code> command creates an <code>AGENTS.md</code> file and installs Agent Skills in your project directory. Together they give AI coding agents the context they need to help you build, export, visualise, run, and tune Plugboard models.</p>
 <p><code>AGENTS.md</code> is a convention used by AI coding tools (such as <a href="https://docs.anthropic.com/en/docs/agents-and-tools/claude-code/overview">Claude Code</a>, <a href="https://openai.com/index/codex/">Codex</a>, and <a href="https://github.com/google-gemini/gemini-cli">Gemini CLI</a>) to discover project-specific instructions automatically.</p>
 <h3 id="usage">Usage</h3>
 <p>To create an <code>AGENTS.md</code> file in the current working directory:</p>
@@ -2501,20 +2501,39 @@ What's new: 🚀 we've open-sourced Plugboard - please <a href="https://github.c
 <p>To create the file in a specific directory:</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>plugboard<span class="w"> </span>ai<span class="w"> </span>init<span class="w"> </span>/path/to/project
 </span></code></pre></div>
+<p>To choose where the skills are installed:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>plugboard<span class="w"> </span>ai<span class="w"> </span>init<span class="w"> </span>--style<span class="w"> </span>github
+</span></code></pre></div>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>The command will not overwrite an existing <code>AGENTS.md</code> file. If one already exists in the target directory, the command exits with an error.</p>
+<p>The command will not overwrite an existing <code>AGENTS.md</code> file or packaged Plugboard skill directory. It reports any packaged AI files that are already present, and adds whichever Plugboard AI files are still missing.</p>
 </div>
-<h3 id="whats-in-the-file">What's in the file?</h3>
+<h3 id="whats-installed">What's installed?</h3>
 <p>The generated <code>AGENTS.md</code> covers:</p>
 <ul>
 <li><strong>Planning a model</strong> — how to break a problem down into components, inputs, outputs, and data flows.</li>
+<li><strong>Model structure</strong> — how to map real-world entities onto separate components instead of monolithic logic.</li>
+<li><strong>YAML-friendly design</strong> — why component arguments should usually be serialisable so processes can be defined in YAML.</li>
 <li><strong>Implementing components</strong> — using built-in library components and creating custom ones by subclassing <a class="autorefs autorefs-internal" title="            Component" href="../../api/component/component/#plugboard.component.Component"><code>Component</code></a>.</li>
 <li><strong>Assembling a process</strong> — connecting components together and running a <a class="autorefs autorefs-internal" title="            LocalProcess" href="../../api/process/process/#plugboard.process.LocalProcess"><code>LocalProcess</code></a>.</li>
 <li><strong>Event-driven models</strong> — defining custom <a class="autorefs autorefs-internal" title="            Event" href="../../api/events/events/#plugboard.events.Event"><code>Event</code></a> types, emitting events, and writing event handlers.</li>
 <li><strong>Exporting models</strong> — saving process definitions to YAML and running them via the CLI.</li>
 </ul>
-<p>The file is intended to be committed to version control alongside your project code so that any AI agent working in the repository has immediate access to Plugboard conventions.</p>
+<p>The generated skills use the Agent Skills <code>SKILL.md</code> format with frontmatter, and are installed into one of these directories:</p>
+<ul>
+<li><code>.agents/skills/</code> for <code>--style agents</code> (default)</li>
+<li><code>.github/skills/</code> for <code>--style github</code></li>
+<li><code>.claude/skills/</code> for <code>--style claude</code></li>
+</ul>
+<p>The generated skills include reusable task guides for:</p>
+<ul>
+<li>creating a YAML config from a model defined in Python</li>
+<li>generating a process diagram with <code>plugboard process diagram</code></li>
+<li>running a model for a user-specified scenario with <code>plugboard process run</code></li>
+<li>adding and shaping a <code>tune</code> section in a YAML config</li>
+</ul>
+<p>The YAML-related skills instruct agents to validate generated configs against <code>plugboard_schemas.ConfigSpec</code>, which is the schema used by the CLI when it loads Plugboard YAML files.</p>
+<p>These files are intended to be committed to version control alongside your project code so that any AI agent working in the repository has immediate access to Plugboard conventions.</p>
 <h3 id="customising">Customising</h3>
 <p>After generating the file you can edit it freely to add project-specific instructions — for example, domain context, coding standards, or pointers to your own components and data sources.</p>
 

@@ -2695,7 +2695,7 @@ What's new: 🚀 we've open-sourced Plugboard - please <a href="https://github.c
 <p>The fastest way to get started is to let your AI coding assistant build your first model. Run the following command in your project directory:</p>
 <div class="language-shell highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>plugboard<span class="w"> </span>ai<span class="w"> </span>init
 </span></code></pre></div>
-<p>This copies a context file (<code>AGENTS.md</code>) into your project that gives your AI tool everything it needs to know about Plugboard: how components work, how to wire them together, library components that are already available, and best practices for building models.</p>
+<p>This copies a context file (<code>AGENTS.md</code>) and installs Agent Skills into <code>.agents/skills/</code> by default (or <code>.github/skills/</code> / <code>.claude/skills/</code> with <code>--style</code>) so your AI tool has Plugboard-specific guidance for structuring models, keeping component arguments YAML-friendly, exporting configs, generating diagrams, running scenarios, and setting up tuning.</p>
 <p>Once initialised, simply open your AI tool of choice (GitHub Copilot, Cursor, Claude, etc.) and describe the model you want to build. For example:</p>
 <blockquote>
 <p><em>"I want to simulate a production line with three machines in series. Each machine has a processing time drawn from a normal distribution and a 5% chance of failure. Model the throughput over 1000 time steps and save the results to a CSV."</em></p>
