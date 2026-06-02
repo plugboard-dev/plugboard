@@ -20,14 +20,15 @@ Create or update a YAML config for the requested scenario, then run it with `plu
 2. Ask for any missing scenario inputs before running anything.
 3. Update the YAML config with the exact parameter values the user requested.
 4. Preserve a clear component structure that matches the real-world model. Do not collapse multiple entities into one component just to make the config shorter.
-5. Run:
+5. Validate the updated YAML against `plugboard_schemas.ConfigSpec` before running it.
+6. Run:
 
 ```sh
 plugboard process run path/to/model.yaml
 ```
 
-6. Report what configuration was used, what command was run, and the key outputs or generated artifacts.
-7. If the scenario required new parameters, confirm that the final config remains YAML-friendly and reusable.
+7. Report what configuration was used, what validation was performed, what command was run, and the key outputs or generated artifacts.
+8. If the scenario required new parameters, confirm that the final config remains YAML-friendly and reusable.
 
 ## Output
 

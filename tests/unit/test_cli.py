@@ -165,9 +165,12 @@ def test_cli_ai_init(tmp_path: Path) -> None:
     tune_skill = skills_dir / "configure-tune" / "SKILL.md"
     assert yaml_skill.read_text().startswith("---\nname: create-yaml-config\n")
     assert "process.dump" in yaml_skill.read_text()
+    assert "plugboard_schemas.ConfigSpec" in yaml_skill.read_text()
     assert "plugboard process diagram" in process_diagram_skill.read_text()
     assert "plugboard process run" in run_process_skill.read_text()
+    assert "plugboard_schemas.ConfigSpec" in run_process_skill.read_text()
     assert "`tune` section" in tune_skill.read_text()
+    assert "plugboard_schemas.ConfigSpec" in tune_skill.read_text()
 
 
 def test_cli_ai_init_github_style(tmp_path: Path) -> None:
@@ -186,12 +189,27 @@ def test_cli_ai_init_already_exists(tmp_path: Path) -> None:
     assert "already exists" in result.output
 
 
-def test_cli_ai_init_fails_when_skills_directory_exists(tmp_path: Path) -> None:
-    """Tests the ai init command fails when the selected skills directory already exists."""
-    (tmp_path / ".agents" / "skills").mkdir(parents=True)
+def test_cli_ai_init_allows_existing_skills_directory(tmp_path: Path) -> None:
+    """Tests the ai init command adds skills to an existing directory with other skills."""
+    existing_skill_dir = tmp_path / ".agents" / "skills" / "other-skill"
+    existing_skill_dir.mkdir(parents=True)
+    (existing_skill_dir / "SKILL.md").write_text(
+        "---\nname: other-skill\ndescription: Existing skill.\n---"
+    )
+    result = runner.invoke(app, ["ai", "init", str(tmp_path)])
+    assert result.exit_code == 0
+    assert (tmp_path / ".agents" / "skills" / "other-skill" / "SKILL.md").exists()
+    assert (tmp_path / ".agents" / "skills" / "create-yaml-config" / "SKILL.md").exists()
+
+
+def test_cli_ai_init_fails_when_packaged_skill_already_exists(tmp_path: Path) -> None:
+    """Tests the ai init command fails when a packaged skill directory already exists."""
+    existing_skill_dir = tmp_path / ".agents" / "skills" / "create-yaml-config"
+    existing_skill_dir.mkdir(parents=True)
+    (existing_skill_dir / "SKILL.md").write_text("existing content")
     result = runner.invoke(app, ["ai", "init", str(tmp_path)])
     assert result.exit_code == 1
-    assert "skills" in result.output
+    assert "skill directories already exist" in result.output
 
 
 def test_cli_ai_init_default_directory() -> None:

@@ -29,7 +29,7 @@ plugboard ai init --style github
 ```
 
 !!! note
-    The command will not overwrite an existing `AGENTS.md` file or the selected skills directory. If either already exists in the target directory, the command exits with an error.
+    The command will not overwrite an existing `AGENTS.md` file. It can add Plugboard skills into an existing selected skills directory, but it will fail if one of the packaged Plugboard skill directories already exists there.
 
 ### What's installed?
 
@@ -55,6 +55,8 @@ The generated skills include reusable task guides for:
 - generating a process diagram with `plugboard process diagram`
 - running a model for a user-specified scenario with `plugboard process run`
 - adding and shaping a `tune` section in a YAML config
+
+The YAML-related skills instruct agents to validate generated configs against `plugboard_schemas.ConfigSpec`, which is the schema used by the CLI when it loads Plugboard YAML files.
 
 These files are intended to be committed to version control alongside your project code so that any AI agent working in the repository has immediate access to Plugboard conventions.
 

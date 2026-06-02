@@ -24,8 +24,9 @@ Work with the user to decide what should be tunable, then add an appropriate `tu
 2. Make sure the parameters being tuned are serialisable and already represented cleanly in the YAML config.
 3. If the current model structure hides tunable behavior inside a monolithic component, suggest splitting the logic into clearer components before or alongside tuning.
 4. Add a `tune` section that reflects the agreed tunable parameters and their search spaces.
-5. Keep the rest of the config readable and preserve stable component names so the tuning setup remains understandable.
-6. Summarise which questions were answered, which defaults were assumed, and what the user may still need to refine.
+5. Validate the updated YAML against `plugboard_schemas.ConfigSpec`, since that schema includes both the process configuration and the optional `tune` section.
+6. Keep the rest of the config readable and preserve stable component names so the tuning setup remains understandable.
+7. Summarise which questions were answered, which defaults were assumed, how the config was validated, and what the user may still need to refine.
 
 ## Output
 

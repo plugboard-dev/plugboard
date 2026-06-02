@@ -26,8 +26,29 @@ Produce a YAML config that faithfully represents the Python-defined process and 
 process.dump("model.yaml")
 ```
 
-6. Review the generated YAML and make sure the component names, arguments, and connector wiring are clear and stable.
-7. Tell the user where the YAML file was written and what CLI commands it unlocks next, such as `plugboard process run` or `plugboard process diagram`.
+6. Validate the generated YAML against `plugboard_schemas.ConfigSpec`, which is the schema used by the Plugboard CLI when loading config files. A quick check is:
+
+```sh
+plugboard process validate model.yaml
+```
+
+If you need to validate directly in Python, use:
+
+```python
+from pathlib import Path
+import msgspec
+from plugboard_schemas import ConfigSpec
+
+ConfigSpec.model_validate(msgspec.yaml.decode(Path("model.yaml").read_bytes()))
+```
+
+This mirrors the Plugboard CLI load path: `msgspec.yaml.decode(...)` produces standard Python
+data structures, and `ConfigSpec.model_validate(...)` validates that decoded YAML data.
+If validation fails, inspect the reported field path and update the YAML structure, missing
+required fields, component arguments, or `tune` entries before trying again.
+
+7. Review the generated YAML and make sure the component names, arguments, connector wiring, and optional `tune` section are clear and stable.
+8. Tell the user where the YAML file was written, how it was validated, and what CLI commands it unlocks next, such as `plugboard process run` or `plugboard process diagram`.
 
 ## Output
 
