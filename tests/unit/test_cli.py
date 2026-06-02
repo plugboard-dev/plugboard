@@ -214,6 +214,8 @@ def test_cli_ai_init_allows_existing_packaged_skill_directory(tmp_path: Path) ->
     assert "Existing packaged skills" in result.output
     assert (tmp_path / "AGENTS.md").exists()
     assert (existing_skill_dir / "SKILL.md").read_text() == "existing content"
+    skill_files = sorted((tmp_path / ".agents" / "skills").glob("*/SKILL.md"))
+    assert len(skill_files) == 4
     assert (tmp_path / ".agents" / "skills" / "process-diagram" / "SKILL.md").exists()
 
 
