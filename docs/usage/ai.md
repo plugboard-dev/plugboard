@@ -29,7 +29,7 @@ plugboard ai init --style github
 ```
 
 !!! note
-    The command will not overwrite an existing `AGENTS.md` file. It can add Plugboard skills into an existing selected skills directory, but it will fail if one of the packaged Plugboard skill directories already exists there.
+    The command will not overwrite an existing `AGENTS.md` file or packaged Plugboard skill directory. It reports any packaged AI files that are already present, and adds whichever Plugboard AI files are still missing.
 
 ### What's installed?
 

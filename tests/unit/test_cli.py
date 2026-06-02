@@ -181,12 +181,14 @@ def test_cli_ai_init_github_style(tmp_path: Path) -> None:
     assert (tmp_path / ".github" / "skills" / "process-diagram" / "SKILL.md").exists()
 
 
-def test_cli_ai_init_already_exists(tmp_path: Path) -> None:
-    """Tests the ai init command fails when AGENTS.md already exists."""
+def test_cli_ai_init_allows_existing_agents_file(tmp_path: Path) -> None:
+    """Tests the ai init command keeps an existing AGENTS.md file and adds missing skills."""
     (tmp_path / "AGENTS.md").write_text("existing content")
     result = runner.invoke(app, ["ai", "init", str(tmp_path)])
-    assert result.exit_code == 1
-    assert "already exists" in result.output
+    assert result.exit_code == 0
+    assert "Exists" in result.stdout
+    assert (tmp_path / "AGENTS.md").read_text() == "existing content"
+    assert (tmp_path / ".agents" / "skills" / "create-yaml-config" / "SKILL.md").exists()
 
 
 def test_cli_ai_init_allows_existing_skills_directory(tmp_path: Path) -> None:
@@ -202,14 +204,17 @@ def test_cli_ai_init_allows_existing_skills_directory(tmp_path: Path) -> None:
     assert (tmp_path / ".agents" / "skills" / "create-yaml-config" / "SKILL.md").exists()
 
 
-def test_cli_ai_init_fails_when_packaged_skill_already_exists(tmp_path: Path) -> None:
-    """Tests the ai init command fails when a packaged skill directory already exists."""
+def test_cli_ai_init_allows_existing_packaged_skill_directory(tmp_path: Path) -> None:
+    """Tests the ai init command adds missing packaged skills around existing ones."""
     existing_skill_dir = tmp_path / ".agents" / "skills" / "create-yaml-config"
     existing_skill_dir.mkdir(parents=True)
     (existing_skill_dir / "SKILL.md").write_text("existing content")
     result = runner.invoke(app, ["ai", "init", str(tmp_path)])
-    assert result.exit_code == 1
-    assert "skill directories already exist" in result.output
+    assert result.exit_code == 0
+    assert "Existing packaged skills" in result.stdout
+    assert (tmp_path / "AGENTS.md").exists()
+    assert (existing_skill_dir / "SKILL.md").read_text() == "existing content"
+    assert (tmp_path / ".agents" / "skills" / "process-diagram" / "SKILL.md").exists()
 
 
 def test_cli_ai_init_default_directory() -> None:

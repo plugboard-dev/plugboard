@@ -23,30 +23,34 @@ _STYLE_SKILLS_DIRS: dict[str, Path] = {
 }
 
 
-def _install_skills(source_dir: Path, target_dir: Path) -> list[Path]:
+def _install_skills(source_dir: Path, target_dir: Path) -> tuple[list[Path], list[Path]]:
     """Install packaged skills into a style-specific skills directory.
 
-    Creates the target directory when needed and returns the created skill directory paths.
+    Creates the target directory when needed and returns the existing and created skill
+    directory paths.
     Validation and source discovery are performed separately by
     `_get_skill_sources_and_validate_target`.
     """
-    skill_sources = _get_skill_sources_and_validate_target(source_dir, target_dir)
+    existing_skills, skill_sources = _get_skill_sources_and_validate_target(source_dir, target_dir)
 
-    target_dir.mkdir(parents=True, exist_ok=True)
     created_paths: list[Path] = []
+    if skill_sources:
+        target_dir.mkdir(parents=True, exist_ok=True)
     for skill_source in skill_sources:
         skill_target = target_dir / skill_source.name
         shutil.copytree(skill_source, skill_target)
         created_paths.append(skill_target)
 
-    return created_paths
+    return existing_skills, created_paths
 
 
-def _get_skill_sources_and_validate_target(source_dir: Path, target_dir: Path) -> list[Path]:
+def _get_skill_sources_and_validate_target(
+    source_dir: Path, target_dir: Path
+) -> tuple[list[Path], list[Path]]:
     """Return packaged skill directories after validating the target directory.
 
-    Returns the packaged skill source directories. Exits with status code 1 if the target path
-    is invalid or if packaged Plugboard skill directories already exist in the target.
+    Returns the existing and missing packaged skill directory paths. Exits with status code 1 if
+    the target path is invalid or if a packaged skill target exists as a non-directory path.
     """
     if not source_dir.is_dir():
         stderr.print(
@@ -63,18 +67,27 @@ def _get_skill_sources_and_validate_target(source_dir: Path, target_dir: Path) -
         raise typer.Exit(1)
 
     skill_sources = sorted(path for path in source_dir.iterdir() if path.is_dir())
-    existing_skill_names: set[str] = set()
-    if target_dir.exists():
-        existing_skill_names = {path.name for path in target_dir.iterdir() if path.is_dir()}
-    conflicting_skills = [path.name for path in skill_sources if path.name in existing_skill_names]
-    if conflicting_skills:
-        conflicts = ", ".join(conflicting_skills)
+    existing_skills: list[Path] = []
+    missing_skills: list[Path] = []
+    invalid_targets: list[str] = []
+    for skill_source in skill_sources:
+        skill_target = target_dir / skill_source.name
+        if skill_target.is_dir():
+            existing_skills.append(skill_target)
+        elif skill_target.exists():
+            invalid_targets.append(skill_source.name)
+        else:
+            missing_skills.append(skill_source)
+
+    if invalid_targets:
+        conflicts = ", ".join(invalid_targets)
         stderr.print(
-            f"[red]Cannot initialise AI files[/red]: skill directories already exist: {conflicts}."
+            "[red]Cannot initialise AI files[/red]: "
+            f"skill targets exist and are not directories: {conflicts}."
         )
         raise typer.Exit(1)
 
-    return skill_sources
+    return existing_skills, missing_skills
 
 
 @app.command()
@@ -110,12 +123,20 @@ def init(
     agents_target = directory / "AGENTS.md"
     skills_target = directory / _STYLE_SKILLS_DIRS[style]
 
-    if agents_target.exists():
-        stderr.print("[red]Cannot initialise AI files[/red]: AGENTS.md already exists.")
+    if agents_target.exists() and not agents_target.is_file():
+        stderr.print("[red]Cannot initialise AI files[/red]: AGENTS.md exists and is not a file.")
         raise typer.Exit(1)
 
-    _get_skill_sources_and_validate_target(_SKILLS_DIR, skills_target)
-    shutil.copy2(_AGENTS_MD, agents_target)
-    created_skills = _install_skills(_SKILLS_DIR, skills_target)
-    print(f"[green]Created[/green] {agents_target}")
+    existing_skills, created_skills = _install_skills(_SKILLS_DIR, skills_target)
+    if agents_target.exists():
+        print(f"[yellow]Exists[/yellow] {agents_target}")
+    else:
+        shutil.copy2(_AGENTS_MD, agents_target)
+        print(f"[green]Created[/green] {agents_target}")
+
+    if existing_skills:
+        print(
+            "[yellow]Existing packaged skills[/yellow] "
+            + ", ".join(skill_dir.name for skill_dir in existing_skills)
+        )
     print(f"[green]Added[/green] {len(created_skills)} skills to {skills_target}")
