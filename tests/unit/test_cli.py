@@ -186,7 +186,7 @@ def test_cli_ai_init_allows_existing_agents_file(tmp_path: Path) -> None:
     (tmp_path / "AGENTS.md").write_text("existing content")
     result = runner.invoke(app, ["ai", "init", str(tmp_path)])
     assert result.exit_code == 0
-    assert "Exists" in result.stdout
+    assert "Exists" in result.output
     assert (tmp_path / "AGENTS.md").read_text() == "existing content"
     assert (tmp_path / ".agents" / "skills" / "create-yaml-config" / "SKILL.md").exists()
 
@@ -211,7 +211,7 @@ def test_cli_ai_init_allows_existing_packaged_skill_directory(tmp_path: Path) ->
     (existing_skill_dir / "SKILL.md").write_text("existing content")
     result = runner.invoke(app, ["ai", "init", str(tmp_path)])
     assert result.exit_code == 0
-    assert "Existing packaged skills" in result.stdout
+    assert "Existing packaged skills" in result.output
     assert (tmp_path / "AGENTS.md").exists()
     assert (existing_skill_dir / "SKILL.md").read_text() == "existing content"
     assert (tmp_path / ".agents" / "skills" / "process-diagram" / "SKILL.md").exists()

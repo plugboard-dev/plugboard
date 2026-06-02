@@ -135,8 +135,6 @@ def init(
         print(f"[green]Created[/green] {agents_target}")
 
     if existing_skills:
-        print(
-            "[yellow]Existing packaged skills[/yellow] "
-            + ", ".join(skill_dir.name for skill_dir in existing_skills)
-        )
+        existing_skill_names = ", ".join(skill_dir.name for skill_dir in existing_skills)
+        print(f"[yellow]Existing packaged skills[/yellow] {existing_skill_names}")
     print(f"[green]Added[/green] {len(created_skills)} skills to {skills_target}")
