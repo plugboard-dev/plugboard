@@ -43,12 +43,14 @@ async def _post_to_api(url: str, data: dict) -> None:
 def _import_recursive(path: Path, base_package: _t.Optional[str] = None) -> None:
     """Import all modules recursively from the given path."""
     logger = DI.logger.resolve_sync()
-    for root, _dirs, files in os.walk(path):
+    for root, dirs, files in os.walk(path):
+        # Update dirs in place so os.walk skips hidden directories like .venv.
+        dirs[:] = [directory for directory in dirs if not directory.startswith(".")]
         for file in files:
             if file.endswith(".py") and not file.startswith("__"):
                 # Construct module name
-                rel_path = os.path.relpath(os.path.join(root, file), path)
-                module_name = rel_path.replace(os.sep, ".")[:-3]
+                rel_path = Path(root, file).relative_to(path)
+                module_name = ".".join(rel_path.with_suffix("").parts)
 
                 if base_package:
                     module_name = f"{base_package}.{module_name}"
