@@ -252,6 +252,34 @@ def test_cli_ai_init_allows_existing_packaged_skill_directory(tmp_path: Path) ->
     assert (tmp_path / ".agents" / "skills" / "process-diagram" / "SKILL.md").exists()
 
 
+def test_cli_ai_init_fails_for_agents_directory_conflict(tmp_path: Path) -> None:
+    """Tests the ai init command rejects AGENTS.md when it already exists as a directory."""
+    (tmp_path / "AGENTS.md").mkdir()
+    result = runner.invoke(app, ["ai", "init", str(tmp_path)])
+    assert result.exit_code == 1
+    assert "AGENTS.md exists and is not a file" in result.stderr
+
+
+def test_cli_ai_init_fails_for_skills_directory_conflict(tmp_path: Path) -> None:
+    """Tests the ai init command rejects a skills target that already exists as a file."""
+    (tmp_path / ".agents").mkdir()
+    (tmp_path / ".agents" / "skills").write_text("not a directory")
+    result = runner.invoke(app, ["ai", "init", str(tmp_path)])
+    assert result.exit_code == 1
+    assert "skills exists and is not a directory" in result.stderr
+
+
+def test_cli_ai_init_fails_for_packaged_skill_conflict(tmp_path: Path) -> None:
+    """Tests the ai init command rejects packaged skill targets that already exist as files."""
+    skills_dir = tmp_path / ".agents" / "skills"
+    skills_dir.mkdir(parents=True)
+    (skills_dir / "create-yaml-config").write_text("not a directory")
+    result = runner.invoke(app, ["ai", "init", str(tmp_path)])
+    assert result.exit_code == 1
+    assert "skill targets exist and are not directories" in result.stderr
+    assert "create-yaml-config" in result.stderr
+
+
 def test_cli_ai_init_default_directory() -> None:
     """Tests the ai init command uses current directory by default."""
     with tempfile.TemporaryDirectory() as tmpdir:
