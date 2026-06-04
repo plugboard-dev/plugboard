@@ -1,29 +1,71 @@
 # AI Agent Instructions for Plugboard Models
 
-This document provides guidelines for AI agents working with specific models implemented in Plugboard.
+This file gives AI coding agents a shared set of instructions for building Plugboard models. Keep the guidance tool-agnostic so it works well with Claude, Gemini, Codex, GitHub Copilot, and other agents that read `AGENTS.md`.
 
-## Creating a Plugboard model
+## Core modeling principles
 
-Always using the following sequence of steps to help users plan, implement and run their models.
+1. **Model the real system explicitly.** When planning a process, split the logic into separate Plugboard `Component`s that map to the real-world entities or stages in the problem. For example, a production line with three machines should normally be represented by three machine components, not one monolithic component.
+2. **Prefer serialisable component arguments.** Component constructor arguments should usually be plain serialisable values such as strings, numbers, booleans, lists, dictionaries, or other YAML-friendly structures so the same model can be defined and run from YAML.
+3. **Reuse built-in components first.** Before creating a custom component, check `plugboard.library` for an existing component that already matches the need.
+4. **Ask clarifying questions early.** If the real-world workflow, data flow, stopping condition, or tuning goals are unclear, ask the user before implementing.
 
-### Planning a Model
+## Recommended workflow
 
-Help users to plan their models from a high-level overview to a detailed design. This should include:
+Use this sequence when helping a user plan, implement, and run a Plugboard model:
 
-* The inputs and outputs of the model;
-* The components that will be needed to implement each part of the model, and any inputs, outputs and parameters they will need;
-* The data flow between components, either via connectors or events. Identify any feedback loops and resolve if necessary.
+1. **Plan the model**
+   - Identify the real-world entities, stages, or responsibilities that should become separate components.
+   - Define the process inputs, outputs, parameters, events, and stopping conditions.
+   - Describe the data flow between components, including any feedback loops.
+   - Prefer designs that can be exported cleanly to YAML.
+2. **Implement components**
+   - Use `plugboard.library` components where possible.
+   - Create custom components only for domain-specific behavior that is not already available.
+   - Keep component arguments serialisable unless there is a strong reason not to.
+3. **Assemble the process**
+   - Unless the user asks otherwise, prefer `LocalProcess`.
+   - Wire components together with connectors or events.
+   - Check for circular loops and resolve them with explicit initial values where needed.
+4. **Export, visualise, and run**
+   - Prefer producing a YAML configuration when the user wants repeatable runs, CLI execution, diagrams, or tuning.
+   - Use `plugboard process diagram` for diagrams and `plugboard process run` for execution when working from YAML.
 
-Ask questions if anything is not clear about the business logic or you require additional domain expertise from the user.
+## Skill files
 
-### Implementing Components
+Additional task-specific instructions are available in a style-specific skills directory. Depending on the setup, look under one of:
 
-Always check whether the functionality you need is already available in the library components in `plugboard.library`. For example, try to use:
-- `FileReader` and `FileWriter` for reading/writing data from CSV or parquet files.
-- `SQLReader` and `SQLWriter` for reading/writing data from SQL databases.
-- `LLMChat` for interacting with standard LLMs, e.g. OpenAI, Gemini, etc.
+- `./.agents/skills/`
+- `./.github/skills/`
+- `./.claude/skills/`
 
-**Using Built-in Components**
+When a user asks for one of these tasks, read the matching `SKILL.md` file and follow it:
+
+- `create-yaml-config/SKILL.md`
+- `process-diagram/SKILL.md`
+- `run-process-scenario/SKILL.md`
+- `configure-tune/SKILL.md`
+
+## Planning a model
+
+When planning a Plugboard model, include:
+
+- the process inputs and outputs
+- the components needed for each part of the workflow
+- the inputs, outputs, events, and parameters for each component
+- the connectors or event flows between components
+- any feedback loops, initial values, and completion signals
+
+Prefer plans where each component has a clear responsibility that matches the user's domain language.
+
+## Implementing components
+
+Always check whether the functionality already exists in `plugboard.library`. Common examples include:
+
+- `FileReader` and `FileWriter` for CSV or parquet I/O
+- `SQLReader` and `SQLWriter` for SQL I/O
+- `LLMChat` for standard LLM interactions
+
+### Using a built-in component
 
 ```python
 from plugboard.library import FileReader
@@ -31,9 +73,9 @@ from plugboard.library import FileReader
 data_loader = FileReader(name="input_data", path="input.csv", field_names=["x", "y", "value"])
 ```
 
-**Creating Custom Components**
+### Creating a custom component
 
-New components should inherit from `plugboard.component.Component`. Add logging messages where it would be helpful by using the bound logger `self._logger`.
+Custom components should inherit from `plugboard.component.Component`. Add helpful structured logging with `self._logger` where appropriate.
 
 ```python
 import typing as _t
@@ -41,23 +83,23 @@ from plugboard.component import Component, IOController as IO
 from plugboard.schemas import ComponentArgsDict
 
 class Offset(Component):
-    """Adds a constant offset to input value."""
+    """Adds a constant offset to an input value."""
+
     io = IO(inputs=["a"], outputs=["x"])
 
     def __init__(
-        self, 
-        offset: float = 0, 
-        **kwargs: _t.Unpack[ComponentArgsDict]
+        self,
+        offset: float = 0,
+        **kwargs: _t.Unpack[ComponentArgsDict],
     ) -> None:
         super().__init__(**kwargs)
         self._offset = offset
 
     async def step(self) -> None:
-        # Implement business logic here
         self.x = self.a + self._offset
 ```
 
-If a component is intended to be a source of new data into the model, then it should await `self.io.close()` when it has finished all the iterations it needs to do. This sends a signal into the `Process` so that other components know when the model has completed. For example, this component runs for a fixed number of iterations:
+If a component is a source of new data into the model, it should await `self.io.close()` when it has finished producing values so the `Process` can shut down cleanly.
 
 ```python
 class Iterator(Component):
@@ -78,9 +120,9 @@ class Iterator(Component):
             await self.io.close()
 ```
 
-### Assembling a Process
+## Assembling a process
 
-Connect components and create a runnable process. Unless asked otherwise, use a `LocalProcess`.
+Connect components and create a runnable process. Unless asked otherwise, prefer `LocalProcess`.
 
 ```python
 from plugboard.connector import AsyncioConnector
@@ -88,12 +130,8 @@ from plugboard.library import FileWriter
 from plugboard.process import LocalProcess
 from plugboard.schemas import ConnectorSpec
 
-# Helper for creating connectors
-connect = lambda src, tgt: AsyncioConnector(
-    spec=ConnectorSpec(source=src, target=tgt)
-)
+connect = lambda src, tgt: AsyncioConnector(spec=ConnectorSpec(source=src, target=tgt))
 
-# Create process with components and connectors
 process = LocalProcess(
     components=[
         Random(name="random", iters=5, low=0, high=10),
@@ -113,43 +151,17 @@ process = LocalProcess(
 )
 ```
 
-Check for circular loops when defining connectors in the `Process`. These will need to be resolved using the `initial_values` argument to a component somewhere within the loop, e.g.
+Check for circular loops when defining connectors. Resolve them with `initial_values` on a component within the loop when needed.
 
 ```python
 my_component = MyComponent(name="test", initial_values={"x": [False], "y": [False]})
 ```
 
-### Visualizing Process Flow
+## Event-driven models
 
-You can create a mermaid diagram to help users understand their models visually.
+Plugboard can also model workflows with events. Events are useful for conditional workflows, alerts, state transitions, or any interaction where data connectors are not the best fit.
 
-```python
-from plugboard.diagram import markdown_diagram
-
-diagram = markdown_diagram(process)
-print(diagram)
-```
-
-### Running the Model
-
-You can help users to run their model. For example, to run the model defined above:
-
-```python
-async with process:
-    await process.run()
-```
-
-## Event-Driven Models
-
-You can help users to implement event-driven models using Plugboard's event system. Components can emit and handle events to communicate with each other.
-
-Examples of where you might want to use events include:
-* A component that monitors a data stream and emits an event when a threshold is crossed.
-* A component that listens for events and triggers actions in response, e.g. sending an alert.
-* A trading algorithm that uses events to signal buy/sell decisions.
-* Where a model has conditional workflows, e.g. process data differently in the model depending on a specific condition.
-
-Events must be defined by inheriting from the `plugboard.events.Event` class. Each event class should define the data it carries using a Pydantic `BaseModel`. For example:
+Events must inherit from `plugboard.events.Event` and define their payload with a Pydantic model.
 
 ```python
 from pydantic import BaseModel
@@ -163,7 +175,7 @@ class MyEvent(Event):
     data: MyEventData
 ```
 
-Components can emit events using the `self.io.queue_event()` method or by returning them from an event handler. Event handlers are defined using methods decorated with `@EventClass.handler`. For example:
+Components can emit events with `self.io.queue_event()` or by returning them from an event handler.
 
 ```python
 from plugboard.component import Component, IOController as IO
@@ -172,7 +184,6 @@ class MyEventPublisher(Component):
     io = IO(inputs=["some_input"], output_events=[MyEvent])
 
     async def step(self) -> None:
-        # Emit an event
         event_data = MyEventData(some_value=42, another_value=f"received {self.some_input}")
         self.io.queue_event(MyEvent(source=self.name, data=event_data))
 
@@ -181,47 +192,45 @@ class MyEventSubscriber(Component):
 
     @MyEvent.handler
     async def handle_my_event(self, event: MyEvent) -> MyEvent:
-        # Handle the event
-        print(f"Received event: {event.data}")
-        output_event_data = MyEventData(some_value=event.data.some_value + 1, another_value="handled")
+        output_event_data = MyEventData(
+            some_value=event.data.some_value + 1,
+            another_value="handled",
+        )
         return MyEvent(source=self.name, data=output_event_data)
 ```
 
-To assemble a process with event-driven components, you can use the same approach as for non-event-driven components. You will need to create connectors for event-driven components using a `ConnectorBuilder`. For example:
+To assemble an event-driven process, combine normal connectors with event connectors built from the component set.
 
 ```python
-from plugboard.connector import AsyncioConnector, ConnectorBuilder
+from plugboard.connector import AsyncioConnector
 from plugboard.process import LocalProcess
+from plugboard.schemas import ConnectorSpec
 
-# Define components....
 component_1 = ...
 component_2 = ...
 
-# Define connectors for non-event components as before
-connect = lambda in_, out_: AsyncioConnector(spec=ConnectorSpec(source=in_, target=out_))
+connect = lambda src, tgt: AsyncioConnector(spec=ConnectorSpec(source=src, target=tgt))
 connectors = [
     connect("component_1.output", "component_2.input"),
-    ...
 ]
-# Define connectors for events
-event_connectors = AsyncioConnector.builder().build_event_connectors(components)
+event_connectors = AsyncioConnector.builder().build_event_connectors([component_1, component_2])
 
 process = LocalProcess(
-    components=[
-        component_1, component_2, ...
-    ],
+    components=[component_1, component_2],
     connectors=connectors + event_connectors,
 )
 ```
 
-## Exporting Models
+## Exporting and running models
 
 Save a process configuration for reuse:
 
 ```python
 process.dump("my-model.yaml")
+```
 
-Later, load and run via CLI
+Run the saved model from the CLI:
+
 ```sh
 plugboard process run my-model.yaml
 ```

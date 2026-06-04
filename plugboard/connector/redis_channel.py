@@ -180,7 +180,9 @@ class RedisConnector(Connector):
 
             async def recv_fn() -> bytes:
                 result = await redis_client.brpop([key], timeout=None)  # type: ignore[misc]
-                return result[1]
+                if result is None:
+                    raise RuntimeError("Unexpected None from Redis BRPOP with infinite timeout")
+                return _t.cast(bytes, result[1])
         else:
             if pubsub is None:
                 raise ValueError("PubSub instance required for PUBSUB mode")
