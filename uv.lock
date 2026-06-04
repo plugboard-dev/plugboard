@@ -4077,7 +4077,7 @@ requires-dist = [
     { name = "sqlalchemy", extras = ["asyncio"], specifier = ">=2.0,<3" },
     { name = "structlog", specifier = ">=25.1.0,<26" },
     { name = "that-depends", specifier = ">=3.4.1,<4" },
-    { name = "typer", specifier = ">=0.12,<1" },
+    { name = "typer", specifier = ">=0.19,<1" },
     { name = "uvloop", marker = "sys_platform != 'win32'", specifier = ">=0.21.0,<1" },
     { name = "websockets", marker = "extra == 'websockets'", specifier = ">=14.2,<17" },
 ]
