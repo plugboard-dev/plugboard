@@ -3,6 +3,6 @@
 import uvloop
 
 
-def test_event_loop_policy_uses_uvloop(event_loop_policy: object) -> None:
-    """The shared pytest-asyncio fixture should configure uvloop policy."""
-    assert isinstance(event_loop_policy, uvloop.EventLoopPolicy)
+def test_asyncio_loop_factory_uses_uvloop(_asyncio_loop_factory: object) -> None:
+    """The shared pytest-asyncio fixture should configure uvloop loop factory."""
+    assert _asyncio_loop_factory is uvloop.new_event_loop

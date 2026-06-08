@@ -22,9 +22,9 @@ from plugboard.utils.settings import Settings
 
 
 @pytest.fixture(scope="session")
-def event_loop_policy() -> asyncio.AbstractEventLoopPolicy:
+def _asyncio_loop_factory() -> _t.Callable[[], asyncio.AbstractEventLoop]:
     """Configure pytest-asyncio to create event loops with uvloop."""
-    return uvloop.EventLoopPolicy()
+    return uvloop.new_event_loop
 
 
 @pytest.fixture(scope="session", autouse=True)
