@@ -82,7 +82,7 @@ test = [
     "optuna>=3.0,<5",
     "pytest>=8.3,<10",
     "pytest-asyncio>=1.0,<2",
-    "pytest-benchmark>=5.1.0",
+    "pytest-codspeed>=4.4.0",
     "pytest-cases>=3.8,<4",
     "pytest-env>=1.1,<2",
     "pytest-rerunfailures>=15.0,<17",
@@ -119,6 +119,10 @@ fallback_version = "0.0.0"
 [tool.uv]
 package = true
 default-groups = ["all"]
+required-environments = [
+    # AARCH64 linux support required for Codspeed benchmarks
+    "sys_platform == 'linux' and platform_machine == 'aarch64'"
+]
 
 [tool.uv.workspace]
 members = ["plugboard-schemas"]
