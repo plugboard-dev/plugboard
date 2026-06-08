@@ -2,9 +2,7 @@
 
 import uvloop
 
-from tests import conftest
 
-
-def test_pytest_asyncio_loop_factories_uses_uvloop() -> None:
-    """The shared pytest-asyncio hook should configure uvloop factories."""
-    assert conftest.pytest_asyncio_loop_factories() == {"uvloop": uvloop.new_event_loop}
+def test_asyncio_loop_factory_uses_uvloop(_asyncio_loop_factory: object) -> None:
+    """The shared pytest-asyncio fixture should configure uvloop loop factory."""
+    assert _asyncio_loop_factory is uvloop.new_event_loop

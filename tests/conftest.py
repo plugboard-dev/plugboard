@@ -21,10 +21,10 @@ from plugboard.utils.di import DI
 from plugboard.utils.settings import Settings
 
 
-@pytest.hookimpl(optionalhook=True)
-def pytest_asyncio_loop_factories() -> dict[str, _t.Callable[[], asyncio.AbstractEventLoop]]:
+@pytest.fixture(scope="session")
+def _asyncio_loop_factory() -> _t.Callable[[], asyncio.AbstractEventLoop]:
     """Configure pytest-asyncio to create event loops with uvloop."""
-    return {"uvloop": uvloop.new_event_loop}
+    return uvloop.new_event_loop
 
 
 @pytest.fixture(scope="session", autouse=True)
