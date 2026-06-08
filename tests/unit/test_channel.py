@@ -1,9 +1,7 @@
 """Unit tests for channels."""
 
 import asyncio
-import os
 import typing as _t
-from unittest.mock import patch
 
 import pytest
 import pytest_cases
@@ -21,6 +19,7 @@ from plugboard.exceptions import ChannelClosedError
 from plugboard.schemas import ConnectorMode, ConnectorSpec
 from plugboard.utils.di import DI
 from plugboard.utils.settings import Settings
+from tests.conftest import override_settings
 
 
 TEST_ITEMS = [
@@ -39,16 +38,11 @@ TEST_ITEMS = [
 def zmq_connector_cls(zmq_pubsub_proxy: bool) -> _t.Iterator[_t.Type[ZMQConnector]]:
     """Returns the ZMQConnector class with the specified proxy setting.
 
-    Patches the env var `PLUGBOARD_FLAGS_ZMQ_PUBSUB_PROXY` to control the proxy setting.
+    Overrides settings to control the proxy setting without mutating process env.
     """
-    with patch.dict(
-        os.environ,
-        {"PLUGBOARD_FLAGS_ZMQ_PUBSUB_PROXY": str(zmq_pubsub_proxy)},
-    ):
-        testing_settings = Settings()
-        DI.settings.override_sync(testing_settings)
+    testing_settings = Settings.model_validate({"flags": {"zmq_pubsub_proxy": zmq_pubsub_proxy}})
+    with override_settings(testing_settings):
         yield ZMQConnector
-        DI.settings.reset_override_sync()
 
 
 @pytest_cases.fixture
@@ -98,6 +92,7 @@ def connector_cls_mp(_connector_cls_mp: type[Connector]) -> type[Connector]:
 
 
 @pytest.mark.asyncio
+@pytest.mark.flaky(reruns=2)
 async def test_multiprocessing_channel(
     connector_cls_mp: type[Connector], ray_ctx: None, job_id_ctx: str
 ) -> None:

@@ -2,8 +2,8 @@
 
 from abc import ABC
 import asyncio
+from contextlib import contextmanager
 import multiprocessing
-import os
 import typing as _t
 from unittest.mock import patch
 
@@ -19,6 +19,16 @@ from plugboard.connector import ZMQConnector
 from plugboard.schemas import Status
 from plugboard.utils.di import DI
 from plugboard.utils.settings import Settings
+
+
+@contextmanager
+def override_settings(settings: Settings) -> _t.Iterator[None]:
+    """Temporarily override DI settings for a test and always reset the override."""
+    DI.settings.override_sync(settings)
+    try:
+        yield
+    finally:
+        DI.settings.reset_override_sync()
 
 
 @pytest.hookimpl(optionalhook=True)
@@ -72,16 +82,11 @@ async def DI_teardown() -> _t.AsyncGenerator[None, None]:
 def zmq_connector_cls(zmq_pubsub_proxy: bool) -> _t.Iterator[_t.Type[ZMQConnector]]:
     """Returns the ZMQConnector class with the specified proxy setting.
 
-    Patches the env var `PLUGBOARD_FLAGS_ZMQ_PUBSUB_PROXY` to control the proxy setting.
+    Overrides settings to control the proxy setting without mutating process env.
     """
-    with patch.dict(
-        os.environ,
-        {"PLUGBOARD_FLAGS_ZMQ_PUBSUB_PROXY": str(zmq_pubsub_proxy)},
-    ):
-        testing_settings = Settings()
-        DI.settings.override_sync(testing_settings)
+    testing_settings = Settings.model_validate({"flags": {"zmq_pubsub_proxy": zmq_pubsub_proxy}})
+    with override_settings(testing_settings):
         yield ZMQConnector
-        DI.settings.reset_override_sync()
 
 
 class ComponentTestHelper(Component, ABC):
