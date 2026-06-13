@@ -86,12 +86,14 @@ async def _discover_components(api_url: str, base_cls: type) -> None:
         outputs = []
         input_events = []
         output_events = []
+        event_field_coverage = {}
 
         if io:
             inputs = list(io.inputs)
             outputs = list(io.outputs)
             input_events = [getattr(e, "type", str(e)) for e in io.input_events]
             output_events = [getattr(e, "type", str(e)) for e in io.output_events]
+            event_field_coverage = getattr(io, "event_field_coverage", {})
 
         data = {
             "id": f"{c.__module__}.{c.__qualname__}",
@@ -102,6 +104,7 @@ async def _discover_components(api_url: str, base_cls: type) -> None:
             "outputs": outputs,
             "input_events": input_events,
             "output_events": output_events,
+            "event_field_coverage": event_field_coverage,
         }
         await _post_to_api(f"{api_url}/types/component", data)
 
