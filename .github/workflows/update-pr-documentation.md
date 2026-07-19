@@ -10,6 +10,7 @@ if: >-
   !github.event.pull_request.draft
 permissions:
   contents: read
+  issues: read
   pull-requests: read
 strict: true
 engine:
