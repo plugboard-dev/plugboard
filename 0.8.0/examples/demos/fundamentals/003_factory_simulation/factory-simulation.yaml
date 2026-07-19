@@ -1,0 +1,112 @@
+plugboard:
+  process:
+    args:
+      components:
+      - type: factory_simulation.Iterator
+        args:
+          name: clock
+          num_days: 365
+      - type: factory_simulation.Machine
+        args:
+          name: machine_1
+          maintenance_interval: 30
+          sigmoid_steepness: 0.10
+          sigmoid_midpoint: 50.0
+          seed: 101
+      - type: factory_simulation.Machine
+        args:
+          name: machine_2
+          maintenance_interval: 30
+          sigmoid_steepness: 0.12
+          sigmoid_midpoint: 45.0
+          seed: 202
+      - type: factory_simulation.Machine
+        args:
+          name: machine_3
+          maintenance_interval: 30
+          sigmoid_steepness: 0.15
+          sigmoid_midpoint: 40.0
+          seed: 303
+      - type: factory_simulation.Machine
+        args:
+          name: machine_4
+          maintenance_interval: 30
+          sigmoid_steepness: 0.18
+          sigmoid_midpoint: 35.0
+          seed: 404
+      - type: factory_simulation.Machine
+        args:
+          name: machine_5
+          maintenance_interval: 30
+          sigmoid_steepness: 0.20
+          sigmoid_midpoint: 30.0
+          seed: 505
+      - type: factory_simulation.Factory
+        args:
+          name: factory
+      connectors:
+      - source: clock.day
+        target: machine_1.day
+      - source: clock.day
+        target: machine_2.day
+      - source: clock.day
+        target: machine_3.day
+      - source: clock.day
+        target: machine_4.day
+      - source: clock.day
+        target: machine_5.day
+      - source: machine_1.daily_value
+        target: factory.value_1
+      - source: machine_2.daily_value
+        target: factory.value_2
+      - source: machine_3.daily_value
+        target: factory.value_3
+      - source: machine_4.daily_value
+        target: factory.value_4
+      - source: machine_5.daily_value
+        target: factory.value_5
+  tune:
+    args:
+      objective:
+        object_name: factory
+        field_type: field
+        field_name: total_value
+      parameters:
+      - type: ray.tune.randint
+        object_type: component
+        object_name: machine_1
+        field_type: arg
+        field_name: maintenance_interval
+        lower: 5
+        upper: 60
+      - type: ray.tune.randint
+        object_type: component
+        object_name: machine_2
+        field_type: arg
+        field_name: maintenance_interval
+        lower: 5
+        upper: 60
+      - type: ray.tune.randint
+        object_type: component
+        object_name: machine_3
+        field_type: arg
+        field_name: maintenance_interval
+        lower: 5
+        upper: 60
+      - type: ray.tune.randint
+        object_type: component
+        object_name: machine_4
+        field_type: arg
+        field_name: maintenance_interval
+        lower: 5
+        upper: 60
+      - type: ray.tune.randint
+        object_type: component
+        object_name: machine_5
+        field_type: arg
+        field_name: maintenance_interval
+        lower: 5
+        upper: 60
+      num_samples: 40
+      mode: max
+      max_concurrent: 4
