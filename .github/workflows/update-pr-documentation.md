@@ -16,6 +16,15 @@ strict: true
 engine:
   id: copilot
 timeout-minutes: 30
+steps:
+  - name: Install Python
+    uses: actions/setup-python@v5
+    with:
+      python-version: "3.13"
+  - name: Install uv
+    uses: astral-sh/setup-uv@v4
+  - name: Install documentation dependencies
+    run: uv sync --no-default-groups --group docs
 network:
   allowed:
     - defaults
@@ -74,8 +83,8 @@ formatting-only changes unless they make existing documentation inaccurate.
 
 ## Procedure
 
-1. Inspect the PR title and description, changed-file list, commits, and diff against
-   `origin/${{ github.event.repository.default_branch }}`. Ignore generated workflow lock files.
+1. Inspect the PR title and description, changed-file list, commits, and diff supplied by the
+   GitHub pull-request tools. Ignore generated workflow lock files.
 2. Identify additions, removals, API/CLI/configuration changes, behavior changes, and breaking
    changes. Read the affected implementation and relevant tests before deciding what users must
    know.
@@ -91,8 +100,8 @@ formatting-only changes unless they make existing documentation inaccurate.
      commands, or supported capabilities.
    - Do not alter generated files or unrelated documentation.
 6. Validate changed Markdown links and code snippets against the implementation. If MkDocs content
-   changed, run `make docs`; if this cannot run because the required local tooling is unavailable,
-   state that in the final safe-output message.
+   changed, run `make docs`; the workflow installs its documentation dependencies before the agent
+   starts.
 7. If documentation was changed, commit only the allowed documentation files and call
    `push_to_pull_request_branch` with the current PR number and a concise commit message. If the
    PR originates from a fork or the safe output cannot push to its branch, call `noop` explaining
