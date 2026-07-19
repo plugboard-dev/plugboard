@@ -31,7 +31,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          ref: ${{ github.ref }}
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
 
       - name: Install python
         uses: actions/setup-python@v5
@@ -64,12 +64,15 @@ jobs:
 
       - name: Get git branch and short sha for tag
         run: |
-          git_hash_short=$(git rev-parse --short "$GITHUB_SHA")
-          echo "GIT_HASH_SHORT=${git_hash_short}" >> $GITHUB_ENV
-          git_branch=$(git branch -r --contains ${{ github.ref }} --merged ${{ github.ref }} --format "%(refname:lstrip=3)" | grep -v HEAD)
-          echo "GIT_BRANCH=${git_branch}" >> $GITHUB_ENV
-          git_branch_docker_safe=$(echo ${git_branch} | tr / -)
-          echo "GIT_BRANCH_DOCKER_SAFE=${git_branch_docker_safe}" >> $GITHUB_ENV
+          git_hash_short=$(git rev-parse --short "${{ github.event.workflow_run.head_sha || github.sha }}")
+          echo "GIT_HASH_SHORT=${git_hash_short}" >> "$GITHUB_ENV"
+          git_branch="${{ github.event.workflow_run.head_branch || github.ref_name }}"
+          if [[ -z "${git_branch}" ]]; then
+            git_branch=$(git rev-parse --abbrev-ref HEAD)
+          fi
+          echo "GIT_BRANCH=${git_branch}" >> "$GITHUB_ENV"
+          git_branch_docker_safe=$(echo "${git_branch}" | tr / -)
+          echo "GIT_BRANCH_DOCKER_SAFE=${git_branch_docker_safe}" >> "$GITHUB_ENV"
 
       # Tagging documented at: https://github.com/docker/metadata-action?tab=readme-ov-file#basic
       - name: Extract metadata (tags, labels) for Docker
