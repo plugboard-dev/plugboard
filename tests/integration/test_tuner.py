@@ -343,6 +343,7 @@ async def test_tune_with_constraint_objective_value(config: dict, ray_ctx: None)
     best_result = tuner.run(
         spec=process_spec,
     )
+    assert not isinstance(best_result, list)
     result = tuner.result_grid
     # There must be no failed trials
     assert not any(t.error for t in result)

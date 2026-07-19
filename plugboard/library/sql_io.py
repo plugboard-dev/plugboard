@@ -1,7 +1,7 @@
 """Provides `SQLReader` and `SQLWriter` components to access SQL databases from Plugboard models."""
 
-import collections.abc as cabc
 from collections import defaultdict, deque
+import collections.abc as cabc
 import typing as _t
 
 from sqlalchemy import MetaData, Table, insert, text
@@ -42,9 +42,11 @@ class SQLReader(DataReader):
         self._connection_string = connection_string
         self._query = query
         self._params = params or {}
-        self._reader: cabc.AsyncIterator[cabc.Sequence[Row[_t.Any]]] | cabc.Iterator[
-            cabc.Sequence[Row[_t.Any]]
-        ] | None = None
+        self._reader: (
+            cabc.AsyncIterator[cabc.Sequence[Row[_t.Any]]]
+            | cabc.Iterator[cabc.Sequence[Row[_t.Any]]]
+            | None
+        ) = None
         self._connect_args = connect_args or {}
 
     async def _run_query_async(self) -> cabc.AsyncIterator[cabc.Sequence[Row[_t.Any]]]:
@@ -84,14 +86,19 @@ class SQLReader(DataReader):
         if self._reader is None:
             try:
                 self._reader = self._run_query_async()
-                return await self._reader.__anext__()
+                async_reader = self._reader
+                return await async_reader.__anext__()
             except InvalidRequestError:
                 # Fall back on synchronous connection
                 self._reader = self._run_query_sync()
                 return next(self._reader)
 
         if isinstance(self._reader, cabc.AsyncIterator):
-            return await self._reader.__anext__()
+            async_reader = _t.cast(
+                cabc.AsyncIterator[cabc.Sequence[Row[_t.Any]]],
+                self._reader,
+            )
+            return await async_reader.__anext__()
         return next(_t.cast(cabc.Iterator[cabc.Sequence[Row[_t.Any]]], self._reader))
 
     async def _convert(self, data: _t.Sequence[Row]) -> dict[str, deque]:
@@ -141,6 +148,7 @@ class SQLWriter(DataWriter):
             raise RuntimeError("No async database connection available")
         async with self._engine.connect() as conn:
             if self._table is None:
+
                 def _load_table(sync_conn: Connection) -> Table:
                     self._metadata.reflect(bind=sync_conn, only=[self._table_name])
                     return Table(self._table_name, self._metadata, autoload_with=sync_conn)
