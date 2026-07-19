@@ -63,16 +63,19 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Get git branch and short sha for tag
+        env:
+          EVENT_BRANCH: ${{ github.event.workflow_run.head_branch || github.ref_name }}
+          EVENT_SHA: ${{ github.event.workflow_run.head_sha || github.sha }}
         run: |
-          git_hash_short=$(git rev-parse --short "${{ github.event.workflow_run.head_sha || github.sha }}")
-          echo "GIT_HASH_SHORT=${git_hash_short}" >> "$GITHUB_ENV"
-          git_branch="${{ github.event.workflow_run.head_branch || github.ref_name }}"
+          git_hash_short=$(git rev-parse --short "$EVENT_SHA")
+          printf 'GIT_HASH_SHORT=%s\n' "${git_hash_short}" >> "$GITHUB_ENV"
+          git_branch="$EVENT_BRANCH"
           if [[ -z "${git_branch}" ]]; then
             git_branch=$(git rev-parse --abbrev-ref HEAD)
           fi
-          echo "GIT_BRANCH=${git_branch}" >> "$GITHUB_ENV"
+          printf 'GIT_BRANCH=%s\n' "${git_branch}" >> "$GITHUB_ENV"
           git_branch_docker_safe=$(echo "${git_branch}" | tr / -)
-          echo "GIT_BRANCH_DOCKER_SAFE=${git_branch_docker_safe}" >> "$GITHUB_ENV"
+          printf 'GIT_BRANCH_DOCKER_SAFE=%s\n' "${git_branch_docker_safe}" >> "$GITHUB_ENV"
 
       # Tagging documented at: https://github.com/docker/metadata-action?tab=readme-ov-file#basic
       - name: Extract metadata (tags, labels) for Docker
