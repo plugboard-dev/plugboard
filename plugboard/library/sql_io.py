@@ -1,10 +1,11 @@
 """Provides `SQLReader` and `SQLWriter` components to access SQL databases from Plugboard models."""
 
+import collections.abc as cabc
 from collections import defaultdict, deque
 import typing as _t
 
 from sqlalchemy import MetaData, Table, insert, text
-from sqlalchemy.engine import Engine, Row, create_engine
+from sqlalchemy.engine import Connection, Engine, Row, create_engine
 from sqlalchemy.exc import InvalidRequestError
 from sqlalchemy.ext.asyncio import AsyncEngine, create_async_engine
 
@@ -41,10 +42,12 @@ class SQLReader(DataReader):
         self._connection_string = connection_string
         self._query = query
         self._params = params or {}
-        self._reader: _t.Optional[_t.AsyncIterator | _t.Iterator] = None
+        self._reader: cabc.AsyncIterator[cabc.Sequence[Row[_t.Any]]] | cabc.Iterator[
+            cabc.Sequence[Row[_t.Any]]
+        ] | None = None
         self._connect_args = connect_args or {}
 
-    async def _run_query_async(self) -> _t.AsyncIterator[_t.Sequence[Row]]:
+    async def _run_query_async(self) -> cabc.AsyncIterator[cabc.Sequence[Row[_t.Any]]]:
         engine = create_async_engine(self._connection_string, **self._connect_args)
         async with engine.connect() as conn:
             if self._chunk_size:
@@ -61,7 +64,7 @@ class SQLReader(DataReader):
                 yield list(result)
             raise NoMoreDataException
 
-    def _run_query_sync(self) -> _t.Iterator[_t.Sequence[Row]]:
+    def _run_query_sync(self) -> cabc.Iterator[cabc.Sequence[Row[_t.Any]]]:
         engine = create_engine(self._connection_string, **self._connect_args)
         with engine.connect() as conn:
             if self._chunk_size:
@@ -77,7 +80,7 @@ class SQLReader(DataReader):
                 yield list(result)
             raise NoMoreDataException
 
-    async def _fetch(self) -> _t.Sequence[Row]:
+    async def _fetch(self) -> cabc.Sequence[Row[_t.Any]]:
         if self._reader is None:
             try:
                 self._reader = self._run_query_async()
@@ -87,9 +90,9 @@ class SQLReader(DataReader):
                 self._reader = self._run_query_sync()
                 return next(self._reader)
 
-        if isinstance(self._reader, _t.AsyncIterator):
+        if isinstance(self._reader, cabc.AsyncIterator):
             return await self._reader.__anext__()
-        return next(self._reader)
+        return next(_t.cast(cabc.Iterator[cabc.Sequence[Row[_t.Any]]], self._reader))
 
     async def _convert(self, data: _t.Sequence[Row]) -> dict[str, deque]:
         converted_data: dict[str, deque] = defaultdict(deque)
@@ -138,11 +141,11 @@ class SQLWriter(DataWriter):
             raise RuntimeError("No async database connection available")
         async with self._engine.connect() as conn:
             if self._table is None:
-                await conn.run_sync(
-                    self._metadata.reflect,
-                    only=[self._table_name],
-                )
-                self._table = Table(self._table_name, self._metadata, autoload_with=self._engine)  # type: ignore[arg-type]
+                def _load_table(sync_conn: Connection) -> Table:
+                    self._metadata.reflect(bind=sync_conn, only=[self._table_name])
+                    return Table(self._table_name, self._metadata, autoload_with=sync_conn)
+
+                self._table = await conn.run_sync(_load_table)
             await conn.execute(insert(self._table).values(data))
 
     def _save_rows_sync(self, data: list[dict[str, _t.Any]]) -> None:

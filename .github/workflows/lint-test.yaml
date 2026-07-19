@@ -52,9 +52,7 @@ jobs:
 
       - name: Type checking
         run: |
-          uv run mypy plugboard/ --explicit-package-bases
-          uv run mypy plugboard-schemas/plugboard_schemas/ --explicit-package-bases
-          uv run mypy tests/
+          uv run ty check plugboard/ plugboard-schemas/plugboard_schemas/ tests/
         if: always()
 
       - name: Code complexity

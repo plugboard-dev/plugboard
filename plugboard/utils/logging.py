@@ -11,10 +11,10 @@ from plugboard.utils.settings import Settings
 
 def _is_ipython() -> bool:
     try:
-        from builtins import get_ipython  # type: ignore [attr-defined]  # noqa: F401
+        from IPython import get_ipython
     except ImportError:
         return False
-    return True
+    return get_ipython() is not None
 
 
 def _serialiser(obj: _t.Any, default: _t.Callable | None) -> bytes:

@@ -86,7 +86,9 @@ class _LLMBase(Component, ABC):
         if not expand:
             self.response: str | None = chat_response.message.content
         else:
-            for field, value in chat_response.raw.model_dump().items():  # type: ignore[union-attr]
+            if chat_response.raw is None:
+                raise ValueError("Expected structured response payload from LLM.")
+            for field, value in chat_response.raw.model_dump().items():
                 setattr(self, field, value)
 
 

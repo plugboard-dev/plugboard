@@ -53,7 +53,7 @@ from .tune import (
 )
 
 
-__version__ = version(__package__)
+__version__ = version("plugboard-schemas")
 
 
 __all__ = [

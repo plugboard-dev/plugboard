@@ -63,11 +63,11 @@ dev = [
     "ipywidgets>=8.1.5,<9",
     "jupyterlab>=4.2,<5",
     "licensecheck>=2025.1.0",
-    "mypy>=1.11,<3",
     "nbstripout>=0.8,<1",
     "pre-commit>=3.8,<5",
     "radon>=6.0.1,<7",
     "ruff>=0.5,<1",
+    "ty>=0.0.61",
     "types-aiofiles>=24.1,<26",
     "xenon>=0.9.3,<1",
 ]
@@ -147,13 +147,20 @@ parallel = true
 concurrency = ["multiprocessing", "thread"]
 sigterm = true
 
-[tool.mypy]  # Static type checking
-exclude = [".git", "__pycache__", ".venv", "venv", "docs", "examples"]
-ignore_missing_imports = true
-disallow_untyped_defs = true
-disallow_incomplete_defs = true
-no_implicit_optional = true
-plugins = "pydantic.mypy"
+[tool.ty]  # Static type checking
+
+[tool.ty.analysis]
+replace-imports-with-any = [
+    "openai_responses.**",
+    "pandas.**",
+    "ray.**",
+    "websockets.**",
+]
+
+[tool.ty.rules]
+invalid-type-form = "ignore"
+possibly-missing-submodule = "ignore"
+unused-type-ignore-comment = "ignore"
 
 [tool.ruff]  # Code formatting and linting
 line-length = 100

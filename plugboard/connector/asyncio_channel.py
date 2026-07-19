@@ -32,13 +32,13 @@ class AsyncioChannel(Channel):
         self._queue: asyncio.Queue = queue or asyncio.Queue(maxsize=maxsize)
         self._subscribers: _t.Optional[set[asyncio.Queue]] = subscribers
 
-    async def send(self, item: _t.Any) -> None:
+    async def send(self, msg: _t.Any) -> None:
         """Sends an item through the `Channel`."""
         if self._subscribers is None:
-            return await self._queue.put(item)
+            return await self._queue.put(msg)
         async with asyncio.TaskGroup() as tg:
             for queue in self._subscribers:
-                tg.create_task(queue.put(item))
+                tg.create_task(queue.put(msg))
 
     async def recv(self) -> _t.Any:
         """Returns an item received from the `Channel`."""

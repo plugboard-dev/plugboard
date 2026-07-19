@@ -178,8 +178,8 @@ class Component(ABC, ExportMixin):
         cls.io = IO(
             inputs=sorted(io_args["inputs"], key=str),
             outputs=sorted(io_args["outputs"], key=str),
-            input_events=sorted(io_args["input_events"], key=str),
-            output_events=sorted(io_args["output_events"], key=str),
+            input_events=_t.cast(list[_t.Type[Event]], sorted(io_args["input_events"], key=str)),
+            output_events=_t.cast(list[_t.Type[Event]], sorted(io_args["output_events"], key=str)),
             event_field_coverage=event_field_coverage,
         )
         # Set exports for subclass
