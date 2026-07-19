@@ -150,6 +150,7 @@ class SQLWriter(DataWriter):
             if self._table is None:
 
                 def _load_table(sync_conn: Connection) -> Table:
+                    """Reflect and load the target table within a sync SQLAlchemy connection."""
                     self._metadata.reflect(bind=sync_conn, only=[self._table_name])
                     return Table(self._table_name, self._metadata, autoload_with=sync_conn)
 

@@ -31,7 +31,7 @@ def _call_with_name(func: _t.Callable, path: tuple[str, ...]) -> _t.Callable:
     # underlying function (which supports __signature__ assignment) rather than
     # the bound method object (which does not).
     wraps_target = getattr(func, "__func__", func)
-    func_name = getattr(func, "__name__", type(func).__name__)
+    func_name = getattr(func, "__name__", "<unknown>")
 
     @wraps(wraps_target)
     def wrapper(self: _ActorWrapper, *args: _t.Any, **kwargs: _t.Any) -> _t.Callable:
@@ -48,7 +48,7 @@ def _call_with_name_async(func: _t.Callable, path: tuple[str, ...]) -> _t.Callab
     # underlying function (which supports __signature__ assignment) rather than
     # the bound method object (which does not).
     wraps_target = getattr(func, "__func__", func)
-    func_name = getattr(func, "__name__", type(func).__name__)
+    func_name = getattr(func, "__name__", "<unknown>")
 
     @wraps(wraps_target)
     async def wrapper(self: _ActorWrapper, *args: _t.Any, **kwargs: _t.Any) -> _t.Callable:

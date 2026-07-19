@@ -12,6 +12,8 @@ from plugboard.utils import gen_rand_str
 
 
 class _ComponentFunction(_t.Protocol):
+    """Callable protocol for functions that can be wrapped as Plugboard components."""
+
     __name__: str
     __module__: str
     __doc__: str | None
