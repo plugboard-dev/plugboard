@@ -3,4 +3,7 @@
 from importlib.metadata import version
 
 
-__version__ = version("plugboard")
+_PACKAGE_NAME = __package__ or __name__.split(".")[0]
+
+
+__version__ = version(_PACKAGE_NAME)
