@@ -48,6 +48,9 @@ jobs:
           VERSION=$(uv run hatch version)
           echo "version=$VERSION" >> $GITHUB_OUTPUT
 
+      - name: Audit dependencies
+        run: uv audit --locked
+
       - name: Set git credentials
         run: |
           git config --global user.name "${{ github.actor }}"

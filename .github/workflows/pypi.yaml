@@ -39,6 +39,9 @@ jobs:
           enable-cache: true
           cache-dependency-glob: "uv.lock"
 
+      - name: Audit dependencies
+        run: uv audit --locked
+
       - name: Build wheel
         id: wheel
         run: |

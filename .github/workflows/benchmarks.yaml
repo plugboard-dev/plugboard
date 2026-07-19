@@ -49,6 +49,7 @@ jobs:
         working-directory: ./pr
         run: |
           uv sync --group test
+          uv audit --locked
           uv run pytest --benchmark-only --benchmark-save=pr
 
       - name: Run benchmarks on main
@@ -56,6 +57,7 @@ jobs:
         continue-on-error: true
         run: |
           uv sync --group test
+          uv audit --locked
           uv run pytest --benchmark-only --benchmark-save=base
 
       - name: Compare results
