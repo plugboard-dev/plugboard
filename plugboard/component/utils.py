@@ -12,7 +12,11 @@ from plugboard.utils import gen_rand_str
 
 
 class _ComponentFunction(_t.Protocol):
-    """Callable protocol for functions that can be wrapped as Plugboard components."""
+    """Callable protocol for functions wrapped by `@component`.
+
+    The decorator relies on the wrapped callable exposing `__name__`, `__module__`, and `__doc__`
+    so it can register the generated component class and build helpful generated documentation.
+    """
 
     __name__: str
     __module__: str
