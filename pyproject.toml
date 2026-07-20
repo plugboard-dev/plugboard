@@ -149,6 +149,9 @@ sigterm = true
 
 [tool.ty]  # Static type checking
 
+[tool.ty.src]
+exclude = ["docs", "examples"]
+
 [tool.ty.analysis]
 replace-imports-with-any = [
     "openai_responses.**",
