@@ -68,6 +68,45 @@ async def test_component_initial_values(initial_values: dict[str, _t.Iterable]) 
     await component.io.close()
 
 
+class ExportBase(Component):
+    io = IO(inputs=[], outputs=["out"])
+
+    def __init__(self, x: int = 1, **kwargs: _t.Unpack[ComponentArgsDict]) -> None:
+        super().__init__(**kwargs)
+        self.x = x
+
+    async def step(self) -> None:
+        pass
+
+
+class ExportDerived(ExportBase):
+    io = IO(inputs=[], outputs=["out"])
+
+    def __init__(self, y: int = 2, **kwargs: _t.Unpack[ComponentArgsDict]) -> None:
+        super().__init__(x=y * 10, **kwargs)
+        self.y = y
+
+    async def step(self) -> None:
+        pass
+
+
+def test_export_captures_only_outermost_init_args() -> None:
+    """export() should record only the arguments passed to the outermost __init__."""
+    d = ExportDerived(name="d", y=3)
+    args = d.export()["args"]
+    # Only ExportDerived's own args should appear; ExportBase's derived 'x' must not
+    assert args == {"name": "d", "y": 3}
+    # Rebuilding from the exported args must succeed without TypeError
+    d2 = ExportDerived(**args)
+    assert d2.export()["args"] == args
+
+
+def test_export_no_stale_flag_on_instance() -> None:
+    """Re-entrancy flag must not persist on the instance after construction."""
+    d = ExportDerived(name="d", y=5)
+    assert not any(attr.endswith("_active__") for attr in vars(d))
+
+
 @pytest.mark.asyncio
 async def test_component_status() -> None:
     """Tests the status of a `Component` across its lifecycle."""
