@@ -46,7 +46,10 @@ class ExportMixin:
                 method(self, *args, **kwargs)
             finally:
                 if is_outermost:
-                    setattr(self, _reentrant_key, False)
+                    try:
+                        delattr(self, _reentrant_key)
+                    except AttributeError:
+                        pass
 
         return _wrapper
 
