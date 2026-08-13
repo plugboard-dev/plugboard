@@ -32,13 +32,21 @@ class ExportMixin:
             for k, p in inspect.signature(method).parameters.items()
             if p.kind == inspect.Parameter.POSITIONAL_OR_KEYWORD and k != "self"
         ]
+        _reentrant_key = f"__{key}_active__"
 
         @wraps(method)
         def _wrapper(self: _t.Any, *args: _t.Any, **kwargs: _t.Any) -> None:
-            saved_kwargs = ExportMixin._convert_exportable_objs(kwargs)
-            saved_args = dict(zip(_positional_args[: len(args)], args))
-            setattr(self, key, {**getattr(self, key, {}), **saved_args, **saved_kwargs})
-            method(self, *args, **kwargs)
+            is_outermost = not getattr(self, _reentrant_key, False)
+            if is_outermost:
+                setattr(self, _reentrant_key, True)
+                saved_kwargs = ExportMixin._convert_exportable_objs(kwargs)
+                saved_args = dict(zip(_positional_args[: len(args)], args))
+                setattr(self, key, {**saved_args, **saved_kwargs})
+            try:
+                method(self, *args, **kwargs)
+            finally:
+                if is_outermost:
+                    setattr(self, _reentrant_key, False)
 
         return _wrapper
 
