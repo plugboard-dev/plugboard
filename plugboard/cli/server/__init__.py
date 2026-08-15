@@ -86,7 +86,7 @@ async def _discover_components(api_url: str, base_cls: type) -> None:
         outputs = []
         input_events = []
         output_events = []
-        event_field_coverage = {}
+        event_field_coverage: dict[str, list[str]] = {}
 
         if io:
             inputs = list(io.inputs)
