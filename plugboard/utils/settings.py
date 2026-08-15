@@ -57,6 +57,42 @@ class _RedisSettings(BaseSettings):
     url: _t.Optional[str] = None
 
 
+class _GCPPubSubSettings(BaseSettings):
+    """Google Cloud PubSub settings.
+
+    Attributes:
+        project_id: The GCP project ID for PubSub.
+    """
+
+    model_config = SettingsConfigDict(env_prefix="GCP_PUBSUB_")
+
+    project_id: _t.Optional[str] = None
+
+
+class _AWSSettings(BaseSettings):
+    """AWS settings for SNS/SQS messaging.
+
+    Attributes:
+        region: The default AWS region.
+    """
+
+    model_config = SettingsConfigDict(env_prefix="AWS_")
+
+    region: _t.Optional[str] = None
+
+
+class _KafkaSettings(BaseSettings):
+    """Apache Kafka settings.
+
+    Attributes:
+        bootstrap_servers: Kafka broker address(es).
+    """
+
+    model_config = SettingsConfigDict(env_prefix="KAFKA_")
+
+    bootstrap_servers: _t.Optional[str] = None
+
+
 class Settings(BaseSettings):
     """Settings for Plugboard.
 
@@ -69,6 +105,9 @@ class Settings(BaseSettings):
             status checks.
         rabbitmq: RabbitMQ settings.
         redis: Redis settings.
+        gcp_pubsub: Google Cloud PubSub settings.
+        aws: AWS settings for SNS/SQS messaging.
+        kafka: Apache Kafka settings.
     """
 
     model_config = SettingsConfigDict(env_prefix=_ENV_PREFIX)
@@ -80,3 +119,6 @@ class Settings(BaseSettings):
 
     rabbitmq: _RabbitMQSettings = Field(default_factory=_RabbitMQSettings)
     redis: _RedisSettings = Field(default_factory=_RedisSettings)
+    gcp_pubsub: _GCPPubSubSettings = Field(default_factory=_GCPPubSubSettings)
+    aws: _AWSSettings = Field(default_factory=_AWSSettings)
+    kafka: _KafkaSettings = Field(default_factory=_KafkaSettings)

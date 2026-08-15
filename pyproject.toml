@@ -43,8 +43,11 @@ dependencies = [
 
 [project.optional-dependencies]
 aws = ["s3fs>=2024.9.0"]
+aws-messaging = ["aioboto3>=13.0,<15"]
 azure = ["adlfs>=2024.7.0"]
 gcp = ["gcsfs>=2024.9.0"]
+gcp-pubsub = ["google-cloud-pubsub>=2.25,<3"]
+kafka = ["aiokafka>=0.11,<1"]
 llm = [
     "llama-index-core>=0.12.30,<1",
     "llama-index-llms-openai>=0.3.33,<1",
