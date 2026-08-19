@@ -211,6 +211,12 @@ We can now run this model using the plugboard CLI with the command:
 plugboard process run my-model.yaml
 ```
 
+Process-level parameters defined in the YAML can be overridden at run time with repeated `--param` / `-p` flags (`key=value`, values parsed as YAML):
+
+```shell
+plugboard process run my-model.yaml --param scale=2.0 -p enabled=true
+```
+
 ## 📖 Documentation
 
 For more information including a detailed API reference and step-by-step usage examples, refer to the [documentation site](https://docs.plugboard.dev). We recommend diving into the [tutorials](https://docs.plugboard.dev/latest/examples/tutorials/hello-world/) for a step-by-step guide to getting started.
