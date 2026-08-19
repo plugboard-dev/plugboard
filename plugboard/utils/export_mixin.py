@@ -40,7 +40,9 @@ class ExportMixin:
             if is_outermost:
                 setattr(self, _reentrant_key, True)
                 saved_kwargs = ExportMixin._convert_exportable_objs(kwargs)
-                saved_args = dict(zip(_positional_args[: len(args)], args))
+                saved_args = ExportMixin._convert_exportable_objs(
+                    dict(zip(_positional_args[: len(args)], args))
+                )
                 setattr(self, key, {**saved_args, **saved_kwargs})
             try:
                 method(self, *args, **kwargs)
