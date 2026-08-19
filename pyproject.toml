@@ -162,6 +162,7 @@ extend-exclude = ["__pycache__"]
 output-format = "grouped"
 
 [tool.ruff.format]
+exclude = ["*.md"]
 quote-style = "double"
 indent-style = "space"
 skip-magic-trailing-comma = false
