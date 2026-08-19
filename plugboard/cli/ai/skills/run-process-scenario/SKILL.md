@@ -18,16 +18,16 @@ Create or update a YAML config for the requested scenario, then run it with `plu
 
 1. Make sure a YAML config exists for the model. If the model only exists in Python, create the YAML first by using the `create-yaml-config` skill at `../create-yaml-config/SKILL.md`.
 2. Ask for any missing scenario inputs before running anything.
-3. Update the YAML config with the exact parameter values the user requested.
+3. Prefer overriding process parameters on the CLI with repeated `--param` / `-p` `key=value` flags when only parameter values change for a scenario. Edit the YAML when component structure, connectors, or defaults need to change.
 4. Preserve a clear component structure that matches the real-world model. Do not collapse multiple entities into one component just to make the config shorter.
-5. Validate the updated YAML against `plugboard_schemas.ConfigSpec` before running it.
-6. Run:
+5. Validate the YAML against `plugboard_schemas.ConfigSpec` before running it.
+6. Run, for example:
 
 ```sh
-plugboard process run path/to/model.yaml
+plugboard process run path/to/model.yaml --param scale=2.0 -p max_iters=10
 ```
 
-7. Report what configuration was used, what validation was performed, what command was run, and the key outputs or generated artifacts.
+7. Report what configuration was used, what validation was performed, what command was run (including any `--param` overrides), and the key outputs or generated artifacts.
 8. If the scenario required new parameters, confirm that the final config remains YAML-friendly and reusable.
 
 ## Output

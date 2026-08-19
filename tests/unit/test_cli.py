@@ -164,6 +164,68 @@ async def test_cli_process_run_with_ray_override() -> None:
         assert process_spec.args.state.type == "plugboard.state.RayStateBackend"
 
 
+@pytest.mark.asyncio
+async def test_cli_process_run_with_param_overrides() -> None:
+    """Tests the process run command with --param / -p overrides."""
+    with patch("plugboard.cli.process.ProcessBuilder") as mock_process_builder:
+        mock_process = AsyncMock()
+        mock_process_builder.build.return_value = mock_process
+        result = runner.invoke(
+            app,
+            [
+                "process",
+                "run",
+                "tests/data/dynamic-param-process.yaml",
+                "--param",
+                "max_iters=3",
+                "-p",
+                "scale=1.5",
+                "--param",
+                "enabled=true",
+                "-p",
+                "label=hello",
+                "--param",
+                "items=[1, 2]",
+            ],
+        )
+        assert result.exit_code == 0
+        assert "Process complete" in result.stdout
+        mock_process_builder.build.assert_called_once()
+        process_spec = mock_process_builder.build.call_args[0][0]
+        assert process_spec.args.parameters == {
+            "max_iters": 3,
+            "scale": 1.5,
+            "enabled": True,
+            "label": "hello",
+            "items": [1, 2],
+        }
+
+
+@pytest.mark.asyncio
+async def test_cli_process_run_with_invalid_param_override() -> None:
+    """Tests the process run command rejects malformed --param values."""
+    with patch("plugboard.cli.process.ProcessBuilder") as mock_process_builder:
+        result = runner.invoke(
+            app,
+            ["process", "run", "tests/data/minimal-process.yaml", "--param", "not-a-pair"],
+        )
+        assert result.exit_code == 2
+        assert "Invalid parameter override" in result.stderr
+        mock_process_builder.build.assert_not_called()
+
+
+def test_parse_param_override() -> None:
+    """Tests key=value parsing for process parameter overrides."""
+    from plugboard.cli.process import _parse_param_override
+
+    assert _parse_param_override("scale=2.0") == ("scale", 2.0)
+    assert _parse_param_override("name=hello") == ("name", "hello")
+    assert _parse_param_override("flag=true") == ("flag", True)
+    assert _parse_param_override("empty=") == ("empty", "")
+    assert _parse_param_override("eq=a=b") == ("eq", "a=b")
+    assert _parse_param_override('name="yes"') == ("name", "yes")
+
+
 def test_cli_process_validate() -> None:
     """Tests the process validate command."""
     result = runner.invoke(app, ["process", "validate", "tests/data/minimal-process.yaml"])

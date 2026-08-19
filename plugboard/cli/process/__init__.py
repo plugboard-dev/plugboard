@@ -34,6 +34,45 @@ def _read_yaml(path: Path) -> ConfigSpec:
     return ConfigSpec.model_validate(data)
 
 
+def _parse_param_override(param: str) -> tuple[str, _t.Any]:
+    """Parse a single ``key=value`` process parameter override.
+
+    Values are decoded as YAML scalars/collections so that numbers, booleans,
+    nulls, lists and mappings keep their natural types. Plain strings are left
+    as strings. Use quotes around a value if YAML would otherwise coerce it
+    (for example ``name='"yes"'``).
+    """
+    if "=" not in param:
+        raise typer.BadParameter(
+            f"Invalid parameter override {param!r}. Expected format: key=value.",
+            param_hint="--param",
+        )
+    key, _, raw_value = param.partition("=")
+    if not key:
+        raise typer.BadParameter(
+            f"Invalid parameter override {param!r}. Parameter name must not be empty.",
+            param_hint="--param",
+        )
+    if raw_value == "":
+        return key, ""
+    try:
+        value = msgspec.yaml.decode(raw_value.encode())
+    except msgspec.DecodeError as e:
+        raise typer.BadParameter(
+            f"Could not parse value for parameter {key!r}: {raw_value!r}.",
+            param_hint="--param",
+        ) from e
+    return key, value
+
+
+def _apply_param_overrides(config: ConfigSpec, params: list[str] | None) -> None:
+    """Merge CLI parameter overrides into the process configuration in place."""
+    if not params:
+        return
+    overrides = dict(_parse_param_override(p) for p in params)
+    config.plugboard.process.args.parameters.update(overrides)
+
+
 def _build_process(config: ConfigSpec) -> Process:
     process = ProcessBuilder.build(config.plugboard.process)
     return process
@@ -102,6 +141,17 @@ def run(
             ),
         ),
     ] = None,
+    param: Annotated[
+        _t.Optional[list[str]],
+        typer.Option(
+            "--param",
+            "-p",
+            help=(
+                "Override a process parameter as key=value. Repeatable. "
+                "Values are parsed as YAML (e.g. --param scale=2.0 -p flag=true)."
+            ),
+        ),
+    ] = None,
 ) -> None:
     """Run a Plugboard process."""
     config_spec = _read_yaml(config)
@@ -115,6 +165,12 @@ def run(
         config_spec.plugboard.process = config_spec.plugboard.process.override_process_type(
             process_type  # type: ignore[arg-type]
         )
+
+    try:
+        _apply_param_overrides(config_spec, param)
+    except typer.BadParameter as e:
+        stderr.print(f"[red]{e}[/red]")
+        raise typer.Exit(2) from e
 
     with Progress(
         SpinnerColumn("arrow3"),
