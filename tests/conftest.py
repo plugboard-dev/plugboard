@@ -9,7 +9,6 @@ from unittest.mock import patch
 
 import pytest
 import pytest_asyncio
-import pytest_cases
 from that_depends import ContextScopes, container_context
 import uvloop
 
@@ -79,14 +78,13 @@ async def DI_teardown() -> _t.AsyncGenerator[None, None]:
         await DI.tear_down()
 
 
-@pytest_cases.fixture
-@pytest_cases.parametrize(zmq_pubsub_proxy=[False, True])
-def zmq_connector_cls(zmq_pubsub_proxy: bool) -> _t.Iterator[_t.Type[ZMQConnector]]:
+@pytest.fixture(params=[False, True], ids=["zmq_pubsub_proxy=False", "zmq_pubsub_proxy=True"])
+def zmq_connector_cls(request: pytest.FixtureRequest) -> _t.Iterator[_t.Type[ZMQConnector]]:
     """Returns the ZMQConnector class with the specified proxy setting.
 
     Overrides settings to control the proxy setting without mutating process env.
     """
-    testing_settings = Settings.model_validate({"flags": {"zmq_pubsub_proxy": zmq_pubsub_proxy}})
+    testing_settings = Settings.model_validate({"flags": {"zmq_pubsub_proxy": request.param}})
     with override_settings(testing_settings):
         yield ZMQConnector
 

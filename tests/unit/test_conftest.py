@@ -1,5 +1,6 @@
 """Unit tests for the shared pytest configuration."""
 
+import asyncio
 import os
 
 import pytest
@@ -10,9 +11,9 @@ from plugboard.utils.settings import Settings
 from tests import conftest
 
 
-def test_pytest_asyncio_loop_factories_uses_uvloop() -> None:
-    """The shared pytest-asyncio hook should configure uvloop factories."""
-    assert conftest.pytest_asyncio_loop_factories() == {"uvloop": uvloop.new_event_loop}
+async def test_tests_run_on_uvloop() -> None:
+    """Tests should run on a uvloop event loop, supplied by the loop factory hook."""
+    assert isinstance(asyncio.get_running_loop(), uvloop.Loop)
 
 
 @pytest.mark.parametrize("proxy_enabled", [False, True])
