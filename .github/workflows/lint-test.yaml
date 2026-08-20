@@ -64,7 +64,8 @@ jobs:
         if: always()
 
       - name: Check open source licenses
-        run: uv run licensecheck --requirements-paths ./pyproject.toml --zero --skip-dependencies plugboard-schemas
+        # Skipping fsspec until https://github.com/fsspec/filesystem_spec/issues/2100 resolved
+        run: uv run licensecheck --requirements-paths ./pyproject.toml --zero --skip-dependencies plugboard-schemas fsspec
 
       - name: Build docs
         run: uv run mkdocs build --site-dir /tmp/site
