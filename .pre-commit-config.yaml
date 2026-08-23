@@ -12,9 +12,9 @@ repos:
     # Run the formatter.
     - id: ruff-format
 - repo: https://github.com/astral-sh/ty-pre-commit
-  rev: v0.0.73
+  rev: 0.0.73
   hooks:
-    - id: ty
+    - id: ty-check
 - repo: https://github.com/rubik/xenon
   rev: v0.9.3
   hooks:
