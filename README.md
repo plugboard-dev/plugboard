@@ -1,38 +1,35 @@
-<div align="center">
-  <picture align="center">
-    <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/plugboard-dev/plugboard/refs/heads/main/docs/assets/plugboard-logo-dark.svg" width="65%" height="auto">
-    <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/plugboard-dev/plugboard/refs/heads/main/docs/assets/plugboard-logo-light.svg" width="65%" height="auto">
-    <img alt="Plugboard" src="docs/assets/plugboard-logo.jpeg" width="80%" height="auto">
-  </picture>
-</div>
-
-<div align="center" class="badge-section">
-  <br>
-  <a href="https://pypi.org/project/plugboard/" alt="PyPI version">
-    <img alt="PyPI" src="https://img.shields.io/pypi/v/plugboard?labelColor=075D7A&color=CC9C4A"></a>
-  <a href="https://www.python.org/" alt="Python versions">
-    <img alt="Python" src="https://img.shields.io/pypi/pyversions/plugboard?labelColor=075D7A&color=CC9C4A"></a>
-  <a href="https://github.com/plugboard-dev/plugboard?tab=Apache-2.0-1-ov-file#readme" alt="License">
-    <img alt="License" src="https://img.shields.io/github/license/plugboard-dev/plugboard?labelColor=075D7A&color=CC9C4A"></a>
-  <a href="https://github.com/plugboard-dev/plugboard" alt="Typed">
-    <img alt="Typed" src="https://img.shields.io/pypi/types/plugboard?labelColor=075D7A&color=CC9C4A"></a>
-  <br>
-  <a href="https://github.com/plugboard-dev/plugboard/actions/workflows/lint-test.yaml" alt="Lint and test">
-    <img alt="Lint and Test" src="https://github.com/plugboard-dev/plugboard/actions/workflows/lint-test.yaml/badge.svg"></a>
-  <a href="https://github.com/plugboard-dev/plugboard/actions/workflows/github-code-scanning/codeql" alt="CodeQL">
-    <img alt="CodeQL" src="https://github.com/plugboard-dev/plugboard/actions/workflows/github-code-scanning/codeql/badge.svg"></a>
-  <a href="https://codecov.io/gh/plugboard-dev/plugboard" >
-    <img src="https://codecov.io/gh/plugboard-dev/plugboard/graph/badge.svg?token=4LU4K6TOLQ"/></a>
-  <br>
-  <a href="https://docs.plugboard.dev" alt="Documentation">
-    <img alt="Docs" src="https://github.com/plugboard-dev/plugboard/actions/workflows/docs.yaml/badge.svg"></a>
-</div>
-
-<div align="center">
-  <picture align="center">
-    <img alt="Plugboard" src="docs/assets/demo.gif" width="80%" height="auto">
-  </picture>
-</div>
+<table>
+  <tr>
+    <td width="45%" align="center" valign="middle">
+      <picture>
+        <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/plugboard-dev/plugboard/refs/heads/main/docs/assets/plugboard-logo-dark.svg">
+        <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/plugboard-dev/plugboard/refs/heads/main/docs/assets/plugboard-logo-light.svg">
+        <img alt="Plugboard" src="docs/assets/plugboard-logo.jpeg" width="100%">
+      </picture>
+      <br><br>
+      <a href="https://pypi.org/project/plugboard/" aria-label="PyPI version">
+        <img alt="PyPI" src="https://img.shields.io/pypi/v/plugboard?labelColor=075D7A&color=CC9C4A"></a>
+      <a href="https://www.python.org/" aria-label="Python versions">
+        <img alt="Python" src="https://img.shields.io/pypi/pyversions/plugboard?labelColor=075D7A&color=CC9C4A"></a>
+      <a href="https://github.com/plugboard-dev/plugboard?tab=Apache-2.0-1-ov-file#readme" aria-label="License">
+        <img alt="License" src="https://img.shields.io/github/license/plugboard-dev/plugboard?labelColor=075D7A&color=CC9C4A"></a>
+      <a href="https://github.com/plugboard-dev/plugboard" aria-label="Typed">
+        <img alt="Typed" src="https://img.shields.io/pypi/types/plugboard?labelColor=075D7A&color=CC9C4A"></a>
+      <br>
+      <a href="https://github.com/plugboard-dev/plugboard/actions/workflows/lint-test.yaml" aria-label="Lint and test">
+        <img alt="Lint and Test" src="https://github.com/plugboard-dev/plugboard/actions/workflows/lint-test.yaml/badge.svg"></a>
+      <a href="https://github.com/plugboard-dev/plugboard/actions/workflows/github-code-scanning/codeql" aria-label="CodeQL">
+        <img alt="CodeQL" src="https://github.com/plugboard-dev/plugboard/actions/workflows/github-code-scanning/codeql/badge.svg"></a>
+      <a href="https://codecov.io/gh/plugboard-dev/plugboard" aria-label="Codecov">
+        <img alt="Codecov" src="https://codecov.io/gh/plugboard-dev/plugboard/graph/badge.svg?token=4LU4K6TOLQ"></a>
+      <a href="https://docs.plugboard.dev" aria-label="Documentation">
+        <img alt="Docs" src="https://github.com/plugboard-dev/plugboard/actions/workflows/docs.yaml/badge.svg"></a>
+    </td>
+    <td width="55%" align="center" valign="middle">
+      <img alt="Plugboard demo" src="docs/assets/demo.gif" width="100%">
+    </td>
+  </tr>
+</table>
 
 <hr>
 
