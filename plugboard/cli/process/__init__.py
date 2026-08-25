@@ -73,6 +73,7 @@ def _parse_param_override(param: str) -> tuple[BaseFieldSpec, _t.Any]:
         field = (
             BaseFieldSpec(
                 object_type="process",
+                object_name=None,
                 field_type="parameter",
                 field_name=key,
             )

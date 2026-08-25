@@ -127,3 +127,6 @@ def test_parameter_override() -> None:
     assert components["a"].args.model_dump()["iters"] == 5
     assert components["d"].args.initial_values["in_1"] == [1, 2]
     assert components["d"].args.parameters["enabled"] is True
+
+    with pytest.raises(ValueError, match="Unknown object type"):
+        parse_parameter_name("connector.my_connector.arg.value")

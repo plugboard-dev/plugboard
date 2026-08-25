@@ -101,6 +101,8 @@ def parse_parameter_name(name: str) -> BaseFieldSpec:
 
     if not object_name or not field_name:
         raise ValueError("Parameter names must include an object name and field name.")
+    if object_type not in {"component", "process"}:
+        raise ValueError(f"Unknown object type {object_type!r} for parameter override.")
     if object_type == "process" and object_name != "default":
         raise ValueError("Process parameter names must use 'process.default'.")
     if (object_type == "component" and field_type not in {"arg", "initial_value", "parameter"}) or (
@@ -139,6 +141,8 @@ def override_parameter(process: ProcessSpec, param: BaseFieldSpec, value: _t.Any
             component.args.parameters[param.field_name] = value
     elif param.object_type == "process":
         process.args.parameters[param.field_name] = value
+    else:
+        raise ValueError(f"Unknown object type {param.object_type} for parameter override.")
 
 
 class ObjectiveSpec(BaseFieldSpec):
