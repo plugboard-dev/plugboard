@@ -3,7 +3,13 @@
 import msgspec
 import pytest
 
-from plugboard.schemas import ConfigSpec, TuneArgsSpec, TuneSpec
+from plugboard.schemas import (
+    ConfigSpec,
+    TuneArgsSpec,
+    TuneSpec,
+    override_parameter,
+    parse_parameter_name,
+)
 
 
 def test_config_spec() -> None:
@@ -95,3 +101,29 @@ def test_tune_spec() -> None:
     # Invalid objective length should raise a validation error
     with pytest.raises(ValueError):
         _ = TuneSpec(args=TuneArgsSpec.model_validate(invalid_spec))
+
+
+def test_parameter_override() -> None:
+    """Tests parsing and applying generic parameter overrides."""
+    with open("tests/data/dynamic-param-process.yaml", "rb") as f:
+        config = ConfigSpec.model_validate(msgspec.yaml.decode(f.read()))
+
+    process = config.plugboard.process
+    override_parameter(process, parse_parameter_name("process.default.parameter.max_iters"), 3)
+    override_parameter(process, parse_parameter_name("component.a.arg.iters"), 5)
+    override_parameter(
+        process,
+        parse_parameter_name("component.d.initial_value.in_1"),
+        [1, 2],
+    )
+    override_parameter(
+        process,
+        parse_parameter_name("component.d.parameter.enabled"),
+        True,
+    )
+
+    components = {component.args.name: component for component in process.args.components}
+    assert process.args.parameters["max_iters"] == 3
+    assert components["a"].args.model_dump()["iters"] == 5
+    assert components["d"].args.initial_values["in_1"] == [1, 2]
+    assert components["d"].args.parameters["enabled"] is True

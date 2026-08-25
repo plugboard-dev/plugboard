@@ -6,6 +6,7 @@ import typing as _t
 from pydantic import Field, PositiveInt, ValidationInfo, field_validator, model_validator
 
 from ._common import PlugboardBaseModel
+from .process import ProcessSpec
 
 
 class OptunaSpec(PlugboardBaseModel):
@@ -75,6 +76,69 @@ class BaseFieldSpec(PlugboardBaseModel, ABC):
             f"{self.object_name if self.object_name else 'default'}."
             f"{self.field_type}.{self.field_name}"
         )
+
+
+def parse_parameter_name(name: str) -> BaseFieldSpec:
+    """Parse a tunable parameter's fully-qualified name.
+
+    Args:
+        name: A parameter name such as ``component.my_component.arg.scale``.
+
+    Returns:
+        The corresponding field specification.
+
+    Raises:
+        ValueError: If the name does not identify an overridable parameter.
+    """
+    try:
+        object_type, object_name, field_type, field_name = name.split(".", maxsplit=3)
+    except ValueError as e:
+        raise ValueError(
+            "Parameter name must have the format "
+            "'component.<name>.<arg|initial_value|parameter>.<field>' or "
+            "'process.default.parameter.<field>'."
+        ) from e
+
+    if not object_name or not field_name:
+        raise ValueError("Parameter names must include an object name and field name.")
+    if object_type == "process" and object_name != "default":
+        raise ValueError("Process parameter names must use 'process.default'.")
+    if (object_type == "component" and field_type not in {"arg", "initial_value", "parameter"}) or (
+        object_type == "process" and field_type != "parameter"
+    ):
+        raise ValueError(f"Parameter name {name!r} does not identify an overridable parameter.")
+    return BaseFieldSpec(
+        object_type=object_type,
+        object_name=None if object_type == "process" else object_name,
+        field_type=field_type,
+        field_name=field_name,
+    )
+
+
+def override_parameter(process: ProcessSpec, param: BaseFieldSpec, value: _t.Any) -> None:
+    """Override a parameter or initial value in a process specification.
+
+    Args:
+        process: The process specification to update.
+        param: The field to override.
+        value: The replacement value.
+
+    Raises:
+        ValueError: If the target component is not present in the process.
+    """
+    if param.object_type == "component":
+        try:
+            component = next(c for c in process.args.components if c.args.name == param.object_name)
+        except StopIteration:
+            raise ValueError(f"Component {param.object_name} not found in process.")
+        if param.field_type == "arg":
+            setattr(component.args, param.field_name, value)
+        elif param.field_type == "initial_value":
+            component.args.initial_values[param.field_name] = value
+        elif param.field_type == "parameter":
+            component.args.parameters[param.field_name] = value
+    elif param.object_type == "process":
+        process.args.parameters[param.field_name] = value
 
 
 class ObjectiveSpec(BaseFieldSpec):

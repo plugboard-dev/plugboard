@@ -166,7 +166,7 @@ async def test_cli_process_run_with_ray_override() -> None:
 
 @pytest.mark.asyncio
 async def test_cli_process_run_with_param_overrides() -> None:
-    """Tests the process run command with --param / -p overrides."""
+    """Tests the process run command with generic --param / -p overrides."""
     with patch("plugboard.cli.process.ProcessBuilder") as mock_process_builder:
         mock_process = AsyncMock()
         mock_process_builder.build.return_value = mock_process
@@ -177,15 +177,13 @@ async def test_cli_process_run_with_param_overrides() -> None:
                 "run",
                 "tests/data/dynamic-param-process.yaml",
                 "--param",
-                "max_iters=3",
+                "process.default.parameter.max_iters=3",
                 "-p",
-                "scale=1.5",
+                "component.a.arg.iters=5",
                 "--param",
-                "enabled=true",
+                "component.d.initial_value.in_1=[1, 2]",
                 "-p",
-                "label=hello",
-                "--param",
-                "items=[1, 2]",
+                "component.d.parameter.enabled=true",
             ],
         )
         assert result.exit_code == 0
@@ -194,11 +192,11 @@ async def test_cli_process_run_with_param_overrides() -> None:
         process_spec = mock_process_builder.build.call_args[0][0]
         assert process_spec.args.parameters == {
             "max_iters": 3,
-            "scale": 1.5,
-            "enabled": True,
-            "label": "hello",
-            "items": [1, 2],
         }
+        components = {component.args.name: component for component in process_spec.args.components}
+        assert components["a"].args.iters == 5
+        assert components["d"].args.initial_values["in_1"] == [1, 2]
+        assert components["d"].args.parameters["enabled"] is True
 
 
 @pytest.mark.asyncio
@@ -215,15 +213,27 @@ async def test_cli_process_run_with_invalid_param_override() -> None:
 
 
 def test_parse_param_override() -> None:
-    """Tests key=value parsing for process parameter overrides."""
+    """Tests name=value parsing for generic parameter overrides."""
     from plugboard.cli.process import _parse_param_override
 
-    assert _parse_param_override("scale=2.0") == ("scale", 2.0)
-    assert _parse_param_override("name=hello") == ("name", "hello")
-    assert _parse_param_override("flag=true") == ("flag", True)
-    assert _parse_param_override("empty=") == ("empty", "")
-    assert _parse_param_override("eq=a=b") == ("eq", "a=b")
-    assert _parse_param_override('name="yes"') == ("name", "yes")
+    field, value = _parse_param_override("component.a.arg.scale=2.0")
+    assert field.full_name == "component.a.arg.scale"
+    assert value == 2.0
+    field, value = _parse_param_override("process.default.parameter.name=hello")
+    assert field.full_name == "process.default.parameter.name"
+    assert value == "hello"
+    field, value = _parse_param_override("max_iters=3")
+    assert field.full_name == "process.default.parameter.max_iters"
+    assert value == 3
+    field, value = _parse_param_override("component.a.parameter.flag=true")
+    assert field.full_name == "component.a.parameter.flag"
+    assert value is True
+    field, value = _parse_param_override("component.a.initial_value.empty=")
+    assert field.full_name == "component.a.initial_value.empty"
+    assert value == ""
+    field, value = _parse_param_override('component.a.arg.name="yes"')
+    assert field.full_name == "component.a.arg.name"
+    assert value == "yes"
 
 
 def test_cli_process_validate() -> None:

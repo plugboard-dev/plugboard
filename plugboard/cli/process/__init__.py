@@ -13,7 +13,13 @@ from typing_extensions import Annotated
 
 from plugboard.diagram import MermaidDiagram
 from plugboard.process import Process, ProcessBuilder
-from plugboard.schemas import ConfigSpec, validate_process
+from plugboard.schemas import (
+    BaseFieldSpec,
+    ConfigSpec,
+    override_parameter,
+    parse_parameter_name,
+    validate_process,
+)
 from plugboard.tune import Tuner
 from plugboard.utils import add_sys_path, run_coro_sync
 
@@ -34,8 +40,8 @@ def _read_yaml(path: Path) -> ConfigSpec:
     return ConfigSpec.model_validate(data)
 
 
-def _parse_param_override(param: str) -> tuple[str, _t.Any]:
-    """Parse a single ``key=value`` process parameter override.
+def _parse_param_override(param: str) -> tuple[BaseFieldSpec, _t.Any]:
+    """Parse a single ``name=value`` parameter override.
 
     Values are decoded as YAML scalars/collections so that numbers, booleans,
     nulls, lists and mappings keep their natural types. Plain strings are left
@@ -44,7 +50,7 @@ def _parse_param_override(param: str) -> tuple[str, _t.Any]:
     """
     if "=" not in param:
         raise typer.BadParameter(
-            f"Invalid parameter override {param!r}. Expected format: key=value.",
+            f"Invalid parameter override {param!r}. Expected format: name=value.",
             param_hint="--param",
         )
     key, _, raw_value = param.partition("=")
@@ -54,23 +60,40 @@ def _parse_param_override(param: str) -> tuple[str, _t.Any]:
             param_hint="--param",
         )
     if raw_value == "":
-        return key, ""
+        value = ""
+    else:
+        try:
+            value = msgspec.yaml.decode(raw_value.encode())
+        except msgspec.DecodeError as e:
+            raise typer.BadParameter(
+                f"Could not parse value for parameter {key!r}: {raw_value!r}.",
+                param_hint="--param",
+            ) from e
     try:
-        value = msgspec.yaml.decode(raw_value.encode())
-    except msgspec.DecodeError as e:
+        field = (
+            BaseFieldSpec(
+                object_type="process",
+                field_type="parameter",
+                field_name=key,
+            )
+            if "." not in key
+            else parse_parameter_name(key)
+        )
+    except ValueError as e:
         raise typer.BadParameter(
-            f"Could not parse value for parameter {key!r}: {raw_value!r}.",
+            f"Invalid parameter name {key!r}: {e}",
             param_hint="--param",
         ) from e
-    return key, value
+    return field, value
 
 
 def _apply_param_overrides(config: ConfigSpec, params: list[str] | None) -> None:
-    """Merge CLI parameter overrides into the process configuration in place."""
+    """Apply CLI parameter overrides to the process configuration in place."""
     if not params:
         return
-    overrides = dict(_parse_param_override(p) for p in params)
-    config.plugboard.process.args.parameters.update(overrides)
+    for param in params:
+        field, value = _parse_param_override(param)
+        override_parameter(config.plugboard.process, field, value)
 
 
 def _build_process(config: ConfigSpec) -> Process:
@@ -147,8 +170,10 @@ def run(
             "--param",
             "-p",
             help=(
-                "Override a process parameter as key=value. Repeatable. "
-                "Values are parsed as YAML (e.g. --param scale=2.0 -p flag=true)."
+                "Override a process or component field as name=value. Repeatable. "
+                "Use component.<name>.<arg|initial_value|parameter>.<field> or "
+                "process.default.parameter.<field>; a bare name targets a process parameter. "
+                "Values are parsed as YAML."
             ),
         ),
     ] = None,
