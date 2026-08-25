@@ -28,13 +28,13 @@
     <img alt="Docs" src="https://github.com/plugboard-dev/plugboard/actions/workflows/docs.yaml/badge.svg"></a>
 </div>
 
-<hr>
-
 <div align="center">
   <picture align="center">
     <img alt="Plugboard" src="docs/assets/demo.gif" width="70%" height="auto">
   </picture>
 </div>
+
+<hr>
 
 Plugboard is an **event-driven modelling and orchestration framework** in Python for simulating and driving complex processes with many interconnected stateful components.
 
