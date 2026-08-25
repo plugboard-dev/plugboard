@@ -30,7 +30,7 @@
 
 <div align="center">
   <picture align="center">
-    <img alt="Plugboard" src="docs/assets/demo.gif" width="70%" height="auto">
+    <img alt="Plugboard" src="docs/assets/demo.gif" width="80%" height="auto">
   </picture>
 </div>
 
