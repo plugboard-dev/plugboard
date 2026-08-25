@@ -13,6 +13,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 import respx
+import typer
 from typer.testing import CliRunner
 
 from plugboard.cli import app
@@ -234,6 +235,23 @@ def test_parse_param_override() -> None:
     field, value = _parse_param_override('component.a.arg.name="yes"')
     assert field.full_name == "component.a.arg.name"
     assert value == "yes"
+
+
+@pytest.mark.parametrize(
+    ("param", "message"),
+    [
+        ("not-a-pair", "Expected format"),
+        ("=value", "Parameter name must not be empty"),
+        ("component.a.arg.value=[", "Could not parse value"),
+        ("component.a.field.value=1", "does not identify an overridable parameter"),
+    ],
+)
+def test_parse_param_override_rejects_invalid_values(param: str, message: str) -> None:
+    """Tests invalid generic parameter overrides produce CLI errors."""
+    from plugboard.cli.process import _parse_param_override
+
+    with pytest.raises(typer.BadParameter, match=message):
+        _parse_param_override(param)
 
 
 def test_cli_process_validate() -> None:

@@ -130,3 +130,33 @@ def test_parameter_override() -> None:
 
     with pytest.raises(ValueError, match="Unknown object type"):
         parse_parameter_name("connector.my_connector.arg.value")
+
+
+@pytest.mark.parametrize(
+    ("name", "message"),
+    [
+        ("component.a", "must have the format"),
+        ("component..arg.value", "must include an object name"),
+        ("component.a.arg.", "must include an object name and field name"),
+        ("process.custom.parameter.value", "must use 'process.default'"),
+        ("component.a.field.value", "does not identify an overridable parameter"),
+        ("process.default.arg.value", "does not identify an overridable parameter"),
+    ],
+)
+def test_parse_parameter_name_rejects_invalid_names(name: str, message: str) -> None:
+    """Tests invalid generic override field names are rejected."""
+    with pytest.raises(ValueError, match=message):
+        parse_parameter_name(name)
+
+
+def test_parameter_override_rejects_unknown_component() -> None:
+    """Tests overrides cannot target components outside the process."""
+    with open("tests/data/dynamic-param-process.yaml", "rb") as f:
+        config = ConfigSpec.model_validate(msgspec.yaml.decode(f.read()))
+
+    with pytest.raises(ValueError, match="Component unknown not found"):
+        override_parameter(
+            config.plugboard.process,
+            parse_parameter_name("component.unknown.arg.value"),
+            1,
+        )
