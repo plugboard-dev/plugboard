@@ -43,6 +43,12 @@ Some examples of what you can build with Plugboard include:
     - You can feed data to/from different LLMs using Plugboard components;
     - Easily reconfigure and swap model providers for optimal performance.
 
+<div align="center">
+  <picture align="center">
+    <img alt="Plugboard" src="docs/assets/demo.gif" width="100%" height="auto">
+  </picture>
+</div>
+
 ## 🖋️ Key Features
 
 - **Reusable classes** containing the core framework, which you can extend to define your own model logic;
@@ -98,6 +104,7 @@ import typing as _t
 from plugboard.component import Component, IOController as IO
 from plugboard.schemas import ComponentArgsDict
 
+
 class A(Component):
     io = IO(outputs=["out_1"])
 
@@ -137,9 +144,11 @@ There is also a `@component` decorator which simplifies creating `Component`s fo
 ```python
 from plugboard.component import component
 
+
 @component(inputs=["in_1"], outputs=["out_1"])
 def pow2(in_1: int) -> dict[str, int]:
-  return {"out_1": in_1 ** 2}
+    return {"out_1": in_1**2}
+
 
 result = pow2(2)  # Preserves original function call -> result = {"out_1": 4}
 comp_pow2 = pow2.component(name="component-pow2")
@@ -159,7 +168,7 @@ process = LocalProcess(
         ),
         AsyncioConnector(
             spec=ConnectorSpec(source="component-a.out_1", target=f"{comp_pow2.name}.in_1"),
-        )
+        ),
     ],
 )
 async with process:
