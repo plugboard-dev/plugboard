@@ -3964,6 +3964,9 @@ llm = [
     { name = "llama-index-core" },
     { name = "llama-index-llms-openai" },
 ]
+omq = [
+    { name = "pyomq" },
+]
 ray = [
     { name = "jsonschema" },
     { name = "optuna" },
@@ -4081,6 +4084,7 @@ requires-dist = [
     { name = "pydantic", marker = "python_full_version < '3.14'", specifier = ">=2.8.0,<3" },
     { name = "pydantic", marker = "python_full_version >= '3.14'", specifier = ">=2.13.1,<3" },
     { name = "pydantic-settings", specifier = ">=2.7.1,<3" },
+    { name = "pyomq", marker = "extra == 'omq'", specifier = ">=0.20.1,<1" },
     { name = "pyzmq", specifier = ">=26.2,<28" },
     { name = "ray", extras = ["tune"], marker = "extra == 'ray'", specifier = ">=2.47.1,<3" },
     { name = "redis", marker = "extra == 'redis'", specifier = ">=7.1,<9" },
@@ -4093,7 +4097,7 @@ requires-dist = [
     { name = "uvloop", marker = "sys_platform != 'win32'", specifier = ">=0.21.0,<1" },
     { name = "websockets", marker = "extra == 'websockets'", specifier = ">=14.2,<17" },
 ]
-provides-extras = ["aws", "azure", "gcp", "llm", "ray", "redis", "websockets"]
+provides-extras = ["aws", "azure", "gcp", "llm", "omq", "ray", "redis", "websockets"]
 
 [package.metadata.requires-dev]
 all = [
@@ -4634,6 +4638,22 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/df/08/f1c908c581fd11913da4711ea7ba32c0eee40b0190000996bb863b0c9349/pymdown_extensions-10.21.2.tar.gz", hash = "sha256:c3f55a5b8a1d0edf6699e35dcbea71d978d34ff3fa79f3d807b8a5b3fa90fbdc", size = 853922, upload-time = "2026-03-29T15:01:55.233Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/f7/27/a2fc51a4a122dfd1015e921ae9d22fee3d20b0b8080d9a704578bf9deece/pymdown_extensions-10.21.2-py3-none-any.whl", hash = "sha256:5c0fd2a2bea14eb39af8ff284f1066d898ab2187d81b889b75d46d4348c01638", size = 268901, upload-time = "2026-03-29T15:01:53.244Z" },
+]
+
+[[package]]
+name = "pyomq"
+version = "0.20.1"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/4b/f8/80ab2fc7b7ecab59bcdd4ddcae72dbd819e708ae12109a7005b473510486/pyomq-0.20.1.tar.gz", hash = "sha256:2f42c4c48666fdc4b621e9e7c9d5c94082ef3c9147f35ceb5c3eb42e6ed23819", size = 649938, upload-time = "2026-08-23T21:03:55.159Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/4c/b5/fd6a4a81754a5b5736f15f1a6215752f38e61cca41c7ff420de63a7448ae/pyomq-0.20.1-cp311-abi3-macosx_10_12_x86_64.whl", hash = "sha256:0b62acc91d0882889cba23aca60530062f6109bebc5b1c68a8aea29334f75b82", size = 1779867, upload-time = "2026-08-23T21:03:44.028Z" },
+    { url = "https://files.pythonhosted.org/packages/ba/d7/a14d7176942a9bca468584c7147cf6e6eb86574102c7e1bc4dc7fadaffdf/pyomq-0.20.1-cp311-abi3-macosx_11_0_arm64.whl", hash = "sha256:9f737cabb6f3f6300c55236f2f6f4ded09a6a6d31b0e8f381965f9f4f16c436c", size = 1725287, upload-time = "2026-08-23T21:03:45.442Z" },
+    { url = "https://files.pythonhosted.org/packages/02/67/5b4a4c648f945ad3b8dc5ac1dac1495a89e22d62795a922bf1e5759e9210/pyomq-0.20.1-cp311-abi3-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:7362231d5e222f30ad43ee6e66572c98b665dde282fbcb94c0952282d873d0af", size = 1806696, upload-time = "2026-08-23T21:03:46.781Z" },
+    { url = "https://files.pythonhosted.org/packages/c9/d1/7d0baccf1eaa34e25efcffd4e750e198af1dd3a703a8abda1f0cf1ba1dc3/pyomq-0.20.1-cp311-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:ebe3ea509a7de86be592763ce90af4c53065701bd4b9f58c99887df2d389a269", size = 1829920, upload-time = "2026-08-23T21:03:48.24Z" },
+    { url = "https://files.pythonhosted.org/packages/d9/dc/c9e5c16b2925761dee05f0c430d68e4772b1347620a9b84111c51a8633e1/pyomq-0.20.1-cp311-abi3-musllinux_1_2_aarch64.whl", hash = "sha256:85f47fa8c6a66a9ee0cddc8c7ec940582e9bb80dcc555c1c1fae182c15764d42", size = 1983314, upload-time = "2026-08-23T21:03:49.594Z" },
+    { url = "https://files.pythonhosted.org/packages/c5/c8/aca1a3a033f4ca1f8359eae1cb5e458a9798181d43bfbf474b4ce6a357a1/pyomq-0.20.1-cp311-abi3-musllinux_1_2_x86_64.whl", hash = "sha256:1c57a649272d11f162b4d8ca126b0096278a38fb27a51e3319f8e4e4dd744555", size = 2041966, upload-time = "2026-08-23T21:03:51.117Z" },
+    { url = "https://files.pythonhosted.org/packages/e8/32/217f446433516bcf168d4c262e31c30006fda30eabbe8cf3e259b7b0caed/pyomq-0.20.1-cp311-abi3-win_amd64.whl", hash = "sha256:4aa0ad5b91adeb264739944c4ba505e73885db1a04ac2a7bf6d6956db14e6a9a", size = 1874489, upload-time = "2026-08-23T21:03:52.48Z" },
+    { url = "https://files.pythonhosted.org/packages/b1/61/6c5469e45eaa62325eaf1ca9c6258fe28534f5d763498dd5c58c5aa2e807/pyomq-0.20.1-cp311-abi3-win_arm64.whl", hash = "sha256:24361da804107a7431cfaba3c6bb49d89746441827f9532875d7c3b84725bd64", size = 1750463, upload-time = "2026-08-23T21:03:53.747Z" },
 ]
 
 [[package]]

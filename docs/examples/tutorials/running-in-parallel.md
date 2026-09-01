@@ -51,7 +51,7 @@ With some small changes we can make the same model run in parallel on Ray. First
 !!! info
     [`Channel`][plugboard.connector.Channel] objects are used by Plugboard to handle the communication between components. So far we have used [`AsyncioChannel`][plugboard.connector.AsyncioChannel], which is the best option for simple models that don't require parallelisation.
 
-    Plugboard provides different channel classes for use in parallel environments: [`RayChannel`][plugboard.connector.RayChannel] is suitable for single and multi-host Ray environments. [`ZMQChannel`][plugboard.connector.ZMQChannel] is faster, but currently only works on a single host.
+    Plugboard provides different channel classes for use in parallel environments: [`RayChannel`][plugboard.connector.RayChannel] is suitable for single and multi-host Ray environments. [`ZMQChannel`][plugboard.connector.ZMQChannel] is faster, but currently only works on a single host. Set `PLUGBOARD_ZMQ_BACKEND=pyomq` to use the optional pyomq backend instead of PyZMQ.
 
 ```python
 --8<-- "examples/tutorials/004_using_ray/hello_ray.py:ray"
