@@ -1,5 +1,7 @@
 """Provides unit tests for the schemas module."""
 
+import typing as _t
+
 import msgspec
 import pytest
 
@@ -30,7 +32,7 @@ def test_config_spec() -> None:
 
 def test_tune_spec() -> None:
     """Test the TuneSpec class."""
-    valid_spec = {
+    valid_spec: dict[str, _t.Any] = {
         "objective": {
             "object_type": "component",
             "object_name": "my_component",
@@ -75,7 +77,7 @@ def test_tune_spec() -> None:
     # Validate the TuneSpec with the valid specification
     _ = TuneSpec(args=TuneArgsSpec.model_validate(valid_spec))
 
-    invalid_spec = valid_spec.copy()
+    invalid_spec: dict[str, _t.Any] = valid_spec.copy()
     invalid_spec["mode"] = ["min", "max"]
     # Invalid mode should raise a validation error
     with pytest.raises(ValueError):

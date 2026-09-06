@@ -53,7 +53,7 @@ Some examples of what you can build with Plugboard include:
 - **YAML model specification** format for saving model definitions, allowing you to run the same model locally or in cloud infrastructure;
 - A **command line interface** for executing models;
 - Built to handle the **data intensive simulation** requirements of industrial process applications;
-- Modern implementation with **Python 3.12+** based around **asyncio** with complete type annotation coverage;
+- Modern implementation with **Python 3.12+** based around **asyncio** with complete type annotation coverage checked with **ty**;
 - Built-in integrations for **loading/saving data** from cloud storage and SQL databases;
 - Built-in **LLM integrations** for building AI-augmented process models with support for multiple providers;
 - **Detailed logging** of component inputs, outputs and state for monitoring and process mining or surrogate modelling use-cases.

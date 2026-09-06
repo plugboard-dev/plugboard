@@ -141,6 +141,7 @@ async def test_tune(config: dict, mode: str, process_type: str, ray_ctx: None) -
     best_result = tuner.run(
         spec=process_spec,
     )
+    assert not isinstance(best_result, list)
     result = tuner.result_grid
     assert len(result) == 5
     assert not any(trial.error for trial in result)
@@ -198,6 +199,7 @@ async def test_multi_objective_tune(config: dict, ray_ctx: None) -> None:
     best_result = tuner.run(
         spec=process_spec,
     )
+    assert isinstance(best_result, list)
     result = tuner.result_grid
     # There must be no failed trials
     assert not [t for t in result if t.error]
@@ -239,6 +241,7 @@ async def test_process_parameter_tuning(config: dict, ray_ctx: None) -> None:
     best_result = tuner.run(
         spec=process_spec,
     )
+    assert not isinstance(best_result, list)
     result = tuner.result_grid
     # There must be no failed trials
     assert not [t for t in result if t.error]
@@ -281,6 +284,7 @@ async def test_tune_with_constraint(config: dict, ray_ctx: None) -> None:
     best_result = tuner.run(
         spec=process_spec,
     )
+    assert not isinstance(best_result, list)
     result = tuner.result_grid
     # There must be no failed trials
     assert not any(t.error for t in result)
@@ -331,6 +335,7 @@ async def test_tune_with_constraint_objective_value(config: dict, ray_ctx: None)
     best_result = tuner.run(
         spec=process_spec,
     )
+    assert not isinstance(best_result, list)
     result = tuner.result_grid
     # There must be no failed trials
     assert not any(t.error for t in result)
@@ -354,6 +359,7 @@ async def test_custom_space_tune(
     """Tests tuning with a custom search space."""
     spec = ConfigSpec.model_validate(dynamic_param_config)
     process_spec = spec.plugboard.process
+    space_func_name = getattr(space_func, "__name__", "")
     tuner = Tuner(
         objective=ObjectiveSpec(
             object_type="component",
@@ -381,7 +387,7 @@ async def test_custom_space_tune(
         num_samples=10,
         mode="max",
         max_concurrent=2,
-        algorithm=OptunaSpec(space=f"tests.integration.test_tuner.{space_func.__name__}"),
+        algorithm=OptunaSpec(space=f"tests.integration.test_tuner.{space_func_name}"),
     )
     tuner.run(
         spec=process_spec,
@@ -396,6 +402,6 @@ async def test_custom_space_tune(
         if r.config["n_list"] < 5:
             # When n_list < 5, all list_param values are negative
             assert all(v < 0.0 for v in r.config["component.d.arg.list_param"])
-        if space_func.__name__ == "custom_space_with_process_spec":
+        if space_func_name == "custom_space_with_process_spec":
             # The iters parameter must be set based on the process params
             assert r.config["component.a.arg.iters"] <= process_spec.args.parameters["max_iters"]

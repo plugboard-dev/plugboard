@@ -35,8 +35,7 @@ init: $(VENV)/__makefile_stamps_init
 lint: init
 	uv run ruff check
 	uv run ruff format --check
-	uv run mypy $(SRC)/ --explicit-package-bases
-	uv run mypy $(TESTS)/
+	uv run ty check $(SRC)/ ./plugboard-schemas/plugboard_schemas/ $(TESTS)/
 
 .PHONY: test
 test: init

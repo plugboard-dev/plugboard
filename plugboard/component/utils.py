@@ -11,10 +11,23 @@ from plugboard.component.io_controller import IOController
 from plugboard.utils import gen_rand_str
 
 
-_FuncT = _t.TypeVar(
-    "_FuncT",
-    bound=_t.Callable[..., _t.Union[dict[str, _t.Any], _t.Awaitable[dict[str, _t.Any]]]],
-)
+class _ComponentFunction(_t.Protocol):
+    """Callable protocol for functions wrapped by `@component`.
+
+    The decorator relies on the wrapped callable exposing `__name__`, `__module__`, and `__doc__`
+    so it can register the generated component class and build helpful generated documentation.
+    """
+
+    __name__: str
+    __module__: str
+    __doc__: str | None
+
+    def __call__(
+        self, *args: _t.Any, **kwargs: _t.Any
+    ) -> dict[str, _t.Any] | _t.Awaitable[dict[str, _t.Any]]: ...
+
+
+_FuncT = _t.TypeVar("_FuncT", bound=_ComponentFunction)
 
 _FUNC_COMPONENT_DOC_TEMPLATE = Template(
     """Component for wrapped function $name.
@@ -101,9 +114,11 @@ def _make_component_class(
 
 def _ensure_async_callable(func: _FuncT) -> _t.Callable[..., _t.Awaitable[dict[str, _t.Any]]]:
     if inspect.iscoroutinefunction(func):
-        return func
+        return _t.cast(_t.Callable[..., _t.Awaitable[dict[str, _t.Any]]], func)
+
+    sync_func = _t.cast(_t.Callable[..., dict[str, _t.Any]], func)
 
     async def _async_func(*args: _t.Any, **kwargs: _t.Any) -> dict[str, _t.Any]:
-        return func(*args, **kwargs)  # type: ignore[return-value]
+        return sync_func(*args, **kwargs)
 
     return _async_func

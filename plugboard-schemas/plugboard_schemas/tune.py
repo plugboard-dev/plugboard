@@ -9,6 +9,9 @@ from ._common import PlugboardBaseModel
 from .process import ProcessSpec
 
 
+_FieldType = _t.Literal["arg", "initial_value", "field", "parameter"]
+
+
 class OptunaSpec(PlugboardBaseModel):
     """Specification for the Optuna configuration.
 
@@ -117,7 +120,7 @@ def parse_parameter_name(name: str) -> BaseFieldSpec:
     return BaseFieldSpec(
         object_type=object_type,
         object_name=None if object_type == "process" else object_name,
-        field_type=field_type,
+        field_type=_t.cast(_FieldType, field_type),
         field_name=field_name,
     )
 

@@ -37,18 +37,18 @@ class StateBackend(ABC, ExportMixin):
             metadata: Metadata key value pairs.
             kwargs: Additional keyword arguments.
         """
-        self._local_state = {"job_id": job_id, "metadata": metadata, **kwargs}
+        self._local_state: dict[str, _t.Any] = {"job_id": job_id, "metadata": metadata, **kwargs}
         self._initialised_with_job_id = False
         self._logger = DI.logger.resolve_sync().bind(cls=self.__class__.__name__, job_id=job_id)
         self._logger.info("StateBackend created")
         self._ctx = ExitStack()
 
-    def __getstate__(self) -> dict:
+    def __getstate__(self) -> dict[str, _t.Any]:
         state = self.__dict__.copy()
         state.pop("_ctx", None)
         return state
 
-    def __setstate__(self, state: dict) -> None:
+    def __setstate__(self, state: dict[str, _t.Any]) -> None:
         self.__dict__.update(state)
         self._ctx = ExitStack()
         job_id = self._local_state.get("job_id")
