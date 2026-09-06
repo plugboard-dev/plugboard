@@ -217,6 +217,15 @@ We can now run this model using the plugboard CLI with the command:
 plugboard process run my-model.yaml
 ```
 
+Process fields can be overridden at run time with repeated `--param` / `-p` flags. Use
+`<name>` (short for `process.default.parameter.<name>`) for process parameters or
+`component.<name>.<arg|initial_value|parameter>.<field>` for component fields. Values are parsed
+as YAML. Later flags win when the same field is specified more than once:
+
+```shell
+plugboard process run my-model.yaml --param scale=2.0 -p component.a.arg.iters=5
+```
+
 ## 📖 Documentation
 
 For more information including a detailed API reference and step-by-step usage examples, refer to the [documentation site](https://docs.plugboard.dev). We recommend diving into the [tutorials](https://docs.plugboard.dev/latest/examples/tutorials/hello-world/) for a step-by-step guide to getting started.

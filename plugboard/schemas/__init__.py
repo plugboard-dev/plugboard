@@ -14,6 +14,7 @@ from plugboard_schemas import (
     DEFAULT_STATE_BACKEND_CLS_PATH,
     ENTITY_ID_REGEX,
     RAY_STATE_BACKEND_CLS_PATH,
+    BaseFieldSpec,
     CategoricalParameterSpec,
     ComponentArgsDict,
     ComponentArgsSpec,
@@ -46,6 +47,8 @@ from plugboard_schemas import (
     TuneArgsDict,
     TuneArgsSpec,
     TuneSpec,
+    override_parameter,
+    parse_parameter_name,
     simple_cycles,
     validate_all_inputs_connected,
     validate_input_events,
@@ -55,6 +58,7 @@ from plugboard_schemas import (
 
 
 __all__ = [
+    "BaseFieldSpec",
     "CategoricalParameterSpec",
     "ComponentSpec",
     "ComponentArgsDict",
@@ -96,4 +100,6 @@ __all__ = [
     "validate_input_events",
     "validate_no_unresolved_cycles",
     "validate_process",
+    "override_parameter",
+    "parse_parameter_name",
 ]
