@@ -132,33 +132,25 @@ async def test_tune(config: dict, mode: str, process_type: str, ray_ctx: None) -
         num_samples=5,
         mode=mode,
         max_concurrent=2,
-        algorithm=OptunaSpec(),
+        # Exercise both ends of the search space instead of relying on five random
+        # samples to discover an optimum. Leave two trials to the sampler.
+        algorithm=OptunaSpec(
+            points_to_evaluate=[{"component.a.arg.iters": iters} for iters in range(6, 9)]
+        ),
     )
     best_result = tuner.run(
         spec=process_spec,
     )
     result = tuner.result_grid
-    # There must be no failed trials
-    assert not any(t.error for t in result)
-    # Correct optimimum must be found (within tolerance)
-    if mode == "min":
-        assert (
-            best_result.config["component.a.arg.iters"]
-            <= tuner._parameters["component.a.arg.iters"].lower + 2
-        )
-        assert (
-            best_result.metrics["component.c.field.in_1"]
-            == best_result.config["component.a.arg.iters"] - 1
-        )
-    else:
-        assert (
-            best_result.config["component.a.arg.iters"]
-            >= tuner._parameters["component.a.arg.iters"].upper - 2
-        )
-        assert (
-            best_result.metrics["component.c.field.in_1"]
-            == best_result.config["component.a.arg.iters"] - 1
-        )
+    assert len(result) == 5
+    assert not any(trial.error for trial in result)
+    assert {6, 7, 8} <= {trial.config["component.a.arg.iters"] for trial in result}
+    for trial in result:
+        assert trial.metrics["component.c.field.in_1"] == trial.config["component.a.arg.iters"] - 1
+    # Check that min/max selection returns the known optimum, with no tolerance.
+    expected_iters = 6 if mode == "min" else 8
+    assert best_result.config["component.a.arg.iters"] == expected_iters
+    assert best_result.metrics["component.c.field.in_1"] == expected_iters - 1
 
 
 @pytest.mark.tuner

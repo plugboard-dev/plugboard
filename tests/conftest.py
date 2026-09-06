@@ -56,8 +56,10 @@ def ray_ctx() -> _t.Iterator[None]:
     import ray
 
     ray.init(num_cpus=5, num_gpus=1, resources={"custom_hardware": 10}, include_dashboard=False)
-    yield
-    ray.shutdown()
+    try:
+        yield
+    finally:
+        ray.shutdown()
 
 
 @pytest.fixture(scope="function")

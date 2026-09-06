@@ -92,7 +92,6 @@ def connector_cls_mp(_connector_cls_mp: type[Connector]) -> type[Connector]:
 
 
 @pytest.mark.asyncio
-@pytest.mark.flaky(reruns=2)
 async def test_multiprocessing_channel(
     connector_cls_mp: type[Connector], ray_ctx: None, job_id_ctx: str
 ) -> None:
@@ -132,8 +131,8 @@ async def test_multiprocessing_channel(
         with Pool(2) as pool:
             r1 = pool.apply_async(_send_proc, (connector,))
             r2 = pool.apply_async(_recv_proc, (connector,))
-            r1.get()
-            r2.get()
+            r1.get(timeout=60)
+            r2.get(timeout=60)
 
     # Run the pool function while keeping the connector in scope
     await asyncio.to_thread(run_pool_with_connector, connector)
