@@ -11,8 +11,9 @@ import textwrap
 import typing as _t
 from unittest.mock import AsyncMock, MagicMock, patch
 
+import httpx2
 import pytest
-import respx
+import typer
 from typer.testing import CliRunner
 
 from plugboard.cli import app
@@ -162,6 +163,138 @@ async def test_cli_process_run_with_ray_override() -> None:
         assert process_spec.type == "plugboard.process.RayProcess"
         assert process_spec.connector_builder.type == "plugboard.connector.RayConnector"
         assert process_spec.args.state.type == "plugboard.state.RayStateBackend"
+
+
+@pytest.mark.asyncio
+async def test_cli_process_run_with_param_overrides() -> None:
+    """Tests the process run command with generic --param / -p overrides."""
+    with patch("plugboard.cli.process.ProcessBuilder") as mock_process_builder:
+        mock_process = AsyncMock()
+        mock_process_builder.build.return_value = mock_process
+        result = runner.invoke(
+            app,
+            [
+                "process",
+                "run",
+                "tests/data/dynamic-param-process.yaml",
+                "--param",
+                "process.default.parameter.max_iters=3",
+                "-p",
+                "component.a.arg.iters=5",
+                "--param",
+                "component.d.initial_value.in_1=[1, 2]",
+                "-p",
+                "component.d.parameter.enabled=true",
+            ],
+        )
+        assert result.exit_code == 0
+        assert "Process complete" in result.stdout
+        mock_process_builder.build.assert_called_once()
+        process_spec = mock_process_builder.build.call_args[0][0]
+        assert process_spec.args.parameters == {
+            "max_iters": 3,
+        }
+        components = {component.args.name: component for component in process_spec.args.components}
+        assert components["a"].args.iters == 5
+        assert components["d"].args.initial_values["in_1"] == [1, 2]
+        assert components["d"].args.parameters["enabled"] is True
+
+
+@pytest.mark.parametrize(
+    ("param", "message"),
+    [
+        ("not-a-pair", "Invalid parameter override"),
+        ("component.unknown.arg.value=1", "Component unknown not found"),
+        ("component.a.arg.parameters=[]", "Input should be a valid dictionary"),
+    ],
+)
+@pytest.mark.asyncio
+async def test_cli_process_run_with_invalid_param_override(param: str, message: str) -> None:
+    """Tests the process run command rejects malformed --param values."""
+    with patch("plugboard.cli.process.ProcessBuilder") as mock_process_builder:
+        result = runner.invoke(
+            app,
+            ["process", "run", "tests/data/minimal-process.yaml", "--param", param],
+        )
+        assert result.exit_code == 2
+        assert message in " ".join(result.stderr.split())
+        mock_process_builder.build.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    "names",
+    [
+        ("max_iters", "process.default.parameter.max_iters"),
+        ("process.default.parameter.max_iters", "max_iters"),
+    ],
+)
+@pytest.mark.asyncio
+async def test_cli_process_run_with_mixed_param_names(names: tuple[str, str]) -> None:
+    """Mixed short and qualified overrides preserve defaults and apply in flag order."""
+    with patch("plugboard.cli.process.ProcessBuilder") as mock_process_builder:
+        mock_process_builder.build.return_value = AsyncMock()
+        result = runner.invoke(
+            app,
+            [
+                "process",
+                "run",
+                "tests/data/dynamic-param-process.yaml",
+                "--param",
+                "enabled=true",
+                "--param",
+                f"{names[0]}=3",
+                "-p",
+                f"{names[1]}=5",
+                "-p",
+                "component.d.parameter.enabled=false",
+            ],
+        )
+        assert result.exit_code == 0, result.output
+        process_spec = mock_process_builder.build.call_args[0][0]
+        assert process_spec.args.parameters == {"max_iters": 5, "enabled": True}
+        components = {component.args.name: component for component in process_spec.args.components}
+        assert components["d"].args.parameters["enabled"] is False
+
+
+def test_parse_param_override() -> None:
+    """Tests name=value parsing for generic parameter overrides."""
+    from plugboard.cli.process import _parse_param_override
+
+    field, value = _parse_param_override("component.a.arg.scale=2.0")
+    assert field.full_name == "component.a.arg.scale"
+    assert value == 2.0
+    field, value = _parse_param_override("process.default.parameter.name=hello")
+    assert field.full_name == "process.default.parameter.name"
+    assert value == "hello"
+    field, value = _parse_param_override("max_iters=3")
+    assert field.full_name == "process.default.parameter.max_iters"
+    assert value == 3
+    field, value = _parse_param_override("component.a.parameter.flag=true")
+    assert field.full_name == "component.a.parameter.flag"
+    assert value is True
+    field, value = _parse_param_override("component.a.initial_value.empty=")
+    assert field.full_name == "component.a.initial_value.empty"
+    assert value == ""
+    field, value = _parse_param_override('component.a.arg.name="yes"')
+    assert field.full_name == "component.a.arg.name"
+    assert value == "yes"
+
+
+@pytest.mark.parametrize(
+    ("param", "message"),
+    [
+        ("not-a-pair", "Expected format"),
+        ("=value", "Parameter name must not be empty"),
+        ("component.a.arg.value=[", "Could not parse value"),
+        ("component.a.field.value=1", "does not identify an overridable parameter"),
+    ],
+)
+def test_parse_param_override_rejects_invalid_values(param: str, message: str) -> None:
+    """Tests invalid generic parameter overrides produce CLI errors."""
+    from plugboard.cli.process import _parse_param_override
+
+    with pytest.raises(typer.BadParameter, match=message):
+        _parse_param_override(param)
 
 
 def test_cli_process_validate() -> None:
@@ -335,17 +468,18 @@ def test_cli_server_discover(
         include_hidden_dir=include_hidden_dir,
     )
 
-    with respx.mock:
-        # Mock all the API endpoints
-        component_route = respx.post("http://test:8000/types/component").respond(
-            json={"status": "ok"}
-        )
-        connector_route = respx.post("http://test:8000/types/connector").respond(
-            json={"status": "ok"}
-        )
-        event_route = respx.post("http://test:8000/types/event").respond(json={"status": "ok"})
-        process_route = respx.post("http://test:8000/types/process").respond(json={"status": "ok"})
+    requests: list[httpx2.Request] = []
 
+    def handle_request(request: httpx2.Request) -> httpx2.Response:
+        requests.append(request)
+        return httpx2.Response(200, json={"status": "ok"})
+
+    transport = httpx2.MockTransport(handle_request)
+    async_client_class = httpx2.AsyncClient
+    with patch(
+        "plugboard.cli.server.httpx2.AsyncClient",
+        side_effect=lambda: async_client_class(transport=transport),
+    ):
         result = runner.invoke(
             app,
             [
@@ -364,26 +498,33 @@ def test_cli_server_discover(
 
         # At minimum, should have discovered plugboard's built-in types
         # The exact number may vary, but we expect some calls to each endpoint
-        assert component_route.called
-        assert connector_route.called
-        assert event_route.called
-        assert process_route.called
+        paths = {request.url.path for request in requests}
+        assert "/types/component" in paths
+        assert "/types/connector" in paths
+        assert "/types/event" in paths
+        assert "/types/process" in paths
         if expected_component_name is not None:
             assert any(
-                json.loads(call.request.content)["name"] == expected_component_name
-                for call in component_route.calls
+                json.loads(request.content)["name"] == expected_component_name
+                for request in requests
+                if request.url.path == "/types/component"
             )
 
 
 def test_cli_server_discover_with_env_var(test_project_dir: Path) -> None:
     """Tests the server discover command with environment variable."""
-    with respx.mock:
-        # Mock all the API endpoints with the env var URL
-        respx.post("http://env-test:9000/types/component").respond(json={"status": "ok"})
-        respx.post("http://env-test:9000/types/connector").respond(json={"status": "ok"})
-        respx.post("http://env-test:9000/types/event").respond(json={"status": "ok"})
-        respx.post("http://env-test:9000/types/process").respond(json={"status": "ok"})
+    requests: list[httpx2.Request] = []
 
+    def handle_request(request: httpx2.Request) -> httpx2.Response:
+        requests.append(request)
+        return httpx2.Response(200, json={"status": "ok"})
+
+    transport = httpx2.MockTransport(handle_request)
+    async_client_class = httpx2.AsyncClient
+    with patch(
+        "plugboard.cli.server.httpx2.AsyncClient",
+        side_effect=lambda: async_client_class(transport=transport),
+    ):
         result = runner.invoke(
             app,
             ["server", "discover", str(test_project_dir)],
@@ -393,3 +534,6 @@ def test_cli_server_discover_with_env_var(test_project_dir: Path) -> None:
         # CLI must run without error
         assert result.exit_code == 0
         assert "Discovery complete" in result.stdout
+        assert requests
+        assert all(request.url.host == "env-test" for request in requests)
+        assert all(request.url.port == 9000 for request in requests)

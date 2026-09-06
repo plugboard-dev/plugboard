@@ -101,6 +101,24 @@ Now we can supply the `scale` value when we create the [`Process`][plugboard.pro
 1.  Supply a dictionary of common parameter values to the `Process` here. They are accessible from within all components.
 2.  If you need to override a parameter on a specific component, you can supply it via the component-level `parameters` argument.
 
+When running a YAML-defined model from the CLI you can override process parameters or component
+arguments, initial values, and parameters without editing the file. Repeat `--param` / `-p` as
+`name=value` pairs, where `name` is
+`<name>` (short for `process.default.parameter.<name>`) or
+`component.<name>.<arg|initial_value|parameter>.<field>`. Values are parsed as YAML, so numbers,
+booleans, lists and mappings keep their natural types:
+
+```shell
+plugboard process run parameters.yaml --param scale=2.0 -p component.scale_b.parameter.scale=3.0
+```
+
+Overrides preserve other configured values. If the same field is specified more than once,
+the last flag wins, including when short and fully-qualified names are mixed. A bare name has
+no dots; use the fully-qualified form for a process parameter whose name contains dots.
+Quote collections for the shell (for example `-p 'weights=[1, 2]'`) and retain YAML quotes
+when a value must stay a string (for example `-p 'label="yes"'`). An empty value (`-p label=`)
+sets an empty string; `-p label=null` sets null.
+
 ## Next steps
 
 You've now learned how to build up complex model layouts in Plugboard. In the next tutorial we'll show how powerful a Plugboard model can be as we start to include different types of [`Component`][plugboard.component.Component].
