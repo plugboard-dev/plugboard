@@ -10,6 +10,9 @@ on:
       - synchronize
       - reopened
 
+env:
+  UV_MALWARE_CHECK: "1"
+
 permissions:
   contents: read
 
@@ -37,9 +40,6 @@ jobs:
 
       - name: Install project
         run: uv sync --group test --group docs
-
-      - name: Audit dependencies
-        run: uv audit --locked
 
       - name: Check uv lockfile
         run: uv lock --check
