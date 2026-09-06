@@ -285,6 +285,10 @@ class ZMQProxy:
     async def _poll_push_sockets(self) -> None:
         """Polls push sockets for messages and sends them to the proxy."""
         while True:
+            # Some backends return immediately when polling an empty socket set.
+            if not self._push_poller.sockets:
+                await asyncio.sleep(1)
+                continue
             # Set a timeout of 1 second to allow for new push sockets to be added
             events = dict(await self._push_poller.poll(timeout=1000))
             async with asyncio.TaskGroup() as tg:
