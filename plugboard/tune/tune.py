@@ -18,6 +18,7 @@ from plugboard.schemas import (
     ParameterSpec,
     ProcessSpec,
     Resource,
+    override_parameter,
 )
 from plugboard.utils import DI, run_coro_sync
 from plugboard.utils.dependencies import depends_on_optional
@@ -175,29 +176,6 @@ class Tuner:
         )
 
     @staticmethod
-    def _override_parameter(
-        process: ProcessSpec, param: ParameterSpec, value: _t.Any
-    ) -> None:  # pragma: no cover
-        if param.object_type == "component":
-            try:
-                component = next(
-                    c for c in process.args.components if c.args.name == param.object_name
-                )
-            except StopIteration:
-                raise ValueError(f"Component {param.object_name} not found in process.")
-            if param.field_type == "arg":
-                setattr(component.args, param.field_name, value)
-            elif param.field_type == "initial_value":
-                component.args.initial_values[param.field_name] = value
-            elif param.field_type == "parameter":
-                component.args.parameters[param.field_name] = value
-        elif param.object_type == "process":
-            if param.field_type == "parameter":
-                process.args.parameters[param.field_name] = value
-        else:
-            raise ValueError(f"Unknown object type {param.object_type} for parameter override.")
-
-    @staticmethod
     def _get_objective(process: Process, objective: ObjectiveSpec) -> _t.Any:  # pragma: no cover
         if objective.object_type != "component":
             raise NotImplementedError("Only component objectives are currently supported.")
@@ -280,7 +258,7 @@ class Tuner:
                     # Custom search spaces may include intermediate parameters not in the Tuner
                     self._logger.warning("Parameter from config not found in Tuner", param=name)
                     continue
-                self._override_parameter(spec, self._parameters_dict[name], value)
+                override_parameter(spec, self._parameters_dict[name], value)
 
             process = ProcessBuilder.build(spec)
             result = {}

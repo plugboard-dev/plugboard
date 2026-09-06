@@ -4,20 +4,58 @@ Note: Tests which run async code synchronously from CLI entrypoints must be
 marked async so that they do not interfere with pytest-asyncio's event loop.
 """
 
+import json
 from pathlib import Path
 import tempfile
+import textwrap
 import typing as _t
 from unittest.mock import AsyncMock, MagicMock, patch
 
+import httpx2
 import pytest
-import respx
+import typer
 from typer.testing import CliRunner
 
 from plugboard.cli import app
-from plugboard.cli.ai import _AGENTS_MD
+from plugboard.cli.ai import _AGENTS_MD, _SKILLS_DIR
 
 
 runner = CliRunner()
+
+
+def _create_test_project(
+    base_path: Path,
+    *,
+    as_package: bool = True,
+    include_hidden_dir: bool = False,
+) -> Path:
+    """Create a minimal Python project for CLI discovery tests."""
+    project_dir = base_path / "test_project"
+    project_dir.mkdir()
+
+    if as_package:
+        (project_dir / "__init__.py").write_text("")
+        (project_dir / "test_file.py").write_text("")
+    else:
+        (project_dir / "test_file.py").write_text(
+            textwrap.dedent("""
+            from plugboard.component import Component, IOController as IO
+
+
+            class VisibleComponent(Component):
+                io = IO(outputs=["out"])
+
+                async def step(self) -> None:
+                    self.out = 1
+            """).strip()
+        )
+
+    if include_hidden_dir:
+        hidden_dir = project_dir / ".venv"
+        hidden_dir.mkdir()
+        (hidden_dir / "bad_module.py").write_text('raise RuntimeError("should not import")')
+
+    return project_dir
 
 
 def test_cli_version() -> None:
@@ -35,11 +73,7 @@ def test_cli_version() -> None:
 def test_project_dir() -> _t.Iterator[Path]:
     """Create a minimal Python package for testing."""
     with tempfile.TemporaryDirectory() as tmpdir:
-        project_dir = Path(tmpdir) / "test_project"
-        project_dir.mkdir()
-        (project_dir / "__init__.py").write_text("")
-        (project_dir / "test_file.py").write_text("")
-        yield project_dir
+        yield _create_test_project(Path(tmpdir))
 
 
 @pytest.mark.asyncio
@@ -131,6 +165,138 @@ async def test_cli_process_run_with_ray_override() -> None:
         assert process_spec.args.state.type == "plugboard.state.RayStateBackend"
 
 
+@pytest.mark.asyncio
+async def test_cli_process_run_with_param_overrides() -> None:
+    """Tests the process run command with generic --param / -p overrides."""
+    with patch("plugboard.cli.process.ProcessBuilder") as mock_process_builder:
+        mock_process = AsyncMock()
+        mock_process_builder.build.return_value = mock_process
+        result = runner.invoke(
+            app,
+            [
+                "process",
+                "run",
+                "tests/data/dynamic-param-process.yaml",
+                "--param",
+                "process.default.parameter.max_iters=3",
+                "-p",
+                "component.a.arg.iters=5",
+                "--param",
+                "component.d.initial_value.in_1=[1, 2]",
+                "-p",
+                "component.d.parameter.enabled=true",
+            ],
+        )
+        assert result.exit_code == 0
+        assert "Process complete" in result.stdout
+        mock_process_builder.build.assert_called_once()
+        process_spec = mock_process_builder.build.call_args[0][0]
+        assert process_spec.args.parameters == {
+            "max_iters": 3,
+        }
+        components = {component.args.name: component for component in process_spec.args.components}
+        assert components["a"].args.iters == 5
+        assert components["d"].args.initial_values["in_1"] == [1, 2]
+        assert components["d"].args.parameters["enabled"] is True
+
+
+@pytest.mark.parametrize(
+    ("param", "message"),
+    [
+        ("not-a-pair", "Invalid parameter override"),
+        ("component.unknown.arg.value=1", "Component unknown not found"),
+        ("component.a.arg.parameters=[]", "Input should be a valid dictionary"),
+    ],
+)
+@pytest.mark.asyncio
+async def test_cli_process_run_with_invalid_param_override(param: str, message: str) -> None:
+    """Tests the process run command rejects malformed --param values."""
+    with patch("plugboard.cli.process.ProcessBuilder") as mock_process_builder:
+        result = runner.invoke(
+            app,
+            ["process", "run", "tests/data/minimal-process.yaml", "--param", param],
+        )
+        assert result.exit_code == 2
+        assert message in " ".join(result.stderr.split())
+        mock_process_builder.build.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    "names",
+    [
+        ("max_iters", "process.default.parameter.max_iters"),
+        ("process.default.parameter.max_iters", "max_iters"),
+    ],
+)
+@pytest.mark.asyncio
+async def test_cli_process_run_with_mixed_param_names(names: tuple[str, str]) -> None:
+    """Mixed short and qualified overrides preserve defaults and apply in flag order."""
+    with patch("plugboard.cli.process.ProcessBuilder") as mock_process_builder:
+        mock_process_builder.build.return_value = AsyncMock()
+        result = runner.invoke(
+            app,
+            [
+                "process",
+                "run",
+                "tests/data/dynamic-param-process.yaml",
+                "--param",
+                "enabled=true",
+                "--param",
+                f"{names[0]}=3",
+                "-p",
+                f"{names[1]}=5",
+                "-p",
+                "component.d.parameter.enabled=false",
+            ],
+        )
+        assert result.exit_code == 0, result.output
+        process_spec = mock_process_builder.build.call_args[0][0]
+        assert process_spec.args.parameters == {"max_iters": 5, "enabled": True}
+        components = {component.args.name: component for component in process_spec.args.components}
+        assert components["d"].args.parameters["enabled"] is False
+
+
+def test_parse_param_override() -> None:
+    """Tests name=value parsing for generic parameter overrides."""
+    from plugboard.cli.process import _parse_param_override
+
+    field, value = _parse_param_override("component.a.arg.scale=2.0")
+    assert field.full_name == "component.a.arg.scale"
+    assert value == 2.0
+    field, value = _parse_param_override("process.default.parameter.name=hello")
+    assert field.full_name == "process.default.parameter.name"
+    assert value == "hello"
+    field, value = _parse_param_override("max_iters=3")
+    assert field.full_name == "process.default.parameter.max_iters"
+    assert value == 3
+    field, value = _parse_param_override("component.a.parameter.flag=true")
+    assert field.full_name == "component.a.parameter.flag"
+    assert value is True
+    field, value = _parse_param_override("component.a.initial_value.empty=")
+    assert field.full_name == "component.a.initial_value.empty"
+    assert value == ""
+    field, value = _parse_param_override('component.a.arg.name="yes"')
+    assert field.full_name == "component.a.arg.name"
+    assert value == "yes"
+
+
+@pytest.mark.parametrize(
+    ("param", "message"),
+    [
+        ("not-a-pair", "Expected format"),
+        ("=value", "Parameter name must not be empty"),
+        ("component.a.arg.value=[", "Could not parse value"),
+        ("component.a.field.value=1", "does not identify an overridable parameter"),
+    ],
+)
+def test_parse_param_override_rejects_invalid_values(param: str, message: str) -> None:
+    """Tests invalid generic parameter overrides produce CLI errors."""
+    from plugboard.cli.process import _parse_param_override
+
+    with pytest.raises(typer.BadParameter, match=message):
+        _parse_param_override(param)
+
+
 def test_cli_process_validate() -> None:
     """Tests the process validate command."""
     result = runner.invoke(app, ["process", "validate", "tests/data/minimal-process.yaml"])
@@ -149,24 +315,102 @@ def test_cli_process_validate_invalid() -> None:
 
 
 def test_cli_ai_init(tmp_path: Path) -> None:
-    """Tests the ai init command creates AGENTS.md."""
+    """Tests the ai init command creates AGENTS.md and agent-style skills."""
     result = runner.invoke(app, ["ai", "init", str(tmp_path)])
     assert result.exit_code == 0
     assert "Created" in result.stdout
-    # File must exist with expected content
     agents_md = tmp_path / "AGENTS.md"
+    skills_dir = tmp_path / ".agents" / "skills"
+    skill_files = sorted(skills_dir.glob("*/SKILL.md"))
     assert agents_md.exists()
-    content = agents_md.read_text()
-    assert "Plugboard" in content
+    assert len(skill_files) == 4
+    assert "serialisable" in agents_md.read_text()
+    yaml_skill = skills_dir / "create-yaml-config" / "SKILL.md"
+    process_diagram_skill = skills_dir / "process-diagram" / "SKILL.md"
+    run_process_skill = skills_dir / "run-process-scenario" / "SKILL.md"
+    tune_skill = skills_dir / "configure-tune" / "SKILL.md"
+    assert yaml_skill.read_text().startswith("---\nname: create-yaml-config\n")
+    assert "process.dump" in yaml_skill.read_text()
+    assert "plugboard_schemas.ConfigSpec" in yaml_skill.read_text()
+    assert "plugboard process diagram" in process_diagram_skill.read_text()
+    assert "plugboard process run" in run_process_skill.read_text()
+    assert "plugboard_schemas.ConfigSpec" in run_process_skill.read_text()
+    assert "`tune` section" in tune_skill.read_text()
+    assert "plugboard_schemas.ConfigSpec" in tune_skill.read_text()
 
 
-def test_cli_ai_init_already_exists(tmp_path: Path) -> None:
-    """Tests the ai init command fails when AGENTS.md already exists."""
+def test_cli_ai_init_github_style(tmp_path: Path) -> None:
+    """Tests the ai init command creates GitHub-style skills when requested."""
+    result = runner.invoke(app, ["ai", "init", "--style", "github", str(tmp_path)])
+    assert result.exit_code == 0
+    assert (tmp_path / "AGENTS.md").exists()
+    assert (tmp_path / ".github" / "skills" / "process-diagram" / "SKILL.md").exists()
+
+
+def test_cli_ai_init_allows_existing_agents_file(tmp_path: Path) -> None:
+    """Tests the ai init command keeps an existing AGENTS.md file and adds missing skills."""
     (tmp_path / "AGENTS.md").write_text("existing content")
     result = runner.invoke(app, ["ai", "init", str(tmp_path)])
+    assert result.exit_code == 0
+    assert "Exists" in result.output
+    assert (tmp_path / "AGENTS.md").read_text() == "existing content"
+    assert (tmp_path / ".agents" / "skills" / "create-yaml-config" / "SKILL.md").exists()
+
+
+def test_cli_ai_init_allows_existing_skills_directory(tmp_path: Path) -> None:
+    """Tests the ai init command adds skills to an existing directory with other skills."""
+    existing_skill_dir = tmp_path / ".agents" / "skills" / "other-skill"
+    existing_skill_dir.mkdir(parents=True)
+    (existing_skill_dir / "SKILL.md").write_text(
+        "---\nname: other-skill\ndescription: Existing skill.\n---"
+    )
+    result = runner.invoke(app, ["ai", "init", str(tmp_path)])
+    assert result.exit_code == 0
+    assert (tmp_path / ".agents" / "skills" / "other-skill" / "SKILL.md").exists()
+    assert (tmp_path / ".agents" / "skills" / "create-yaml-config" / "SKILL.md").exists()
+
+
+def test_cli_ai_init_allows_existing_packaged_skill_directory(tmp_path: Path) -> None:
+    """Tests the ai init command adds missing packaged skills around existing ones."""
+    existing_skill_dir = tmp_path / ".agents" / "skills" / "create-yaml-config"
+    existing_skill_dir.mkdir(parents=True)
+    (existing_skill_dir / "SKILL.md").write_text("existing content")
+    result = runner.invoke(app, ["ai", "init", str(tmp_path)])
+    assert result.exit_code == 0
+    assert "Existing packaged skills" in result.output
+    assert (tmp_path / "AGENTS.md").exists()
+    assert (existing_skill_dir / "SKILL.md").read_text() == "existing content"
+    skill_files = sorted((tmp_path / ".agents" / "skills").glob("*/SKILL.md"))
+    assert len(skill_files) == 4
+    assert (tmp_path / ".agents" / "skills" / "process-diagram" / "SKILL.md").exists()
+
+
+def test_cli_ai_init_fails_for_agents_directory_conflict(tmp_path: Path) -> None:
+    """Tests the ai init command rejects AGENTS.md when it already exists as a directory."""
+    (tmp_path / "AGENTS.md").mkdir()
+    result = runner.invoke(app, ["ai", "init", str(tmp_path)])
     assert result.exit_code == 1
-    # Error is printed to stderr which typer captures in output
-    assert "already exists" in result.output
+    assert "AGENTS.md exists and is not a file" in result.stderr
+
+
+def test_cli_ai_init_fails_for_skills_directory_conflict(tmp_path: Path) -> None:
+    """Tests the ai init command rejects a skills target that already exists as a file."""
+    (tmp_path / ".agents").mkdir()
+    (tmp_path / ".agents" / "skills").write_text("not a directory")
+    result = runner.invoke(app, ["ai", "init", str(tmp_path)])
+    assert result.exit_code == 1
+    assert "skills exists and is not a directory" in result.stderr
+
+
+def test_cli_ai_init_fails_for_packaged_skill_conflict(tmp_path: Path) -> None:
+    """Tests the ai init command rejects packaged skill targets that already exist as files."""
+    skills_dir = tmp_path / ".agents" / "skills"
+    skills_dir.mkdir(parents=True)
+    (skills_dir / "create-yaml-config").write_text("not a directory")
+    result = runner.invoke(app, ["ai", "init", str(tmp_path)])
+    assert result.exit_code == 1
+    assert "skill targets exist and are not directories" in result.stderr
+    assert "create-yaml-config" in result.stderr
 
 
 def test_cli_ai_init_default_directory() -> None:
@@ -180,36 +424,68 @@ def test_cli_ai_init_default_directory() -> None:
             result = runner.invoke(app, ["ai", "init"])
             assert result.exit_code == 0
             assert (Path(tmpdir) / "AGENTS.md").exists()
+            assert (Path(tmpdir) / ".agents" / "skills" / "process-diagram" / "SKILL.md").exists()
         finally:
             os.chdir(original_cwd)
 
 
 def test_cli_ai_agents_template_is_packaged_file() -> None:
-    """Tests the AI template is a real package file rather than a symlink."""
+    """Tests the AGENTS template is a real package file rather than a symlink."""
     assert _AGENTS_MD.exists()
     assert _AGENTS_MD.is_file()
     assert not _AGENTS_MD.is_symlink()
 
 
-def test_cli_server_discover(test_project_dir: Path) -> None:
-    """Tests the server discover command."""
-    with respx.mock:
-        # Mock all the API endpoints
-        component_route = respx.post("http://test:8000/types/component").respond(
-            json={"status": "ok"}
-        )
-        connector_route = respx.post("http://test:8000/types/connector").respond(
-            json={"status": "ok"}
-        )
-        event_route = respx.post("http://test:8000/types/event").respond(json={"status": "ok"})
-        process_route = respx.post("http://test:8000/types/process").respond(json={"status": "ok"})
+def test_cli_ai_skills_templates_are_packaged_files() -> None:
+    """Tests the skills templates are real package files rather than symlinks."""
+    skill_files = sorted(_SKILLS_DIR.glob("*/SKILL.md"))
+    assert skill_files
+    for skill_file in skill_files:
+        assert skill_file.exists()
+        assert skill_file.is_file()
+        assert not skill_file.is_symlink()
 
+
+@pytest.mark.parametrize(
+    ("as_package", "include_hidden_dir", "expected_component_name"),
+    [
+        (True, False, None),
+        (True, True, None),
+        (False, False, "VisibleComponent"),
+        (False, True, "VisibleComponent"),
+    ],
+)
+def test_cli_server_discover(
+    tmp_path: Path,
+    as_package: bool,
+    include_hidden_dir: bool,
+    expected_component_name: str | None,
+) -> None:
+    """Tests the server discover command."""
+    project_dir = _create_test_project(
+        tmp_path,
+        as_package=as_package,
+        include_hidden_dir=include_hidden_dir,
+    )
+
+    requests: list[httpx2.Request] = []
+
+    def handle_request(request: httpx2.Request) -> httpx2.Response:
+        requests.append(request)
+        return httpx2.Response(200, json={"status": "ok"})
+
+    transport = httpx2.MockTransport(handle_request)
+    async_client_class = httpx2.AsyncClient
+    with patch(
+        "plugboard.cli.server.httpx2.AsyncClient",
+        side_effect=lambda: async_client_class(transport=transport),
+    ):
         result = runner.invoke(
             app,
             [
                 "server",
                 "discover",
-                str(test_project_dir),
+                str(project_dir),
                 "--api-url",
                 "http://test:8000",
             ],
@@ -217,25 +493,38 @@ def test_cli_server_discover(test_project_dir: Path) -> None:
 
         # CLI must run without error
         assert result.exit_code == 0
+        assert result.exception is None
         assert "Discovery complete" in result.stdout
 
         # At minimum, should have discovered plugboard's built-in types
         # The exact number may vary, but we expect some calls to each endpoint
-        assert component_route.called
-        assert connector_route.called
-        assert event_route.called
-        assert process_route.called
+        paths = {request.url.path for request in requests}
+        assert "/types/component" in paths
+        assert "/types/connector" in paths
+        assert "/types/event" in paths
+        assert "/types/process" in paths
+        if expected_component_name is not None:
+            assert any(
+                json.loads(request.content)["name"] == expected_component_name
+                for request in requests
+                if request.url.path == "/types/component"
+            )
 
 
 def test_cli_server_discover_with_env_var(test_project_dir: Path) -> None:
     """Tests the server discover command with environment variable."""
-    with respx.mock:
-        # Mock all the API endpoints with the env var URL
-        respx.post("http://env-test:9000/types/component").respond(json={"status": "ok"})
-        respx.post("http://env-test:9000/types/connector").respond(json={"status": "ok"})
-        respx.post("http://env-test:9000/types/event").respond(json={"status": "ok"})
-        respx.post("http://env-test:9000/types/process").respond(json={"status": "ok"})
+    requests: list[httpx2.Request] = []
 
+    def handle_request(request: httpx2.Request) -> httpx2.Response:
+        requests.append(request)
+        return httpx2.Response(200, json={"status": "ok"})
+
+    transport = httpx2.MockTransport(handle_request)
+    async_client_class = httpx2.AsyncClient
+    with patch(
+        "plugboard.cli.server.httpx2.AsyncClient",
+        side_effect=lambda: async_client_class(transport=transport),
+    ):
         result = runner.invoke(
             app,
             ["server", "discover", str(test_project_dir)],
@@ -245,3 +534,6 @@ def test_cli_server_discover_with_env_var(test_project_dir: Path) -> None:
         # CLI must run without error
         assert result.exit_code == 0
         assert "Discovery complete" in result.stdout
+        assert requests
+        assert all(request.url.host == "env-test" for request in requests)
+        assert all(request.url.port == 9000 for request in requests)

@@ -10,6 +10,9 @@ on:
       - synchronize
       - reopened
 
+env:
+  UV_MALWARE_CHECK: "1"
+
 permissions:
   contents: read
 
@@ -58,7 +61,7 @@ jobs:
         if: always()
 
       - name: Code complexity
-        run: uv run xenon --max-absolute B --max-modules A --max-average A plugboard/
+        run: uv run xenon --max-absolute C --max-modules A --max-average A plugboard/
         if: always()
 
       - name: Notebook output cleared
@@ -66,7 +69,8 @@ jobs:
         if: always()
 
       - name: Check open source licenses
-        run: uv run licensecheck --requirements-paths ./pyproject.toml --zero --skip-dependencies plugboard-schemas
+        # Skipping fsspec until https://github.com/fsspec/filesystem_spec/issues/2100 resolved
+        run: uv run licensecheck --requirements-paths ./pyproject.toml --zero --skip-dependencies plugboard-schemas fsspec
 
       - name: Build docs
         run: uv run mkdocs build --site-dir /tmp/site

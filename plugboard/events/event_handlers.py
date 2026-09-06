@@ -18,11 +18,16 @@ class EventHandlers:  # pragma: no cover
     _handlers: _t.ClassVar[dict[str, dict[str, AsyncCallable]]] = defaultdict(dict)
 
     @classmethod
-    def add(cls, event: _t.Type[Event] | Event) -> _t.Callable[[AsyncCallable], AsyncCallable]:
+    def add(
+        cls,
+        event: _t.Type[Event] | Event,
+        populates_fields: _t.Optional[list[str]] = None,
+    ) -> _t.Callable[[AsyncCallable], AsyncCallable]:
         """Decorator that registers class methods as handlers for specific event types.
 
         Args:
             event: Event class this handler processes
+            populates_fields: Optional list of fields that the handler populates
 
         Returns:
             Callable: Decorated method
@@ -31,6 +36,12 @@ class EventHandlers:  # pragma: no cover
         def decorator(method: AsyncCallable) -> AsyncCallable:
             class_path = cls._get_class_path_for_method(method)
             cls._handlers[class_path][event.type] = method
+
+            if populates_fields is not None:
+                if not hasattr(method, "_event_field_coverage"):
+                    setattr(method, "_event_field_coverage", {})
+                getattr(method, "_event_field_coverage")[event.type] = populates_fields
+
             return method
 
         return decorator
@@ -57,10 +68,11 @@ class EventHandlers:  # pragma: no cover
         Raises:
             KeyError: If no handler found for class or event type
         """
+        store = cls._handlers
         for base_class in _class.__mro__:
             base_path = f"{base_class.__module__}.{base_class.__name__}"
-            if base_path in cls._handlers and event.type in cls._handlers[base_path]:
-                return cls._handlers[base_path][event.type]
+            if base_path in store and event.type in store[base_path]:
+                return store[base_path][event.type]
         raise KeyError(
             f"No handler found for class '{_class.__name__}' and event type '{event.type}'"
         )

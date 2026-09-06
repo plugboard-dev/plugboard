@@ -6,7 +6,7 @@ import os
 from pathlib import Path
 import typing as _t
 
-import httpx
+import httpx2
 from rich.console import Console
 from rich.progress import Progress, SpinnerColumn, TextColumn
 import typer
@@ -29,26 +29,28 @@ stderr = Console(stderr=True)
 async def _post_to_api(url: str, data: dict) -> None:
     """Post data to the given API URL."""
     logger = DI.logger.resolve_sync()
-    async with httpx.AsyncClient() as client:
+    async with httpx2.AsyncClient() as client:
         try:
             response = await client.post(url, json=data, timeout=30.0)
             if response.status_code not in (200, 201):  # pragma: no cover
                 logger.error(f"Failed to post to {url}: {response.status_code} {response.text}")
             else:
                 logger.debug(f"Successfully posted to {url}")
-        except (httpx.HTTPStatusError, httpx.RequestError) as e:  # pragma: no cover
+        except (httpx2.HTTPStatusError, httpx2.RequestError) as e:  # pragma: no cover
             logger.error(f"Error posting to {url}: {e}")
 
 
 def _import_recursive(path: Path, base_package: _t.Optional[str] = None) -> None:
     """Import all modules recursively from the given path."""
     logger = DI.logger.resolve_sync()
-    for root, _dirs, files in os.walk(path):
+    for root, dirs, files in os.walk(path):
+        # Update dirs in place so os.walk skips hidden directories like .venv.
+        dirs[:] = [directory for directory in dirs if not directory.startswith(".")]
         for file in files:
             if file.endswith(".py") and not file.startswith("__"):
                 # Construct module name
-                rel_path = os.path.relpath(os.path.join(root, file), path)
-                module_name = rel_path.replace(os.sep, ".")[:-3]
+                rel_path = Path(root, file).relative_to(path)
+                module_name = ".".join(rel_path.with_suffix("").parts)
 
                 if base_package:
                     module_name = f"{base_package}.{module_name}"
@@ -84,12 +86,14 @@ async def _discover_components(api_url: str, base_cls: type) -> None:
         outputs = []
         input_events = []
         output_events = []
+        event_field_coverage: dict[str, list[str]] = {}
 
         if io:
             inputs = list(io.inputs)
             outputs = list(io.outputs)
             input_events = [getattr(e, "type", str(e)) for e in io.input_events]
             output_events = [getattr(e, "type", str(e)) for e in io.output_events]
+            event_field_coverage = getattr(io, "event_field_coverage", {})
 
         data = {
             "id": f"{c.__module__}.{c.__qualname__}",
@@ -100,6 +104,7 @@ async def _discover_components(api_url: str, base_cls: type) -> None:
             "outputs": outputs,
             "input_events": input_events,
             "output_events": output_events,
+            "event_field_coverage": event_field_coverage,
         }
         await _post_to_api(f"{api_url}/types/component", data)
 
