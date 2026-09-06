@@ -82,6 +82,8 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
+          # Match SHA tags and revision labels to the commit checked out above.
+          context: git
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
             type=semver,pattern={{version}},value=${{ env.PACKAGE_VERSION }},enable=${{ (github.event_name == 'workflow_run') && (github.event.workflow_run.conclusion == 'success') }}
