@@ -79,10 +79,11 @@ class BaseFieldSpec(PlugboardBaseModel, ABC):
 
 
 def parse_parameter_name(name: str) -> BaseFieldSpec:
-    """Parse a tunable parameter's fully-qualified name.
+    """Parse a bare process parameter name or a fully-qualified override name.
 
     Args:
         name: A parameter name such as ``component.my_component.arg.scale``.
+            A bare name such as ``scale`` means ``process.default.parameter.scale``.
 
     Returns:
         The corresponding field specification.
@@ -90,11 +91,15 @@ def parse_parameter_name(name: str) -> BaseFieldSpec:
     Raises:
         ValueError: If the name does not identify an overridable parameter.
     """
+    if not name:
+        raise ValueError("Parameter name must not be empty.")
+    if "." not in name:
+        name = f"process.default.parameter.{name}"
     try:
         object_type, object_name, field_type, field_name = name.split(".", maxsplit=3)
     except ValueError as e:
         raise ValueError(
-            "Parameter name must have the format "
+            "Parameter name must have the format '<name>', "
             "'component.<name>.<arg|initial_value|parameter>.<field>' or "
             "'process.default.parameter.<field>'."
         ) from e

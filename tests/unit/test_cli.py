@@ -200,17 +200,60 @@ async def test_cli_process_run_with_param_overrides() -> None:
         assert components["d"].args.parameters["enabled"] is True
 
 
+@pytest.mark.parametrize(
+    ("param", "message"),
+    [
+        ("not-a-pair", "Invalid parameter override"),
+        ("component.unknown.arg.value=1", "Component unknown not found"),
+        ("component.a.arg.parameters=[]", "Input should be a valid dictionary"),
+    ],
+)
 @pytest.mark.asyncio
-async def test_cli_process_run_with_invalid_param_override() -> None:
+async def test_cli_process_run_with_invalid_param_override(param: str, message: str) -> None:
     """Tests the process run command rejects malformed --param values."""
     with patch("plugboard.cli.process.ProcessBuilder") as mock_process_builder:
         result = runner.invoke(
             app,
-            ["process", "run", "tests/data/minimal-process.yaml", "--param", "not-a-pair"],
+            ["process", "run", "tests/data/minimal-process.yaml", "--param", param],
         )
         assert result.exit_code == 2
-        assert "Invalid parameter override" in result.stderr
+        assert message in " ".join(result.stderr.split())
         mock_process_builder.build.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    "names",
+    [
+        ("max_iters", "process.default.parameter.max_iters"),
+        ("process.default.parameter.max_iters", "max_iters"),
+    ],
+)
+@pytest.mark.asyncio
+async def test_cli_process_run_with_mixed_param_names(names: tuple[str, str]) -> None:
+    """Mixed short and qualified overrides preserve defaults and apply in flag order."""
+    with patch("plugboard.cli.process.ProcessBuilder") as mock_process_builder:
+        mock_process_builder.build.return_value = AsyncMock()
+        result = runner.invoke(
+            app,
+            [
+                "process",
+                "run",
+                "tests/data/dynamic-param-process.yaml",
+                "--param",
+                "enabled=true",
+                "--param",
+                f"{names[0]}=3",
+                "-p",
+                f"{names[1]}=5",
+                "-p",
+                "component.d.parameter.enabled=false",
+            ],
+        )
+        assert result.exit_code == 0, result.output
+        process_spec = mock_process_builder.build.call_args[0][0]
+        assert process_spec.args.parameters == {"max_iters": 5, "enabled": True}
+        components = {component.args.name: component for component in process_spec.args.components}
+        assert components["d"].args.parameters["enabled"] is False
 
 
 def test_parse_param_override() -> None:

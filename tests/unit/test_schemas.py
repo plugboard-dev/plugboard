@@ -135,6 +135,7 @@ def test_parameter_override() -> None:
 @pytest.mark.parametrize(
     ("name", "message"),
     [
+        ("", "must not be empty"),
         ("component.a", "must have the format"),
         ("component..arg.value", "must include an object name"),
         ("component.a.arg.", "must include an object name and field name"),
@@ -160,3 +161,11 @@ def test_parameter_override_rejects_unknown_component() -> None:
             parse_parameter_name("component.unknown.arg.value"),
             1,
         )
+
+
+def test_parse_bare_parameter_name() -> None:
+    """Bare names identify the same process parameter as fully-qualified names."""
+    short = parse_parameter_name("max_iters")
+    qualified = parse_parameter_name("process.default.parameter.max_iters")
+    assert short == qualified
+    assert short.full_name == "process.default.parameter.max_iters"

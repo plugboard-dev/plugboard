@@ -70,16 +70,7 @@ def _parse_param_override(param: str) -> tuple[BaseFieldSpec, _t.Any]:
                 param_hint="--param",
             ) from e
     try:
-        field = (
-            BaseFieldSpec(
-                object_type="process",
-                object_name=None,
-                field_type="parameter",
-                field_name=key,
-            )
-            if "." not in key
-            else parse_parameter_name(key)
-        )
+        field = parse_parameter_name(key)
     except ValueError as e:
         raise typer.BadParameter(
             f"Invalid parameter name {key!r}: {e}",
@@ -94,7 +85,12 @@ def _apply_param_overrides(config: ConfigSpec, params: list[str] | None) -> None
         return
     for param in params:
         field, value = _parse_param_override(param)
-        override_parameter(config.plugboard.process, field, value)
+        try:
+            override_parameter(config.plugboard.process, field, value)
+        except ValueError as e:
+            raise typer.BadParameter(
+                f"Invalid parameter override {param!r}: {e}", param_hint="--param"
+            ) from e
 
 
 def _build_process(config: ConfigSpec) -> Process:

@@ -63,11 +63,14 @@ We can now run this model using the plugboard CLI with the command:
 plugboard process run model.yaml
 ```
 
-You can override process parameters or component fields at run time without editing the YAML:
+You can override component fields at run time without editing the YAML:
 
 ```shell
-plugboard process run model.yaml --param process.default.parameter.scale=2.0 -p component.a.arg.iters=10
+plugboard process run model.yaml --param component.a.arg.iters=5
 ```
+
+For models that use process parameters, `-p scale=2.0` is shorthand for
+`-p process.default.parameter.scale=2.0`. Repeat `--param` / `-p` to override multiple values.
 
 You should see that an output `.txt` file has been created, showing the the model as run successfully. Congratulations - you have built and run your first Plugboard model!
 

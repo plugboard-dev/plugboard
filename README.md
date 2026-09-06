@@ -212,12 +212,12 @@ plugboard process run my-model.yaml
 ```
 
 Process fields can be overridden at run time with repeated `--param` / `-p` flags. Use
-`process.default.parameter.<name>` for process parameters or
+`<name>` (short for `process.default.parameter.<name>`) for process parameters or
 `component.<name>.<arg|initial_value|parameter>.<field>` for component fields. Values are parsed
-as YAML:
+as YAML. Later flags win when the same field is specified more than once:
 
 ```shell
-plugboard process run my-model.yaml --param process.default.parameter.scale=2.0 -p component.a.arg.enabled=true
+plugboard process run my-model.yaml --param scale=2.0 -p component.a.arg.iters=5
 ```
 
 ## 📖 Documentation
