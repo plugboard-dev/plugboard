@@ -3158,7 +3158,7 @@ span.linenos.special { color: #000000; background-color: #ffffc0; padding-left: 
 <span class="kn">import</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">_t</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">getpass</span><span class="w"> </span><span class="kn">import</span> <span class="n">getpass</span>
 
-<span class="kn">import</span><span class="w"> </span><span class="nn">httpx</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">httpx2</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">pydantic</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseModel</span><span class="p">,</span> <span class="n">Field</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">plugboard.component</span><span class="w"> </span><span class="kn">import</span> <span class="n">Component</span><span class="p">,</span> <span class="n">IOController</span>
@@ -3172,7 +3172,7 @@ import os
 import typing as _t
 from getpass import getpass
 
-import httpx
+import httpx2
 from pydantic import BaseModel, Field
 
 from plugboard.component import Component, IOController
@@ -3253,13 +3253,13 @@ from plugboard.library import FileWriter, LLMChat, WebsocketReader</div>
 </div>
 </clipboard-copy>
 </div>
-<div class="highlight-ipynb hl-python"><pre><span></span><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">fetch_bluesky_did</span><span class="p">(</span><span class="n">client</span><span class="p">:</span> <span class="n">httpx</span><span class="o">.</span><span class="n">AsyncClient</span><span class="p">,</span> <span class="n">user_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<div class="highlight-ipynb hl-python"><pre><span></span><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">fetch_bluesky_did</span><span class="p">(</span><span class="n">client</span><span class="p">:</span> <span class="n">httpx2</span><span class="o">.</span><span class="n">AsyncClient</span><span class="p">,</span> <span class="n">user_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
     <span class="n">response</span> <span class="o">=</span> <span class="k">await</span> <span class="n">client</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
         <span class="s2">"https://bsky.social/xrpc/com.atproto.identity.resolveHandle"</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="s2">"handle"</span><span class="p">:</span> <span class="n">user_name</span><span class="p">}</span>
     <span class="p">)</span>
     <span class="k">return</span> <span class="n">response</span><span class="o">.</span><span class="n">json</span><span class="p">()[</span><span class="s2">"did"</span><span class="p">]</span>
 </pre></div>
-<div class="clipboard-copy-txt" id="cell-4">async def fetch_bluesky_did(client: httpx.AsyncClient, user_name: str) -&gt; str:
+<div class="clipboard-copy-txt" id="cell-4">async def fetch_bluesky_did(client: httpx2.AsyncClient, user_name: str) -&gt; str:
     response = await client.get(
         "https://bsky.social/xrpc/com.atproto.identity.resolveHandle", params={"handle": user_name}
     )
@@ -3296,7 +3296,7 @@ from plugboard.library import FileWriter, LLMChat, WebsocketReader</div>
     <span class="s2">"wsj.com"</span><span class="p">,</span>
     <span class="s2">"yahoofinance.com"</span><span class="p">,</span>
 <span class="p">]</span>
-<span class="k">async</span> <span class="k">with</span> <span class="n">httpx</span><span class="o">.</span><span class="n">AsyncClient</span><span class="p">()</span> <span class="k">as</span> <span class="n">client</span><span class="p">:</span>
+<span class="k">async</span> <span class="k">with</span> <span class="n">httpx2</span><span class="o">.</span><span class="n">AsyncClient</span><span class="p">()</span> <span class="k">as</span> <span class="n">client</span><span class="p">:</span>
     <span class="n">bluesky_dids</span> <span class="o">=</span> <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">gather</span><span class="p">(</span>
         <span class="o">*</span><span class="p">[</span><span class="n">fetch_bluesky_did</span><span class="p">(</span><span class="n">client</span><span class="p">,</span> <span class="n">handle</span><span class="p">)</span> <span class="k">for</span> <span class="n">handle</span> <span class="ow">in</span> <span class="n">user_handles</span><span class="p">]</span>
     <span class="p">)</span>
@@ -3311,7 +3311,7 @@ from plugboard.library import FileWriter, LLMChat, WebsocketReader</div>
     "wsj.com",
     "yahoofinance.com",
 ]
-async with httpx.AsyncClient() as client:
+async with httpx2.AsyncClient() as client:
     bluesky_dids = await asyncio.gather(
         *[fetch_bluesky_did(client, handle) for handle in user_handles]
     )

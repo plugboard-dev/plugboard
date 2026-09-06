@@ -3316,7 +3316,7 @@ span.linenos.special { color: #000000; background-color: #ffffc0; padding-left: 
 <span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">pydantic</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseModel</span><span class="p">,</span> <span class="n">ConfigDict</span><span class="p">,</span> <span class="n">AnyUrl</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">PIL</span><span class="w"> </span><span class="kn">import</span> <span class="n">Image</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">httpx</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">httpx2</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">torchvision.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">mobilenet_v3_small</span><span class="p">,</span> <span class="n">MobileNet_V3_Small_Weights</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">torchvision</span><span class="w"> </span><span class="kn">import</span> <span class="n">transforms</span>
@@ -3339,7 +3339,7 @@ from datetime import time
 import pandas as pd
 from pydantic import BaseModel, ConfigDict, AnyUrl
 from PIL import Image
-import httpx
+import httpx2
 from torchvision.models import mobilenet_v3_small, MobileNet_V3_Small_Weights
 
 from torchvision import transforms
@@ -3429,7 +3429,7 @@ from plugboard.events import Event</div>
         <span class="n">headers</span> <span class="o">=</span> <span class="p">{</span>
             <span class="s2">"User-Agent"</span><span class="p">:</span> <span class="s2">"PlugboardExample/1.0 (https://docs.plugboard.dev, hello@plugboard.dev)"</span>
         <span class="p">}</span>
-        <span class="k">async</span> <span class="k">with</span> <span class="n">httpx</span><span class="o">.</span><span class="n">AsyncClient</span><span class="p">()</span> <span class="k">as</span> <span class="n">client</span><span class="p">:</span>
+        <span class="k">async</span> <span class="k">with</span> <span class="n">httpx2</span><span class="o">.</span><span class="n">AsyncClient</span><span class="p">()</span> <span class="k">as</span> <span class="n">client</span><span class="p">:</span>
             <span class="n">r</span> <span class="o">=</span> <span class="k">await</span> <span class="n">client</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">url</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="n">headers</span><span class="p">,</span> <span class="n">follow_redirects</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
             <span class="n">r</span><span class="o">.</span><span class="n">raise_for_status</span><span class="p">()</span>
 
@@ -3471,7 +3471,7 @@ from plugboard.events import Event</div>
         headers = {
             "User-Agent": "PlugboardExample/1.0 (https://docs.plugboard.dev, hello@plugboard.dev)"
         }
-        async with httpx.AsyncClient() as client:
+        async with httpx2.AsyncClient() as client:
             r = await client.get(self.url, headers=headers, follow_redirects=True)
             r.raise_for_status()
 
