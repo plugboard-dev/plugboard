@@ -38,7 +38,10 @@ def create_socket(
     _ctx = ctx or zmq.asyncio.Context.instance()
     socket = _ctx.socket(socket_type)
     for opt, value in socket_opts:
-        socket.setsockopt(opt, value)
+        if isinstance(value, str):
+            socket.setsockopt_string(opt, value)
+        else:
+            socket.setsockopt(opt, value)
     return socket
 
 
@@ -60,7 +63,10 @@ def _create_sync_socket(
     _ctx = ctx or zmq.Context.instance()
     socket = _ctx.socket(socket_type)
     for opt, value in socket_opts:
-        socket.setsockopt(opt, value)
+        if isinstance(value, str):
+            socket.setsockopt_string(opt, value)
+        else:
+            socket.setsockopt(opt, value)
     return socket
 
 

@@ -40,6 +40,12 @@ async def zmq_proxy() -> _t.AsyncGenerator[ZMQProxy, None]:
             ([(zmq.SNDHWM, 100)], [(zmq.RCVHWM, 100), (zmq.SUBSCRIBE, b"test")]),
             b"test",
         ),
+        # PUB-SUB pair with str topic
+        (
+            (zmq.PUB, zmq.SUB),
+            ([(zmq.SNDHWM, 100)], [(zmq.RCVHWM, 100), (zmq.SUBSCRIBE, "test")]),
+            b"test",
+        ),
         # DEALER-ROUTER pair
         (
             (zmq.DEALER, zmq.ROUTER),
