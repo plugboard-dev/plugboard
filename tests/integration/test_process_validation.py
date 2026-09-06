@@ -64,7 +64,7 @@ async def test_component_validation() -> None:
     class NoSuperCall(Component):
         io = IO(inputs=["x"], outputs=["y"])
 
-        def __init__(*args: _t.Any, **kwargs: _t.Any):
+        def __init__(*args: _t.Any, **kwargs: _t.Any) -> None:
             pass
 
         async def step(self) -> None:
