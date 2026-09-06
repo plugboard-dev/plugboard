@@ -2566,12 +2566,17 @@ What's new: 🚀 we've open-sourced Plugboard - please <a href="https://github.c
 <div class="language-sh highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>uv<span class="w"> </span>run<span class="w"> </span>pytest<span class="w"> </span>.
 </span></code></pre></div></p>
 <h3 id="linting">Linting</h3>
-<p>We use <a href="https://github.com/astral-sh/ruff">ruff</a> for code formatting and style. Install the pre-commit hook by running
+<p>We use <a href="https://github.com/astral-sh/ruff">ruff</a> for code formatting and style, and
+<a href="https://github.com/astral-sh/ty">ty</a> for static type checking. Install the pre-commit hook by
+running
 <div class="language-sh highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>uv<span class="w"> </span>run<span class="w"> </span>pre-commit<span class="w"> </span>install
+</span></code></pre></div></p>
+<p>You can run the full local lint suite with
+<div class="language-sh highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>make<span class="w"> </span>lint
 </span></code></pre></div></p>
 <h3 id="documentation">Documentation</h3>
 <p>The package documentation uses <a href="https://squidfunk.github.io/mkdocs-material/">Material for MkDocs</a> and can be viewed locally by running
-<div class="language-sh highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>uv<span class="w"> </span>run<span class="w"> </span>mkdocs<span class="w"> </span>serve
+<div class="language-sh highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>uv<span class="w"> </span>run<span class="w"> </span>mkdocs<span class="w"> </span>serve
 </span></code></pre></div></p>
 <h3 id="ai-assisted-development">AI-assisted development</h3>
 <p>This repo includes custom AI agent prompts to assist with development:</p>
