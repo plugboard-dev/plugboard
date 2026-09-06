@@ -10,6 +10,9 @@ on:
       - synchronize
       - reopened
 
+env:
+  UV_MALWARE_CHECK: "1"
+
 permissions:
   contents: read
 
