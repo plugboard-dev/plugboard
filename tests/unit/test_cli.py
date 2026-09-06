@@ -11,8 +11,8 @@ import textwrap
 import typing as _t
 from unittest.mock import AsyncMock, MagicMock, patch
 
+import httpx2
 import pytest
-import respx
 import typer
 from typer.testing import CliRunner
 
@@ -468,17 +468,18 @@ def test_cli_server_discover(
         include_hidden_dir=include_hidden_dir,
     )
 
-    with respx.mock:
-        # Mock all the API endpoints
-        component_route = respx.post("http://test:8000/types/component").respond(
-            json={"status": "ok"}
-        )
-        connector_route = respx.post("http://test:8000/types/connector").respond(
-            json={"status": "ok"}
-        )
-        event_route = respx.post("http://test:8000/types/event").respond(json={"status": "ok"})
-        process_route = respx.post("http://test:8000/types/process").respond(json={"status": "ok"})
+    requests: list[httpx2.Request] = []
 
+    def handle_request(request: httpx2.Request) -> httpx2.Response:
+        requests.append(request)
+        return httpx2.Response(200, json={"status": "ok"})
+
+    transport = httpx2.MockTransport(handle_request)
+    async_client_class = httpx2.AsyncClient
+    with patch(
+        "plugboard.cli.server.httpx2.AsyncClient",
+        side_effect=lambda: async_client_class(transport=transport),
+    ):
         result = runner.invoke(
             app,
             [
@@ -497,26 +498,33 @@ def test_cli_server_discover(
 
         # At minimum, should have discovered plugboard's built-in types
         # The exact number may vary, but we expect some calls to each endpoint
-        assert component_route.called
-        assert connector_route.called
-        assert event_route.called
-        assert process_route.called
+        paths = {request.url.path for request in requests}
+        assert "/types/component" in paths
+        assert "/types/connector" in paths
+        assert "/types/event" in paths
+        assert "/types/process" in paths
         if expected_component_name is not None:
             assert any(
-                json.loads(call.request.content)["name"] == expected_component_name
-                for call in component_route.calls
+                json.loads(request.content)["name"] == expected_component_name
+                for request in requests
+                if request.url.path == "/types/component"
             )
 
 
 def test_cli_server_discover_with_env_var(test_project_dir: Path) -> None:
     """Tests the server discover command with environment variable."""
-    with respx.mock:
-        # Mock all the API endpoints with the env var URL
-        respx.post("http://env-test:9000/types/component").respond(json={"status": "ok"})
-        respx.post("http://env-test:9000/types/connector").respond(json={"status": "ok"})
-        respx.post("http://env-test:9000/types/event").respond(json={"status": "ok"})
-        respx.post("http://env-test:9000/types/process").respond(json={"status": "ok"})
+    requests: list[httpx2.Request] = []
 
+    def handle_request(request: httpx2.Request) -> httpx2.Response:
+        requests.append(request)
+        return httpx2.Response(200, json={"status": "ok"})
+
+    transport = httpx2.MockTransport(handle_request)
+    async_client_class = httpx2.AsyncClient
+    with patch(
+        "plugboard.cli.server.httpx2.AsyncClient",
+        side_effect=lambda: async_client_class(transport=transport),
+    ):
         result = runner.invoke(
             app,
             ["server", "discover", str(test_project_dir)],
@@ -526,3 +534,6 @@ def test_cli_server_discover_with_env_var(test_project_dir: Path) -> None:
         # CLI must run without error
         assert result.exit_code == 0
         assert "Discovery complete" in result.stdout
+        assert requests
+        assert all(request.url.host == "env-test" for request in requests)
+        assert all(request.url.port == 9000 for request in requests)
