@@ -3,7 +3,6 @@
 import typing as _t
 
 import pytest
-from pytest_lazy_fixtures import lf
 
 from plugboard.connector import (
     Connector,
@@ -11,8 +10,7 @@ from plugboard.connector import (
     ZMQConnector,
 )
 from plugboard.connector.redis_channel import RedisConnector
-from plugboard.utils.settings import Settings
-from tests.conftest import override_settings
+from tests.conftest import ConnectorCase, configured_connector, connector_case_id
 from tests.unit.test_connector_pubsub import (  # noqa: F401
     _HASH_SEED,
     TEST_ITEMS,
@@ -22,21 +20,18 @@ from tests.unit.test_connector_pubsub import (  # noqa: F401
 )
 
 
-@pytest.fixture(params=[True], ids=["zmq_pubsub_proxy=True"])
-def zmq_connector_cls(request: pytest.FixtureRequest) -> _t.Iterator[_t.Type[ZMQConnector]]:
-    """Returns the ZMQConnector class with the specified proxy setting.
-
-    Overrides settings to control the proxy setting without mutating process env.
-    """
-    testing_settings = Settings.model_validate({"flags": {"zmq_pubsub_proxy": request.param}})
-    with override_settings(testing_settings):
-        yield ZMQConnector
-
-
-@pytest.fixture(params=[RabbitMQConnector, lf("zmq_connector_cls"), RedisConnector])
-def connector_cls(request: pytest.FixtureRequest) -> type[Connector]:
-    """Fixture for `Connector` of various types."""
-    return request.param
+@pytest.fixture(
+    params=[
+        ConnectorCase(RabbitMQConnector),
+        ConnectorCase(ZMQConnector, True),
+        ConnectorCase(RedisConnector),
+    ],
+    ids=connector_case_id,
+)
+def connector_cls(request: pytest.FixtureRequest) -> _t.Iterator[type[Connector]]:
+    """Configure each connector variant for this test module."""
+    with configured_connector(request.param) as cls:
+        yield cls
 
 
 @pytest.mark.asyncio

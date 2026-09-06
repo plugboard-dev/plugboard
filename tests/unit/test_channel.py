@@ -4,7 +4,6 @@ import asyncio
 import typing as _t
 
 import pytest
-from pytest_lazy_fixtures import lf
 from ray.util.multiprocessing import Pool
 from that_depends import ContextScopes, container_context
 
@@ -18,8 +17,7 @@ from plugboard.connector import (
 from plugboard.exceptions import ChannelClosedError
 from plugboard.schemas import ConnectorMode, ConnectorSpec
 from plugboard.utils.di import DI
-from plugboard.utils.settings import Settings
-from tests.conftest import override_settings
+from tests.conftest import ConnectorCase, configured_connector, connector_case_id
 
 
 TEST_ITEMS = [
@@ -33,21 +31,18 @@ TEST_ITEMS = [
 ]
 
 
-@pytest.fixture(params=[False], ids=["zmq_pubsub_proxy=False"])
-def zmq_connector_cls(request: pytest.FixtureRequest) -> _t.Iterator[_t.Type[ZMQConnector]]:
-    """Returns the ZMQConnector class with the specified proxy setting.
-
-    Overrides settings to control the proxy setting without mutating process env.
-    """
-    testing_settings = Settings.model_validate({"flags": {"zmq_pubsub_proxy": request.param}})
-    with override_settings(testing_settings):
-        yield ZMQConnector
-
-
-@pytest.fixture(params=[AsyncioConnector, RayConnector, lf("zmq_connector_cls")])
-def connector_cls(request: pytest.FixtureRequest) -> type[Connector]:
-    """Fixture for `Connector` of various types."""
-    return request.param
+@pytest.fixture(
+    params=[
+        ConnectorCase(AsyncioConnector),
+        ConnectorCase(RayConnector),
+        ConnectorCase(ZMQConnector, False),
+    ],
+    ids=connector_case_id,
+)
+def connector_cls(request: pytest.FixtureRequest) -> _t.Iterator[type[Connector]]:
+    """Configure each connector variant for this test module."""
+    with configured_connector(request.param) as cls:
+        yield cls
 
 
 @pytest.mark.asyncio
@@ -82,10 +77,14 @@ async def test_channel(connector_cls: type[Connector], ray_ctx: None, job_id_ctx
     assert send_channel.is_closed
 
 
-@pytest.fixture(params=[RayConnector, lf("zmq_connector_cls")])
-def connector_cls_mp(request: pytest.FixtureRequest) -> type[Connector]:
-    """Fixture for `Connector` of various types for use in multiprocess context."""
-    return request.param
+@pytest.fixture(
+    params=[ConnectorCase(RayConnector), ConnectorCase(ZMQConnector, False)],
+    ids=connector_case_id,
+)
+def connector_cls_mp(request: pytest.FixtureRequest) -> _t.Iterator[type[Connector]]:
+    """Configure each connector variant for this test module."""
+    with configured_connector(request.param) as cls:
+        yield cls
 
 
 @pytest.mark.asyncio

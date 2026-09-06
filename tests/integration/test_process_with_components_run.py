@@ -10,7 +10,6 @@ from unittest.mock import patch
 from aiofile import async_open
 from pydantic import BaseModel
 import pytest
-from pytest_lazy_fixtures import lf
 
 from plugboard.component import IOController as IO
 from plugboard.component.component import IO_READ_TIMEOUT_SECONDS
@@ -20,13 +19,14 @@ from plugboard.connector import (
     ConnectorBuilder,
     RabbitMQConnector,
     RayConnector,
+    ZMQConnector,
 )
 from plugboard.events import Event
 from plugboard.exceptions import ConstraintError, NotInitialisedError, ProcessStatusError
 from plugboard.library import FileWriter
 from plugboard.process import LocalProcess, Process, RayProcess
 from plugboard.schemas import ConnectorSpec, Status
-from tests.conftest import ComponentTestHelper
+from tests.conftest import ComponentTestHelper, ConnectorCase, connector_case_id
 
 
 class A(ComponentTestHelper):
@@ -87,13 +87,17 @@ def tempfile_path() -> _t.Generator[Path, None, None]:
 @pytest.mark.parametrize(
     "process_cls, connector_cls",
     [
-        (LocalProcess, AsyncioConnector),
-        (LocalProcess, lf("zmq_connector_cls")),
-        (LocalProcess, RabbitMQConnector),
-        (RayProcess, RayConnector),
-        (RayProcess, lf("zmq_connector_cls")),
-        (RayProcess, RabbitMQConnector),
+        (LocalProcess, ConnectorCase(AsyncioConnector)),
+        (LocalProcess, ConnectorCase(ZMQConnector, False)),
+        (LocalProcess, ConnectorCase(ZMQConnector, True)),
+        (LocalProcess, ConnectorCase(RabbitMQConnector)),
+        (RayProcess, ConnectorCase(RayConnector)),
+        (RayProcess, ConnectorCase(ZMQConnector, False)),
+        (RayProcess, ConnectorCase(ZMQConnector, True)),
+        (RayProcess, ConnectorCase(RabbitMQConnector)),
     ],
+    indirect=["connector_cls"],
+    ids=connector_case_id,
 )
 @pytest.mark.parametrize(
     "iters, factor",

@@ -7,7 +7,6 @@ import signal
 import typing as _t
 
 import pytest
-from pytest_lazy_fixtures import lf
 
 from plugboard.component import Component, IOController as IO
 from plugboard.connector import (
@@ -16,11 +15,12 @@ from plugboard.connector import (
     ConnectorBuilder,
     RabbitMQConnector,
     RayConnector,
+    ZMQConnector,
 )
 from plugboard.events import StopEvent
 from plugboard.process import LocalProcess, Process, RayProcess
 from plugboard.schemas import ConnectorSpec, Status
-from tests.conftest import ComponentTestHelper
+from tests.conftest import ComponentTestHelper, ConnectorCase, connector_case_id
 
 
 STOP_TOLERANCE = 3
@@ -60,13 +60,17 @@ class B(ComponentTestHelper):
 @pytest.mark.parametrize(
     "process_cls, connector_cls",
     [
-        (LocalProcess, AsyncioConnector),
-        (LocalProcess, lf("zmq_connector_cls")),
-        (LocalProcess, RabbitMQConnector),
-        # (RayProcess, RayConnector),  # TODO : Pubsub/StopEvent unsupported. See https://github.com/plugboard-dev/plugboard/issues/101.
-        (RayProcess, lf("zmq_connector_cls")),
-        (RayProcess, RabbitMQConnector),
+        (LocalProcess, ConnectorCase(AsyncioConnector)),
+        (LocalProcess, ConnectorCase(ZMQConnector, False)),
+        (LocalProcess, ConnectorCase(ZMQConnector, True)),
+        (LocalProcess, ConnectorCase(RabbitMQConnector)),
+        # (RayProcess, ConnectorCase(RayConnector)),  # TODO : Pubsub/StopEvent unsupported. See https://github.com/plugboard-dev/plugboard/issues/101.
+        (RayProcess, ConnectorCase(ZMQConnector, False)),
+        (RayProcess, ConnectorCase(ZMQConnector, True)),
+        (RayProcess, ConnectorCase(RabbitMQConnector)),
     ],
+    indirect=["connector_cls"],
+    ids=connector_case_id,
 )
 async def test_process_stop_event(
     process_cls: type[Process], connector_cls: type[Connector], ray_ctx: None

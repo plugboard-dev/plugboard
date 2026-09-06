@@ -7,6 +7,7 @@ import multiprocessing
 import typing as _t
 from unittest.mock import patch
 
+import msgspec
 import pytest
 import pytest_asyncio
 from that_depends import ContextScopes, container_context
@@ -14,7 +15,7 @@ import uvloop
 
 from plugboard.component import Component, IOController as IO
 from plugboard.component.io_controller import IOStreamClosedError
-from plugboard.connector import ZMQConnector
+from plugboard.connector import Connector
 from plugboard.schemas import Status
 from plugboard.utils.di import DI
 from plugboard.utils.settings import Settings
@@ -30,7 +31,7 @@ def override_settings(settings: Settings) -> _t.Iterator[None]:
         DI.settings.reset_override_sync()
 
 
-@pytest.hookimpl(optionalhook=True)
+@pytest.hookimpl
 def pytest_asyncio_loop_factories() -> dict[str, _t.Callable[[], asyncio.AbstractEventLoop]]:
     """Configure pytest-asyncio to create event loops with uvloop."""
     return {"uvloop": uvloop.new_event_loop}
@@ -78,15 +79,39 @@ async def DI_teardown() -> _t.AsyncGenerator[None, None]:
         await DI.tear_down()
 
 
-@pytest.fixture(params=[False, True], ids=["zmq_pubsub_proxy=False", "zmq_pubsub_proxy=True"])
-def zmq_connector_cls(request: pytest.FixtureRequest) -> _t.Iterator[_t.Type[ZMQConnector]]:
-    """Returns the ZMQConnector class with the specified proxy setting.
+class ConnectorCase(msgspec.Struct, frozen=True):
+    """Connector implementation and optional ZMQ proxy setting for a test case."""
 
-    Overrides settings to control the proxy setting without mutating process env.
-    """
-    testing_settings = Settings.model_validate({"flags": {"zmq_pubsub_proxy": request.param}})
-    with override_settings(testing_settings):
-        yield ZMQConnector
+    connector_cls: type[Connector]
+    zmq_pubsub_proxy: bool | None = None
+
+
+def connector_case_id(value: object) -> str | None:
+    """Name connector cases while leaving other parameter IDs to pytest."""
+    if not isinstance(value, ConnectorCase):
+        return None
+    name = value.connector_cls.__name__
+    if value.zmq_pubsub_proxy is not None:
+        name += f"-zmq_pubsub_proxy={value.zmq_pubsub_proxy}"
+    return name
+
+
+@contextmanager
+def configured_connector(case: ConnectorCase) -> _t.Iterator[type[Connector]]:
+    """Apply a connector case's settings until fixture teardown, including on failure."""
+    if case.zmq_pubsub_proxy is None:
+        yield case.connector_cls
+    else:
+        settings = Settings.model_validate({"flags": {"zmq_pubsub_proxy": case.zmq_pubsub_proxy}})
+        with override_settings(settings):
+            yield case.connector_cls
+
+
+@pytest.fixture
+def connector_cls(request: pytest.FixtureRequest) -> _t.Iterator[type[Connector]]:
+    """Resolve connector cases supplied through indirect parametrization."""
+    with configured_connector(request.param) as cls:
+        yield cls
 
 
 class ComponentTestHelper(Component, ABC):
