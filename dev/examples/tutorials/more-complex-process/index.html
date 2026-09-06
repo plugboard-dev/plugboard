@@ -2745,6 +2745,20 @@ For example, we can rewrite the <code>Scale</code> component like this:</p>
 <li>Supply a dictionary of common parameter values to the <code>Process</code> here. They are accessible from within all components.</li>
 <li>If you need to override a parameter on a specific component, you can supply it via the component-level <code>parameters</code> argument.</li>
 </ol>
+<p>When running a YAML-defined model from the CLI you can override process parameters or component
+arguments, initial values, and parameters without editing the file. Repeat <code>--param</code> / <code>-p</code> as
+<code>name=value</code> pairs, where <code>name</code> is
+<code>&lt;name&gt;</code> (short for <code>process.default.parameter.&lt;name&gt;</code>) or
+<code>component.&lt;name&gt;.&lt;arg|initial_value|parameter&gt;.&lt;field&gt;</code>. Values are parsed as YAML, so numbers,
+booleans, lists and mappings keep their natural types:</p>
+<div class="language-shell highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>plugboard<span class="w"> </span>process<span class="w"> </span>run<span class="w"> </span>parameters.yaml<span class="w"> </span>--param<span class="w"> </span><span class="nv">scale</span><span class="o">=</span><span class="m">2</span>.0<span class="w"> </span>-p<span class="w"> </span>component.scale_b.parameter.scale<span class="o">=</span><span class="m">3</span>.0
+</span></code></pre></div>
+<p>Overrides preserve other configured values. If the same field is specified more than once,
+the last flag wins, including when short and fully-qualified names are mixed. A bare name has
+no dots; use the fully-qualified form for a process parameter whose name contains dots.
+Quote collections for the shell (for example <code>-p 'weights=[1, 2]'</code>) and retain YAML quotes
+when a value must stay a string (for example <code>-p 'label="yes"'</code>). An empty value (<code>-p label=</code>)
+sets an empty string; <code>-p label=null</code> sets null.</p>
 <h2 id="next-steps">Next steps</h2>
 <p>You've now learned how to build up complex model layouts in Plugboard. In the next tutorial we'll show how powerful a Plugboard model can be as we start to include different types of <a class="autorefs autorefs-internal" title="            Component" href="../../../api/component/component/#plugboard.component.Component"><code>Component</code></a>.</p>
 

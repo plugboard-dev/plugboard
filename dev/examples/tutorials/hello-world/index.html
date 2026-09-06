@@ -2611,6 +2611,11 @@ What's new: 🚀 we've open-sourced Plugboard - please <a href="https://github.c
 <p>We can now run this model using the plugboard CLI with the command:
 <div class="language-shell highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>plugboard<span class="w"> </span>process<span class="w"> </span>run<span class="w"> </span>model.yaml
 </span></code></pre></div></p>
+<p>You can override component fields at run time without editing the YAML:</p>
+<div class="language-shell highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>plugboard<span class="w"> </span>process<span class="w"> </span>run<span class="w"> </span>model.yaml<span class="w"> </span>--param<span class="w"> </span>component.a.arg.iters<span class="o">=</span><span class="m">5</span>
+</span></code></pre></div>
+<p>For models that use process parameters, <code>-p scale=2.0</code> is shorthand for
+<code>-p process.default.parameter.scale=2.0</code>. Repeat <code>--param</code> / <code>-p</code> to override multiple values.</p>
 <p>You should see that an output <code>.txt</code> file has been created, showing the the model as run successfully. Congratulations - you have built and run your first Plugboard model!</p>
 <p>In the following tutorials we will build up some more complex components and processes to demonstrate the power of the framework.</p>
 

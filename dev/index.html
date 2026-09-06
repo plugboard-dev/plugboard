@@ -2816,6 +2816,12 @@ What's new: 🚀 we've open-sourced Plugboard - please <a href="https://github.c
 <p>We can now run this model using the plugboard CLI with the command:
 <div class="language-shell highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>plugboard<span class="w"> </span>process<span class="w"> </span>run<span class="w"> </span>my-model.yaml
 </span></code></pre></div></p>
+<p>Process fields can be overridden at run time with repeated <code>--param</code> / <code>-p</code> flags. Use
+<code>&lt;name&gt;</code> (short for <code>process.default.parameter.&lt;name&gt;</code>) for process parameters or
+<code>component.&lt;name&gt;.&lt;arg|initial_value|parameter&gt;.&lt;field&gt;</code> for component fields. Values are parsed
+as YAML. Later flags win when the same field is specified more than once:</p>
+<div class="language-shell highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>plugboard<span class="w"> </span>process<span class="w"> </span>run<span class="w"> </span>my-model.yaml<span class="w"> </span>--param<span class="w"> </span><span class="nv">scale</span><span class="o">=</span><span class="m">2</span>.0<span class="w"> </span>-p<span class="w"> </span>component.a.arg.iters<span class="o">=</span><span class="m">5</span>
+</span></code></pre></div>
 <h2 id="documentation">📖 Documentation</h2>
 <p>For more information including a detailed API reference and step-by-step usage examples, refer to the <a href="https://docs.plugboard.dev">documentation site</a>. We recommend diving into the <a href="https://docs.plugboard.dev/latest/examples/tutorials/hello-world/">tutorials</a> for a step-by-step guide to getting started.</p>
 <h2 id="roadmap">🐾 Roadmap</h2>
