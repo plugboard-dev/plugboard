@@ -23,9 +23,9 @@ class RayChannel(Channel):
     @depends_on_optional("ray")
     def __init__(  # noqa: D417
         self,
-        actor_options: _t.Optional[dict] = None,
+        actor_options: _t.Optional[dict[str, _t.Any]] = None,
         **kwargs: _t.Any,
-    ):
+    ) -> None:
         """Instantiates `RayChannel`.
 
         Args:
@@ -51,9 +51,9 @@ class RayChannel(Channel):
         """
         return self._actor.getattr.remote("is_closed")  # type: ignore
 
-    async def send(self, item: _t.Any) -> None:
+    async def send(self, msg: _t.Any) -> None:
         """Sends an item through the `RayChannel`."""
-        await self._actor.send.remote(item)  # type: ignore
+        await self._actor.send.remote(msg)  # type: ignore
 
     async def recv(self) -> _t.Any:
         """Returns an item received from the `RayChannel`."""

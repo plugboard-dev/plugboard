@@ -53,7 +53,7 @@ Some examples of what you can build with Plugboard include:
 - **YAML model specification** format for saving model definitions, allowing you to run the same model locally or in cloud infrastructure;
 - A **command line interface** for executing models;
 - Built to handle the **data intensive simulation** requirements of industrial process applications;
-- Modern implementation with **Python 3.12+** based around **asyncio** with complete type annotation coverage;
+- Modern implementation with **Python 3.12+** based around **asyncio** with complete type annotation coverage checked with **ty**;
 - Built-in integrations for **loading/saving data** from cloud storage and SQL databases;
 - Built-in **LLM integrations** for building AI-augmented process models with support for multiple providers;
 - **Detailed logging** of component inputs, outputs and state for monitoring and process mining or surrogate modelling use-cases.
@@ -215,6 +215,15 @@ plugboard:
 We can now run this model using the plugboard CLI with the command:
 ```shell
 plugboard process run my-model.yaml
+```
+
+Process fields can be overridden at run time with repeated `--param` / `-p` flags. Use
+`<name>` (short for `process.default.parameter.<name>`) for process parameters or
+`component.<name>.<arg|initial_value|parameter>.<field>` for component fields. Values are parsed
+as YAML. Later flags win when the same field is specified more than once:
+
+```shell
+plugboard process run my-model.yaml --param scale=2.0 -p component.a.arg.iters=5
 ```
 
 ## 📖 Documentation

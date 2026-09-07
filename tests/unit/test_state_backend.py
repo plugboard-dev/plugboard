@@ -41,6 +41,8 @@ def invalid_job_id() -> str:
 @pytest.fixture(scope="module", params=[DictStateBackend, RayStateBackend])
 def state_backend_cls(request: pytest.FixtureRequest) -> _t.Type[StateBackend]:
     """Returns a `StateBackend` class."""
+    if request.param is RayStateBackend:
+        request.getfixturevalue("ray_ctx")
     return request.param
 
 

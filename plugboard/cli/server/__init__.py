@@ -6,7 +6,7 @@ import os
 from pathlib import Path
 import typing as _t
 
-import httpx
+import httpx2
 from rich.console import Console
 from rich.progress import Progress, SpinnerColumn, TextColumn
 import typer
@@ -29,14 +29,14 @@ stderr = Console(stderr=True)
 async def _post_to_api(url: str, data: dict) -> None:
     """Post data to the given API URL."""
     logger = DI.logger.resolve_sync()
-    async with httpx.AsyncClient() as client:
+    async with httpx2.AsyncClient() as client:
         try:
             response = await client.post(url, json=data, timeout=30.0)
             if response.status_code not in (200, 201):  # pragma: no cover
                 logger.error(f"Failed to post to {url}: {response.status_code} {response.text}")
             else:
                 logger.debug(f"Successfully posted to {url}")
-        except (httpx.HTTPStatusError, httpx.RequestError) as e:  # pragma: no cover
+        except (httpx2.HTTPStatusError, httpx2.RequestError) as e:  # pragma: no cover
             logger.error(f"Error posting to {url}: {e}")
 
 
@@ -86,12 +86,14 @@ async def _discover_components(api_url: str, base_cls: type) -> None:
         outputs = []
         input_events = []
         output_events = []
+        event_field_coverage: dict[str, list[str]] = {}
 
         if io:
             inputs = list(io.inputs)
             outputs = list(io.outputs)
             input_events = [getattr(e, "type", str(e)) for e in io.input_events]
             output_events = [getattr(e, "type", str(e)) for e in io.output_events]
+            event_field_coverage = getattr(io, "event_field_coverage", {})
 
         data = {
             "id": f"{c.__module__}.{c.__qualname__}",
@@ -102,6 +104,7 @@ async def _discover_components(api_url: str, base_cls: type) -> None:
             "outputs": outputs,
             "input_events": input_events,
             "output_events": output_events,
+            "event_field_coverage": event_field_coverage,
         }
         await _post_to_api(f"{api_url}/types/component", data)
 

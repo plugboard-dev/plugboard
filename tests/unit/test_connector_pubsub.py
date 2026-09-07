@@ -3,12 +3,10 @@
 import asyncio
 from functools import lru_cache
 from itertools import cycle
-import os
 import random
 import string
 import time
 import typing as _t
-from unittest.mock import patch
 
 import pytest
 import pytest_cases
@@ -21,8 +19,8 @@ from plugboard.connector import (
 )
 from plugboard.exceptions import ChannelClosedError
 from plugboard.schemas import ConnectorMode, ConnectorSpec
-from plugboard.utils.di import DI
 from plugboard.utils.settings import Settings
+from tests.conftest import override_settings
 
 
 @pytest_cases.fixture
@@ -30,16 +28,11 @@ from plugboard.utils.settings import Settings
 def zmq_connector_cls(zmq_pubsub_proxy: bool) -> _t.Iterator[_t.Type[ZMQConnector]]:
     """Returns the ZMQConnector class with the specified proxy setting.
 
-    Patches the env var `PLUGBOARD_FLAGS_ZMQ_PUBSUB_PROXY` to control the proxy setting.
+    Overrides settings to control the proxy setting without mutating process env.
     """
-    with patch.dict(
-        os.environ,
-        {"PLUGBOARD_FLAGS_ZMQ_PUBSUB_PROXY": str(zmq_pubsub_proxy)},
-    ):
-        testing_settings = Settings()
-        DI.settings.override_sync(testing_settings)
+    testing_settings = Settings.model_validate({"flags": {"zmq_pubsub_proxy": zmq_pubsub_proxy}})
+    with override_settings(testing_settings):
         yield ZMQConnector
-        DI.settings.reset_override_sync()
 
 
 @pytest_cases.fixture

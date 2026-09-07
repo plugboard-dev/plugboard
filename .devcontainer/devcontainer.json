@@ -25,6 +25,7 @@
 				"ms-python.python",
 				"ms-toolsai.jupyter",
 				"charliermarsh.ruff",
+				"astral-sh.ty",
 				"GitHub.copilot",
 				"GitHub.copilot-chat"
 			],

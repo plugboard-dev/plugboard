@@ -1,9 +1,17 @@
 """Provides unit tests for the schemas module."""
 
+import typing as _t
+
 import msgspec
 import pytest
 
-from plugboard.schemas import ConfigSpec, TuneArgsSpec, TuneSpec
+from plugboard.schemas import (
+    ConfigSpec,
+    TuneArgsSpec,
+    TuneSpec,
+    override_parameter,
+    parse_parameter_name,
+)
 
 
 def test_config_spec() -> None:
@@ -24,7 +32,7 @@ def test_config_spec() -> None:
 
 def test_tune_spec() -> None:
     """Test the TuneSpec class."""
-    valid_spec = {
+    valid_spec: dict[str, _t.Any] = {
         "objective": {
             "object_type": "component",
             "object_name": "my_component",
@@ -69,7 +77,7 @@ def test_tune_spec() -> None:
     # Validate the TuneSpec with the valid specification
     _ = TuneSpec(args=TuneArgsSpec.model_validate(valid_spec))
 
-    invalid_spec = valid_spec.copy()
+    invalid_spec: dict[str, _t.Any] = valid_spec.copy()
     invalid_spec["mode"] = ["min", "max"]
     # Invalid mode should raise a validation error
     with pytest.raises(ValueError):
@@ -95,3 +103,71 @@ def test_tune_spec() -> None:
     # Invalid objective length should raise a validation error
     with pytest.raises(ValueError):
         _ = TuneSpec(args=TuneArgsSpec.model_validate(invalid_spec))
+
+
+def test_parameter_override() -> None:
+    """Tests parsing and applying generic parameter overrides."""
+    with open("tests/data/dynamic-param-process.yaml", "rb") as f:
+        config = ConfigSpec.model_validate(msgspec.yaml.decode(f.read()))
+
+    process = config.plugboard.process
+    override_parameter(process, parse_parameter_name("process.default.parameter.max_iters"), 3)
+    override_parameter(process, parse_parameter_name("component.a.arg.iters"), 5)
+    override_parameter(
+        process,
+        parse_parameter_name("component.d.initial_value.in_1"),
+        [1, 2],
+    )
+    override_parameter(
+        process,
+        parse_parameter_name("component.d.parameter.enabled"),
+        True,
+    )
+
+    components = {component.args.name: component for component in process.args.components}
+    assert process.args.parameters["max_iters"] == 3
+    assert components["a"].args.model_dump()["iters"] == 5
+    assert components["d"].args.initial_values["in_1"] == [1, 2]
+    assert components["d"].args.parameters["enabled"] is True
+
+    with pytest.raises(ValueError, match="Unknown object type"):
+        parse_parameter_name("connector.my_connector.arg.value")
+
+
+@pytest.mark.parametrize(
+    ("name", "message"),
+    [
+        ("", "must not be empty"),
+        ("component.a", "must have the format"),
+        ("component..arg.value", "must include an object name"),
+        ("component.a.arg.", "must include an object name and field name"),
+        ("process.custom.parameter.value", "must use 'process.default'"),
+        ("component.a.field.value", "does not identify an overridable parameter"),
+        ("process.default.arg.value", "does not identify an overridable parameter"),
+    ],
+)
+def test_parse_parameter_name_rejects_invalid_names(name: str, message: str) -> None:
+    """Tests invalid generic override field names are rejected."""
+    with pytest.raises(ValueError, match=message):
+        parse_parameter_name(name)
+
+
+def test_parameter_override_rejects_unknown_component() -> None:
+    """Tests overrides cannot target components outside the process."""
+    with open("tests/data/dynamic-param-process.yaml", "rb") as f:
+        config = ConfigSpec.model_validate(msgspec.yaml.decode(f.read()))
+
+    with pytest.raises(ValueError, match="Component unknown not found"):
+        override_parameter(
+            config.plugboard.process,
+            parse_parameter_name("component.unknown.arg.value"),
+            1,
+        )
+
+
+def test_parse_bare_parameter_name() -> None:
+    """Bare names identify the same process parameter as fully-qualified names."""
+    short = parse_parameter_name("max_iters")
+    qualified = parse_parameter_name("process.default.parameter.max_iters")
+    assert short == qualified
+    assert short.full_name == "process.default.parameter.max_iters"

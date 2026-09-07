@@ -1,5 +1,6 @@
 """Provides logging utilities."""
 
+import importlib
 import logging
 import typing as _t
 
@@ -11,10 +12,11 @@ from plugboard.utils.settings import Settings
 
 def _is_ipython() -> bool:
     try:
-        from builtins import get_ipython  # type: ignore [attr-defined]  # noqa: F401
+        ipython = importlib.import_module("IPython")
     except ImportError:
         return False
-    return True
+    get_ipython = getattr(ipython, "get_ipython", None)
+    return callable(get_ipython) and get_ipython() is not None
 
 
 def _serialiser(obj: _t.Any, default: _t.Callable | None) -> bytes:

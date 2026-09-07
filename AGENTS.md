@@ -53,7 +53,7 @@ Plugboard is an event-driven framework in Python for simulating and orchestratin
 - You can delegate to the `lint` agent in `.github/agents` to resolve linting issues.
 - **Tools**: 
   - `ruff` - Formatting and linting.
-  - `mypy` - Static type checking.
+  - `ty` - Static type checking.
 - **Commands**:
   - `make lint` - Check for issues.
   - `make format` - Auto-format code.

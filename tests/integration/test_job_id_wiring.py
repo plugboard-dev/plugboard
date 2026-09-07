@@ -65,8 +65,10 @@ class ProcessBuilderMock:
     def build(self, spec: ProcessSpec) -> Process:
         """Build the process."""
         self._built_process = self._actual_build_fn(spec)
-        setattr(self._built_process, "run", lambda: self._mock_process_run(self._built_process))
-        return self._built_process
+        built_process = self._built_process
+        assert built_process is not None
+        setattr(built_process, "run", lambda: self._mock_process_run(built_process))
+        return built_process
 
     @staticmethod
     async def _mock_process_run(process: Process) -> None:

@@ -46,7 +46,7 @@ class _ValidatorRegistry:
         return len(self._validators)
 
     def __repr__(self) -> str:
-        names = [fn.__name__ for fn in self._validators]
+        names = [getattr(fn, "__name__", type(fn).__name__) for fn in self._validators]
         return f"{type(self).__name__}({names!r})"
 
 

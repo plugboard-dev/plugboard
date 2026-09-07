@@ -50,7 +50,8 @@ class EventHandlers:  # pragma: no cover
     def _get_class_path_for_method(method: AsyncCallable) -> str:
         """Get the fully qualified path for the class containing a method."""
         module_name = method.__module__
-        qualname_parts = method.__qualname__.split(".")
+        qualname = getattr(method, "__qualname__", type(method).__qualname__)
+        qualname_parts = qualname.split(".")
         class_name = qualname_parts[-2]  # Last part is the method name
         return f"{module_name}.{class_name}"
 
