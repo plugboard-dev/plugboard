@@ -7,9 +7,11 @@ import os
 import subprocess
 import sys
 import textwrap
+from types import ModuleType
 
 import pytest
 
+import plugboard._zmq.backend as backend
 from plugboard._zmq.backend import ZMQ_BACKEND_ENV
 
 
@@ -30,6 +32,50 @@ def _run_backend_probe(
         env=env,
         text=True,
     )
+
+
+def test_backend_name_normalizes_environment_value(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Backend names are normalized and default to PyZMQ."""
+    monkeypatch.delenv(ZMQ_BACKEND_ENV, raising=False)
+    assert backend._backend_name() == "pyzmq"
+
+    monkeypatch.setenv(ZMQ_BACKEND_ENV, "")
+    assert backend._backend_name() == "pyzmq"
+
+    monkeypatch.setenv(ZMQ_BACKEND_ENV, " PyOmQ ")
+    assert backend._backend_name() == "pyomq"
+
+
+def test_backend_name_rejects_unsupported_value(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Unsupported backend names fail before imports are attempted."""
+    monkeypatch.setenv(ZMQ_BACKEND_ENV, "not-a-backend")
+
+    with pytest.raises(ValueError, match="Unsupported ZMQ backend"):
+        backend._backend_name()
+
+
+def test_load_pyomq_backend(monkeypatch: pytest.MonkeyPatch) -> None:
+    """The loader imports both modules for the pyomq backend."""
+    pyomq = ModuleType("pyomq")
+    pyomq_asyncio = ModuleType("pyomq.asyncio")
+    monkeypatch.setitem(sys.modules, "pyomq", pyomq)
+    monkeypatch.setitem(sys.modules, "pyomq.asyncio", pyomq_asyncio)
+    monkeypatch.setenv(ZMQ_BACKEND_ENV, "pyomq")
+
+    selected_backend, selected_zmq, selected_asyncio = backend._load_backend()
+
+    assert selected_backend == "pyomq"
+    assert selected_zmq is pyomq
+    assert selected_asyncio is pyomq_asyncio
+
+
+def test_load_backend_reports_missing_dependency(monkeypatch: pytest.MonkeyPatch) -> None:
+    """The loader reports a missing selected backend clearly."""
+    monkeypatch.setitem(sys.modules, "pyomq", None)
+    monkeypatch.setenv(ZMQ_BACKEND_ENV, "pyomq")
+
+    with pytest.raises(backend.ZMQBackendImportError, match="pyomq"):
+        backend._load_backend()
 
 
 def test_default_zmq_backend_is_pyzmq() -> None:
