@@ -7,8 +7,8 @@ import multiprocessing
 import typing as _t
 
 from pydantic import BaseModel, Field, ValidationError
-import zmq
-import zmq.asyncio
+
+from plugboard._zmq.backend import zmq, zmq_asyncio
 
 
 try:
@@ -23,8 +23,8 @@ ZMQ_ADDR: str = r"tcp://127.0.0.1"
 def create_socket(
     socket_type: int,
     socket_opts: zmq_sockopts_t,
-    ctx: _t.Optional[zmq.asyncio.Context] = None,
-) -> zmq.asyncio.Socket:
+    ctx: _t.Optional[zmq_asyncio.Context] = None,
+) -> zmq_asyncio.Socket:
     """Creates a ZeroMQ socket with the given type and options.
 
     Args:
@@ -35,7 +35,7 @@ def create_socket(
     Returns:
         The created ZMQ socket.
     """
-    _ctx = ctx or zmq.asyncio.Context.instance()
+    _ctx = ctx or zmq_asyncio.Context.instance()
     socket = _ctx.socket(socket_type)
     for opt, value in socket_opts:
         socket.setsockopt(opt, value)
@@ -184,7 +184,7 @@ class ZMQProxy:
         """Connects the REQ socket to the REP socket in the subprocess."""
         if self._socket_rep_port is None:
             raise RuntimeError("ZMQ proxy socket REP port not set.")
-        self._socket_req_socket: zmq.asyncio.Socket = create_socket(zmq.REQ, [])
+        self._socket_req_socket: zmq_asyncio.Socket = create_socket(zmq.REQ, [])
         socket_rep_socket_address: str = f"{self._zmq_address}:{self._socket_rep_port}"
         self._socket_req_socket.connect(socket_rep_socket_address)
         self._socket_req_lock: asyncio.Lock = asyncio.Lock()
@@ -205,8 +205,8 @@ class ZMQProxy:
 
     async def _run(self) -> None:
         """Async multiprocessing entrypoint to run ZMQ proxy."""
-        self._push_poller: zmq.asyncio.Poller = zmq.asyncio.Poller()
-        self._push_sockets: dict[str, tuple[str, zmq.asyncio.Socket]] = {}
+        self._push_poller: zmq_asyncio.Poller = zmq_asyncio.Poller()
+        self._push_sockets: dict[str, tuple[str, zmq_asyncio.Socket]] = {}
 
         self._create_proxy_sockets()
 
@@ -285,13 +285,17 @@ class ZMQProxy:
     async def _poll_push_sockets(self) -> None:
         """Polls push sockets for messages and sends them to the proxy."""
         while True:
+            # Some backends return immediately when polling an empty socket set.
+            if not self._push_poller.sockets:
+                await asyncio.sleep(1)
+                continue
             # Set a timeout of 1 second to allow for new push sockets to be added
             events = dict(await self._push_poller.poll(timeout=1000))
             async with asyncio.TaskGroup() as tg:
                 for socket in events:
                     tg.create_task(self._handle_push_socket(socket))
 
-    async def _handle_push_socket(self, socket: zmq.asyncio.Socket) -> None:
+    async def _handle_push_socket(self, socket: zmq_asyncio.Socket) -> None:
         msg = await socket.recv_multipart()
         topic = msg[0].decode("utf8")
         _, push_socket = self._push_sockets[topic]

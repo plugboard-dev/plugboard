@@ -1,7 +1,9 @@
 """Tests for ZMQProxy class."""
 
 import asyncio
+from contextlib import suppress
 import typing as _t
+from unittest.mock import AsyncMock, Mock
 
 import pytest
 import pytest_asyncio
@@ -9,6 +11,36 @@ import zmq
 import zmq.asyncio
 
 from plugboard._zmq.zmq_proxy import ZMQ_ADDR, ZMQProxy, create_socket, zmq_sockopts_t
+
+
+@pytest.mark.asyncio
+async def test_empty_push_poller_yields_and_resumes() -> None:
+    """An empty proxy yields to other tasks and handles subsequently registered sockets."""
+    proxy = ZMQProxy.__new__(ZMQProxy)
+    poller = Mock(spec=zmq.asyncio.Poller)
+    poller.sockets = []
+    # Fail immediately instead of hanging if the empty poller is called in a busy loop.
+    poller.poll = AsyncMock(side_effect=AssertionError("Polled an empty socket set"))
+    proxy._push_poller = poller
+    handler = AsyncMock()
+    proxy._handle_push_socket = handler  # type: ignore[method-assign]
+
+    task = asyncio.create_task(proxy._poll_push_sockets())
+    try:
+        await asyncio.sleep(0.01)
+        assert not task.done()
+        poller.poll.assert_not_called()
+
+        socket = Mock(spec=zmq.asyncio.Socket)
+        poller.sockets = [(socket, zmq.POLLIN)]
+        poller.poll.side_effect = [[(socket, zmq.POLLIN)], asyncio.CancelledError()]
+        with pytest.raises(asyncio.CancelledError):
+            await asyncio.wait_for(task, timeout=3)
+        handler.assert_awaited_once_with(socket)
+    finally:
+        task.cancel()
+        with suppress(asyncio.CancelledError):
+            await task
 
 
 @pytest_asyncio.fixture
