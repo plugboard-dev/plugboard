@@ -1,0 +1,99 @@
+plugboard:
+  process:
+    args:
+      components:
+      - type: production_line.Input
+        args:
+          name: input
+          items_per_step: 10
+      - type: production_line.InputStockpile
+        args:
+          name: stockpile
+          initial_values:
+            machine1_running: [false]
+            machine2_running: [false]
+      - type: production_line.Controller
+        args:
+          name: controller1
+          threshold: 30
+      - type: production_line.Controller
+        args:
+          name: controller2
+          threshold: 50
+      - type: production_line.MachineCost
+        args:
+          name: machine1_cost
+          cost_per_step: 100.0
+      - type: production_line.MachineCost
+        args:
+          name: machine2_cost
+          cost_per_step: 200.0
+      - type: production_line.OutputStock
+        args:
+          name: output_stock
+      - type: production_line.TotalCost
+        args:
+          name: total_cost
+      - type: production_line.CostPerUnit
+        args:
+          name: cost_per_unit
+      connectors:
+      # Input flow
+      - source: input.items
+        target: stockpile.incoming_items
+      # Stockpile to controllers
+      - source: stockpile.size
+        target: controller1.stockpile_size
+      - source: stockpile.size
+        target: controller2.stockpile_size
+      # Controllers to machine costs
+      - source: controller1.should_run
+        target: machine1_cost.is_running
+      - source: controller2.should_run
+        target: machine2_cost.is_running
+      # Controllers to stockpile (for processing)
+      - source: controller1.should_run
+        target: stockpile.machine1_running
+      - source: controller2.should_run
+        target: stockpile.machine2_running
+      # Controllers to output stock
+      - source: controller1.should_run
+        target: output_stock.machine1_running
+      - source: controller2.should_run
+        target: output_stock.machine2_running
+      # All costs to total cost
+      - source: stockpile.storage_cost
+        target: total_cost.storage_cost
+      - source: machine1_cost.cost
+        target: total_cost.machine1_cost
+      - source: machine2_cost.cost
+        target: total_cost.machine2_cost
+      # Total cost and output to cost per unit
+      - source: total_cost.total_cost
+        target: cost_per_unit.total_cost
+      - source: output_stock.total_output
+        target: cost_per_unit.total_output
+  tune:
+    args:
+      objective:
+        object_name: cost_per_unit
+        field_type: field
+        field_name: cost_per_unit
+      parameters:
+      - type: ray.tune.randint
+        object_type: component
+        object_name: controller1
+        field_type: arg
+        field_name: threshold
+        lower: 10
+        upper: 100
+      - type: ray.tune.randint
+        object_type: component
+        object_name: controller2
+        field_type: arg
+        field_name: threshold
+        lower: 10
+        upper: 100
+      num_samples: 40
+      mode: min
+      max_concurrent: 4
