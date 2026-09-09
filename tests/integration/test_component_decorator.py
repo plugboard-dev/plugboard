@@ -142,8 +142,12 @@ async def test_process_builder_with_decorated_components(
 ) -> None:
     """Tests a process using components created with the component decorator executes correctly."""
     iters = 10
+    process_type = _t.cast(
+        _t.Literal["plugboard.process.LocalProcess", "plugboard.process.RayProcess"],
+        f"{process_cls.__module__}.{process_cls.__name__}",
+    )
     process_spec = ProcessSpec(
-        type=f"{process_cls.__module__}.{process_cls.__name__}",
+        type=process_type,
         args=ProcessArgsSpec(
             components=[
                 ComponentSpec(

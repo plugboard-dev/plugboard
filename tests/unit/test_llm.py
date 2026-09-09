@@ -134,6 +134,7 @@ async def test_openai_structured_chat(
         assert llm.x == 45
         assert llm.y == "test"
     else:
+        assert llm.response is not None
         assert json.loads(llm.response) == test_response.model_dump()
 
 

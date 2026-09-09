@@ -6,6 +6,9 @@ on:
       - opened
       - synchronize
 
+env:
+  UV_MALWARE_CHECK: "1"
+
 jobs:
   benchmark:
     name: Benchmark tests

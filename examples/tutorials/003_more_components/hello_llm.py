@@ -4,7 +4,7 @@
 import asyncio
 import typing as _t
 
-import httpx
+import httpx2
 from pydantic import BaseModel
 
 from plugboard.component import Component, IOController as IO
@@ -23,7 +23,7 @@ class WeatherAPI(Component):
 
     def __init__(self, **kwargs: _t.Unpack[ComponentArgsDict]) -> None:
         super().__init__(**kwargs)
-        self._client = httpx.AsyncClient()
+        self._client = httpx2.AsyncClient()
 
     async def step(self) -> None:
         response = await self._client.get(
@@ -36,7 +36,7 @@ class WeatherAPI(Component):
         )
         try:
             response.raise_for_status()
-        except httpx.HTTPStatusError:
+        except httpx2.HTTPStatusError:
             self._logger.error(
                 "Error querying weather API",
                 code=response.status_code,

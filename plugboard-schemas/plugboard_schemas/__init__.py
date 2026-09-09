@@ -40,6 +40,7 @@ from .state import (
     Status,
 )
 from .tune import (
+    BaseFieldSpec,
     CategoricalParameterSpec,
     Direction,
     FloatParameterSpec,
@@ -50,13 +51,19 @@ from .tune import (
     TuneArgsDict,
     TuneArgsSpec,
     TuneSpec,
+    override_parameter,
+    parse_parameter_name,
 )
 
 
-__version__ = version(__package__)
+_PACKAGE_NAME = __package__ or __name__.split(".")[0]
+
+
+__version__ = version(_PACKAGE_NAME)
 
 
 __all__ = [
+    "BaseFieldSpec",
     "CategoricalParameterSpec",
     "ComponentSpec",
     "ComponentArgsDict",
@@ -100,4 +107,6 @@ __all__ = [
     "validate_input_events",
     "validate_no_unresolved_cycles",
     "validate_process",
+    "override_parameter",
+    "parse_parameter_name",
 ]

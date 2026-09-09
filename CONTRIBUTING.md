@@ -28,9 +28,16 @@ uv run pytest .
 
 ### Linting
 
-We use [ruff](https://github.com/astral-sh/ruff) for code formatting and style. Install the pre-commit hook by running
+We use [ruff](https://github.com/astral-sh/ruff) for code formatting and style, and
+[ty](https://github.com/astral-sh/ty) for static type checking. Install the pre-commit hook by
+running
 ```sh
 uv run pre-commit install
+```
+
+You can run the full local lint suite with
+```sh
+make lint
 ```
 
 ### Documentation
