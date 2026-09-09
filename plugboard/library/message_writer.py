@@ -140,7 +140,7 @@ class MessageDataWriter(Component, ABC):
         Raises:
             Exception: If all retries are exhausted.
         """
-        last_exception: _t.Optional[Exception] = None
+        last_exception: Exception = RuntimeError("All retries exhausted")
         for attempt in range(self._max_retries + 1):
             try:
                 await self._send(messages)
@@ -160,7 +160,7 @@ class MessageDataWriter(Component, ABC):
                     )
                     await asyncio.sleep(delay)
                     await self._reconnect()
-        raise last_exception  # type: ignore[misc]
+        raise last_exception
 
     async def _reconnect(self) -> None:
         """Attempts to reconnect to the message broker."""

@@ -182,7 +182,6 @@ class GCPPubSubDataWriter(MessageDataWriter):
     async def _disconnect(self) -> None:
         """Closes the PubSub publisher client."""
         if self._publisher is not None:
-            self._publisher.close()  # type: ignore[no-untyped-call]
             self._publisher = None
 
     async def _send(self, messages: list[_t.Any]) -> None:

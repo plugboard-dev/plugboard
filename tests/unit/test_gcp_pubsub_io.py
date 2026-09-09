@@ -303,7 +303,6 @@ async def test_gcp_pubsub_writer_disconnect() -> None:
     await writer._connect()
     await writer._disconnect()
 
-    mock_publisher.close.assert_called_once()
     assert writer._publisher is None
 
 
