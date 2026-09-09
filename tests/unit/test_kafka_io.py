@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
+from collections import deque
 import importlib.machinery
 import json
 import sys
 import typing as _t
-from collections import deque
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest

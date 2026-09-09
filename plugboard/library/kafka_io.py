@@ -27,9 +27,7 @@ class KafkaDataReaderArgsDict(MessageDataReaderArgsDict):
         parse_json: Whether to parse message values as JSON.
     """
 
-    bootstrap_servers: _t.Union[str, list[str]]
-    group_id: str
-    parse_json: _t.NotRequired[bool]
+    pass
 
 
 class KafkaDataWriterArgsDict(MessageDataWriterArgsDict):
@@ -40,8 +38,7 @@ class KafkaDataWriterArgsDict(MessageDataWriterArgsDict):
         parse_json: Whether to encode message values as JSON.
     """
 
-    bootstrap_servers: _t.Union[str, list[str]]
-    parse_json: _t.NotRequired[bool]
+    pass
 
 
 class KafkaDataReader(MessageDataReader):

@@ -4,8 +4,8 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 import asyncio
-from collections import defaultdict, deque
 from asyncio.tasks import Task
+from collections import defaultdict, deque
 import typing as _t
 
 from plugboard.component import Component, IOController
@@ -18,7 +18,6 @@ class MessageDataWriterArgsDict(ComponentArgsDict):
 
     Attributes:
         field_names: The names of the fields to include in messages.
-        topic: The topic/queue to write to.
         chunk_size: Optional; The number of records to batch into messages.
         max_retries: Maximum number of retry attempts for transient failures.
         retry_base_delay: Base delay in seconds for exponential backoff.
@@ -26,7 +25,7 @@ class MessageDataWriterArgsDict(ComponentArgsDict):
     """
 
     field_names: list[str]
-    topic: str
+    topic: _t.NotRequired[str]
     chunk_size: _t.NotRequired[int | None]
     max_retries: _t.NotRequired[int]
     retry_base_delay: _t.NotRequired[float]
@@ -245,7 +244,7 @@ class MessageDataWriter(Component, ABC):
             self._task.cancel()
             try:
                 await self._task
-            except (asyncio.CancelledError, Exception):
+            except (asyncio.CancelledError, Exception):  # noqa: S110
                 pass
             self._task = None
         await self._disconnect()

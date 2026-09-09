@@ -28,10 +28,7 @@ class AWSSQSDataReaderArgsDict(MessageDataReaderArgsDict):
         wait_time_seconds: Long-polling wait time in seconds.
     """
 
-    queue_url: str
-    region: str
-    parse_json: _t.NotRequired[bool]
-    wait_time_seconds: _t.NotRequired[int]
+    pass
 
 
 class AWSSNSDataWriterArgsDict(MessageDataWriterArgsDict):
@@ -43,9 +40,7 @@ class AWSSNSDataWriterArgsDict(MessageDataWriterArgsDict):
         parse_json: Whether to encode message data as JSON.
     """
 
-    topic_arn: str
-    region: str
-    parse_json: _t.NotRequired[bool]
+    pass
 
 
 class AWSSQSDataReader(MessageDataReader):
@@ -75,8 +70,8 @@ class AWSSQSDataReader(MessageDataReader):
             **kwargs: Additional keyword arguments for
                 [`MessageDataReader`][plugboard.library.MessageDataReader].
         """
-        topic = kwargs.pop("topic", queue_url)
-        super().__init__(topic=topic, **kwargs)
+        kwargs.setdefault("topic", queue_url)
+        super().__init__(**kwargs)
         self._queue_url = queue_url
         self._region = region
         self._parse_json = parse_json
@@ -95,7 +90,7 @@ class AWSSQSDataReader(MessageDataReader):
         if self._client is not None:
             try:
                 await self._client_ctx.__aexit__(None, None, None)
-            except Exception:  # noqa: S102
+            except Exception:  # noqa: S110
                 pass
             self._client = None
             self._session = None
@@ -184,8 +179,8 @@ class AWSSNSDataWriter(MessageDataWriter):
             **kwargs: Additional keyword arguments for
                 [`MessageDataWriter`][plugboard.library.MessageDataWriter].
         """
-        topic = kwargs.pop("topic", topic_arn)
-        super().__init__(topic=topic, **kwargs)
+        kwargs.setdefault("topic", topic_arn)
+        super().__init__(**kwargs)
         self._topic_arn = topic_arn
         self._region = region
         self._parse_json = parse_json
@@ -203,7 +198,7 @@ class AWSSNSDataWriter(MessageDataWriter):
         if self._client is not None:
             try:
                 await self._client_ctx.__aexit__(None, None, None)
-            except Exception:  # noqa: S102
+            except Exception:  # noqa: S110
                 pass
             self._client = None
             self._session = None

@@ -2,16 +2,14 @@
 
 from __future__ import annotations
 
+from collections import deque
 import importlib.machinery
 import json
 import sys
 import typing as _t
-from collections import deque
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
-
-from plugboard.exceptions import NoMoreDataException
 
 
 # ---------------------------------------------------------------------------
@@ -32,7 +30,7 @@ _mock_aioboto3.Session.return_value = _mock_aioboto3_session
 
 sys.modules.setdefault("aioboto3", _mock_aioboto3)
 
-from plugboard.library.aws_messaging_io import AWSSQSDataReader, AWSSNSDataWriter  # noqa: E402
+from plugboard.library.aws_messaging_io import AWSSNSDataWriter, AWSSQSDataReader  # noqa: E402
 
 
 # ---------------------------------------------------------------------------

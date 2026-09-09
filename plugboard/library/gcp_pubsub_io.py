@@ -14,7 +14,6 @@ from plugboard.utils import depends_on_optional
 
 try:
     from google.cloud import pubsub_v1
-    from google.cloud.pubsub_v1.subscriber.message import Message as PubSubMessage
 except ImportError:  # pragma: no cover
     pass
 
@@ -28,9 +27,7 @@ class GCPPubSubDataReaderArgsDict(MessageDataReaderArgsDict):
         parse_json: Whether to parse message data as JSON.
     """
 
-    project_id: str
-    subscription_id: str
-    parse_json: _t.NotRequired[bool]
+    pass
 
 
 class GCPPubSubDataWriterArgsDict(MessageDataWriterArgsDict):
@@ -42,9 +39,7 @@ class GCPPubSubDataWriterArgsDict(MessageDataWriterArgsDict):
         parse_json: Whether to encode message data as JSON.
     """
 
-    project_id: str
-    topic_id: str
-    parse_json: _t.NotRequired[bool]
+    pass
 
 
 class GCPPubSubDataReader(MessageDataReader):
@@ -71,13 +66,11 @@ class GCPPubSubDataReader(MessageDataReader):
             **kwargs: Additional keyword arguments for
                 [`MessageDataReader`][plugboard.library.MessageDataReader].
         """
-        topic = kwargs.pop("topic", f"{project_id}/{subscription_id}")
-        super().__init__(topic=topic, **kwargs)
+        kwargs.setdefault("topic", f"{project_id}/{subscription_id}")
+        super().__init__(**kwargs)
         self._project_id = project_id
         self._subscription_id = subscription_id
-        self._subscription_path = (
-            f"projects/{project_id}/subscriptions/{subscription_id}"
-        )
+        self._subscription_path = f"projects/{project_id}/subscriptions/{subscription_id}"
         self._parse_json = parse_json
         self._subscriber: _t.Optional[pubsub_v1.SubscriberClient] = None
 
@@ -174,8 +167,8 @@ class GCPPubSubDataWriter(MessageDataWriter):
             **kwargs: Additional keyword arguments for
                 [`MessageDataWriter`][plugboard.library.MessageDataWriter].
         """
-        topic = kwargs.pop("topic", f"{project_id}/{topic_id}")
-        super().__init__(topic=topic, **kwargs)
+        kwargs.setdefault("topic", f"{project_id}/{topic_id}")
+        super().__init__(**kwargs)
         self._project_id = project_id
         self._topic_id = topic_id
         self._topic_path = f"projects/{project_id}/topics/{topic_id}"

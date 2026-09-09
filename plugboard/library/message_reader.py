@@ -4,8 +4,8 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 import asyncio
-from collections import deque
 from asyncio.tasks import Task
+from collections import deque
 import typing as _t
 
 from plugboard.component import Component, IOController
@@ -18,7 +18,6 @@ class MessageDataReaderArgsDict(ComponentArgsDict):
 
     Attributes:
         field_names: The names of the fields to read from messages.
-        topic: The topic/queue to read from.
         chunk_size: Optional; The number of messages to fetch per batch.
         max_retries: Maximum number of retry attempts for transient failures.
         retry_base_delay: Base delay in seconds for exponential backoff.
@@ -26,7 +25,7 @@ class MessageDataReaderArgsDict(ComponentArgsDict):
     """
 
     field_names: list[str]
-    topic: str
+    topic: _t.NotRequired[str]
     chunk_size: _t.NotRequired[int | None]
     max_retries: _t.NotRequired[int]
     retry_base_delay: _t.NotRequired[float]
@@ -183,7 +182,7 @@ class MessageDataReader(Component, ABC):
         self._logger.info("Attempting reconnection to message broker", topic=self._topic)
         try:
             await self._disconnect()
-        except Exception:  # noqa: S102
+        except Exception:  # noqa: S110
             self._logger.warning("Error during disconnect in reconnection", exc_info=True)
         await self._connect()
         self._logger.info("Reconnected to message broker", topic=self._topic)
@@ -258,7 +257,7 @@ class MessageDataReader(Component, ABC):
             self._task.cancel()
             try:
                 await self._task
-            except (asyncio.CancelledError, Exception):
+            except (asyncio.CancelledError, Exception):  # noqa: S110
                 pass
             self._task = None
         await self._disconnect()
