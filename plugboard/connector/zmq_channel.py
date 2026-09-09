@@ -353,7 +353,9 @@ class _ZMQPipelineConnectorProxy(_ZMQPubsubConnectorProxy):
         self._recv_channel = ZMQChannel(
             recv_socket=recv_socket, topic=self._topic, maxsize=self._maxsize
         )
-        await asyncio.sleep(0.1)  # Ensure connections established before first send. Better way?
+        # Allow extra time for the proxy subprocess's SUB socket subscription to propagate
+        # to XPUB before the sender starts publishing (ZMQ "slow joiner" problem).
+        await asyncio.sleep(0.5)
         return self._recv_channel
 
 
