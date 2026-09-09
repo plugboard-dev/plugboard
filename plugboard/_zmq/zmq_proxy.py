@@ -16,7 +16,7 @@ try:
 except ImportError:  # pragma: no cover
     from asyncio import run as _asyncio_run
 
-zmq_sockopts_t: _t.TypeAlias = list[tuple[int, int | bytes | str]]
+zmq_sockopts_t: _t.TypeAlias = list[tuple[int, int | bytes]]
 ZMQ_ADDR: str = r"tcp://127.0.0.1"
 
 
