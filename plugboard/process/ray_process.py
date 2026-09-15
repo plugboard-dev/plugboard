@@ -43,11 +43,7 @@ class RayProcess(Process):
         """
         # TODO: Replace with a namespace based on the job ID or similar
         self._namespace = f"plugboard-{gen_rand_str(16)}"
-        self._component_actors = {
-            # Recreate components on remote actors
-            c.id: self._create_component_actor(c)
-            for c in components
-        }
+        self._component_actors: dict[str, _t.Any] = {}
         self._tasks: dict[str, ray.ObjectRef] = {}
 
         super().__init__(
@@ -113,6 +109,13 @@ class RayProcess(Process):
 
     async def init(self) -> None:
         """Performs component initialisation actions."""
+        self.validate()
+        self._component_actors = {
+            # Recreate components on remote actors only when execution starts.
+            component.id: self._create_component_actor(component)
+            for component in self.components.values()
+        }
+        await asyncio.gather(*(connector.init() for connector in self.connectors.values()))
         await self.connect_state()
         await self._connect_components()
         coros = [component.init.remote() for component in self._component_actors.values()]

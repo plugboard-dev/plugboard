@@ -1,5 +1,6 @@
 """Provides `RayChannel` for use in cluster compute environments."""
 
+import asyncio
 import typing as _t
 
 from plugboard.connector.asyncio_channel import AsyncioChannel
@@ -34,8 +35,18 @@ class RayChannel(Channel):
         """
         default_options = {"num_cpus": 0}
         actor_options = actor_options or {}
-        actor_options = {**default_options, **actor_options}
-        self._actor = ray.remote(**actor_options)(_AsyncioChannelActor).remote(**kwargs)
+        self._actor_options = {**default_options, **actor_options}
+        self._channel_kwargs = kwargs
+        self._actor: _t.Any = None
+        self._init_lock = asyncio.Lock()
+
+    async def init(self) -> None:
+        """Create the channel actor when execution starts."""
+        async with self._init_lock:
+            if self._actor is None:
+                self._actor = ray.remote(**self._actor_options)(_AsyncioChannelActor).remote(
+                    **self._channel_kwargs
+                )
 
     @property
     def maxsize(self) -> int:
@@ -73,10 +84,16 @@ class RayConnector(Connector):
             raise ValueError("RayConnector only supports `PIPELINE` type connections.")
         self._channel = RayChannel()
 
+    async def init(self) -> None:
+        """Create the remote channel actor."""
+        await self._channel.init()
+
     async def connect_send(self) -> RayChannel:
         """Returns a `RayChannel` for sending messages."""
+        await self.init()
         return self._channel
 
     async def connect_recv(self) -> RayChannel:
         """Returns a `RayChannel` for receiving messages."""
+        await self.init()
         return self._channel
