@@ -27,7 +27,7 @@ class RayChannel(Channel):
         actor_options: _t.Optional[dict[str, _t.Any]] = None,
         **kwargs: _t.Any,
     ) -> None:
-        """Instantiates `RayChannel`.
+        """Instantiates `RayChannel` and creates its remote actor.
 
         Args:
             actor_options: Optional; Options to pass to the Ray actor. Defaults to {"num_cpus": 0}.
@@ -35,18 +35,8 @@ class RayChannel(Channel):
         """
         default_options = {"num_cpus": 0}
         actor_options = actor_options or {}
-        self._actor_options = {**default_options, **actor_options}
-        self._channel_kwargs = kwargs
-        self._actor: _t.Any = None
-        self._init_lock = asyncio.Lock()
-
-    async def init(self) -> None:
-        """Create the channel actor when execution starts."""
-        async with self._init_lock:
-            if self._actor is None:
-                self._actor = ray.remote(**self._actor_options)(_AsyncioChannelActor).remote(
-                    **self._channel_kwargs
-                )
+        actor_options = {**default_options, **actor_options}
+        self._actor = ray.remote(**actor_options)(_AsyncioChannelActor).remote(**kwargs)
 
     @property
     def maxsize(self) -> int:
@@ -82,18 +72,21 @@ class RayConnector(Connector):
         super().__init__(*args, **kwargs)
         if self.spec.mode != ConnectorMode.PIPELINE:
             raise ValueError("RayConnector only supports `PIPELINE` type connections.")
-        self._channel = RayChannel()
+        self._channel: _t.Optional[RayChannel] = None
+        self._init_lock = asyncio.Lock()
 
     async def init(self) -> None:
-        """Create the remote channel actor."""
-        await self._channel.init()
+        """Create the channel and its remote actor when execution starts."""
+        async with self._init_lock:
+            if self._channel is None:
+                self._channel = RayChannel()
 
     async def connect_send(self) -> RayChannel:
         """Returns a `RayChannel` for sending messages."""
         await self.init()
-        return self._channel
+        return _t.cast(RayChannel, self._channel)
 
     async def connect_recv(self) -> RayChannel:
         """Returns a `RayChannel` for receiving messages."""
         await self.init()
-        return self._channel
+        return _t.cast(RayChannel, self._channel)
