@@ -50,6 +50,7 @@ async def test_channel(connector_cls: type[Connector], ray_ctx: None, job_id_ctx
     """Tests the various Channel implementations."""
     spec = ConnectorSpec(mode=ConnectorMode.PIPELINE, source="test.send", target="test.recv")
     connector = ConnectorBuilder(connector_cls=connector_cls).build(spec)
+    await connector.init()
 
     send_channel, recv_channel = await asyncio.gather(
         connector.connect_send(), connector.connect_recv()
@@ -94,6 +95,7 @@ async def test_multiprocessing_channel(
     """Tests the various Channel implementations in a multiprocess environment."""
     spec = ConnectorSpec(mode=ConnectorMode.PIPELINE, source="test.send", target="test.recv")
     connector = ConnectorBuilder(connector_cls=connector_cls_mp).build(spec)
+    await connector.init()
 
     container_ctx = container_context(
         DI, global_context={"job_id": job_id_ctx}, scope=ContextScopes.APP

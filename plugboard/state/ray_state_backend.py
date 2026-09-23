@@ -67,8 +67,14 @@ class RayStateBackend(DictStateBackend):
         super().__init__(*args, **kwargs)
         default_options = {"num_cpus": 0}
         actor_options = actor_options or {}
-        actor_options = {**default_options, **actor_options}
-        self._actor = ray.remote(**actor_options)(_DictionaryActor).remote()
+        self._actor_options = {**default_options, **actor_options}
+        self._actor: _t.Any = None
+
+    async def init(self) -> None:
+        """Create the state actor when process execution starts."""
+        if self._actor is None:
+            self._actor = ray.remote(**self._actor_options)(_DictionaryActor).remote()
+        await super().init()
 
     @property
     def _state(self) -> dict[str, _t.Any]:

@@ -1,5 +1,6 @@
 """Provides `FileReader` and `FileWriter` components to access files from Plugboard models."""
 
+import asyncio
 from collections import deque
 from pathlib import Path
 import typing as _t
@@ -106,7 +107,12 @@ class FileWriter(DataWriter):
             raise ValueError("Only CSV files support chunked writing.")
         self._storage_options = storage_options or {}
         self._header_written = False
-        self._check_file()
+
+    async def init(self) -> None:
+        """Open and truncate the destination when execution starts."""
+        await asyncio.to_thread(self._check_file)
+        self._header_written = False
+        await super().init()
 
     def _check_file(self) -> None:
         with fsspec.open(self._file_path, mode="w", **self._storage_options):
