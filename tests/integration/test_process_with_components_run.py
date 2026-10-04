@@ -84,7 +84,6 @@ def tempfile_path() -> _t.Generator[Path, None, None]:
 
 
 @pytest.mark.asyncio
-@pytest.mark.flaky(reruns=3)  # Flaky on Github Actions with Ray + ZMQ proxy (slow joiner)
 @pytest.mark.parametrize(
     "process_cls, connector_cls",
     [
