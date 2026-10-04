@@ -57,6 +57,42 @@ class _RedisSettings(BaseSettings):
     url: _t.Optional[str] = None
 
 
+class _GCPPubSubSettings(BaseSettings):
+    """Google Cloud PubSub settings.
+
+    Attributes:
+        project_id: The GCP project ID for PubSub.
+    """
+
+    model_config = SettingsConfigDict(env_prefix="GCP_PUBSUB_")
+
+    project_id: _t.Optional[str] = None
+
+
+class _AWSSettings(BaseSettings):
+    """AWS settings for SNS/SQS messaging.
+
+    Attributes:
+        region: The default AWS region.
+    """
+
+    model_config = SettingsConfigDict(env_prefix="AWS_")
+
+    region: _t.Optional[str] = None
+
+
+class _KafkaSettings(BaseSettings):
+    """Apache Kafka settings.
+
+    Attributes:
+        bootstrap_servers: Kafka broker address(es).
+    """
+
+    model_config = SettingsConfigDict(env_prefix="KAFKA_")
+
+    bootstrap_servers: _t.Optional[str] = None
+
+
 class Settings(BaseSettings):
     """Settings for Plugboard.
 
@@ -69,6 +105,9 @@ class Settings(BaseSettings):
             status checks.
         rabbitmq: RabbitMQ settings.
         redis: Redis settings.
+        gcp_pubsub: Google Cloud PubSub settings.
+        aws: AWS settings for SNS/SQS messaging.
+        kafka: Apache Kafka settings.
     """
 
     model_config = SettingsConfigDict(env_prefix=_ENV_PREFIX)
@@ -80,3 +119,42 @@ class Settings(BaseSettings):
 
     rabbitmq: _RabbitMQSettings = Field(default_factory=_RabbitMQSettings)
     redis: _RedisSettings = Field(default_factory=_RedisSettings)
+    gcp_pubsub: _GCPPubSubSettings = Field(default_factory=_GCPPubSubSettings)
+    aws: _AWSSettings = Field(default_factory=_AWSSettings)
+    kafka: _KafkaSettings = Field(default_factory=_KafkaSettings)
+
+
+_ArgumentT = _t.TypeVar("_ArgumentT")
+
+
+def resolve_argument(
+    value: _t.Optional[_ArgumentT],
+    fallback: _t.Optional[_ArgumentT],
+    arg_name: str,
+    env_var: str,
+) -> _ArgumentT:
+    """Resolves a component argument against its configured fallback.
+
+    Components accept connection details explicitly, but falling back to settings lets
+    the same model run in a different environment without code changes.
+
+    Args:
+        value: The value passed to the component, if any.
+        fallback: The value loaded from `Settings`, if any.
+        arg_name: The name of the argument, used in the error message.
+        env_var: The environment variable that backs the fallback, used in the error
+            message.
+
+    Returns:
+        The explicit value, or the configured value when none was passed.
+
+    Raises:
+        ValueError: If neither an explicit value nor a configured value is available.
+    """
+    resolved = value if value else fallback
+    if resolved is None:
+        raise ValueError(
+            f"'{arg_name}' is required: pass it explicitly or set the '{env_var}' "
+            f"environment variable."
+        )
+    return resolved

@@ -170,3 +170,4 @@ cython_debug/
 
 # Generated version files
 */_version.py
+docs/message-data-reader-writer-proposal.md
