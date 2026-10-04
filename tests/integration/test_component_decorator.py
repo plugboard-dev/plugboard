@@ -5,7 +5,6 @@ import asyncio
 import typing as _t
 
 import pytest
-import pytest_cases
 
 from plugboard.component import IOController as IO
 from plugboard.component.utils import component
@@ -83,7 +82,7 @@ class E(ComponentTestHelper):
 
 
 @pytest.mark.asyncio
-@pytest_cases.parametrize(
+@pytest.mark.parametrize(
     "process_cls, connector_cls",
     [
         (LocalProcess, AsyncioConnector),
@@ -127,7 +126,7 @@ async def test_process_with_decorated_components(
 
 
 @pytest.mark.asyncio
-@pytest_cases.parametrize(
+@pytest.mark.parametrize(
     "process_cls, connector_cls",
     [
         (LocalProcess, AsyncioConnector),

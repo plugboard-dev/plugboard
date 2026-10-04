@@ -9,7 +9,6 @@ import time
 import typing as _t
 
 import pytest
-import pytest_cases
 
 from plugboard.connector import (
     AsyncioConnector,
@@ -19,27 +18,17 @@ from plugboard.connector import (
 )
 from plugboard.exceptions import ChannelClosedError
 from plugboard.schemas import ConnectorMode, ConnectorSpec
-from plugboard.utils.settings import Settings
-from tests.conftest import override_settings
+from tests.conftest import ConnectorCase, configured_connector, connector_case_id
 
 
-@pytest_cases.fixture
-@pytest_cases.parametrize(zmq_pubsub_proxy=[False])
-def zmq_connector_cls(zmq_pubsub_proxy: bool) -> _t.Iterator[_t.Type[ZMQConnector]]:
-    """Returns the ZMQConnector class with the specified proxy setting.
-
-    Overrides settings to control the proxy setting without mutating process env.
-    """
-    testing_settings = Settings.model_validate({"flags": {"zmq_pubsub_proxy": zmq_pubsub_proxy}})
-    with override_settings(testing_settings):
-        yield ZMQConnector
-
-
-@pytest_cases.fixture
-@pytest_cases.parametrize(_connector_cls=[AsyncioConnector, zmq_connector_cls])
-def connector_cls(_connector_cls: type[Connector]) -> type[Connector]:
-    """Fixture for `Connector` of various types."""
-    return _connector_cls
+@pytest.fixture(
+    params=[ConnectorCase(AsyncioConnector), ConnectorCase(ZMQConnector, False)],
+    ids=connector_case_id,
+)
+def connector_cls(request: pytest.FixtureRequest) -> _t.Iterator[type[Connector]]:
+    """Configure each connector variant for this test module."""
+    with configured_connector(request.param) as cls:
+        yield cls
 
 
 TEST_ITEMS = string.ascii_lowercase
@@ -133,11 +122,11 @@ async def recv_messages_unordered(channels: list[Channel]) -> list[int]:
 
 
 @pytest.mark.asyncio
-@pytest_cases.parametrize(
-    "connector_cls, num_subscribers, num_messages",
+@pytest.mark.parametrize(
+    "num_subscribers, num_messages",
     [
-        (connector_cls, 1, 100),
-        (connector_cls, 10, 100),
+        (1, 100),
+        (10, 100),
     ],
 )
 async def test_pubsub_channel_single_publisher(
@@ -188,11 +177,11 @@ async def _test_pubsub_channel_single_publisher(
 
 
 @pytest.mark.asyncio
-@pytest_cases.parametrize(
-    "connector_cls, num_publishers, num_subscribers, num_messages",
+@pytest.mark.parametrize(
+    "num_publishers, num_subscribers, num_messages",
     [
-        (connector_cls, 10, 1, 100),
-        (connector_cls, 10, 10, 100),
+        (10, 1, 100),
+        (10, 10, 100),
     ],
 )
 async def test_pubsub_channel_multiple_publishers(
@@ -248,11 +237,11 @@ async def _test_pubsub_channel_multiple_publishers(
 
 
 @pytest.mark.asyncio
-@pytest_cases.parametrize(
-    "connector_cls, num_topics, num_publishers, num_subscribers, num_messages",
+@pytest.mark.parametrize(
+    "num_topics, num_publishers, num_subscribers, num_messages",
     [
-        (connector_cls, 3, 10, 1, 100),
-        (connector_cls, 3, 10, 10, 100),
+        (3, 10, 1, 100),
+        (3, 10, 10, 100),
     ],
 )
 async def test_pubsub_channel_multiple_topics_and_publishers(

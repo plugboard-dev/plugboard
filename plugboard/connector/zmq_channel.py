@@ -7,9 +7,8 @@ import asyncio
 import typing as _t
 
 from that_depends import Provide, inject
-import zmq
-import zmq.asyncio
 
+from plugboard._zmq.backend import ZMQ_BACKEND_PYOMQ, zmq, zmq_asyncio, zmq_backend
 from plugboard._zmq.zmq_proxy import ZMQ_ADDR, ZMQProxy, create_socket, zmq_sockopts_t
 from plugboard.connector.connector import Connector
 from plugboard.connector.serde_channel import SerdeChannel
@@ -19,6 +18,7 @@ from plugboard.utils import DI, Settings
 
 
 ZMQ_CONFIRM_MSG: str = "__PLUGBOARD_CHAN_CONFIRM_MSG__"
+PYOMQ_CLOSE_DRAIN_SECONDS: float = 0.1
 
 # Collection of poll tasks for ZMQ channels required to create strong refs to polling tasks
 # to avoid destroying tasks before they are done on garbage collection. Is there a better way?
@@ -32,8 +32,8 @@ class ZMQChannel(SerdeChannel):
     def __init__(  # noqa: D417
         self,
         *args: _t.Any,
-        send_socket: _t.Optional[zmq.asyncio.Socket] = None,
-        recv_socket: _t.Optional[zmq.asyncio.Socket] = None,
+        send_socket: _t.Optional[zmq_asyncio.Socket] = None,
+        recv_socket: _t.Optional[zmq_asyncio.Socket] = None,
         topic: str = "",
         maxsize: int = 2000,
         **kwargs: _t.Any,
@@ -54,8 +54,8 @@ class ZMQChannel(SerdeChannel):
             maxsize: Optional; Queue maximum item capacity, defaults to 2000.
         """
         super().__init__(*args, **kwargs)
-        self._send_socket: _t.Optional[zmq.asyncio.Socket] = send_socket
-        self._recv_socket: _t.Optional[zmq.asyncio.Socket] = recv_socket
+        self._send_socket: _t.Optional[zmq_asyncio.Socket] = send_socket
+        self._recv_socket: _t.Optional[zmq_asyncio.Socket] = recv_socket
         self._is_send_closed = send_socket is None
         self._is_recv_closed = recv_socket is None
         self._send_hwm = max(maxsize // 2, 1)
@@ -83,6 +83,10 @@ class ZMQChannel(SerdeChannel):
         """Closes the `ZMQChannel`."""
         if self._send_socket is not None:
             await super().close()
+            if zmq_backend == ZMQ_BACKEND_PYOMQ:
+                # pyomq does not expose an awaitable socket drain; give queued PUB frames,
+                # including the close sentinel, a short window to reach the proxy.
+                await asyncio.sleep(PYOMQ_CLOSE_DRAIN_SECONDS)
             self._send_socket.close()
             self._send_socket = None
         if self._recv_socket is not None:
@@ -232,7 +236,7 @@ class _ZMQPubsubConnector(_ZMQConnector):
         self._xsub_port = self._xsub_socket.bind_to_random_port("tcp://*")
         self._xpub_socket = create_socket(zmq.XPUB, [(zmq.SNDHWM, self._maxsize)])
         self._xpub_port = self._xpub_socket.bind_to_random_port("tcp://*")
-        self._poller = zmq.asyncio.Poller()
+        self._poller = zmq_asyncio.Poller()
         self._poller.register(self._xsub_socket, zmq.POLLIN)
         self._poller.register(self._xpub_socket, zmq.POLLIN)
         self._poll_task = asyncio.create_task(self._poll())
@@ -251,7 +255,7 @@ class _ZMQPubsubConnector(_ZMQConnector):
         poll_fn, xps, xss = self._poller.poll, self._xpub_socket, self._xsub_socket
         try:
             while True:
-                events = dict(await poll_fn())
+                events = dict(await poll_fn(timeout=1000))
                 if xps in events:
                     await xss.send_multipart(await xps.recv_multipart())
                 if xss in events:

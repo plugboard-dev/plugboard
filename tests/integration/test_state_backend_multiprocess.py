@@ -4,7 +4,6 @@ import typing as _t
 
 import pytest
 import pytest_asyncio
-import pytest_cases
 from ray.util.multiprocessing import Pool
 import uvloop
 
@@ -185,7 +184,7 @@ async def test_state_backend_multiprocess(
         assert state_data_conn["times_upserted"] == 2
 
 
-@pytest_cases.parametrize("setup_backend", [setup_SqliteStateBackend, setup_PostgresStateBackend])
+@pytest.mark.parametrize("setup_backend", [setup_SqliteStateBackend, setup_PostgresStateBackend])
 @pytest.mark.asyncio
 async def test_no_process_found_errors(
     setup_backend: _t.Callable[[], _t.ContextManager[StateBackend]],
