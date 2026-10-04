@@ -1,377 +1,372 @@
-"""Unit tests for Kafka message data reader/writer."""
+"""Unit tests for the Apache Kafka message data implementations."""
 
 from __future__ import annotations
 
 from collections import deque
-import importlib.machinery
-import json
-import sys
 import typing as _t
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock, MagicMock, call
 
+from aiokafka.errors import (
+    KafkaConnectionError,
+    RecordTooLargeError,
+    TopicAuthorizationFailedError,
+)
+from aiokafka.structs import OffsetAndMetadata, TopicPartition
 import pytest
 
-from plugboard.exceptions import NoMoreDataException
+from plugboard.exceptions import (
+    MessageBrokerConnectionError,
+    MessageBrokerPermanentError,
+    MessageBrokerTransientError,
+)
+from plugboard.library import kafka_io
+from plugboard.library.kafka_io import KafkaDataReader, KafkaDataWriter
+from plugboard.utils.settings import Settings
+from tests import conftest
 
 
-# ---------------------------------------------------------------------------
-# Mock the aiokafka module before importing the implementation
-# ---------------------------------------------------------------------------
-
-
-def _make_mock_module(name: str) -> MagicMock:
-    """Creates a mock module with __spec__ set for find_spec compatibility."""
-    mock = MagicMock()
-    mock.__spec__ = importlib.machinery.ModuleSpec(name, None)
-    return mock
-
-
-_mock_aiokafka = _make_mock_module("aiokafka")
-_mock_consumer_class = MagicMock()
-_mock_producer_class = MagicMock()
-_mock_aiokafka.AIOKafkaConsumer = _mock_consumer_class
-_mock_aiokafka.AIOKafkaProducer = _mock_producer_class
-
-sys.modules.setdefault("aiokafka", _mock_aiokafka)
-
-from plugboard.library.kafka_io import KafkaDataReader, KafkaDataWriter  # noqa: E402
-
-
-# ---------------------------------------------------------------------------
-# Helpers
-# ---------------------------------------------------------------------------
-
-
-def _make_kafka_record(value: dict[str, _t.Any] | bytes) -> MagicMock:
-    """Creates a mock Kafka ConsumerRecord."""
-    record = MagicMock()
-    if isinstance(value, dict):
-        record.value = json.dumps(value).encode("utf-8")
-    else:
-        record.value = value
-    record.topic = "test-topic"
-    record.partition = 0
-    record.offset = 0
+def consumer_record(topic: str, partition: int, offset: int, value: bytes) -> MagicMock:
+    """Builds a Kafka `ConsumerRecord` double."""
+    record = MagicMock(name="consumer_record")
+    record.topic = topic
+    record.partition = partition
+    record.offset = offset
+    record.value = value
     return record
 
 
-# ---------------------------------------------------------------------------
-# Tests: KafkaDataReader
-# ---------------------------------------------------------------------------
+@pytest.fixture
+def consumer(monkeypatch: pytest.MonkeyPatch) -> MagicMock:
+    """Replaces `AIOKafkaConsumer` with a double that records its construction."""
+    client = MagicMock(name="consumer")
+    client.start = AsyncMock()
+    client.stop = AsyncMock()
+    client.commit = AsyncMock()
+    client.getmany = AsyncMock(return_value={})
+    factory = MagicMock(name="AIOKafkaConsumer", return_value=client)
+    monkeypatch.setattr(kafka_io, "AIOKafkaConsumer", factory)
+    client.factory = factory
+    return client
 
 
-@pytest.mark.asyncio
-async def test_kafka_reader_connect() -> None:
-    """Tests that the reader creates and starts a Kafka consumer."""
-    mock_consumer = AsyncMock()
-    _mock_consumer_class.return_value = mock_consumer
-    mock_consumer.start = AsyncMock()
+@pytest.fixture
+def producer(monkeypatch: pytest.MonkeyPatch) -> MagicMock:
+    """Replaces `AIOKafkaProducer` with a double that records its construction."""
+    client = MagicMock(name="producer")
+    client.start = AsyncMock()
+    client.stop = AsyncMock()
+    client.send = AsyncMock()
+    client.flush = AsyncMock()
+    client.send_and_wait = AsyncMock()
+    factory = MagicMock(name="AIOKafkaProducer", return_value=client)
+    monkeypatch.setattr(kafka_io, "AIOKafkaProducer", factory)
+    client.factory = factory
+    return client
 
-    reader = KafkaDataReader(
-        name="test-kafka-reader",
-        field_names=["x", "y"],
+
+def make_reader(**kwargs: _t.Any) -> KafkaDataReader:
+    """Builds a reader for the fixed test topic/group."""
+    kwargs.setdefault("field_names", ["x", "y"])
+    return KafkaDataReader(
+        name="kafka-reader",
+        topic="test-topic",
+        group_id="test-group",
+        bootstrap_servers="localhost:9092",
+        **kwargs,
+    )
+
+
+def make_writer(**kwargs: _t.Any) -> KafkaDataWriter:
+    """Builds a writer for the fixed test topic."""
+    kwargs.setdefault("field_names", ["x", "y"])
+    return KafkaDataWriter(
+        name="kafka-writer",
         topic="test-topic",
         bootstrap_servers="localhost:9092",
-        group_id="test-group",
+        **kwargs,
     )
+
+
+# ---------------------------------------------------------------------------
+# Reader: connection and consuming
+# ---------------------------------------------------------------------------
+
+
+async def test_reader_starts_consumer_on_topic_group(consumer: MagicMock) -> None:
+    """Tests the consumer is built for the topic, group and batch size."""
+    reader = make_reader(chunk_size=5)
     await reader._connect()
 
-    _mock_consumer_class.assert_called()
-    mock_consumer.start.assert_called()
-    assert reader._consumer is mock_consumer
-
-
-@pytest.mark.asyncio
-async def test_kafka_reader_disconnect() -> None:
-    """Tests that the reader stops the Kafka consumer."""
-    mock_consumer = AsyncMock()
-    _mock_consumer_class.return_value = mock_consumer
-    mock_consumer.start = AsyncMock()
-    mock_consumer.stop = AsyncMock()
-
-    reader = KafkaDataReader(
-        name="test-kafka-reader",
-        field_names=["x"],
-        topic="test-topic",
-        bootstrap_servers="localhost:9092",
+    consumer.factory.assert_called_once_with(
+        "test-topic",
+        bootstrap_servers=["localhost:9092"],
         group_id="test-group",
+        auto_offset_reset="earliest",
+        enable_auto_commit=False,
+        max_poll_records=5,
     )
+    consumer.start.assert_awaited_once_with()
+
+
+async def test_reader_stops_consumer_on_disconnect(consumer: MagicMock) -> None:
+    """Tests that teardown stops the consumer, releasing its group membership."""
+    reader = make_reader()
     await reader._connect()
     await reader._disconnect()
-
-    mock_consumer.stop.assert_called()
-    assert reader._consumer is None
+    consumer.stop.assert_awaited_once_with()
 
 
-@pytest.mark.asyncio
-async def test_kafka_reader_receive() -> None:
-    """Tests receiving messages from Kafka."""
-    mock_consumer = AsyncMock()
-    _mock_consumer_class.return_value = mock_consumer
-    mock_consumer.start = AsyncMock()
-
-    test_data = [{"x": 1, "y": "a"}, {"x": 2, "y": "b"}]
-    mock_records = [_make_kafka_record(d) for d in test_data]
-    tp = MagicMock()
-    mock_consumer.getmany = AsyncMock(return_value={tp: mock_records})
-
-    reader = KafkaDataReader(
-        name="test-kafka-reader",
-        field_names=["x", "y"],
-        topic="test-topic",
-        bootstrap_servers="localhost:9092",
-        group_id="test-group",
-        chunk_size=10,
-    )
+async def test_reader_flattens_records_from_partitions(consumer: MagicMock) -> None:
+    """Tests that records from every assigned partition are returned."""
+    consumer.getmany.return_value = {
+        TopicPartition("test-topic", 0): [consumer_record("test-topic", 0, 1, b"{}")],
+        TopicPartition("test-topic", 1): [
+            consumer_record("test-topic", 1, 7, b"{}"),
+            consumer_record("test-topic", 1, 8, b"{}"),
+        ],
+    }
+    reader = make_reader()
     await reader._connect()
+
     messages = await reader._receive()
 
-    assert len(messages) == 2
-    mock_consumer.getmany.assert_called()
+    consumer.getmany.assert_awaited_once_with(timeout_ms=30_000, max_records=10)
+    assert [(r.partition, r.offset) for r in messages] == [(0, 1), (1, 7), (1, 8)]
 
 
-@pytest.mark.asyncio
-async def test_kafka_reader_receive_empty() -> None:
-    """Tests that empty response raises NoMoreDataException."""
-    mock_consumer = AsyncMock()
-    _mock_consumer_class.return_value = mock_consumer
-    mock_consumer.start = AsyncMock()
-    mock_consumer.getmany = AsyncMock(return_value={})
+async def test_reader_empty_poll_returns_no_messages(consumer: MagicMock) -> None:
+    """Tests that a timed-out poll reads as 'nothing yet', not as an exhausted topic.
 
-    reader = KafkaDataReader(
-        name="test-kafka-reader",
-        field_names=["x"],
-        topic="test-topic",
-        bootstrap_servers="localhost:9092",
-        group_id="test-group",
+    A consumer catching up between messages must keep running, so an empty poll must
+    not raise `NoMoreDataException`.
+    """
+    consumer.getmany.return_value = {}
+    reader = make_reader()
+    await reader._connect()
+    assert await reader._receive() == []
+
+
+async def test_reader_converts_json_values(consumer: MagicMock) -> None:
+    """Tests that JSON record values become field buffers."""
+    reader = make_reader()
+    await reader._connect()
+    batch = [
+        consumer_record("test-topic", 0, 1, b'{"x": 1, "y": "a"}'),
+        consumer_record("test-topic", 0, 2, b'{"x": 2, "y": "b"}'),
+    ]
+    assert await reader._convert(batch) == {"x": deque([1, 2]), "y": deque(["a", "b"])}
+
+
+async def test_reader_non_json_value_uses_data_field(consumer: MagicMock) -> None:
+    """Tests that a raw value is exposed through the `data` field."""
+    reader = make_reader(field_names=["data"], parse_json=False)
+    await reader._connect()
+    converted = await reader._convert([consumer_record("test-topic", 0, 1, b"hello")])
+    assert converted == {"data": deque(["hello"])}
+
+
+# ---------------------------------------------------------------------------
+# Reader: offset commits
+# ---------------------------------------------------------------------------
+
+
+async def test_reader_commits_offsets_of_processed_records(consumer: MagicMock) -> None:
+    """Tests that an ack commits the offset *after* each processed record.
+
+    Committing the consumer position instead of these offsets would mark records that
+    were never processed as done, and they would never be redelivered.
+    """
+    reader = make_reader()
+    await reader._connect()
+    records = [
+        consumer_record("test-topic", 0, 3, b"{}"),
+        consumer_record("test-topic", 0, 4, b"{}"),
+    ]
+
+    await reader._ack(records)
+
+    consumer.commit.assert_awaited_once_with(
+        offsets={TopicPartition("test-topic", 0): OffsetAndMetadata(5, "")}
     )
+
+
+async def test_reader_commits_highest_offset_per_partition(consumer: MagicMock) -> None:
+    """Tests that out-of-order records commit the furthest offset for each partition."""
+    reader = make_reader()
+    await reader._connect()
+    records = [
+        consumer_record("test-topic", 1, 2, b"{}"),
+        consumer_record("test-topic", 0, 10, b"{}"),
+        consumer_record("test-topic", 1, 5, b"{}"),
+        consumer_record("test-topic", 0, 8, b"{}"),
+    ]
+
+    await reader._ack(records)
+
+    committed = consumer.commit.await_args.kwargs["offsets"]
+    assert committed == {
+        TopicPartition("test-topic", 0): OffsetAndMetadata(11, ""),
+        TopicPartition("test-topic", 1): OffsetAndMetadata(6, ""),
+    }
+
+
+async def test_reader_commits_nothing_without_records(consumer: MagicMock) -> None:
+    """Tests that an empty batch does not issue a commit."""
+    reader = make_reader()
+    await reader._connect()
+    await reader._ack([])
+    consumer.commit.assert_not_awaited()
+
+
+async def test_reader_without_connection_raises_connection_error(consumer: MagicMock) -> None:
+    """Tests that consuming before connecting fails loudly."""
+    reader = make_reader()
+    with pytest.raises(MessageBrokerConnectionError):
+        await reader._receive()
+    with pytest.raises(MessageBrokerConnectionError):
+        await reader._ack([])
+
+
+# ---------------------------------------------------------------------------
+# Reader: error mapping
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    ("error", "expected"),
+    [
+        (TopicAuthorizationFailedError("denied"), MessageBrokerPermanentError),
+        (RecordTooLargeError("too big"), MessageBrokerPermanentError),
+        (KafkaConnectionError("down"), MessageBrokerTransientError),
+    ],
+)
+async def test_reader_maps_kafka_errors(
+    consumer: MagicMock, error: Exception, expected: type[Exception]
+) -> None:
+    """Tests that Kafka failures land on the right broker exception type."""
+    consumer.getmany.side_effect = error
+    reader = make_reader()
     await reader._connect()
 
-    with pytest.raises(NoMoreDataException):
+    with pytest.raises(expected):
         await reader._receive()
 
 
-@pytest.mark.asyncio
-async def test_kafka_reader_convert_json() -> None:
-    """Tests converting JSON Kafka messages to field buffer."""
-    reader = KafkaDataReader(
-        name="test-kafka-reader",
-        field_names=["x", "y"],
-        topic="test-topic",
-        bootstrap_servers="localhost:9092",
-        group_id="test-group",
-        parse_json=True,
-    )
-
-    mock_records = [
-        _make_kafka_record({"x": 1, "y": "a"}),
-        _make_kafka_record({"x": 2, "y": "b"}),
-    ]
-    result = await reader._convert(mock_records)
-    assert list(result["x"]) == [1, 2]
-    assert list(result["y"]) == ["a", "b"]
-
-
-@pytest.mark.asyncio
-async def test_kafka_reader_convert_raw() -> None:
-    """Tests converting raw Kafka messages to field buffer."""
-    reader = KafkaDataReader(
-        name="test-kafka-reader",
-        field_names=["data"],
-        topic="test-topic",
-        bootstrap_servers="localhost:9092",
-        group_id="test-group",
-        parse_json=False,
-    )
-
-    mock_records = [_make_kafka_record(b"raw-1"), _make_kafka_record(b"raw-2")]
-    result = await reader._convert(mock_records)
-    assert list(result["data"]) == ["raw-1", "raw-2"]
-
-
-@pytest.mark.asyncio
-async def test_kafka_reader_ack() -> None:
-    """Tests committing offsets for Kafka messages."""
-    mock_consumer = AsyncMock()
-    _mock_consumer_class.return_value = mock_consumer
-    mock_consumer.start = AsyncMock()
-    mock_consumer.commit = AsyncMock()
-
-    reader = KafkaDataReader(
-        name="test-kafka-reader",
-        field_names=["x"],
-        topic="test-topic",
-        bootstrap_servers="localhost:9092",
-        group_id="test-group",
-    )
+async def test_reader_unclassified_error_propagates(consumer: MagicMock) -> None:
+    """Tests that an unknown error is not rewritten into a broker exception."""
+    consumer.getmany.side_effect = ValueError("unexpected")
+    reader = make_reader()
     await reader._connect()
 
-    mock_records = [_make_kafka_record({"x": 1})]
-    await reader._ack(mock_records)
-
-    mock_consumer.commit.assert_called()
-
-
-@pytest.mark.asyncio
-async def test_kafka_reader_bootstrap_servers_list() -> None:
-    """Tests that bootstrap_servers can be a list."""
-    mock_consumer = AsyncMock()
-    _mock_consumer_class.return_value = mock_consumer
-    mock_consumer.start = AsyncMock()
-
-    reader = KafkaDataReader(
-        name="test-kafka-reader",
-        field_names=["x"],
-        topic="test-topic",
-        bootstrap_servers=["host1:9092", "host2:9092"],
-        group_id="test-group",
-    )
-    await reader._connect()
-
-    call_kwargs = _mock_consumer_class.call_args[1]
-    assert call_kwargs["bootstrap_servers"] == ["host1:9092", "host2:9092"]
-
-
-@pytest.mark.asyncio
-async def test_kafka_reader_bootstrap_servers_string() -> None:
-    """Tests that bootstrap_servers string is converted to list."""
-    mock_consumer = AsyncMock()
-    _mock_consumer_class.return_value = mock_consumer
-    mock_consumer.start = AsyncMock()
-
-    reader = KafkaDataReader(
-        name="test-kafka-reader",
-        field_names=["x"],
-        topic="test-topic",
-        bootstrap_servers="localhost:9092",
-        group_id="test-group",
-    )
-    await reader._connect()
-
-    call_kwargs = _mock_consumer_class.call_args[1]
-    assert call_kwargs["bootstrap_servers"] == ["localhost:9092"]
+    with pytest.raises(ValueError, match="unexpected"):
+        await reader._receive()
 
 
 # ---------------------------------------------------------------------------
-# Tests: KafkaDataWriter
+# Writer
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.asyncio
-async def test_kafka_writer_connect() -> None:
-    """Tests that the writer creates and starts a Kafka producer."""
-    mock_producer = AsyncMock()
-    _mock_producer_class.return_value = mock_producer
-    mock_producer.start = AsyncMock()
-
-    writer = KafkaDataWriter(
-        name="test-kafka-writer",
-        field_names=["x"],
-        topic="test-topic",
-        bootstrap_servers="localhost:9092",
-    )
+async def test_writer_starts_producer(producer: MagicMock) -> None:
+    """Tests that the producer is created and started."""
+    writer = make_writer()
     await writer._connect()
-
-    _mock_producer_class.assert_called()
-    mock_producer.start.assert_called()
-    assert writer._producer is mock_producer
+    producer.factory.assert_called_once_with(bootstrap_servers=["localhost:9092"])
+    producer.start.assert_awaited_once_with()
 
 
-@pytest.mark.asyncio
-async def test_kafka_writer_disconnect() -> None:
-    """Tests that the writer stops the Kafka producer."""
-    mock_producer = AsyncMock()
-    _mock_producer_class.return_value = mock_producer
-    mock_producer.start = AsyncMock()
-    mock_producer.stop = AsyncMock()
-
-    writer = KafkaDataWriter(
-        name="test-kafka-writer",
-        field_names=["x"],
-        topic="test-topic",
-        bootstrap_servers="localhost:9092",
-    )
+async def test_writer_stops_producer_on_disconnect(producer: MagicMock) -> None:
+    """Tests that teardown stops the producer."""
+    writer = make_writer()
     await writer._connect()
     await writer._disconnect()
-
-    mock_producer.stop.assert_called()
-    assert writer._producer is None
+    producer.stop.assert_awaited_once_with()
 
 
-@pytest.mark.asyncio
-async def test_kafka_writer_send() -> None:
-    """Tests sending messages to Kafka."""
-    mock_producer = AsyncMock()
-    _mock_producer_class.return_value = mock_producer
-    mock_producer.start = AsyncMock()
-    mock_producer.send_and_wait = AsyncMock()
+async def test_writer_sends_batch_then_flushes_once(producer: MagicMock) -> None:
+    """Tests that records are submitted together and the buffer flushed once.
 
-    writer = KafkaDataWriter(
-        name="test-kafka-writer",
-        field_names=["x"],
-        topic="test-topic",
-        bootstrap_servers="localhost:9092",
-    )
+    Awaiting each send individually (as `send_and_wait` does) costs one round trip per
+    record and defeats the producer's batching.
+    """
+    writer = make_writer()
     await writer._connect()
 
-    messages = [b"msg1", b"msg2"]
-    await writer._send(messages)
+    await writer._send([b"one", b"two", b"three"])
 
-    assert mock_producer.send_and_wait.call_count == 2
-
-
-@pytest.mark.asyncio
-async def test_kafka_writer_convert_json() -> None:
-    """Tests converting field data to JSON messages."""
-    writer = KafkaDataWriter(
-        name="test-kafka-writer",
-        field_names=["x", "y"],
-        topic="test-topic",
-        bootstrap_servers="localhost:9092",
-        parse_json=True,
-    )
-
-    data = {"x": deque([1, 2]), "y": deque(["a", "b"])}
-    messages = await writer._convert(data)
-
-    assert len(messages) == 2
-    assert json.loads(messages[0]) == {"x": 1, "y": "a"}
-    assert json.loads(messages[1]) == {"x": 2, "y": "b"}
+    assert producer.send.await_args_list == [
+        call("test-topic", value=b"one"),
+        call("test-topic", value=b"two"),
+        call("test-topic", value=b"three"),
+    ]
+    producer.send_and_wait.assert_not_awaited()
+    producer.flush.assert_awaited_once_with()
 
 
-@pytest.mark.asyncio
-async def test_kafka_writer_convert_raw() -> None:
-    """Tests converting field data to raw bytes messages."""
-    writer = KafkaDataWriter(
-        name="test-kafka-writer",
-        field_names=["data"],
-        topic="test-topic",
-        bootstrap_servers="localhost:9092",
-        parse_json=False,
-    )
-
-    data = {"data": deque([b"raw1", b"raw2"])}
-    messages = await writer._convert(data)
-
-    assert len(messages) == 2
-    assert messages[0] == b"raw1"
-    assert messages[1] == b"raw2"
+async def test_writer_converts_fields_to_json_bytes(producer: MagicMock) -> None:
+    """Tests that buffered fields become one JSON message per record."""
+    writer = make_writer()
+    await writer._connect()
+    converted = await writer._convert({"x": deque([1, 2]), "y": deque(["a", "b"])})
+    assert converted == [b'{"x": 1, "y": "a"}', b'{"x": 2, "y": "b"}']
 
 
-@pytest.mark.asyncio
-async def test_kafka_writer_bootstrap_servers_list() -> None:
-    """Tests that bootstrap_servers can be a list."""
-    mock_producer = AsyncMock()
-    _mock_producer_class.return_value = mock_producer
-    mock_producer.start = AsyncMock()
+async def test_writer_non_json_sends_first_field(producer: MagicMock) -> None:
+    """Tests that a raw writer publishes the first field's value."""
+    writer = make_writer(field_names=["x"], parse_json=False)
+    await writer._connect()
+    assert await writer._convert({"x": deque(["hello"])}) == [b"hello"]
 
-    writer = KafkaDataWriter(
-        name="test-kafka-writer",
-        field_names=["x"],
-        topic="test-topic",
-        bootstrap_servers=["host1:9092", "host2:9092"],
-    )
+
+async def test_writer_send_failure_maps_error(producer: MagicMock) -> None:
+    """Tests that a failed send surfaces as a broker exception."""
+    producer.send.side_effect = KafkaConnectionError("down")
+    writer = make_writer()
     await writer._connect()
 
-    call_kwargs = _mock_producer_class.call_args[1]
-    assert call_kwargs["bootstrap_servers"] == ["host1:9092", "host2:9092"]
+    with pytest.raises(MessageBrokerTransientError):
+        await writer._send([b"one"])
+
+
+async def test_writer_without_connection_raises_connection_error(producer: MagicMock) -> None:
+    """Tests that sending before connecting fails loudly."""
+    writer = make_writer()
+    with pytest.raises(MessageBrokerConnectionError):
+        await writer._send([b"one"])
+
+
+# ---------------------------------------------------------------------------
+# Settings resolution
+# ---------------------------------------------------------------------------
+
+
+async def test_bootstrap_servers_fall_back_to_settings() -> None:
+    """Tests that `KAFKA_BOOTSTRAP_SERVERS` supplies the brokers when not passed."""
+    settings = Settings.model_validate({"kafka": {"bootstrap_servers": "kafka:9092"}})
+    with conftest.override_settings(settings):
+        writer = KafkaDataWriter(name="kafka-writer", topic="test-topic", field_names=["x"])
+    assert writer._bootstrap_servers == ["kafka:9092"]
+
+
+def test_bootstrap_servers_accepts_a_list() -> None:
+    """Tests that an explicit list of brokers is kept as given."""
+    reader = KafkaDataReader(
+        name="kafka-reader",
+        topic="test-topic",
+        group_id="test-group",
+        field_names=["x"],
+        bootstrap_servers=["a:9092", "b:9092"],
+    )
+    assert reader._bootstrap_servers == ["a:9092", "b:9092"]
+
+
+def test_missing_bootstrap_servers_names_the_environment_variable() -> None:
+    """Tests that unresolvable brokers report what to configure."""
+    with conftest.override_settings(Settings.model_validate({})):
+        with pytest.raises(ValueError, match="KAFKA_BOOTSTRAP_SERVERS"):
+            KafkaDataWriter(
+                name="kafka-writer",
+                topic="test-topic",
+                field_names=["x"],
+                bootstrap_servers=None,
+            )

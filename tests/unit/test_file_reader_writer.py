@@ -30,6 +30,12 @@ def mock_s3_server() -> _t.Generator[None, None, None]:
     """
     server = ThreadedMotoServer(ip_address=S3_IP_ADDRESS, port=S3_PORT)
     server.start()
+    if "AWS_CONFIG_FILE" not in os.environ:
+        # These tests only ever talk to the local moto server, so they must not pick up
+        # a developer's real AWS profile: its region changes how S3 validates buckets.
+        empty_config = tempfile.NamedTemporaryFile(prefix="plugboard-empty-aws-", delete=False)
+        os.environ["AWS_CONFIG_FILE"] = empty_config.name
+        os.environ["AWS_SHARED_CREDENTIALS_FILE"] = empty_config.name
     if "AWS_SECRET_ACCESS_KEY" not in os.environ:
         os.environ["AWS_SECRET_ACCESS_KEY"] = "test-access-key"  # noqa: S105
     if "AWS_ACCESS_KEY_ID" not in os.environ:

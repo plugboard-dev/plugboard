@@ -2,15 +2,17 @@
 
 from __future__ import annotations
 
-from abc import ABC, abstractmethod
+from abc import abstractmethod
 import asyncio
-from asyncio.tasks import Task
 from collections import deque
+import contextlib
 import typing as _t
 
-from plugboard.component import Component, IOController
-from plugboard.exceptions import IOSetupError, IOStreamClosedError, NoMoreDataException
+from plugboard.component import IOController
+from plugboard.exceptions import IOStreamClosedError, NoMoreDataException
+from plugboard.library.data_reader import DataReader
 from plugboard.schemas import ComponentArgsDict
+from plugboard.utils.retry import RetryPolicy, attempt_reconnect, with_retry
 
 
 class MessageDataReaderArgsDict(ComponentArgsDict):
@@ -18,30 +20,36 @@ class MessageDataReaderArgsDict(ComponentArgsDict):
 
     Attributes:
         field_names: The names of the fields to read from messages.
+        topic: The topic/queue/subscription to read from.
         chunk_size: Optional; The number of messages to fetch per batch.
-        max_retries: Maximum number of retry attempts for transient failures.
-        retry_base_delay: Base delay in seconds for exponential backoff.
-        retry_max_delay: Maximum delay in seconds for exponential backoff.
+        retry_policy: Optional; The backoff policy for retrying failed broker calls.
+        idle_poll_delay: Optional; Delay in seconds between polls that return no
+            messages.
     """
 
     field_names: list[str]
-    topic: _t.NotRequired[str]
+    topic: str
     chunk_size: _t.NotRequired[int | None]
-    max_retries: _t.NotRequired[int]
-    retry_base_delay: _t.NotRequired[float]
-    retry_max_delay: _t.NotRequired[float]
+    retry_policy: _t.NotRequired[RetryPolicy]
+    idle_poll_delay: _t.NotRequired[float]
 
 
-class MessageDataReader(Component, ABC):
+class MessageDataReader(DataReader):
     """Abstract base class for reading data from a pub/sub message broker.
 
-    Provides connection management, reconnection with exponential backoff,
-    retry logic, message acknowledgment, and chunked/buffered reading
-    analogous to [`DataReader`][plugboard.library.DataReader].
+    Extends [`DataReader`][plugboard.library.DataReader] with the parts a message
+    broker needs and a finite source does not: a long-lived connection, reconnection
+    with exponential backoff, and acknowledgment of the messages that were consumed.
 
-    Subclasses must implement broker-specific methods for connecting,
-    receiving messages, converting messages to field buffers, and
-    acknowledging processed messages.
+    Unlike a file or table reader, an empty poll does not mean the stream is over -
+    it means the broker had nothing to hand out yet. `step()` therefore waits for the
+    next message instead of closing the stream, so a reader started before its
+    producer keeps running. A subclass signals a genuinely exhausted source by
+    raising [`NoMoreDataException`][plugboard.exceptions.NoMoreDataException] from
+    `_receive`, which closes the IO stream like `DataReader` does.
+
+    Subclasses implement the broker-specific methods for connecting, receiving raw
+    messages, converting them to field buffers, and acknowledging processed messages.
     """
 
     io = IOController()
@@ -51,47 +59,27 @@ class MessageDataReader(Component, ABC):
         field_names: list[str],
         topic: str,
         chunk_size: _t.Optional[int] = None,
-        max_retries: int = 3,
-        retry_base_delay: float = 1.0,
-        retry_max_delay: float = 60.0,
+        retry_policy: RetryPolicy = RetryPolicy(),
+        idle_poll_delay: float = 0.1,
         **kwargs: _t.Unpack[ComponentArgsDict],
     ) -> None:
         """Instantiates the `MessageDataReader`.
 
         Args:
             field_names: The names of the fields to extract from messages.
-            topic: The topic/queue to read from.
+            topic: The topic/queue/subscription to read from.
             chunk_size: Optional; The number of messages to fetch per batch.
-            max_retries: Maximum number of retry attempts for transient failures.
-            retry_base_delay: Base delay in seconds for exponential backoff.
-            retry_max_delay: Maximum delay in seconds for exponential backoff.
+            retry_policy: The backoff policy for retrying failed broker calls.
+            idle_poll_delay: Delay in seconds before polling again after a poll that
+                returned no messages.
             **kwargs: Additional keyword arguments for [`Component`][plugboard.component.Component].
         """
-        super().__init__(**kwargs)
+        super().__init__(field_names=field_names, chunk_size=chunk_size, **kwargs)
         self._topic = topic
-        self._buffer: dict[str, deque] = dict()
-        self._chunk_size = chunk_size
-        self._max_retries = max_retries
-        self._retry_base_delay = retry_base_delay
-        self._retry_max_delay = retry_max_delay
+        self._retry_policy = retry_policy
+        self._idle_poll_delay = idle_poll_delay
         self._pending_ack: list[_t.Any] = []
-        self._task: _t.Optional[Task] = None
-        self.io = IOController(
-            inputs=None,
-            outputs=field_names,
-            input_events=self.__class__.io.input_events,
-            output_events=self.__class__.io.output_events,
-            namespace=self.name,
-            component=self,
-        )
-
-    def __init_subclass__(cls, *args: _t.Any, **kwargs: _t.Any) -> None:
-        try:
-            return super().__init_subclass__(*args, **kwargs)
-        except IOSetupError:
-            # Concrete subclasses of the abstract data io classes represent a special case for io
-            # setup. They receive io args at run time, not declaration time, so skip error.
-            pass
+        self._connection_lock = asyncio.Lock()
 
     @abstractmethod
     async def _connect(self) -> None:
@@ -111,27 +99,17 @@ class MessageDataReader(Component, ABC):
     async def _receive(self) -> list[_t.Any]:
         """Receives a batch of raw messages from the broker.
 
-        Should block until at least one message is available or a timeout occurs.
-        Returns an empty list on timeout.
+        Should block until at least one message is available or a timeout occurs, and
+        return an empty list on timeout. Returning an empty list is *not* how a
+        subclass reports an exhausted source - raising `NoMoreDataException` is.
 
         Returns:
             A list of raw broker-specific message objects.
 
         Raises:
-            NoMoreDataException: If the subscription/source is exhausted and no
-                more messages will arrive.
-        """
-        pass
-
-    @abstractmethod
-    async def _convert(self, messages: list[_t.Any]) -> dict[str, deque]:
-        """Converts raw messages into a `dict[str, deque]` field buffer.
-
-        Args:
-            messages: Raw broker-specific message objects.
-
-        Returns:
-            A dictionary mapping field names to deques of field values.
+            NoMoreDataException: If the source is exhausted and no more messages will
+                arrive.
+            MessageBrokerPermanentError: If the failure cannot be recovered by retrying.
         """
         pass
 
@@ -144,121 +122,132 @@ class MessageDataReader(Component, ABC):
         """
         pass
 
-    async def _receive_with_retry(self) -> list[_t.Any]:
-        """Receives messages with exponential backoff retry and reconnection.
+    @abstractmethod
+    async def _convert(self, data: list[_t.Any]) -> dict[str, deque]:
+        """Converts raw messages into a `dict[str, deque]` field buffer.
+
+        Args:
+            data: Raw broker-specific message objects, as returned by `_receive`.
 
         Returns:
-            A list of raw broker-specific message objects.
+            A dictionary mapping field names to deques of field values.
+        """
+        pass
+
+    async def _fetch(self) -> list[_t.Any]:
+        """Receives a batch of messages, retrying transient failures.
+
+        Returns:
+            A list of raw broker-specific message objects, possibly empty.
 
         Raises:
             NoMoreDataException: If the source is exhausted.
             MessageBrokerConnectionError: If all retries are exhausted.
         """
-        last_exception: Exception = RuntimeError("All retries exhausted")
-        for attempt in range(self._max_retries + 1):
-            try:
-                return await self._receive()
-            except NoMoreDataException:
-                raise
-            except Exception as e:
-                last_exception = e
-                if attempt < self._max_retries:
-                    delay = min(
-                        self._retry_base_delay * (2**attempt),
-                        self._retry_max_delay,
-                    )
-                    self._logger.warning(
-                        "Transient error receiving messages, retrying",
-                        attempt=attempt + 1,
-                        delay=delay,
-                        error=str(e),
-                    )
-                    await asyncio.sleep(delay)
-                    await self._reconnect()
-        raise last_exception
+        return await with_retry(
+            self._receive,
+            self._reconnect,
+            policy=self._retry_policy,
+            logger=self._logger,
+            description="receiving messages",
+        )
 
     async def _reconnect(self) -> None:
-        """Attempts to reconnect to the message broker."""
-        self._logger.info("Attempting reconnection to message broker", topic=self._topic)
-        try:
-            await self._disconnect()
-        except Exception:  # noqa: S110
-            self._logger.warning("Error during disconnect in reconnection", exc_info=True)
-        await self._connect()
-        self._logger.info("Reconnected to message broker", topic=self._topic)
+        """Attempts to reconnect to the message broker.
 
-    async def _fetch_batch(self) -> None:
-        """Fetches a batch of messages and updates the internal buffer."""
+        Held under the connection lock so an in-flight acknowledgment cannot use a
+        client that is being replaced.
+        """
+        async with self._connection_lock:
+            await attempt_reconnect(
+                self._connect,
+                self._disconnect,
+                logger=self._logger,
+                topic=self._topic,
+            )
+
+    async def _fetch_chunk(self) -> None:
+        """Fetches a batch of messages and updates the internal buffer.
+
+        An empty batch leaves the buffer untouched, so the caller can poll again: a
+        broker with nothing to deliver has not ended the stream. The next batch is
+        requested concurrently so that waiting on the broker overlaps with processing.
+        """
         if self._task is None:
-            self._task = asyncio.create_task(self._receive_with_retry())
-        messages = await self._task
-        # Start fetching next batch concurrently
-        self._task = asyncio.create_task(self._receive_with_retry())
-        if len(messages) == 0:
-            raise NoMoreDataException
+            self._task = asyncio.create_task(self._fetch())
+        task = self._task
+        # Clear the reference before awaiting so a failed fetch leaves no dangling task.
+        self._task = None
+        messages = await task
+        if not messages:
+            await asyncio.sleep(self._idle_poll_delay)
+            return
         new_buffer = await self._convert(messages)
         self._buffer = {field_name: new_buffer[field_name] for field_name in self.io.outputs}
         self._pending_ack = messages
+        # Prefetch the next batch while the current one is being consumed.
+        self._task = asyncio.create_task(self._fetch())
 
-    def _consume_record(self) -> None:
-        """Consumes one record from the buffer and sets field attributes."""
-        for field in self.io.outputs:
-            setattr(self, field, self._buffer[field].popleft())
+    @property
+    def _records_available(self) -> int:
+        """Calculates how many consumed-but-unpublished records the buffer holds."""
+        if not self._buffer:
+            return 0
+        return min(len(values) for values in self._buffer.values())
 
     async def _ack_pending(self) -> None:
-        """Acknowledges all pending messages."""
-        if self._pending_ack:
+        """Acknowledges the batch whose records have all been consumed.
+
+        Acknowledgment waits for the connection lock, so it never runs against a client
+        that a concurrent reconnect is replacing.
+        """
+        if not self._pending_ack:
+            return
+        async with self._connection_lock:
             await self._ack(self._pending_ack)
-            self._pending_ack = []
+        self._pending_ack = []
 
     async def init(self) -> None:
         """Initialises the `MessageDataReader`.
 
-        Connects to the message broker and pre-fetches the first batch of messages.
-        If no messages are available, the reader will raise `IOStreamClosedError`
-        on the first `step()` call.
+        Connects to the message broker and starts pre-fetching the first batch so that
+        the first `step()` does not wait on a cold poll.
         """
         await self._connect()
         self._logger.info("Connected to message broker", topic=self._topic)
-        try:
-            await self._fetch_batch()
-        except NoMoreDataException:
-            # No messages available at init time; step() will raise IOStreamClosedError
-            pass
+        self._task = asyncio.create_task(self._fetch())
 
     async def step(self) -> None:
-        """Reads data from the message broker and updates outputs.
+        """Reads the next message from the broker and updates outputs.
 
-        Consumes one record from the buffer. If the buffer is empty,
-        fetches the next batch. Acknowledges processed messages.
+        Waits until a message is available, then consumes one record. Once the batch's
+        last record has been consumed the whole batch is acknowledged, so a failure
+        before that point leaves the remaining messages for redelivery.
 
         Raises:
-            IOStreamClosedError: If there is no more data to read.
+            IOStreamClosedError: If the source is exhausted.
         """
-        if not self._buffer:
-            # Buffer was never populated (e.g. empty source at init)
-            await self.io.close()
-            raise IOStreamClosedError("No more messages from broker")
-        try:
-            self._consume_record()
-            await self._ack_pending()
-        except IndexError:
+        while not self._records_available:
             try:
-                await self._fetch_batch()
-                self._consume_record()
-                await self._ack_pending()
+                await self._fetch_chunk()
             except NoMoreDataException:
+                await self._ack_pending()
                 await self.io.close()
-                raise IOStreamClosedError("No more messages from broker")
+                raise IOStreamClosedError("No more messages from broker") from None
+        self._consume_record()
+        if not self._records_available:
+            await self._ack_pending()
 
     async def destroy(self) -> None:
-        """Destroys the `MessageDataReader` and disconnects from the broker."""
+        """Destroys the `MessageDataReader` and disconnects from the broker.
+
+        Messages that were pre-fetched but never consumed are left unacknowledged so
+        the broker redelivers them to whoever reads the queue next.
+        """
         if self._task is not None:
             self._task.cancel()
-            try:
+            with contextlib.suppress(asyncio.CancelledError, Exception):
                 await self._task
-            except (asyncio.CancelledError, Exception):  # noqa: S110
-                pass
             self._task = None
         await self._disconnect()
         self._logger.info("Disconnected from message broker", topic=self._topic)

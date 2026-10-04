@@ -122,3 +122,39 @@ class Settings(BaseSettings):
     gcp_pubsub: _GCPPubSubSettings = Field(default_factory=_GCPPubSubSettings)
     aws: _AWSSettings = Field(default_factory=_AWSSettings)
     kafka: _KafkaSettings = Field(default_factory=_KafkaSettings)
+
+
+_ArgumentT = _t.TypeVar("_ArgumentT")
+
+
+def resolve_argument(
+    value: _t.Optional[_ArgumentT],
+    fallback: _t.Optional[_ArgumentT],
+    arg_name: str,
+    env_var: str,
+) -> _ArgumentT:
+    """Resolves a component argument against its configured fallback.
+
+    Components accept connection details explicitly, but falling back to settings lets
+    the same model run in a different environment without code changes.
+
+    Args:
+        value: The value passed to the component, if any.
+        fallback: The value loaded from `Settings`, if any.
+        arg_name: The name of the argument, used in the error message.
+        env_var: The environment variable that backs the fallback, used in the error
+            message.
+
+    Returns:
+        The explicit value, or the configured value when none was passed.
+
+    Raises:
+        ValueError: If neither an explicit value nor a configured value is available.
+    """
+    resolved = value if value else fallback
+    if resolved is None:
+        raise ValueError(
+            f"'{arg_name}' is required: pass it explicitly or set the '{env_var}' "
+            f"environment variable."
+        )
+    return resolved

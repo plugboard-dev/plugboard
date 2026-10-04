@@ -1,4 +1,4 @@
-"""Unit tests for the `MessageDataWriter` base class."""
+"""Unit tests for the `MessageDataWriter` base class and its shared encoding helpers."""
 
 from __future__ import annotations
 
@@ -8,357 +8,335 @@ import typing as _t
 import pytest
 
 from plugboard.connector import AsyncioConnector
-from plugboard.library.message_writer import MessageDataWriter
+from plugboard.exceptions import (
+    MessageBrokerPermanentError,
+    MessageBrokerTransientError,
+)
+from plugboard.library.message_writer import (
+    MessageDataWriter,
+    encode_records,
+    encode_records_bytes,
+    iter_records,
+)
 from plugboard.schemas import ConnectorSpec
+from plugboard.utils.retry import RetryPolicy
 
 
-# ---------------------------------------------------------------------------
-# Mock implementation
-# ---------------------------------------------------------------------------
+class RecordingWriter(MessageDataWriter):
+    """A `MessageDataWriter` that records what it sends and can script send failures.
 
+    Each `_send` call consumes the next entry of `script`: an exception is raised, and
+    anything else is recorded as a delivered batch. When the script runs out, sends
+    succeed and are recorded.
+    """
 
-class MockMessageDataWriter(MessageDataWriter):
-    """Mock `MessageDataWriter` for testing the base class logic."""
+    def __init__(self, *args: _t.Any, script: list[_t.Any] | None = None, **kwargs: _t.Any) -> None:
+        """Instantiates the writer.
 
-    def __init__(
-        self,
-        *args: _t.Any,
-        fail_on_connect: bool = False,
-        fail_on_send: int | None = None,
-        **kwargs: _t.Any,
-    ) -> None:
+        Args:
+            *args: Positional arguments for
+                [`MessageDataWriter`][plugboard.library.MessageDataWriter].
+            script: The per-send outcomes to play back.
+            **kwargs: Keyword arguments for
+                [`MessageDataWriter`][plugboard.library.MessageDataWriter].
+        """
         super().__init__(*args, **kwargs)
-        self._connected = False
-        self._disconnected = False
-        self._sent_messages: list[list[_t.Any]] = []
-        self._fail_on_connect = fail_on_connect
-        self._fail_on_send = fail_on_send
-        self._send_call_count = 0
-        self._connect_call_count = 0
-        self._disconnect_call_count = 0
+        self.script = script or []
+        self.sends: list[list[_t.Any]] = []
+        self.attempts = 0
+        self.connects = 0
+        self.disconnects = 0
 
     async def _connect(self) -> None:
-        self._connect_call_count += 1
-        if self._fail_on_connect and self._connect_call_count <= 1:
-            raise ConnectionError("Simulated connection failure")
-        self._connected = True
+        self.connects += 1
 
     async def _disconnect(self) -> None:
-        self._disconnect_call_count += 1
-        self._connected = False
-        self._disconnected = True
-
-    async def _send(self, messages: list[_t.Any]) -> None:
-        self._send_call_count += 1
-        if self._fail_on_send is not None and self._send_call_count == self._fail_on_send:
-            raise ConnectionError("Simulated send failure")
-        self._sent_messages.append(messages)
+        self.disconnects += 1
 
     async def _convert(self, data: dict[str, deque]) -> list[_t.Any]:
-        completed_rows = min(len(d) for d in data.values()) if data else 0
-        messages: list[dict[str, _t.Any]] = []
-        for i in range(completed_rows):
-            record = {field: data[field][i] for field in data}
-            messages.append(record)
-        return messages
+        return list(iter_records(data))
+
+    async def _send(self, messages: list[_t.Any]) -> None:
+        outcome = self.script[self.attempts] if self.attempts < len(self.script) else None
+        self.attempts += 1
+        if isinstance(outcome, Exception):
+            raise outcome
+        self.sends.append(list(messages))
 
 
-# ---------------------------------------------------------------------------
-# Test helpers
-# ---------------------------------------------------------------------------
+class UnreconnectableWriter(RecordingWriter):
+    """A writer whose first connect succeeds and every reconnect afterwards fails."""
+
+    async def _connect(self) -> None:
+        self.connects += 1
+        if self.connects > 1:
+            raise OSError("broker unreachable")
 
 
-async def _setup_writer_with_channels(
-    writer: MockMessageDataWriter, field_names: list[str]
-) -> dict[str, AsyncioConnector]:
-    """Sets up a writer with connected asyncio channels for sending data."""
+def make_writer(
+    field_names: list[str],
+    *,
+    script: list[_t.Any] | None = None,
+    max_retries: int = 3,
+    writer_cls: type[RecordingWriter] = RecordingWriter,
+    **kwargs: _t.Any,
+) -> RecordingWriter:
+    """Builds a writer over the given fields."""
+    return writer_cls(
+        name="test-writer",
+        field_names=field_names,
+        topic="test-topic",
+        script=script,
+        retry_policy=RetryPolicy(max_retries=max_retries),
+        **kwargs,
+    )
+
+
+async def connect_writer(writer: RecordingWriter) -> dict[str, AsyncioConnector]:
+    """Connects input channels to a writer and returns them by field name."""
     connectors = {
         field: AsyncioConnector(
-            spec=ConnectorSpec(source="none.none", target=f"{writer.name}.{field}"),
+            spec=ConnectorSpec(source="none.none", target=f"{writer.name}.{field}")
         )
-        for field in field_names
+        for field in writer.io.inputs
     }
     await writer.io.connect(list(connectors.values()))
     return connectors
 
 
-# ---------------------------------------------------------------------------
-# Tests: Basic lifecycle
-# ---------------------------------------------------------------------------
-
-
-@pytest.mark.asyncio
-async def test_message_data_writer_init() -> None:
-    """Tests that `init` connects to the broker."""
-    writer = MockMessageDataWriter(
-        name="test-writer",
-        field_names=["x", "y"],
-        topic="test-topic",
-    )
-    await writer.init()
-    assert writer._connected is True
-    assert writer._connect_call_count == 1
-    await writer.destroy()
-
-
-@pytest.mark.asyncio
-async def test_message_data_writer_destroy() -> None:
-    """Tests that `destroy` disconnects from the broker."""
-    writer = MockMessageDataWriter(
-        name="test-writer",
-        field_names=["x", "y"],
-        topic="test-topic",
-    )
-    await writer.init()
-    await writer.destroy()
-    assert writer._disconnected is True
-    assert writer._disconnect_call_count == 1
-
-
-# ---------------------------------------------------------------------------
-# Tests: Writing data
-# ---------------------------------------------------------------------------
-
-
-@pytest.mark.asyncio
-async def test_message_data_writer_step_and_run() -> None:
-    """Tests that data is written via step and flushed on run."""
-    writer = MockMessageDataWriter(
-        name="test-writer",
-        field_names=["x", "y"],
-        topic="test-topic",
-        chunk_size=2,
-    )
-    connectors = await _setup_writer_with_channels(writer, ["x", "y"])
-    await writer.init()
-
-    output_channels = {field: await connectors[field].connect_send() for field in ["x", "y"]}
-
-    # Send data
-    test_data = [(1, "a"), (2, "b"), (3, "c")]
-    for x_val, y_val in test_data:
-        await output_channels["x"].send(x_val)
-        await output_channels["y"].send(y_val)
+async def write_records(
+    writer: RecordingWriter,
+    channels: dict[str, AsyncioConnector],
+    records: list[dict[str, _t.Any]],
+) -> None:
+    """Pushes records into the writer one at a time, stepping after each."""
+    senders = {field: await channel.connect_send() for field, channel in channels.items()}
+    for record in records:
+        for field, value in record.items():
+            await senders[field].send(value)
         await writer.step()
 
-    # Close inputs and run to flush
+
+def delivered(writer: RecordingWriter) -> list[_t.Any]:
+    """Flattens everything the writer sent."""
+    return [record for batch in writer.sends for record in batch]
+
+
+RECORDS = [{"x": 1, "y": "a"}, {"x": 2, "y": "b"}, {"x": 3, "y": "c"}]
+SINGLE = [{"x": 1}]  # For the single-field writers used by the retry tests.
+
+
+# ---------------------------------------------------------------------------
+# Lifecycle
+# ---------------------------------------------------------------------------
+
+
+async def test_init_connects_to_broker() -> None:
+    """Tests that `init` opens the broker connection."""
+    writer = make_writer(["x"])
+    await writer.init()
+    assert writer.connects == 1
+    await writer.destroy()
+
+
+async def test_destroy_disconnects() -> None:
+    """Tests that `destroy` closes the broker connection."""
+    writer = make_writer(["x"])
+    await writer.init()
+    await writer.destroy()
+    assert writer.disconnects == 1
+
+
+async def test_destroy_waits_for_in_flight_send() -> None:
+    """Tests that a send still running at teardown completes instead of being dropped."""
+    writer = make_writer(["x"])
+    channels = await connect_writer(writer)
+    await writer.init()
+    await write_records(writer, channels, [{"x": 1}])
+    await writer._save_chunk()  # Buffer one batch without waiting for it to land.
+    await writer.destroy()
+    assert delivered(writer) == [{"x": 1}]
+
+
+@pytest.mark.parametrize("chunk_size", [1, 2, 3])
+# ---------------------------------------------------------------------------
+# Batching
+# ---------------------------------------------------------------------------
+
+
+async def test_records_are_sent_in_batches(chunk_size: int) -> None:
+    """Tests that every record is delivered exactly once, in order."""
+    writer = make_writer(["x", "y"], chunk_size=chunk_size)
+    channels = await connect_writer(writer)
+    await writer.init()
+
+    await write_records(writer, channels, RECORDS)
     await writer.io.close()
     await writer.run()
 
-    # Verify sent messages
-    all_sent = [msg for batch in writer._sent_messages for msg in batch]
-    assert len(all_sent) == 3
-    assert all_sent[0] == {"x": 1, "y": "a"}
-    assert all_sent[1] == {"x": 2, "y": "b"}
-    assert all_sent[2] == {"x": 3, "y": "c"}
-
-    await writer.destroy()
+    assert delivered(writer) == RECORDS
+    assert all(len(batch) <= chunk_size for batch in writer.sends)
 
 
-@pytest.mark.asyncio
-async def test_message_data_writer_flush_on_run() -> None:
-    """Tests that remaining buffered data is flushed on `run`."""
-    writer = MockMessageDataWriter(
-        name="test-writer",
-        field_names=["x"],
-        topic="test-topic",
-        chunk_size=10,  # Large chunk size so nothing is sent during step
-    )
-    connectors = await _setup_writer_with_channels(writer, ["x"])
+async def test_run_flushes_remaining_buffer() -> None:
+    """Tests that data left under the chunk size is still sent when the run ends."""
+    writer = make_writer(["x", "y"], chunk_size=10)
+    channels = await connect_writer(writer)
     await writer.init()
 
-    output_channels = {"x": await connectors["x"].connect_send()}
-
-    # Send data (less than chunk_size)
-    for i in range(3):
-        await output_channels["x"].send(i)
-        await writer.step()
-
-    # Nothing should be sent yet (buffer < chunk_size)
-    assert len(writer._sent_messages) == 0
-
-    # Close and run to flush
-    await writer.io.close()
-    await writer.run()
-
-    # Now data should be flushed
-    all_sent = [msg for batch in writer._sent_messages for msg in batch]
-    assert len(all_sent) == 3
-    assert all_sent == [{"x": 0}, {"x": 1}, {"x": 2}]
-
-    await writer.destroy()
-
-
-# ---------------------------------------------------------------------------
-# Tests: Chunked writing
-# ---------------------------------------------------------------------------
-
-
-@pytest.mark.asyncio
-@pytest.mark.parametrize("chunk_size", [1, 2, 3, 5])
-async def test_message_data_writer_chunked(chunk_size: int) -> None:
-    """Tests writing with various chunk sizes."""
-    writer = MockMessageDataWriter(
-        name="test-writer",
-        field_names=["x", "y"],
-        topic="test-topic",
-        chunk_size=chunk_size,
-    )
-    connectors = await _setup_writer_with_channels(writer, ["x", "y"])
-    await writer.init()
-
-    output_channels = {field: await connectors[field].connect_send() for field in ["x", "y"]}
-
-    test_data = [(i, f"val_{i}") for i in range(5)]
-    for x_val, y_val in test_data:
-        await output_channels["x"].send(x_val)
-        await output_channels["y"].send(y_val)
-        await writer.step()
+    await write_records(writer, channels, RECORDS)
+    assert writer.sends == []  # Below the chunk size: still buffered.
 
     await writer.io.close()
     await writer.run()
-
-    all_sent = [msg for batch in writer._sent_messages for msg in batch]
-    assert len(all_sent) == 5
-    for i, (x_val, y_val) in enumerate(test_data):
-        assert all_sent[i] == {"x": x_val, "y": y_val}
-
-    await writer.destroy()
+    assert delivered(writer) == RECORDS
 
 
-@pytest.mark.asyncio
-async def test_message_data_writer_no_chunk_size() -> None:
-    """Tests writing without chunk size (flush only on run)."""
-    writer = MockMessageDataWriter(
-        name="test-writer",
-        field_names=["x"],
-        topic="test-topic",
-        chunk_size=None,
-    )
-    connectors = await _setup_writer_with_channels(writer, ["x"])
+# ---------------------------------------------------------------------------
+# Retry and reconnection
+# ---------------------------------------------------------------------------
+
+
+async def test_transient_send_failure_reconnects_and_recovers() -> None:
+    """Tests that a transient failure is retried after reconnecting."""
+    writer = make_writer(["x"], script=[MessageBrokerTransientError("blip")], max_retries=3)
+    channels = await connect_writer(writer)
     await writer.init()
 
-    output_channels = {"x": await connectors["x"].connect_send()}
-
-    for i in range(3):
-        await output_channels["x"].send(i)
-        await writer.step()
-
-    # Nothing sent yet (no chunk_size trigger)
-    assert len(writer._sent_messages) == 0
-
+    await write_records(writer, channels, SINGLE)
     await writer.io.close()
     await writer.run()
 
-    all_sent = [msg for batch in writer._sent_messages for msg in batch]
-    assert len(all_sent) == 3
-
-    await writer.destroy()
-
-
-# ---------------------------------------------------------------------------
-# Tests: Retry logic
-# ---------------------------------------------------------------------------
+    assert delivered(writer) == [{"x": 1}]
+    assert writer.attempts == 2  # Failed once, then succeeded.
+    assert writer.connects == 2  # Initial connect plus one reconnect.
+    assert writer.disconnects == 1
 
 
-@pytest.mark.asyncio
-async def test_message_data_writer_retry_on_send_failure() -> None:
-    """Tests that writer retries on transient send failures."""
-    writer = MockMessageDataWriter(
-        name="test-writer",
-        field_names=["x"],
-        topic="test-topic",
-        chunk_size=1,
-        fail_on_send=1,  # Fail on first send
+async def test_permanent_send_failure_is_not_retried() -> None:
+    """Tests that a permanent broker error surfaces immediately."""
+    writer = make_writer(
+        ["x"],
+        script=[MessageBrokerPermanentError("topic deleted"), None],
         max_retries=3,
-        retry_base_delay=0.01,
     )
-    connectors = await _setup_writer_with_channels(writer, ["x"])
+    channels = await connect_writer(writer)
     await writer.init()
+    await write_records(writer, channels, SINGLE)
 
-    output_channels = {"x": await connectors["x"].connect_send()}
+    await writer._save_chunk()
+    send = writer._task
+    assert send is not None
+    with pytest.raises(MessageBrokerPermanentError, match="topic deleted"):
+        await send
 
-    # Send one item and step (triggers send which fails, then retries)
-    await output_channels["x"].send(0)
-    await writer.step()
+    assert writer.attempts == 1
+    assert writer.connects == 1  # No reconnect attempted.
+    writer._task = None  # The failed send is already inspected here.
+    await writer.destroy()
 
-    # Send another item and step (should succeed now)
-    await output_channels["x"].send(1)
-    await writer.step()
 
-    await writer.io.close()
-    await writer.run()
+async def test_retry_exhaustion_raises_last_send_error() -> None:
+    """Tests that sends are bounded and the broker's own error is raised."""
+    failures = [ConnectionError(f"failure {index}") for index in range(5)]
+    writer = make_writer(["x"], script=failures, max_retries=2)
+    channels = await connect_writer(writer)
+    await writer.init()
+    await write_records(writer, channels, SINGLE)
 
-    # Should have retried and eventually succeeded
-    all_sent = [msg for batch in writer._sent_messages for msg in batch]
-    assert len(all_sent) == 2
-    # Should have reconnected
-    assert writer._connect_call_count >= 2
+    await writer._save_chunk()
+    send = writer._task
+    assert send is not None
+    with pytest.raises(ConnectionError, match="failure 2"):
+        await send
 
+    assert writer.attempts == 3  # Initial attempt plus two retries.
+    assert writer.connects == 3  # Initial connect plus one reconnect per retry.
+    writer._task = None
+    await writer.destroy()
+
+
+async def test_reconnect_failure_does_not_abort_retries() -> None:
+    """Tests that a failing reconnect costs an attempt instead of ending the retrying."""
+    writer = make_writer(
+        ["x"],
+        script=[ConnectionError("send failed")] * 3,
+        max_retries=2,
+        writer_cls=UnreconnectableWriter,
+    )
+    channels = await connect_writer(writer)
+    await writer.init()
+    await write_records(writer, channels, SINGLE)
+
+    await writer._save_chunk()
+    send = writer._task
+    assert send is not None
+    with pytest.raises(ConnectionError, match="send failed"):
+        await send
+
+    assert writer.attempts == 3  # Every attempt ran despite the reconnect failures.
+    assert writer.connects == 3
+    writer._task = None
     await writer.destroy()
 
 
 # ---------------------------------------------------------------------------
-# Tests: Connection failure on init
+# Shared record encoding helpers
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.asyncio
-async def test_message_data_writer_connection_failure_on_init() -> None:
-    """Tests that init raises on connection failure."""
-    writer = MockMessageDataWriter(
-        name="test-writer",
-        field_names=["x"],
-        topic="test-topic",
-        fail_on_connect=True,
-    )
-    with pytest.raises(ConnectionError):
-        await writer.init()
+def test_iter_records_yields_one_dict_per_row() -> None:
+    """Tests that a field buffer becomes one record per row, in order."""
+    buffer = {"x": deque([1, 2]), "y": deque(["a", "b"])}
+    assert list(iter_records(buffer)) == [{"x": 1, "y": "a"}, {"x": 2, "y": "b"}]
 
 
-# ---------------------------------------------------------------------------
-# Tests: Topic attribute
-# ---------------------------------------------------------------------------
+def test_iter_records_stops_at_the_shortest_field() -> None:
+    """Tests that an incomplete trailing row is not emitted."""
+    buffer = {"x": deque([1, 2, 3]), "y": deque(["a"])}
+    assert list(iter_records(buffer)) == [{"x": 1, "y": "a"}]
 
 
-@pytest.mark.asyncio
-async def test_message_data_writer_topic() -> None:
-    """Tests that the topic is stored correctly."""
-    writer = MockMessageDataWriter(
-        name="test-writer",
-        field_names=["x"],
-        topic="my-topic",
-    )
-    assert writer._topic == "my-topic"
+def test_iter_records_handles_empty_buffers() -> None:
+    """Tests that empty buffers produce no records."""
+    assert list(iter_records({})) == []
+    assert list(iter_records({"x": deque()})) == []
 
 
-# ---------------------------------------------------------------------------
-# Tests: Single field
-# ---------------------------------------------------------------------------
+def test_iter_records_is_linear_in_row_count() -> None:
+    """Tests that many buffered rows convert in one pass, not one index per row."""
+    rows = 20_000
+    buffer = {"x": deque(range(rows)), "y": deque(range(rows))}
+    records = list(iter_records(buffer))
+    assert len(records) == rows
+    assert records[-1] == {"x": rows - 1, "y": rows - 1}
 
 
-@pytest.mark.asyncio
-async def test_message_data_writer_single_field() -> None:
-    """Tests writing with a single input field."""
-    writer = MockMessageDataWriter(
-        name="test-writer",
-        field_names=["value"],
-        topic="test-topic",
-        chunk_size=3,
-    )
-    connectors = await _setup_writer_with_channels(writer, ["value"])
-    await writer.init()
+@pytest.mark.parametrize(
+    ("parse_json", "expected"),
+    [
+        (True, ['{"x": 1, "y": "a"}', '{"x": 2, "y": "b"}']),
+        (False, ["1", "2"]),
+    ],
+)
+def test_encode_records_as_text(parse_json: bool, expected: list[str]) -> None:
+    """Tests text payloads, JSON-encoded or the raw first field."""
+    assert encode_records({"x": deque([1, 2]), "y": deque(["a", "b"])}, parse_json) == expected
 
-    output_channels = {"value": await connectors["value"].connect_send()}
 
-    for i in range(3):
-        await output_channels["value"].send(i * 10)
-        await writer.step()
+@pytest.mark.parametrize(
+    ("parse_json", "expected"),
+    [
+        (True, [b'{"x": 1}', b'{"x": 2}']),
+        (False, [b"1", b"2"]),
+    ],
+)
+def test_encode_records_as_bytes(parse_json: bool, expected: list[bytes]) -> None:
+    """Tests binary payloads, JSON-encoded or the raw first field."""
+    assert encode_records_bytes({"x": deque([1, 2])}, parse_json) == expected
 
-    await writer.io.close()
-    await writer.run()
 
-    all_sent = [msg for batch in writer._sent_messages for msg in batch]
-    assert all_sent == [{"value": 0}, {"value": 10}, {"value": 20}]
-
-    await writer.destroy()
+def test_encode_records_bytes_preserves_binary_payloads() -> None:
+    """Tests that non-UTF-8 bytes survive a raw (non-JSON) payload untouched."""
+    payload = bytes([0xFF, 0xFE, 0x00])
+    assert encode_records_bytes({"x": deque([payload])}, parse_json=False) == [payload]

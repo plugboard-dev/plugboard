@@ -43,7 +43,7 @@ dependencies = [
 
 [project.optional-dependencies]
 aws = ["s3fs>=2024.9.0"]
-aws-messaging = ["aioboto3>=13.0,<15"]
+aws-messaging = ["aiobotocore>=3.4,<4"]
 azure = ["adlfs>=2024.7.0"]
 gcp = ["gcsfs>=2024.9.0"]
 gcp-pubsub = ["google-cloud-pubsub>=2.25,<3"]
@@ -78,7 +78,12 @@ dev = [
 test = [
     "aiofile>=3.9,<4",
     "aiosqlite>=0.20,<1",
+    # Mirrors the optional broker extras so tests can import the real client classes and
+    # inject fakes, instead of leaving them unresolved to the type checker.
+    "aiobotocore>=3.4,<4",
+    "aiokafka>=0.11,<1",
     "coverage>=7.7.1,<8",
+    "google-cloud-pubsub>=2.25,<3",
     "llama-index-core>=0.12.30,<1",
     "llama-index-llms-openai>=0.3.33,<1",
     "moto[server]>=5.0,<6",

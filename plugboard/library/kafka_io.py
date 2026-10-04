@@ -2,80 +2,128 @@
 
 from __future__ import annotations
 
+import asyncio
 from collections import deque
 import json
 import typing as _t
 
-from plugboard.exceptions import NoMoreDataException
+from plugboard.exceptions import (
+    MessageBrokerConnectionError,
+    MessageBrokerPermanentError,
+    MessageBrokerTransientError,
+)
 from plugboard.library.message_reader import MessageDataReader, MessageDataReaderArgsDict
-from plugboard.library.message_writer import MessageDataWriter, MessageDataWriterArgsDict
-from plugboard.utils import depends_on_optional
+from plugboard.library.message_writer import (
+    MessageDataWriter,
+    MessageDataWriterArgsDict,
+    encode_records_bytes,
+)
+from plugboard.utils import DI, depends_on_optional
+from plugboard.utils.settings import resolve_argument
 
 
 try:
     from aiokafka import AIOKafkaConsumer, AIOKafkaProducer
+    from aiokafka.errors import (
+        CoordinatorNotAvailableError,
+        KafkaConnectionError,
+        NodeNotReadyError,
+        NotLeaderForPartitionError,
+        RecordTooLargeError,
+        RequestTimedOutError,
+        TopicAuthorizationFailedError,
+        UnknownTopicOrPartitionError,
+    )
+    from aiokafka.structs import OffsetAndMetadata, TopicPartition
+
+    # Kafka failures that retrying cannot resolve, such as missing authorization or a
+    # record the broker will always reject.
+    _PERMANENT_ERRORS: tuple[type[Exception], ...] = (
+        TopicAuthorizationFailedError,
+        RecordTooLargeError,
+    )
+
+    # Kafka failures raised while the cluster is rebalancing or a broker is unreachable,
+    # which are expected to clear.
+    _TRANSIENT_ERRORS: tuple[type[Exception], ...] = (
+        KafkaConnectionError,
+        NodeNotReadyError,
+        CoordinatorNotAvailableError,
+        NotLeaderForPartitionError,
+        RequestTimedOutError,
+        UnknownTopicOrPartitionError,
+    )
 except ImportError:  # pragma: no cover
-    pass
+    # With the extra not installed, `depends_on_optional` blocks construction and
+    # classification is moot: `isinstance(error, ())` never matches.
+    _PERMANENT_ERRORS = ()
+    _TRANSIENT_ERRORS = ()
 
 
-class KafkaDataReaderArgsDict(MessageDataReaderArgsDict):
-    """Specification of the `KafkaDataReader` constructor arguments.
+def _wrap_error(error: Exception) -> Exception:
+    """Maps an aiokafka error onto the Plugboard message broker exception hierarchy.
 
-    Attributes:
-        bootstrap_servers: Kafka broker address(es).
-        group_id: Consumer group ID.
-        parse_json: Whether to parse message values as JSON.
+    Args:
+        error: The error raised by the Kafka client.
+
+    Returns:
+        A `MessageBrokerPermanentError` for a rejection that will not change on retry,
+        a `MessageBrokerTransientError` for a failure worth retrying, otherwise the
+        original error.
     """
-
-    pass
-
-
-class KafkaDataWriterArgsDict(MessageDataWriterArgsDict):
-    """Specification of the `KafkaDataWriter` constructor arguments.
-
-    Attributes:
-        bootstrap_servers: Kafka broker address(es).
-        parse_json: Whether to encode message values as JSON.
-    """
-
-    pass
+    if isinstance(error, _PERMANENT_ERRORS):
+        return MessageBrokerPermanentError(str(error))
+    if isinstance(error, _TRANSIENT_ERRORS):
+        return MessageBrokerTransientError(str(error))
+    return error
 
 
 class KafkaDataReader(MessageDataReader):
     """Reads data from an Apache Kafka topic.
 
-    Messages are consumed from the topic using a consumer group and converted
-    to field values. Offsets are committed after processing (acknowledgment).
+    Messages are consumed from the topic using a consumer group. Acknowledging a batch
+    commits the offsets following the records that were consumed, so a failure before
+    that point leaves the remaining records for redelivery.
     """
 
     @depends_on_optional("aiokafka", extra="kafka")
     def __init__(
         self,
-        bootstrap_servers: str | list[str],
         group_id: str,
+        bootstrap_servers: _t.Optional[str | list[str]] = None,
         parse_json: bool = True,
-        **kwargs: _t.Unpack[KafkaDataReaderArgsDict],
+        poll_timeout_ms: int = 30_000,
+        **kwargs: _t.Unpack[MessageDataReaderArgsDict],
     ) -> None:
         """Instantiates the `KafkaDataReader`.
 
         Args:
-            bootstrap_servers: Kafka broker address(es) (e.g. `"localhost:9092"`).
             group_id: Consumer group ID.
+            bootstrap_servers: Optional; Kafka broker address(es), for example
+                `"localhost:9092"`. Falls back to `KAFKA_BOOTSTRAP_SERVERS`.
             parse_json: Whether to parse message values as JSON.
+            poll_timeout_ms: Milliseconds to wait for a batch of records.
             **kwargs: Additional keyword arguments for
                 [`MessageDataReader`][plugboard.library.MessageDataReader].
         """
+        bootstrap_servers = resolve_argument(
+            bootstrap_servers,
+            DI.settings.resolve_sync().kafka.bootstrap_servers,
+            "bootstrap_servers",
+            "KAFKA_BOOTSTRAP_SERVERS",
+        )
         super().__init__(**kwargs)
-        if isinstance(bootstrap_servers, str):
-            bootstrap_servers = [bootstrap_servers]
-        self._bootstrap_servers = bootstrap_servers
+        self._bootstrap_servers = (
+            [bootstrap_servers] if isinstance(bootstrap_servers, str) else bootstrap_servers
+        )
         self._group_id = group_id
         self._parse_json = parse_json
+        self._poll_timeout_ms = poll_timeout_ms
         self._consumer: _t.Optional[AIOKafkaConsumer] = None
 
     async def _connect(self) -> None:
         """Creates and starts a Kafka consumer."""
-        self._consumer = AIOKafkaConsumer(
+        consumer = AIOKafkaConsumer(
             self._topic,
             bootstrap_servers=self._bootstrap_servers,
             group_id=self._group_id,
@@ -83,46 +131,47 @@ class KafkaDataReader(MessageDataReader):
             enable_auto_commit=False,
             max_poll_records=self._chunk_size or 10,
         )
-        await self._consumer.start()
+        await consumer.start()
+        self._consumer = consumer
 
     async def _disconnect(self) -> None:
         """Stops and closes the Kafka consumer."""
         if self._consumer is not None:
-            await self._consumer.stop()
+            consumer = self._consumer
             self._consumer = None
+            await consumer.stop()
 
     async def _receive(self) -> list[_t.Any]:
         """Receives a batch of messages from the Kafka topic.
 
         Returns:
-            A list of Kafka `ConsumerRecord` objects.
+            A list of Kafka `ConsumerRecord` objects, empty if the poll timed out.
 
         Raises:
-            NoMoreDataException: If the consumer has been closed.
+            MessageBrokerError: If the poll failed for a retryable or permanent reason.
         """
         if self._consumer is None:
-            raise RuntimeError("Kafka consumer not initialized")
+            raise MessageBrokerConnectionError("Kafka consumer is not connected")
         max_messages = self._chunk_size or 10
-        # Use getmany to fetch a batch with timeout
-        data = await self._consumer.getmany(timeout_ms=30000, max_records=max_messages)
-        messages: list[_t.Any] = []
-        for _tp, records in data.items():
-            messages.extend(records)
-        if not messages:
-            raise NoMoreDataException
-        return messages[:max_messages]
+        try:
+            data = await self._consumer.getmany(
+                timeout_ms=self._poll_timeout_ms, max_records=max_messages
+            )
+        except Exception as error:  # noqa: BLE001
+            raise _wrap_error(error) from error
+        return [record for records in data.values() for record in records]
 
-    async def _convert(self, messages: list[_t.Any]) -> dict[str, deque]:
+    async def _convert(self, data: list[_t.Any]) -> dict[str, deque]:
         """Converts Kafka messages to a field buffer.
 
         Args:
-            messages: A list of `ConsumerRecord` objects.
+            data: A list of `ConsumerRecord` objects.
 
         Returns:
             A dictionary mapping field names to deques of field values.
         """
         converted: dict[str, deque] = {field: deque() for field in self.io.outputs}
-        for record in messages:
+        for record in data:
             value = record.value
             if isinstance(value, bytes):
                 value = value.decode("utf-8")
@@ -135,68 +184,106 @@ class KafkaDataReader(MessageDataReader):
         return converted
 
     async def _ack(self, messages: list[_t.Any]) -> None:
-        """Commits offsets for processed Kafka messages.
+        """Commits the offsets that follow the processed Kafka messages.
+
+        Only the offsets of the records that were actually consumed are committed, so
+        records still waiting in the buffer stay eligible for redelivery.
 
         Args:
-            messages: The `ConsumerRecord` objects to acknowledge.
+            messages: The `ConsumerRecord` objects that have been processed.
+
+        Raises:
+            MessageBrokerConnectionError: If the consumer is not connected.
+            MessageBrokerError: If the commit failed.
         """
         if self._consumer is None:
-            raise RuntimeError("Kafka consumer not initialized")
-        await self._consumer.commit()
+            raise MessageBrokerConnectionError("Kafka consumer is not connected")
+        offsets: dict[TopicPartition, OffsetAndMetadata] = {}
+        for record in messages:
+            partition = TopicPartition(record.topic, record.partition)
+            next_offset = OffsetAndMetadata(record.offset + 1, "")
+            current = offsets.get(partition)
+            if current is None or current.offset < next_offset.offset:
+                offsets[partition] = next_offset
+        if not offsets:
+            return
+        try:
+            await self._consumer.commit(offsets=offsets)
+        except Exception as error:  # noqa: BLE001
+            raise _wrap_error(error) from error
 
 
 class KafkaDataWriter(MessageDataWriter):
     """Writes data to an Apache Kafka topic.
 
-    Field data is converted to JSON-encoded messages and produced
-    to the specified Kafka topic.
+    Field data is converted to JSON-encoded messages and produced to the specified
+    topic. Records are submitted together and flushed once, so the producer's internal
+    batching is used instead of one round trip per record.
     """
 
     @depends_on_optional("aiokafka", extra="kafka")
     def __init__(
         self,
-        bootstrap_servers: str | list[str],
+        bootstrap_servers: _t.Optional[str | list[str]] = None,
         parse_json: bool = True,
-        **kwargs: _t.Unpack[KafkaDataWriterArgsDict],
+        **kwargs: _t.Unpack[MessageDataWriterArgsDict],
     ) -> None:
         """Instantiates the `KafkaDataWriter`.
 
         Args:
-            bootstrap_servers: Kafka broker address(es) (e.g. `"localhost:9092"`).
+            bootstrap_servers: Optional; Kafka broker address(es), for example
+                `"localhost:9092"`. Falls back to `KAFKA_BOOTSTRAP_SERVERS`.
             parse_json: Whether to encode message values as JSON.
             **kwargs: Additional keyword arguments for
                 [`MessageDataWriter`][plugboard.library.MessageDataWriter].
         """
+        bootstrap_servers = resolve_argument(
+            bootstrap_servers,
+            DI.settings.resolve_sync().kafka.bootstrap_servers,
+            "bootstrap_servers",
+            "KAFKA_BOOTSTRAP_SERVERS",
+        )
         super().__init__(**kwargs)
-        if isinstance(bootstrap_servers, str):
-            bootstrap_servers = [bootstrap_servers]
-        self._bootstrap_servers = bootstrap_servers
+        self._bootstrap_servers = (
+            [bootstrap_servers] if isinstance(bootstrap_servers, str) else bootstrap_servers
+        )
         self._parse_json = parse_json
         self._producer: _t.Optional[AIOKafkaProducer] = None
 
     async def _connect(self) -> None:
         """Creates and starts a Kafka producer."""
-        self._producer = AIOKafkaProducer(
-            bootstrap_servers=self._bootstrap_servers,
-        )
-        await self._producer.start()
+        producer = AIOKafkaProducer(bootstrap_servers=self._bootstrap_servers)
+        await producer.start()
+        self._producer = producer
 
     async def _disconnect(self) -> None:
         """Stops and closes the Kafka producer."""
         if self._producer is not None:
-            await self._producer.stop()
+            producer = self._producer
             self._producer = None
+            await producer.stop()
 
     async def _send(self, messages: list[_t.Any]) -> None:
         """Sends messages to the Kafka topic.
 
         Args:
             messages: A list of bytes objects to send.
+
+        Raises:
+            MessageBrokerConnectionError: If the producer is not connected.
+            MessageBrokerError: If a send failed or the buffer could not be flushed.
         """
         if self._producer is None:
-            raise RuntimeError("Kafka producer not initialized")
-        for msg_data in messages:
-            await self._producer.send_and_wait(self._topic, value=msg_data)
+            raise MessageBrokerConnectionError("Kafka producer is not connected")
+        try:
+            # `send` returns a future that resolves once the broker acknowledges the
+            # record; awaiting them together keeps the producer's batching intact.
+            await asyncio.gather(
+                *(self._producer.send(self._topic, value=msg_data) for msg_data in messages)
+            )
+            await self._producer.flush()
+        except Exception as error:  # noqa: BLE001
+            raise _wrap_error(error) from error
 
     async def _convert(self, data: dict[str, deque]) -> list[_t.Any]:
         """Converts field buffer data to JSON-encoded bytes messages.
@@ -207,15 +294,4 @@ class KafkaDataWriter(MessageDataWriter):
         Returns:
             A list of bytes objects ready to send.
         """
-        completed_rows = min(len(d) for d in data.values()) if data else 0
-        messages: list[bytes] = []
-        for i in range(completed_rows):
-            record = {field: data[field][i] for field in data}
-            if self._parse_json:
-                messages.append(json.dumps(record).encode("utf-8"))
-            else:
-                first_field = next(iter(record.values()))
-                messages.append(
-                    first_field if isinstance(first_field, bytes) else str(first_field).encode()
-                )
-        return messages
+        return encode_records_bytes(data, self._parse_json)

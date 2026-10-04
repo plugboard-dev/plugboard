@@ -24,6 +24,26 @@ Plugboard can make use of a message broker for data exchange between components 
 | `RABBITMQ_URL`      | URL for RabbitMQ AMQP message broker (must include credentials if required)  | |
 | `REDIS_URL`         | URL for Redis message broker (must include credentials if required)  | |
 
+These brokers carry data *between components* within a run. To read or write records
+through an external broker as part of the model itself, see
+[Message Data](message-data.md).
+
+### Message data brokers
+
+The message data components ([`MessageDataReader`][plugboard.library.MessageDataReader] /
+[`MessageDataWriter`][plugboard.library.MessageDataWriter] and their broker
+implementations) take connection details as constructor arguments, falling back to the
+evironment below when they are not supplied:
+
+| Option Name               | Description                            | Default Value |
+|---------------------------|----------------------------------------|---------------|
+| `GCP_PUBSUB_PROJECT_ID`   | GCP project for PubSub topics and subscriptions | |
+| `AWS_REGION`              | AWS region for SQS and SNS clients     | |
+| `KAFKA_BOOTSTRAP_SERVERS` | Kafka broker address(es)               | |
+
+Note that `AWS_REGION` is also read by the AWS SDK itself, so setting it affects both
+Plugboard's defaults and the credential/endpoint resolution of the underlying client.
+
 ## Job ID
 
 Each plugboard run has a unique job ID associated with it. This is used to: track state for each run; and separate data messages between runs when using a message broker. Typically, a run would be started without explicitly setting the job ID, in which case a unique job ID will be created automatically. However, there are instances when it may be desirable to specify the job ID, such as stopping a run and resuming the same run later with the existing persisted state. In these scenarios the job ID can be set with the below environment variable which will then be used by any `StateBackend`, `Process` and `Component` while the value is set.
