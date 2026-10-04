@@ -147,6 +147,22 @@ async def test_destroy_disconnects() -> None:
     assert writer.disconnects == 1
 
 
+async def test_destroy_reports_failed_pending_send(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """Tests that a send which fails at teardown is reported, not swallowed."""
+    writer = make_writer(["x"], script=[ConnectionError("lost")], max_retries=0)
+    channels = await connect_writer(writer)
+    await writer.init()
+    await write_records(writer, channels, SINGLE)
+    await writer._save_chunk()
+
+    await writer.destroy()  # Must not raise: teardown still has to disconnect.
+
+    assert "Pending send failed during destroy" in capsys.readouterr().out
+    assert writer.disconnects == 1
+
+
 async def test_destroy_waits_for_in_flight_send() -> None:
     """Tests that a send still running at teardown completes instead of being dropped."""
     writer = make_writer(["x"])

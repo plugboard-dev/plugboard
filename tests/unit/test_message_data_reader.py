@@ -73,6 +73,14 @@ class UnreconnectableReader(ScriptedReader):
             raise OSError("broker unreachable")
 
 
+class UndisconnectableReader(ScriptedReader):
+    """A reader whose disconnect always fails, as it does when the link is already gone."""
+
+    async def _disconnect(self) -> None:
+        self.disconnects += 1
+        raise OSError("connection already lost")
+
+
 MESSAGES = [
     {"x": 1, "y": "a"},
     {"x": 2, "y": "b"},
@@ -368,6 +376,31 @@ async def test_permanent_error_is_not_retried() -> None:
     assert reader.polls == 1
     assert reader.connects == 1  # No reconnect attempted.
     await reader.destroy()
+
+
+async def test_failing_disconnect_still_reconnects() -> None:
+    """Tests that a broken connection is not mistaken for a reason to give up reconnecting.
+
+    The disconnect during a reconnect is expected to fail when the link already dropped,
+    so it must not prevent the new connection from being made.
+    """
+    reader = UndisconnectableReader(
+        name="test-reader",
+        field_names=["x", "y"],
+        topic="test-topic",
+        idle_poll_delay=0.0,
+        script=[ConnectionError("blip"), MESSAGES[:1], NoMoreDataException()],
+        retry_policy=RetryPolicy(max_retries=3),
+    )
+    await reader.init()
+
+    assert await drain(reader) == MESSAGES[:1]
+    assert reader.connects == 2  # Initial connect plus one reconnect.
+    assert reader.disconnects == 1
+
+    # A disconnect that fails during teardown is surfaced rather than hidden.
+    with pytest.raises(OSError, match="connection already lost"):
+        await reader.destroy()
 
 
 async def test_reconnect_failure_does_not_abort_retries(
