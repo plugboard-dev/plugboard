@@ -22,28 +22,28 @@ S3_URL = f"http://{S3_IP_ADDRESS}:{S3_PORT}"
 
 
 @pytest.fixture(scope="module", autouse=True)
-def mock_s3_server() -> _t.Generator[None, None, None]:
+def mock_s3_server(tmp_path_factory: pytest.TempPathFactory) -> _t.Generator[None, None, None]:
     """Provides a mock S3 server for testing.
 
     Required for async tests until this is resolved:
         https://github.com/aio-libs/aiobotocore/issues/755
+
+    The AWS env vars are set on a `MonkeyPatch` context so they are restored on
+    teardown, and the empty config file lives in a pytest temp dir so it is cleaned up.
     """
     server = ThreadedMotoServer(ip_address=S3_IP_ADDRESS, port=S3_PORT)
     server.start()
-    if "AWS_CONFIG_FILE" not in os.environ:
-        # These tests only ever talk to the local moto server, so they must not pick up
-        # a developer's real AWS profile: its region changes how S3 validates buckets.
-        empty_config = tempfile.NamedTemporaryFile(prefix="plugboard-empty-aws-", delete=False)
-        os.environ["AWS_CONFIG_FILE"] = empty_config.name
-        os.environ["AWS_SHARED_CREDENTIALS_FILE"] = empty_config.name
-    if "AWS_SECRET_ACCESS_KEY" not in os.environ:
-        os.environ["AWS_SECRET_ACCESS_KEY"] = "test-access-key"  # noqa: S105
-    if "AWS_ACCESS_KEY_ID" not in os.environ:
-        os.environ["AWS_ACCESS_KEY_ID"] = "test-key-id"
-    if "AWS_ENDPOINT_URL" not in os.environ:
-        os.environ["AWS_ENDPOINT_URL"] = S3_URL
-
-    yield
+    # These tests only ever talk to the local moto server, so they must not pick up a
+    # developer's real AWS profile: its region changes how S3 validates buckets.
+    empty_config = tmp_path_factory.mktemp("aws") / "config"
+    empty_config.touch()
+    with pytest.MonkeyPatch.context() as monkeypatch:
+        monkeypatch.setenv("AWS_CONFIG_FILE", str(empty_config))
+        monkeypatch.setenv("AWS_SHARED_CREDENTIALS_FILE", str(empty_config))
+        monkeypatch.setenv("AWS_SECRET_ACCESS_KEY", "test-access-key")  # noqa: S105
+        monkeypatch.setenv("AWS_ACCESS_KEY_ID", "test-key-id")
+        monkeypatch.setenv("AWS_ENDPOINT_URL", S3_URL)
+        yield
     server.stop()
 
 

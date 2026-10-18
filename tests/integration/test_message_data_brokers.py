@@ -22,7 +22,6 @@ from a failed run interfere with the next one.
 from __future__ import annotations
 
 import asyncio
-from collections import deque
 import contextlib
 import logging
 import os
@@ -30,15 +29,18 @@ import typing as _t
 import warnings
 
 from aiobotocore.session import get_session as get_boto_session
+from google.api_core import exceptions as gcp_exceptions
 from google.cloud import pubsub_v1
 import pytest
 
+from plugboard.connector import AsyncioConnector
 from plugboard.library import (
     AWSSNSDataWriter,
     AWSSQSDataReader,
     GCPPubSubDataReader,
     GCPPubSubDataWriter,
 )
+from plugboard.schemas import ConnectorSpec
 
 
 # Gate the whole module behind an opt-in env var (default: skip). The message broker
@@ -80,11 +82,6 @@ def broker_env() -> _t.Iterator[None]:
     if missing:
         pytest.skip(f"missing broker env vars: {', '.join(missing)}")
     yield
-
-
-# ---------------------------------------------------------------------------
-# AWS SQS helpers
-# ---------------------------------------------------------------------------
 
 
 async def _aws_queue_depth(queue_url: str, region: str) -> int:
@@ -148,42 +145,76 @@ async def _assert_aws_queue_empty(queue_url: str, region: str) -> None:
     pytest.fail(f"SQS queue {queue_url} not empty after drain (depth={depth})")
 
 
-# ---------------------------------------------------------------------------
-# GCP Pub/Sub helpers
-# ---------------------------------------------------------------------------
+def _gcp_sub_path(project_id: str, subscription_id: str) -> str:
+    """The fully-qualified PubSub subscription path."""
+    return f"projects/{project_id}/subscriptions/{subscription_id}"
 
 
-def _drain_gcp_subscription(project_id: str, subscription_id: str, *, timeout: float = 2.0) -> int:
-    """Pulls and acknowledges all available messages on the subscription; returns the count.
+def _gcp_pull_one(project_id: str, subscription_id: str, *, timeout: float) -> list[object]:
+    """Pulls up to one batch of messages, returning an empty list if the window elapses.
 
-    Loops until a pull returns nothing. An empty subscription either returns no messages or
-    raises ``DeadlineExceeded`` once the pull window elapses; both are treated as "drained".
-    Only ``pubsub.subscriptions.pull``/``acknowledge`` are used (the subscriber role), so
-    no ``pubsub.subscriptions.get`` permission is needed.
+    Uses only ``pubsub.subscriptions.pull`` (the subscriber role). An empty subscription
+    raises ``DeadlineExceeded`` once the pull window elapses; that is reported as "none
+    available" rather than a broker error, while any other error propagates so an
+    auth/permission problem is not mistaken for an empty broker during setup.
     """
-    sub_path = f"projects/{project_id}/subscriptions/{subscription_id}"
     subscriber = pubsub_v1.SubscriberClient()
-    acked = 0
     try:
-        while True:
-            try:
-                response = subscriber.pull(
-                    request={"subscription": sub_path, "max_messages": 10}, timeout=timeout
-                )
-            except Exception:  # DeadlineExceeded -> no messages available right now.
-                return acked
-            ack_ids = [msg.ack_id for msg in response.received_messages]
-            if not ack_ids:
-                return acked
-            subscriber.acknowledge(request={"subscription": sub_path, "ack_ids": ack_ids})
-            acked += len(ack_ids)
+        response = subscriber.pull(
+            request={
+                "subscription": _gcp_sub_path(project_id, subscription_id),
+                "max_messages": 10,
+            },
+            timeout=timeout,
+        )
+        return list(response.received_messages)
+    except gcp_exceptions.DeadlineExceeded:
+        return []
     finally:
         subscriber.close()
 
 
-# ---------------------------------------------------------------------------
-# Hygiene orchestrator
-# ---------------------------------------------------------------------------
+def _gcp_subscription_undelivered(project_id: str, subscription_id: str) -> bool:
+    """Returns True if the subscription has any available (undelivered) messages."""
+    return len(_gcp_pull_one(project_id, subscription_id, timeout=2.0)) > 0
+
+
+def _drain_gcp_subscription(project_id: str, subscription_id: str, *, timeout: float = 2.0) -> int:
+    """Pulls and acknowledges all available messages on the subscription; returns the count."""
+    subscriber = pubsub_v1.SubscriberClient()
+    acked = 0
+    try:
+        while True:
+            response = subscriber.pull(
+                request={
+                    "subscription": _gcp_sub_path(project_id, subscription_id),
+                    "max_messages": 10,
+                },
+                timeout=timeout,
+            )
+            ack_ids = [msg.ack_id for msg in response.received_messages]
+            if not ack_ids:
+                return acked
+            subscriber.acknowledge(
+                request={
+                    "subscription": _gcp_sub_path(project_id, subscription_id),
+                    "ack_ids": ack_ids,
+                }
+            )
+            acked += len(ack_ids)
+    except gcp_exceptions.DeadlineExceeded:
+        return acked
+    finally:
+        subscriber.close()
+
+
+def _log_leftover(message: str, *, pre_test: bool) -> None:
+    """Reports a leftover message, escalating to a warning (and a pytest warning) pre-test."""
+    if pre_test:
+        warnings.warn(message, stacklevel=3)
+        _LOG.warning(message)
+    else:
+        _LOG.info(message)
 
 
 async def _clean_broker(
@@ -203,10 +234,10 @@ async def _clean_broker(
     if queue_url and region:
         depth = await _aws_queue_depth(queue_url, region)
         if depth:
-            message = f"SQS queue {queue_url} was not empty ({depth} message(s)); draining"
-            _LOG.warning(message) if pre_test else _LOG.info(message)
-            if pre_test:
-                warnings.warn(message, stacklevel=2)
+            _log_leftover(
+                f"SQS queue {queue_url} was not empty ({depth} message(s)); draining",
+                pre_test=pre_test,
+            )
             await _drain_aws_queue(queue_url, region)
             if pre_test:
                 await _assert_aws_queue_empty(queue_url, region)
@@ -214,17 +245,10 @@ async def _clean_broker(
     if project_id and subscription_id:
         drained = _drain_gcp_subscription(project_id, subscription_id)
         if drained:
-            message = (
-                f"PubSub subscription {subscription_id} had {drained} leftover message(s); drained"
+            _log_leftover(
+                f"PubSub subscription {subscription_id} had {drained} leftover message(s); drained",
+                pre_test=pre_test,
             )
-            if pre_test:
-                warnings.warn(message, stacklevel=2)
-            (_LOG.warning if pre_test else _LOG.info)(message)
-
-
-# ---------------------------------------------------------------------------
-# Tests
-# ---------------------------------------------------------------------------
 
 
 @requires_broker
@@ -253,20 +277,22 @@ async def test_aws_sns_sqs_round_trip(broker_env: None) -> None:
         chunk_size=10,
     )
 
+    writer_channels = await connect_writer(writer)
     await reader.init()
     await writer.init()
+    received: list[dict[str, _t.Any]] = []
     try:
-        await write_records(writer, RECORDS)
+        await write_records(writer, writer_channels, RECORDS)
         received = await read_records(reader, len(RECORDS))
+        assert sorted((record["x"], record["y"]) for record in received) == EXPECTED
+        # The reader acknowledged every record, so nothing should remain on the queue.
+        await _assert_aws_queue_empty(queue_url, region)
     finally:
         await writer.destroy()
         await reader.destroy()
-
-    assert sorted((record["x"], record["y"]) for record in received) == EXPECTED
-
-    # Reading acked every record, so the queue should be clean; drain + assert as a safety.
-    await _clean_broker(pre_test=False, queue_url=queue_url, region=region)
-    await _assert_aws_queue_empty(queue_url, region)
+        # Safety net: if the read or assertion failed mid-way, drain any unacked
+        # leftovers so they do not interfere with the next run.
+        await _clean_broker(pre_test=False, queue_url=queue_url, region=region)
 
 
 @requires_broker
@@ -295,39 +321,60 @@ async def test_gcp_pubsub_round_trip(broker_env: None) -> None:
         pull_timeout=3,
     )
 
+    writer_channels = await connect_writer(writer)
     await reader.init()
     await writer.init()
+    received: list[dict[str, _t.Any]] = []
     try:
-        await write_records(writer, RECORDS)
+        await write_records(writer, writer_channels, RECORDS)
         received = await read_records(reader, len(RECORDS))
+        assert sorted((record["x"], record["y"]) for record in received) == EXPECTED
     finally:
         await writer.destroy()
         await reader.destroy()
+        # Clean up so nothing interferes with the next run, then confirm the
+        # subscription is genuinely empty (the reader should have acked everything).
+        await _clean_broker(pre_test=False, project_id=project_id, subscription_id=subscription_id)
+        assert _gcp_subscription_undelivered(project_id, subscription_id) == 0, (
+            "PubSub subscription not empty after the round trip"
+        )
 
-    assert sorted((record["x"], record["y"]) for record in received) == EXPECTED
 
-    # Reading acked every record, so the subscription should be clean; drain as a safety.
-    await _clean_broker(pre_test=False, project_id=project_id, subscription_id=subscription_id)
+async def connect_writer(
+    writer: AWSSNSDataWriter | GCPPubSubDataWriter,
+) -> dict[str, AsyncioConnector]:
+    """Connects an input channel to each of the writer's fields.
 
-
-# ---------------------------------------------------------------------------
-# Driving helpers
-# ---------------------------------------------------------------------------
+    Inputs must be connected before the writer is initialised, mirroring the unit tests.
+    """
+    channels = {
+        field: AsyncioConnector(
+            spec=ConnectorSpec(source="none.none", target=f"{writer.name}.{field}")
+        )
+        for field in writer.io.inputs
+    }
+    await writer.io.connect(list(channels.values()))
+    return channels
 
 
 async def write_records(
     writer: AWSSNSDataWriter | GCPPubSubDataWriter,
+    channels: dict[str, AsyncioConnector],
     records: list[dict[str, _t.Any]],
 ) -> None:
-    """Publishes records through the writer's own convert + send path.
+    """Publishes records through the writer's public `Component` lifecycle.
 
-    Building the field buffer as one ``deque`` per field and calling ``_convert`` then
-    ``_send`` is exactly how the writer reaches the broker, so this validates the real
-    message encoding without depending on the Component input-IO machinery.
+    Each record is sent to the connected input channels and the writer stepped; closing
+    and running the writer then flushes the remaining buffer to the broker, so the real
+    ``step``/``run``/``_save`` path (not the private broker methods) is exercised.
     """
-    buffer = {field: deque(record[field] for record in records) for field in writer.io.inputs}
-    messages = await writer._convert(buffer)
-    await writer._send(messages)
+    senders = {field: await channel.connect_send() for field, channel in channels.items()}
+    for record in records:
+        for field, value in record.items():
+            await senders[field].send(value)
+        await writer.step()
+    await writer.io.close()
+    await writer.run()
 
 
 async def read_records(

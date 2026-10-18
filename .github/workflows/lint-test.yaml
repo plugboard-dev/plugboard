@@ -115,6 +115,12 @@ jobs:
     name: Tests - integration
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    # The message broker integration tests publish to a single shared SQS queue and
+    # GCP subscription, so concurrent runs must not collide on them. Serializing the
+    # job across runs keeps one set of broker tests at a time.
+    concurrency:
+      group: test-integration
+      cancel-in-progress: false
     strategy:
       matrix:
         python_version: [3.12, 3.13, 3.14]
@@ -156,7 +162,9 @@ jobs:
           RAY_ENABLE_UV_RUN_RUNTIME_ENV: 0
           PLUGBOARD_IO_READ_TIMEOUT: 5.0
           # Run the message broker integration tests (AWS SQS/SNS + GCP Pub/Sub).
-          PLUGBOARD_MESSAGE_BROKER_TESTS: ${{ vars.PLUGBOARD_MESSAGE_BROKER_TESTS }}
+          # Gated to a single Python leg: the tests share one SQS queue and GCP
+          # subscription, so the matrix legs must not run them concurrently.
+          PLUGBOARD_MESSAGE_BROKER_TESTS: ${{ vars.PLUGBOARD_MESSAGE_BROKER_TESTS == 'true' && matrix.python_version == 3.12 && 'true' || 'false' }}
           # AWS SQS/SNS identifiers.
           AWS_REGION: ${{ vars.AWS_REGION }}
           AWS_SQS_QUEUE_URL: ${{ vars.AWS_SQS_QUEUE_URL }}

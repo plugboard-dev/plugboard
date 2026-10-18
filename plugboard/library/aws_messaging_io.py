@@ -80,6 +80,14 @@ _MISSING_RESOURCE_CODES = frozenset(
 )
 
 
+def _parse_json_or_raw(text: str) -> _t.Any:
+    """Parses `text` as JSON, returning the raw text unchanged if it is not valid JSON."""
+    try:
+        return json.loads(text)
+    except (json.JSONDecodeError, TypeError):
+        return text
+
+
 def _decode_body(body: str, *, parse_json: bool) -> dict[str, _t.Any]:
     """Decodes an SQS message body into a record dict.
 
@@ -97,17 +105,11 @@ def _decode_body(body: str, *, parse_json: bool) -> dict[str, _t.Any]:
     """
     if not parse_json:
         return {"data": body}
-    try:
-        record = json.loads(body)
-    except (json.JSONDecodeError, TypeError):
-        return {"data": body}
+    record = _parse_json_or_raw(body)
     if isinstance(record, dict) and record.get("Type") == "Notification" and "Message" in record:
-        record = record["Message"]
-        if isinstance(record, str):
-            try:
-                record = json.loads(record)
-            except (json.JSONDecodeError, TypeError):
-                return {"data": record}
+        message = record["Message"]
+        if isinstance(message, str):
+            record = _parse_json_or_raw(message)
     if not isinstance(record, dict):
         return {"data": record}
     return record
@@ -177,7 +179,7 @@ class AWSSQSDataReader(MessageDataReader):
                 [`MessageDataReader`][plugboard.library.MessageDataReader].
         """
         region = resolve_argument(
-            region, DI.settings.resolve_sync().aws.region, "region", "AWS_REGION"
+            region, DI.settings.resolve_sync().aws.region, arg_name="region", env_var="AWS_REGION"
         )
         kwargs.setdefault("topic", queue_url)
         super().__init__(**kwargs)
@@ -310,7 +312,7 @@ class AWSSNSDataWriter(MessageDataWriter):
                 [`MessageDataWriter`][plugboard.library.MessageDataWriter].
         """
         region = resolve_argument(
-            region, DI.settings.resolve_sync().aws.region, "region", "AWS_REGION"
+            region, DI.settings.resolve_sync().aws.region, arg_name="region", env_var="AWS_REGION"
         )
         kwargs.setdefault("topic", topic_arn)
         super().__init__(**kwargs)
@@ -362,4 +364,4 @@ class AWSSNSDataWriter(MessageDataWriter):
         Returns:
             A list of message strings ready to publish.
         """
-        return encode_records(data, self._parse_json)
+        return encode_records(data, parse_json=self._parse_json)

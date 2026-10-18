@@ -91,11 +91,6 @@ def sqs_message(body: str, handle: str) -> dict[str, str]:
     return {"Body": body, "ReceiptHandle": handle, "MessageId": handle}
 
 
-# ---------------------------------------------------------------------------
-# Reader: connection and receiving
-# ---------------------------------------------------------------------------
-
-
 async def test_reader_connects_sqs_client_in_region(aws_client: MagicMock) -> None:
     """Tests that the client is created for SQS in the configured region."""
     reader = make_reader()
@@ -147,15 +142,9 @@ async def test_reader_empty_poll_returns_no_messages(aws_client: MagicMock) -> N
     assert await reader._receive() == []
 
 
-# ---------------------------------------------------------------------------
-# Reader: conversion and acknowledgment
-# ---------------------------------------------------------------------------
-
-
 async def test_reader_converts_json_bodies() -> None:
     """Tests that JSON message bodies become field buffers."""
     reader = make_reader()
-    await reader._connect()
     batch = [sqs_message('{"x": 1, "y": "a"}', "h1"), sqs_message('{"x": 2, "y": "b"}', "h2")]
     assert await reader._convert(batch) == {"x": deque([1, 2]), "y": deque(["a", "b"])}
 
@@ -163,7 +152,6 @@ async def test_reader_converts_json_bodies() -> None:
 async def test_reader_non_json_body_uses_data_field() -> None:
     """Tests that a raw body is exposed through the `data` field."""
     reader = make_reader(field_names=["data"], parse_json=False)
-    await reader._connect()
     converted = await reader._convert([sqs_message("hello", "h1")])
     assert converted == {"data": deque(["hello"])}
 
@@ -171,7 +159,6 @@ async def test_reader_non_json_body_uses_data_field() -> None:
 async def test_reader_unwraps_sns_envelope() -> None:
     """Tests that an SNS notification envelope delivers the nested record."""
     reader = make_reader()
-    await reader._connect()
     envelope = json.dumps(
         {
             "Type": "Notification",
@@ -182,6 +169,37 @@ async def test_reader_unwraps_sns_envelope() -> None:
     )
     batch = [sqs_message(envelope, "h1")]
     assert await reader._convert(batch) == {"x": deque([1]), "y": deque(["a"])}
+
+
+def test_decode_body_raw_string_is_exposed_under_data() -> None:
+    """Tests that a non-JSON body is exposed under `data` rather than raising."""
+    decoded = aws_messaging_io._decode_body("just some text", parse_json=True)
+    assert decoded == {"data": "just some text"}
+
+
+def test_decode_body_envelope_with_non_json_message_is_exposed_under_data() -> None:
+    """Tests that an SNS envelope whose Message is a plain string is unwrapped to `data`."""
+    envelope = json.dumps({"Type": "Notification", "Message": "plain payload"})
+    assert aws_messaging_io._decode_body(envelope, parse_json=True) == {"data": "plain payload"}
+
+
+@pytest.mark.parametrize(
+    ("body", "value"),
+    [
+        ("42", 42),
+        ('"hello"', "hello"),
+        ("true", True),
+        ("[1, 2, 3]", [1, 2, 3]),
+    ],
+)
+def test_decode_body_json_scalar_or_array_is_exposed_under_data(body: str, value: _t.Any) -> None:
+    """Tests that a non-object JSON payload is wrapped under `data`."""
+    assert aws_messaging_io._decode_body(body, parse_json=True) == {"data": value}
+
+
+def test_decode_body_without_parse_json_is_raw() -> None:
+    """Tests that `parse_json=False` exposes the raw body under `data`."""
+    assert aws_messaging_io._decode_body('{"x": 1}', parse_json=False) == {"data": '{"x": 1}'}
 
 
 async def test_reader_deletes_processed_messages(aws_client: MagicMock) -> None:
@@ -234,16 +252,28 @@ async def test_reader_reports_failed_deletes_as_transient(aws_client: MagicMock)
         await reader._ack([sqs_message('{"x": 1}', "h1")])
 
 
+async def test_reader_ack_without_connection_raises_connection_error(aws_client: MagicMock) -> None:
+    """Tests that acking before connecting fails loudly."""
+    reader = make_reader()
+    with pytest.raises(MessageBrokerConnectionError):
+        await reader._ack([sqs_message('{"x": 1}', "h1")])
+
+
+async def test_reader_ack_wraps_transient_delete_errors(aws_client: MagicMock) -> None:
+    """Tests that a throttled delete is wrapped for retry rather than leaking the SDK error."""
+    aws_client.delete_message_batch.side_effect = client_error("ThrottlingException")
+    reader = make_reader()
+    await reader._connect()
+
+    with pytest.raises(MessageBrokerTransientError):
+        await reader._ack([sqs_message('{"x": 1}', "h1")])
+
+
 async def test_reader_without_connection_raises_connection_error(aws_client: MagicMock) -> None:
     """Tests that receiving before connecting fails loudly."""
     reader = make_reader()
     with pytest.raises(MessageBrokerConnectionError):
         await reader._receive()
-
-
-# ---------------------------------------------------------------------------
-# Reader: error mapping
-# ---------------------------------------------------------------------------
 
 
 @pytest.mark.parametrize(
@@ -288,11 +318,6 @@ async def test_reader_unclassified_error_propagates(aws_client: MagicMock) -> No
         await reader._receive()
 
 
-# ---------------------------------------------------------------------------
-# Writer
-# ---------------------------------------------------------------------------
-
-
 async def test_writer_connects_sns_client(aws_client: MagicMock) -> None:
     """Tests that the writer creates a client for SNS in the configured region."""
     writer = make_writer()
@@ -316,7 +341,6 @@ async def test_writer_publishes_each_message(aws_client: MagicMock) -> None:
 async def test_writer_converts_fields_to_json_strings() -> None:
     """Tests that buffered fields become one JSON message per record."""
     writer = make_writer()
-    await writer._connect()
     converted = await writer._convert({"x": deque([1, 2]), "y": deque(["a", "b"])})
     assert converted == ['{"x": 1, "y": "a"}', '{"x": 2, "y": "b"}']
 
@@ -324,7 +348,6 @@ async def test_writer_converts_fields_to_json_strings() -> None:
 async def test_writer_non_json_sends_first_field() -> None:
     """Tests that a raw writer publishes the first field's value."""
     writer = make_writer(field_names=["x"], parse_json=False)
-    await writer._connect()
     assert await writer._convert({"x": deque([7])}) == ["7"]
 
 
@@ -353,22 +376,19 @@ async def test_writer_without_connection_raises_connection_error(aws_client: Mag
         await writer._send(["one"])
 
 
-# ---------------------------------------------------------------------------
-# Settings resolution
-# ---------------------------------------------------------------------------
-
-
-async def test_region_falls_back_to_settings() -> None:
-    """Tests that `AWS_REGION` supplies the region when none is passed."""
+async def test_region_falls_back_to_settings(aws_client: MagicMock) -> None:
+    """Tests that `AWS_REGION` supplies the client's region when none is passed."""
     settings = Settings.model_validate({"aws": {"region": "ap-south-1"}})
     with conftest.override_settings(settings):
         reader = AWSSQSDataReader(
             name="sqs-reader", queue_url="https://sqs.test/1/messages", field_names=["x"]
         )
-    assert reader._region == "ap-south-1"
+        await reader._connect()
+    assert aws_client.created == [("sqs", {"region_name": "ap-south-1"})]
+    await reader._disconnect()
 
 
-def test_explicit_region_wins_over_settings() -> None:
+async def test_explicit_region_wins_over_settings(aws_client: MagicMock) -> None:
     """Tests that an explicit region is not overridden by configuration."""
     settings = Settings.model_validate({"aws": {"region": "ap-south-1"}})
     with conftest.override_settings(settings):
@@ -378,7 +398,9 @@ def test_explicit_region_wins_over_settings() -> None:
             field_names=["x"],
             region="us-west-2",
         )
-    assert reader._region == "us-west-2"
+        await reader._connect()
+    assert aws_client.created == [("sqs", {"region_name": "us-west-2"})]
+    await reader._disconnect()
 
 
 def test_missing_region_names_the_environment_variable() -> None:
@@ -393,13 +415,22 @@ def test_missing_region_names_the_environment_variable() -> None:
             )
 
 
-def test_reader_topic_defaults_to_queue_url() -> None:
-    """Tests that the queue URL identifies the reader's topic."""
+async def test_reader_receives_from_the_configured_queue(aws_client: MagicMock) -> None:
+    """Tests that the reader receives from the queue it was configured with."""
+    aws_client.receive_message.return_value = {"Messages": []}
     reader = make_reader()
-    assert reader._topic == "https://sqs.test/1/messages"
+    await reader._connect()
+    await reader._receive()
+    aws_client.receive_message.assert_awaited_once()
+    assert aws_client.receive_message.await_args.kwargs["QueueUrl"] == "https://sqs.test/1/messages"
+    await reader._disconnect()
 
 
-def test_writer_topic_defaults_to_topic_arn() -> None:
-    """Tests that the topic ARN identifies the writer's topic."""
+async def test_writer_publishes_to_the_configured_topic(aws_client: MagicMock) -> None:
+    """Tests that the writer publishes to the topic it was configured with."""
     writer = make_writer()
-    assert writer._topic == "arn:aws:sns:eu-west-1:1:messages"
+    await writer._connect()
+    await writer._send(['{"x": 1}'])
+    aws_client.publish.assert_awaited_once()
+    assert aws_client.publish.await_args.kwargs["TopicArn"] == "arn:aws:sns:eu-west-1:1:messages"
+    await writer._disconnect()

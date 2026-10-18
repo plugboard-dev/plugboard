@@ -3,19 +3,18 @@
 from __future__ import annotations
 
 from collections import deque
-from types import SimpleNamespace
 import typing as _t
 
 import pytest
 
 from plugboard.exceptions import (
     IOStreamClosedError,
+    MessageBrokerConnectionError,
     MessageBrokerPermanentError,
     MessageBrokerTransientError,
     NoMoreDataException,
 )
 from plugboard.library.message_reader import MessageDataReader
-from plugboard.utils import retry as retry_utils
 from plugboard.utils.retry import RetryPolicy
 
 
@@ -111,28 +110,6 @@ async def drain(reader: ScriptedReader, limit: int = 100) -> list[dict[str, _t.A
     raise AssertionError(f"Reader did not finish within {limit} steps")
 
 
-@pytest.fixture
-def backoff_delays(monkeypatch: pytest.MonkeyPatch) -> _t.Iterator[list[float]]:
-    """Captures the non-zero backoff delays applied by the retry helper.
-
-    Only the retry module's `asyncio` reference is replaced: patching `asyncio.sleep`
-    globally would also break the event loop teardown that waits for pending tasks.
-    """
-    delays: list[float] = []
-
-    async def _fake_sleep(delay: float, *args: _t.Any) -> None:
-        if delay:  # Idle poll pacing is not a backoff delay.
-            delays.append(delay)
-
-    monkeypatch.setattr(retry_utils, "asyncio", _t.cast(_t.Any, SimpleNamespace(sleep=_fake_sleep)))
-    yield delays
-
-
-# ---------------------------------------------------------------------------
-# Lifecycle
-# ---------------------------------------------------------------------------
-
-
 async def test_init_connects_and_starts_prefetch() -> None:
     """Tests that `init` connects and pre-fetches without waiting for data."""
     reader = make_reader([MESSAGES[:2]])
@@ -161,11 +138,6 @@ async def test_topic_is_retained() -> None:
     reader = make_reader([], topic="my-topic")
     assert reader._topic == "my-topic"
     await reader.destroy()
-
-
-# ---------------------------------------------------------------------------
-# Reading records
-# ---------------------------------------------------------------------------
 
 
 async def test_step_publishes_records_in_order() -> None:
@@ -216,11 +188,6 @@ async def test_single_field_reader() -> None:
     await reader.destroy()
 
 
-# ---------------------------------------------------------------------------
-# Empty polls are not the end of the stream
-# ---------------------------------------------------------------------------
-
-
 async def test_empty_poll_waits_for_late_messages() -> None:
     """Tests that idle polls do not end the stream, so late messages are still read.
 
@@ -257,11 +224,6 @@ async def test_no_dangling_task_when_source_exhausted() -> None:
         await reader.step()
     assert reader._task is None
     await reader.destroy()
-
-
-# ---------------------------------------------------------------------------
-# Acknowledgment timing
-# ---------------------------------------------------------------------------
 
 
 async def test_batch_acked_only_after_its_last_record_is_consumed() -> None:
@@ -301,11 +263,6 @@ async def test_unconsumed_messages_are_not_acknowledged() -> None:
     await reader.step()
     await reader.destroy()
     assert reader.acked == []
-
-
-# ---------------------------------------------------------------------------
-# Retry and reconnection
-# ---------------------------------------------------------------------------
 
 
 async def test_transient_receive_failure_reconnects_and_recovers(
@@ -406,10 +363,11 @@ async def test_failing_disconnect_still_reconnects() -> None:
 async def test_reconnect_failure_does_not_abort_retries(
     backoff_delays: list[float],
 ) -> None:
-    """Tests that a failing reconnect costs an attempt instead of ending the retrying.
+    """Tests that a failing reconnect skips that attempt but the retries continue.
 
-    During a network partition the read and the reconnect can both fail; the reader must
-    still use up its retries and then report the broker error.
+    During a network partition the reconnect can fail; rather than running the read and
+    failing with a synthetic "not connected" error, that attempt is skipped, the retries
+    keep reconnecting, and the error eventually raised is the broker's own.
     """
     reader = UnreconnectableReader(
         name="test-reader",
@@ -424,7 +382,66 @@ async def test_reconnect_failure_does_not_abort_retries(
     with pytest.raises(ConnectionError, match="read failed"):
         await reader.step()
 
-    assert reader.polls == 3  # All three attempts ran, despite the reconnect failures.
-    assert reader.connects == 3  # Initial connect plus one per retry.
+    assert reader.polls == 1  # Only the initial read ran; the retries were skipped.
+    assert reader.connects == 3  # Initial connect plus one reconnect per retry.
+    assert backoff_delays == [1.0, 2.0]
+    await reader.destroy()
+
+
+class _FlakyConnectionReader(ScriptedReader):
+    """Models a connection that drops and cannot be re-established.
+
+    The first read fails with a real broker error; the link is then torn down and every
+    reconnect fails, leaving the reader disconnected (where a real receive would raise
+    `MessageBrokerConnectionError`).
+    """
+
+    def __init__(self, *args: _t.Any, script: list[_t.Any], **kwargs: _t.Any) -> None:
+        super().__init__(*args, script=script, **kwargs)
+        self.connected = True
+
+    async def _connect(self) -> None:
+        self.connected = True
+        self.connects += 1
+
+    async def _reconnect(self) -> None:
+        # The link is down and cannot be re-established: the client is left disconnected.
+        self.connected = False
+        raise OSError("broker unreachable")
+
+    async def _receive(self) -> list[_t.Any]:
+        if not self.connected:
+            raise MessageBrokerConnectionError("client is not connected")
+        outcome = self.script[self.polls] if self.polls < len(self.script) else []
+        self.polls += 1
+        if isinstance(outcome, Exception):
+            raise outcome
+        return _t.cast(list[_t.Any], outcome)
+
+
+async def test_retries_exhausted_after_failed_reconnect_raise_broker_error(
+    backoff_delays: list[float],
+) -> None:
+    """Tests that total failure reports the broker's error, not a synthetic one.
+
+    When every reconnect fails the reader is left disconnected, so running a read would
+    surface `MessageBrokerConnectionError("client is not connected")`. The retries must
+    instead surface the last real broker error from the attempt that last ran.
+    """
+    reader = _FlakyConnectionReader(
+        name="test-reader",
+        field_names=["x", "y"],
+        topic="test-topic",
+        idle_poll_delay=0.0,
+        script=[ConnectionError("broker timeout")],
+        retry_policy=RetryPolicy(max_retries=2),
+    )
+    await reader.init()
+
+    with pytest.raises(ConnectionError, match="broker timeout") as excinfo:
+        await reader.step()
+
+    assert "not connected" not in str(excinfo.value)  # Never the synthetic connection error.
+    assert reader.connects == 1  # Only `init` connected; the reconnects all failed.
     assert backoff_delays == [1.0, 2.0]
     await reader.destroy()

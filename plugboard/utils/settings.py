@@ -116,6 +116,7 @@ _ArgumentT = _t.TypeVar("_ArgumentT")
 def resolve_argument(
     value: _t.Optional[_ArgumentT],
     fallback: _t.Optional[_ArgumentT],
+    *,
     arg_name: str,
     env_var: str,
 ) -> _ArgumentT:
@@ -138,7 +139,7 @@ def resolve_argument(
         ValueError: If neither an explicit value nor a configured value is available.
     """
     resolved = value if value else fallback
-    if resolved is None:
+    if not resolved:
         raise ValueError(
             f"'{arg_name}' is required: pass it explicitly or set the '{env_var}' "
             f"environment variable."

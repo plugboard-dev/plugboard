@@ -9,33 +9,27 @@ import json
 import typing as _t
 
 from plugboard.component import IOController
-from plugboard.library.data_writer import DataWriter
+from plugboard.library.data_writer import DataWriter, DataWriterArgsSpec
 from plugboard.schemas import ComponentArgsDict
-from plugboard.utils.retry import RetryPolicy, attempt_reconnect, with_retry
+from plugboard.utils.retry import RetryPolicy, attempt_reconnect
 
 
-class MessageDataWriterArgsDict(ComponentArgsDict):
+class MessageDataWriterArgsDict(DataWriterArgsSpec):
     """Specification of the `MessageDataWriter` constructor arguments.
 
+    Adds the message-broker-specific arguments to the `DataWriter` ones.
+
     Attributes:
-        field_names: The names of the fields to include in messages.
         topic: The topic/queue to write to.
-        chunk_size: Optional; The number of records to batch into each send.
         retry_policy: Optional; The backoff policy for retrying failed broker calls.
     """
 
-    field_names: list[str]
-    topic: str
-    chunk_size: _t.NotRequired[int | None]
+    topic: _t.NotRequired[str]
     retry_policy: _t.NotRequired[RetryPolicy]
 
 
 def iter_records(data: dict[str, deque]) -> _t.Iterator[dict[str, _t.Any]]:
     """Iterates over the complete records held in a field buffer.
-
-    Zipping the deques walks each field once, which keeps record building linear in
-    the number of buffered values - indexing the deques per row would be quadratic,
-    and with the default `chunk_size` the buffer holds the whole run.
 
     Args:
         data: A dictionary mapping field names to deques of field values.
@@ -66,7 +60,7 @@ def _raw_bytes(record: dict[str, _t.Any]) -> bytes:
     return bytes(value) if isinstance(value, (bytes, bytearray)) else str(value).encode("utf-8")
 
 
-def encode_records(data: dict[str, deque], parse_json: bool) -> list[str]:
+def encode_records(data: dict[str, deque], *, parse_json: bool) -> list[str]:
     """Encodes a field buffer as one text message per record.
 
     Args:
@@ -82,7 +76,7 @@ def encode_records(data: dict[str, deque], parse_json: bool) -> list[str]:
     ]
 
 
-def encode_records_bytes(data: dict[str, deque], parse_json: bool) -> list[bytes]:
+def encode_records_bytes(data: dict[str, deque], *, parse_json: bool) -> list[bytes]:
     """Encodes a field buffer as one binary message per record.
 
     Args:
@@ -116,7 +110,7 @@ class MessageDataWriter(DataWriter):
     def __init__(
         self,
         field_names: list[str],
-        topic: str,
+        topic: str = "",
         chunk_size: _t.Optional[int] = None,
         retry_policy: RetryPolicy = RetryPolicy(),
         **kwargs: _t.Unpack[ComponentArgsDict],
@@ -136,11 +130,7 @@ class MessageDataWriter(DataWriter):
 
     @abstractmethod
     async def _connect(self) -> None:
-        """Establishes connection to the message broker.
-
-        Raises:
-            MessageBrokerConnectionError: If connection cannot be established.
-        """
+        """Establishes connection to the message broker."""
         pass
 
     @abstractmethod
@@ -181,22 +171,18 @@ class MessageDataWriter(DataWriter):
             data: The converted messages to send, as produced by `_convert`.
 
         Raises:
-            MessageBrokerConnectionError: If all retries are exhausted.
+            MessageBrokerPermanentError: If the failure cannot be recovered by retrying.
+            Exception: The error from the final attempt, if retries are exhausted.
         """
-        await with_retry(
+        await self._retry_policy.run(
             lambda: self._send(data),
             self._reconnect,
-            policy=self._retry_policy,
             logger=self._logger,
             description="sending messages",
         )
 
     async def _reconnect(self) -> None:
-        """Attempts to reconnect to the message broker.
-
-        No lock is needed here: unlike a reader, a writer never acknowledges
-        concurrently, and sends are serialised through `self._task`.
-        """
+        """Re-establishes the broker connection, ignoring a failure to close the old one."""
         await attempt_reconnect(
             self._connect,
             self._disconnect,

@@ -33,7 +33,7 @@ through an external broker as part of the model itself, see
 The message data components ([`MessageDataReader`][plugboard.library.MessageDataReader] /
 [`MessageDataWriter`][plugboard.library.MessageDataWriter] and their broker
 implementations) take connection details as constructor arguments, falling back to the
-evironment below when they are not supplied:
+environment below when they are not supplied:
 
 | Option Name               | Description                            | Default Value |
 |---------------------------|----------------------------------------|---------------|

@@ -9,27 +9,25 @@ import contextlib
 import typing as _t
 
 from plugboard.component import IOController
-from plugboard.exceptions import IOStreamClosedError, NoMoreDataException
-from plugboard.library.data_reader import DataReader
+from plugboard.exceptions import NoMoreDataException
+from plugboard.library.data_reader import DataReader, DataReaderArgsSpec
 from plugboard.schemas import ComponentArgsDict
-from plugboard.utils.retry import RetryPolicy, attempt_reconnect, with_retry
+from plugboard.utils.retry import RetryPolicy, attempt_reconnect
 
 
-class MessageDataReaderArgsDict(ComponentArgsDict):
+class MessageDataReaderArgsDict(DataReaderArgsSpec):
     """Specification of the `MessageDataReader` constructor arguments.
 
+    Adds the message-broker-specific arguments to the `DataReader` ones.
+
     Attributes:
-        field_names: The names of the fields to read from messages.
         topic: The topic/queue/subscription to read from.
-        chunk_size: Optional; The number of messages to fetch per batch.
         retry_policy: Optional; The backoff policy for retrying failed broker calls.
         idle_poll_delay: Optional; Delay in seconds between polls that return no
             messages.
     """
 
-    field_names: list[str]
-    topic: str
-    chunk_size: _t.NotRequired[int | None]
+    topic: _t.NotRequired[str]
     retry_policy: _t.NotRequired[RetryPolicy]
     idle_poll_delay: _t.NotRequired[float]
 
@@ -57,7 +55,7 @@ class MessageDataReader(DataReader):
     def __init__(
         self,
         field_names: list[str],
-        topic: str,
+        topic: str = "",
         chunk_size: _t.Optional[int] = None,
         retry_policy: RetryPolicy = RetryPolicy(),
         idle_poll_delay: float = 0.1,
@@ -83,11 +81,7 @@ class MessageDataReader(DataReader):
 
     @abstractmethod
     async def _connect(self) -> None:
-        """Establishes connection to the message broker.
-
-        Raises:
-            MessageBrokerConnectionError: If connection cannot be established.
-        """
+        """Establishes connection to the message broker."""
         pass
 
     @abstractmethod
@@ -142,12 +136,12 @@ class MessageDataReader(DataReader):
 
         Raises:
             NoMoreDataException: If the source is exhausted.
-            MessageBrokerConnectionError: If all retries are exhausted.
+            MessageBrokerPermanentError: If the failure cannot be recovered by retrying.
+            Exception: The error from the final attempt, if retries are exhausted.
         """
-        return await with_retry(
+        return await self._retry_policy.run(
             self._receive,
             self._reconnect,
-            policy=self._retry_policy,
             logger=self._logger,
             description="receiving messages",
         )
@@ -196,15 +190,26 @@ class MessageDataReader(DataReader):
         return min(len(values) for values in self._buffer.values())
 
     async def _ack_pending(self) -> None:
-        """Acknowledges the batch whose records have all been consumed.
+        """Acknowledges the batch whose records have all been consumed, retrying transient failures.
 
-        Acknowledgment waits for the connection lock, so it never runs against a client
-        that a concurrent reconnect is replacing.
+        The acknowledgment and any reconnect run under the connection lock so neither can
+        use a client that a concurrent reconnect is replacing; the lock is held inside the
+        retried operation so a mid-retry reconnect does not deadlock on it.
         """
         if not self._pending_ack:
             return
-        async with self._connection_lock:
-            await self._ack(self._pending_ack)
+        pending = self._pending_ack
+
+        async def ack() -> None:
+            async with self._connection_lock:
+                await self._ack(pending)
+
+        await self._retry_policy.run(
+            ack,
+            self._reconnect,
+            logger=self._logger,
+            description="acknowledging messages",
+        )
         self._pending_ack = []
 
     async def init(self) -> None:
@@ -224,8 +229,9 @@ class MessageDataReader(DataReader):
         last record has been consumed the whole batch is acknowledged, so a failure
         before that point leaves the remaining messages for redelivery.
 
-        Raises:
-            IOStreamClosedError: If the source is exhausted.
+        An exhausted source closes the IO stream and returns (rather than raising): the
+        closed stream ends the run through `io.write`, exactly as it does for
+        `DataReader`, so the component completes instead of being marked failed.
         """
         while not self._records_available:
             try:
@@ -233,7 +239,7 @@ class MessageDataReader(DataReader):
             except NoMoreDataException:
                 await self._ack_pending()
                 await self.io.close()
-                raise IOStreamClosedError("No more messages from broker") from None
+                return
         self._consume_record()
         if not self._records_available:
             await self._ack_pending()

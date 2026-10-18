@@ -56,25 +56,52 @@ except ImportError:  # pragma: no cover
     _NOT_FOUND_ERRORS = ()
 
 
-def _wrap_error(error: Exception) -> Exception:
+def _wrap_error(error: Exception, *, exhausted: bool = False) -> Exception:
     """Maps a PubSub SDK error onto the Plugboard message broker exception hierarchy.
 
     Args:
         error: The error raised by the PubSub client.
+        exhausted: Whether a missing topic/subscription should be reported as an
+            exhausted source. Only meaningful for a reader: a writer cannot recover from
+            a missing topic, so it is a permanent failure there.
 
     Returns:
-        A `NoMoreDataException` for a deleted topic/subscription, a
+        A `NoMoreDataException` for a deleted topic/subscription (readers only), a
         `MessageBrokerPermanentError` for a rejection that will not change on retry, a
         `MessageBrokerTransientError` for a failure worth retrying, otherwise the
         original error.
     """
     if isinstance(error, _NOT_FOUND_ERRORS):
-        return NoMoreDataException()
+        return NoMoreDataException() if exhausted else MessageBrokerPermanentError(str(error))
     if isinstance(error, _PERMANENT_ERRORS):
         return MessageBrokerPermanentError(str(error))
     if isinstance(error, _TRANSIENT_ERRORS):
         return MessageBrokerTransientError(str(error))
     return error
+
+
+def _decode_payload(payload: bytes, *, parse_json: bool) -> dict[str, _t.Any]:
+    """Decodes a PubSub message payload into a record dict.
+
+    A payload that is not valid UTF-8, is not JSON, or is a JSON scalar or array cannot
+    be read as a record, so it is exposed under the ``data`` field rather than raising.
+
+    Args:
+        payload: The raw PubSub message data.
+        parse_json: Whether the record is JSON.
+
+    Returns:
+        The decoded record as a dict.
+    """
+    if not parse_json:
+        return {"data": payload}
+    try:
+        record = json.loads(payload.decode("utf-8"))
+    except (UnicodeDecodeError, json.JSONDecodeError):
+        return {"data": payload}
+    if not isinstance(record, dict):
+        return {"data": record}
+    return record
 
 
 class GCPPubSubDataReader(MessageDataReader):
@@ -111,13 +138,11 @@ class GCPPubSubDataReader(MessageDataReader):
         project_id = resolve_argument(
             project_id,
             DI.settings.resolve_sync().gcp_pubsub.project_id,
-            "project_id",
-            "GCP_PUBSUB_PROJECT_ID",
+            arg_name="project_id",
+            env_var="GCP_PUBSUB_PROJECT_ID",
         )
         kwargs.setdefault("topic", f"{project_id}/{subscription_id}")
         super().__init__(**kwargs)
-        self._project_id = project_id
-        self._subscription_id = subscription_id
         self._subscription_path = f"projects/{project_id}/subscriptions/{subscription_id}"
         self._parse_json = parse_json
         self._pull_timeout = pull_timeout
@@ -154,8 +179,12 @@ class GCPPubSubDataReader(MessageDataReader):
             response = await asyncio.to_thread(
                 self._subscriber.pull, request=request, timeout=self._pull_timeout
             )
+        except gcp_exceptions.DeadlineExceeded:
+            # The pull window elapsed on an empty subscription: this is "nothing yet",
+            # not a broker error, so it must not trigger a reconnect or fail the reader.
+            return []
         except Exception as error:  # noqa: BLE001
-            raise _wrap_error(error) from error
+            raise _wrap_error(error, exhausted=True) from error
         return list(response.received_messages)
 
     async def _convert(self, data: list[_t.Any]) -> dict[str, deque]:
@@ -169,11 +198,7 @@ class GCPPubSubDataReader(MessageDataReader):
         """
         converted: dict[str, deque] = {field: deque() for field in self.io.outputs}
         for msg_wrapper in data:
-            payload = msg_wrapper.message.data
-            if self._parse_json:
-                record = json.loads(payload.decode("utf-8"))
-            else:
-                record = {"data": payload}
+            record = _decode_payload(msg_wrapper.message.data, parse_json=self._parse_json)
             for field in self.io.outputs:
                 converted[field].append(record.get(field))
         return converted
@@ -229,13 +254,11 @@ class GCPPubSubDataWriter(MessageDataWriter):
         project_id = resolve_argument(
             project_id,
             DI.settings.resolve_sync().gcp_pubsub.project_id,
-            "project_id",
-            "GCP_PUBSUB_PROJECT_ID",
+            arg_name="project_id",
+            env_var="GCP_PUBSUB_PROJECT_ID",
         )
         kwargs.setdefault("topic", f"{project_id}/{topic_id}")
         super().__init__(**kwargs)
-        self._project_id = project_id
-        self._topic_id = topic_id
         self._topic_path = f"projects/{project_id}/topics/{topic_id}"
         self._parse_json = parse_json
         self._publish_timeout = publish_timeout
@@ -294,4 +317,4 @@ class GCPPubSubDataWriter(MessageDataWriter):
         Returns:
             A list of bytes objects ready to publish.
         """
-        return encode_records_bytes(data, self._parse_json)
+        return encode_records_bytes(data, parse_json=self._parse_json)

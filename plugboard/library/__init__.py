@@ -1,5 +1,6 @@
 """Provides implementations of Plugboard objects for use in user models."""
 
+from plugboard.utils.retry import RetryPolicy
 from .aws_messaging_io import AWSSNSDataWriter, AWSSQSDataReader
 from .data_reader import DataReader
 from .data_writer import DataWriter
@@ -25,6 +26,7 @@ __all__ = [
     "LLMImageProcessor",
     "MessageDataReader",
     "MessageDataWriter",
+    "RetryPolicy",
     "SQLReader",
     "SQLWriter",
     "WebsocketBase",

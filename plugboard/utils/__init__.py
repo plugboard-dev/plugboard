@@ -9,7 +9,8 @@ from plugboard.utils.path_utils import add_sys_path
 from plugboard.utils.random import gen_rand_str
 from plugboard.utils.ray import build_actor_wrapper, is_on_ray_worker
 from plugboard.utils.registry import ClassRegistry
-from plugboard.utils.settings import Settings, resolve_argument
+from plugboard.utils.retry import RetryPolicy
+from plugboard.utils.settings import Settings
 
 
 __all__ = [
@@ -19,12 +20,12 @@ __all__ = [
     "gather_except",
     "gen_rand_str",
     "is_on_ray_worker",
-    "resolve_argument",
     "run_coro_sync",
     "ClassRegistry",
     "DI",
     "EntityIdGen",
     "Exportable",
     "ExportMixin",
+    "RetryPolicy",
     "Settings",
 ]

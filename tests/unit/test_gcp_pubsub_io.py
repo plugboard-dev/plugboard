@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections import deque
+import json
 import threading
 from types import SimpleNamespace
 import typing as _t
@@ -84,11 +85,6 @@ def make_writer(**kwargs: _t.Any) -> GCPPubSubDataWriter:
     )
 
 
-# ---------------------------------------------------------------------------
-# Reader
-# ---------------------------------------------------------------------------
-
-
 async def test_reader_connect_builds_client_off_the_event_loop(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -162,10 +158,9 @@ async def test_reader_pulls_off_the_event_loop(subscriber: MagicMock) -> None:
     assert caller_threads[0] != threading.current_thread().name
 
 
-async def test_reader_converts_json_messages(subscriber: MagicMock) -> None:
+async def test_reader_converts_json_messages() -> None:
     """Tests that JSON payloads become field buffers keyed by the declared fields."""
     reader = make_reader()
-    await reader._connect()
     batch = [make_message(b'{"x": 1, "y": "a"}'), make_message(b'{"x": 2, "y": "b"}')]
     assert await reader._convert(batch) == {"x": deque([1, 2]), "y": deque(["a", "b"])}
 
@@ -173,9 +168,29 @@ async def test_reader_converts_json_messages(subscriber: MagicMock) -> None:
 async def test_reader_non_json_messages_fill_single_field() -> None:
     """Tests that a raw payload is exposed through the `data` field."""
     reader = make_reader(field_names=["data"], parse_json=False)
-    await reader._connect()
     converted = await reader._convert([make_message(b"hello")])
     assert converted == {"data": deque([b"hello"])}
+
+
+def test_decode_payload_non_utf8_is_exposed_under_data() -> None:
+    """Tests that a payload which is not valid UTF-8 is exposed under `data`."""
+    assert gcp_pubsub_io._decode_payload(b"\xff\xfe", parse_json=True) == {"data": b"\xff\xfe"}
+
+
+def test_decode_payload_non_json_is_exposed_under_data() -> None:
+    """Tests that a non-JSON payload is exposed under `data`."""
+    assert gcp_pubsub_io._decode_payload(b"not json", parse_json=True) == {"data": b"not json"}
+
+
+@pytest.mark.parametrize("payload", [b"42", b'"hello"', b"true", b"[1, 2]"])
+def test_decode_payload_json_scalar_or_array_is_exposed_under_data(payload: bytes) -> None:
+    """Tests that a non-object JSON payload is wrapped under `data`."""
+    assert gcp_pubsub_io._decode_payload(payload, parse_json=True) == {"data": json.loads(payload)}
+
+
+def test_decode_payload_without_parse_json_is_raw() -> None:
+    """Tests that `parse_json=False` exposes the raw payload under `data`."""
+    assert gcp_pubsub_io._decode_payload(b'{"x": 1}', parse_json=False) == {"data": b'{"x": 1}'}
 
 
 async def test_reader_ack_sends_ack_ids(subscriber: MagicMock) -> None:
@@ -194,6 +209,23 @@ async def test_reader_ack_sends_ack_ids(subscriber: MagicMock) -> None:
     )
 
 
+async def test_reader_ack_without_connection_raises_connection_error() -> None:
+    """Tests that acking before connecting fails loudly."""
+    reader = make_reader()
+    with pytest.raises(MessageBrokerConnectionError):
+        await reader._ack([make_message(b'{"x": 1}')])
+
+
+async def test_reader_ack_wraps_failed_acknowledgments(subscriber: MagicMock) -> None:
+    """Tests that a failed acknowledgment is wrapped for retry rather than leaking gRPC."""
+    subscriber.acknowledge.side_effect = gcp_exceptions.DeadlineExceeded("deadline")
+    reader = make_reader()
+    await reader._connect()
+
+    with pytest.raises(MessageBrokerTransientError):
+        await reader._ack([make_message(b'{"x": 1}')])
+
+
 async def test_reader_disconnect_closes_subscriber(subscriber: MagicMock) -> None:
     """Tests that teardown closes the client, releasing its channel."""
     reader = make_reader()
@@ -209,7 +241,6 @@ async def test_reader_disconnect_closes_subscriber(subscriber: MagicMock) -> Non
         (gcp_exceptions.PermissionDenied("nope"), MessageBrokerPermanentError),
         (gcp_exceptions.InvalidArgument("bad"), MessageBrokerPermanentError),
         (gcp_exceptions.ServiceUnavailable("busy"), MessageBrokerTransientError),
-        (gcp_exceptions.DeadlineExceeded("late"), MessageBrokerTransientError),
     ],
 )
 async def test_reader_maps_broker_errors(
@@ -222,6 +253,18 @@ async def test_reader_maps_broker_errors(
 
     with pytest.raises(expected):
         await reader._receive()
+
+
+async def test_reader_idle_pull_timeout_returns_no_messages(subscriber: MagicMock) -> None:
+    """Tests that a pull window elapsing on an empty subscription reads as 'nothing yet'.
+
+    An idle pull raises `DeadlineExceeded`; treating it as a broker error would trigger a
+    needless reconnect and eventually fail the reader on an empty subscription.
+    """
+    subscriber.pull.side_effect = gcp_exceptions.DeadlineExceeded("late")
+    reader = make_reader()
+    await reader._connect()
+    assert await reader._receive() == []
 
 
 async def test_reader_unclassified_error_propagates(subscriber: MagicMock) -> None:
@@ -253,8 +296,8 @@ async def test_reader_missing_project_id(monkeypatch: pytest.MonkeyPatch) -> Non
             )
 
 
-async def test_reader_project_id_from_settings() -> None:
-    """Tests that `GCP_PUBSUB_PROJECT_ID` supplies the project when not passed."""
+async def test_reader_project_id_from_settings(subscriber: MagicMock) -> None:
+    """Tests that `GCP_PUBSUB_PROJECT_ID` supplies the pull's project when not passed."""
     settings = Settings.model_validate({"gcp_pubsub": {"project_id": "settings-project"}})
     with conftest.override_settings(settings):
         reader = GCPPubSubDataReader(
@@ -262,12 +305,13 @@ async def test_reader_project_id_from_settings() -> None:
             subscription_id="test-subscription",
             field_names=["x"],
         )
-    assert reader._subscription_path == "projects/settings-project/subscriptions/test-subscription"
-
-
-# ---------------------------------------------------------------------------
-# Writer
-# ---------------------------------------------------------------------------
+        await reader._connect()
+        await reader._receive()
+    subscriber.pull.assert_called_once()
+    assert subscriber.pull.call_args.kwargs["request"]["subscription"] == (
+        "projects/settings-project/subscriptions/test-subscription"
+    )
+    await reader._disconnect()
 
 
 async def test_writer_publishes_encoded_records(publisher: MagicMock) -> None:
@@ -309,18 +353,16 @@ async def test_writer_waits_off_the_event_loop(publisher: MagicMock) -> None:
     assert all(name != threading.current_thread().name for name in caller_threads)
 
 
-async def test_writer_converts_fields_to_json_bytes(publisher: MagicMock) -> None:
+async def test_writer_converts_fields_to_json_bytes() -> None:
     """Tests that buffered fields become one JSON message per record."""
     writer = make_writer()
-    await writer._connect()
     converted = await writer._convert({"x": deque([1, 2]), "y": deque(["a", "b"])})
     assert converted == [b'{"x": 1, "y": "a"}', b'{"x": 2, "y": "b"}']
 
 
-async def test_writer_non_json_sends_first_field(publisher: MagicMock) -> None:
+async def test_writer_non_json_sends_first_field() -> None:
     """Tests that a raw writer publishes the first field's value."""
     writer = make_writer(field_names=["x"], parse_json=False)
-    await writer._connect()
     assert await writer._convert({"x": deque(["hello"])}) == [b"hello"]
 
 
@@ -332,6 +374,15 @@ async def test_writer_disconnect_stops_publisher(publisher: MagicMock) -> None:
     publisher.stop.assert_called_once_with()
 
 
+async def test_writer_disconnect_wraps_stop_errors(publisher: MagicMock) -> None:
+    """Tests that a failed publisher stop is wrapped rather than leaking gRPC."""
+    publisher.stop.side_effect = gcp_exceptions.FailedPrecondition("not stopped")
+    writer = make_writer()
+    await writer._connect()
+    with pytest.raises(MessageBrokerPermanentError):
+        await writer._disconnect()
+
+
 async def test_writer_publish_failure_maps_error(publisher: MagicMock) -> None:
     """Tests that a publish failure surfaces as a broker exception."""
     publisher.publish.side_effect = gcp_exceptions.ServiceUnavailable("busy")
@@ -339,6 +390,20 @@ async def test_writer_publish_failure_maps_error(publisher: MagicMock) -> None:
     await writer._connect()
 
     with pytest.raises(MessageBrokerTransientError):
+        await writer._send([b"one"])
+
+
+async def test_writer_publish_to_missing_topic_is_permanent(publisher: MagicMock) -> None:
+    """Tests that publishing to a deleted topic is permanent, not an exhausted source.
+
+    `NoMoreDataException` is reserved for exhausted read sources; a writer cannot recover
+    from a missing topic, so it must fail as permanent.
+    """
+    publisher.publish.side_effect = gcp_exceptions.NotFound("gone")
+    writer = make_writer()
+    await writer._connect()
+
+    with pytest.raises(MessageBrokerPermanentError):
         await writer._send([b"one"])
 
 

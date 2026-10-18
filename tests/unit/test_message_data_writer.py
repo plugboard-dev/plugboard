@@ -126,11 +126,6 @@ RECORDS = [{"x": 1, "y": "a"}, {"x": 2, "y": "b"}, {"x": 3, "y": "c"}]
 SINGLE = [{"x": 1}]  # For the single-field writers used by the retry tests.
 
 
-# ---------------------------------------------------------------------------
-# Lifecycle
-# ---------------------------------------------------------------------------
-
-
 async def test_init_connects_to_broker() -> None:
     """Tests that `init` opens the broker connection."""
     writer = make_writer(["x"])
@@ -175,11 +170,6 @@ async def test_destroy_waits_for_in_flight_send() -> None:
 
 
 @pytest.mark.parametrize("chunk_size", [1, 2, 3])
-# ---------------------------------------------------------------------------
-# Batching
-# ---------------------------------------------------------------------------
-
-
 async def test_records_are_sent_in_batches(chunk_size: int) -> None:
     """Tests that every record is delivered exactly once, in order."""
     writer = make_writer(["x", "y"], chunk_size=chunk_size)
@@ -208,12 +198,9 @@ async def test_run_flushes_remaining_buffer() -> None:
     assert delivered(writer) == RECORDS
 
 
-# ---------------------------------------------------------------------------
-# Retry and reconnection
-# ---------------------------------------------------------------------------
-
-
-async def test_transient_send_failure_reconnects_and_recovers() -> None:
+async def test_transient_send_failure_reconnects_and_recovers(
+    backoff_delays: list[float],
+) -> None:
     """Tests that a transient failure is retried after reconnecting."""
     writer = make_writer(["x"], script=[MessageBrokerTransientError("blip")], max_retries=3)
     channels = await connect_writer(writer)
@@ -227,6 +214,7 @@ async def test_transient_send_failure_reconnects_and_recovers() -> None:
     assert writer.attempts == 2  # Failed once, then succeeded.
     assert writer.connects == 2  # Initial connect plus one reconnect.
     assert writer.disconnects == 1
+    assert backoff_delays == [1.0]  # Base delay on the single retry.
 
 
 async def test_permanent_send_failure_is_not_retried() -> None:
@@ -252,7 +240,9 @@ async def test_permanent_send_failure_is_not_retried() -> None:
     await writer.destroy()
 
 
-async def test_retry_exhaustion_raises_last_send_error() -> None:
+async def test_retry_exhaustion_raises_last_send_error(
+    backoff_delays: list[float],
+) -> None:
     """Tests that sends are bounded and the broker's own error is raised."""
     failures = [ConnectionError(f"failure {index}") for index in range(5)]
     writer = make_writer(["x"], script=failures, max_retries=2)
@@ -268,12 +258,20 @@ async def test_retry_exhaustion_raises_last_send_error() -> None:
 
     assert writer.attempts == 3  # Initial attempt plus two retries.
     assert writer.connects == 3  # Initial connect plus one reconnect per retry.
+    assert backoff_delays == [1.0, 2.0]  # Backoff doubles on consecutive attempts.
     writer._task = None
     await writer.destroy()
 
 
-async def test_reconnect_failure_does_not_abort_retries() -> None:
-    """Tests that a failing reconnect costs an attempt instead of ending the retrying."""
+async def test_reconnect_failure_does_not_abort_retries(
+    backoff_delays: list[float],
+) -> None:
+    """Tests that a failing reconnect skips that attempt but the retries continue.
+
+    Without a connection a send would fail with a synthetic "not connected" error, so a
+    failed reconnect skips the attempt; the retries keep reconnecting and the error that
+    is eventually raised is still the broker's own.
+    """
     writer = make_writer(
         ["x"],
         script=[ConnectionError("send failed")] * 3,
@@ -290,15 +288,10 @@ async def test_reconnect_failure_does_not_abort_retries() -> None:
     with pytest.raises(ConnectionError, match="send failed"):
         await send
 
-    assert writer.attempts == 3  # Every attempt ran despite the reconnect failures.
-    assert writer.connects == 3
+    assert writer.attempts == 1  # Only the initial send ran; the retries were skipped.
+    assert writer.connects == 3  # Initial connect plus one reconnect per retry.
     writer._task = None
     await writer.destroy()
-
-
-# ---------------------------------------------------------------------------
-# Shared record encoding helpers
-# ---------------------------------------------------------------------------
 
 
 def test_iter_records_yields_one_dict_per_row() -> None:
@@ -337,7 +330,10 @@ def test_iter_records_is_linear_in_row_count() -> None:
 )
 def test_encode_records_as_text(parse_json: bool, expected: list[str]) -> None:
     """Tests text payloads, JSON-encoded or the raw first field."""
-    assert encode_records({"x": deque([1, 2]), "y": deque(["a", "b"])}, parse_json) == expected
+    assert (
+        encode_records({"x": deque([1, 2]), "y": deque(["a", "b"])}, parse_json=parse_json)
+        == expected
+    )
 
 
 @pytest.mark.parametrize(
@@ -349,7 +345,7 @@ def test_encode_records_as_text(parse_json: bool, expected: list[str]) -> None:
 )
 def test_encode_records_as_bytes(parse_json: bool, expected: list[bytes]) -> None:
     """Tests binary payloads, JSON-encoded or the raw first field."""
-    assert encode_records_bytes({"x": deque([1, 2])}, parse_json) == expected
+    assert encode_records_bytes({"x": deque([1, 2])}, parse_json=parse_json) == expected
 
 
 def test_encode_records_bytes_preserves_binary_payloads() -> None:
