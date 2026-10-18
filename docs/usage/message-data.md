@@ -12,8 +12,10 @@ component's outputs (for a reader) or inputs (for a writer).
 | [`GCPPubSubDataWriter`][plugboard.library.GCPPubSubDataWriter] | Google Cloud PubSub | | a topic |
 | [`AWSSQSDataReader`][plugboard.library.AWSSQSDataReader] | AWS SQS | a queue | |
 | [`AWSSNSDataWriter`][plugboard.library.AWSSNSDataWriter] | AWS SNS | | a topic |
+| [`KafkaDataReader`][plugboard.library.KafkaDataReader] | Apache Kafka | a topic + consumer group | |
+| [`KafkaDataWriter`][plugboard.library.KafkaDataWriter] | Apache Kafka | | a topic |
 
-All four build on the [`MessageDataReader`][plugboard.library.MessageDataReader] and
+All six build on the [`MessageDataReader`][plugboard.library.MessageDataReader] and
 [`MessageDataWriter`][plugboard.library.MessageDataWriter] base classes, which handle
 connecting, reconnection with backoff, batching and acknowledgment.
 
@@ -24,6 +26,7 @@ Each broker uses its own client library, supplied as an extra:
 ```shell
 pip install "plugboard[gcp-pubsub]"     # google-cloud-pubsub
 pip install "plugboard[aws-messaging]"  # aiobotocore
+pip install "plugboard[kafka]"          # aiokafka
 ```
 
 Constructing a component without its extra raises an `ImportError` naming the extra to
@@ -99,7 +102,8 @@ run that would otherwise wait forever.
 **Messages are acknowledged after they are processed.** A batch fetched from the broker
 is acknowledged only once every record in it has been published downstream, so a crash
 mid-batch leaves the unread messages to be redelivered (at-least-once). For SQS,
-"acknowledge" means deleting the messages.
+"acknowledge" means deleting the messages; for Kafka it means committing the offsets of
+the processed records, per partition.
 
 **Batching is bounded by the broker.** `chunk_size` sets how many messages are fetched
 per poll (and per send for writers). SQS delivers at most 10 messages per call, so a
@@ -111,14 +115,15 @@ deleted topic — fail immediately instead of burning the retries. Both the clas
 and the policy are handled by the base classes:
 
 ```python
-from plugboard.library import GCPPubSubDataReader
+from plugboard.library import KafkaDataReader
 from plugboard.utils.retry import RetryPolicy
 
-reader = GCPPubSubDataReader(
+reader = KafkaDataReader(
     name="reader",
-    subscription_id="measurements-pull",
-    project_id="plugboard-dev",
+    topic="measurements",
+    group_id="plugboard",
     field_names=["x", "y"],
+    bootstrap_servers="localhost:9092",  # Optional; defaults to KAFKA_BOOTSTRAP_SERVERS
     retry_policy=RetryPolicy(max_retries=5, base_delay=0.5, max_delay=30.0),
     idle_poll_delay=0.5,  # Pause between empty polls, if the broker returns immediately
 )
@@ -138,7 +143,8 @@ arguments always win.
 |---------------------------|------------------------------------------|---------|
 | `GCP_PUBSUB_PROJECT_ID`   | Default GCP project for PubSub topics    | `GCPPubSubDataReader`, `GCPPubSubDataWriter` |
 | `AWS_REGION`              | Default AWS region for SQS/SNS clients   | `AWSSQSDataReader`, `AWSSNSDataWriter` |
+| `KAFKA_BOOTSTRAP_SERVERS` | Default Kafka broker address(es)         | `KafkaDataReader`, `KafkaDataWriter` |
 
 Credentials themselves are never configured through Plugboard: the clients use their
-normal provider mechanisms (Application Default Credentials for PubSub, and the standard
-AWS credential chain for SQS/SNS).
+normal provider mechanisms (Application Default Credentials for PubSub, the standard AWS
+credential chain, SASL settings for Kafka).
