@@ -13,15 +13,24 @@ PubSub client uses Application Default Credentials (``GOOGLE_APPLICATION_CREDENT
 The write side is driven through each writer's own ``_convert``/``_send`` pair - the exact
 broker write path - so these tests validate the broker wiring and field<->message encoding
 round trip, while the generic buffering/batching logic is already covered by the unit tests.
+
+Hygiene: before each test the queue/subscription is checked, and if it is not empty a
+warning is emitted and it is drained; after each test it is drained again so no messages
+from a failed run interfere with the next one.
 """
 
 from __future__ import annotations
 
 import asyncio
 from collections import deque
+import contextlib
+import logging
 import os
 import typing as _t
+import warnings
 
+from aiobotocore.session import get_session as get_boto_session
+from google.cloud import pubsub_v1
 import pytest
 
 from plugboard.library import (
@@ -42,6 +51,19 @@ requires_broker = pytest.mark.skipif(
 FIELD_NAMES = ["x", "y"]
 # Enough to verify batch delivery, but small so a broken broker fails fast.
 RECORDS = [{"x": i, "y": f"value-{i}"} for i in range(1, 6)]
+EXPECTED = sorted((record["x"], record["y"]) for record in RECORDS)
+_LOG = logging.getLogger(__name__)
+
+# The infra sets the SQS visibility timeout to 30s, so a message a concurrent test received
+# but has not deleted is redelivered within ~30s and picked up by a later drain pass. The
+# drain declares the queue empty only after several consecutive long-poll timeouts, which
+# also absorbs staggered SNS->SQS fan-out delivery.
+_DRAIN_TIMEOUT = 90.0
+_DRAIN_EMPTY_POLLS = 3  # consecutive empty polls before declaring the queue drained
+_DRAIN_POLL_WAIT = 2  # seconds per SQS long poll (also a natural settle between polls)
+_DEPTH_CHECK_RETRIES = 3
+_DEPTH_CHECK_INTERVAL = 2.0
+_READ_TIMEOUT = 60.0
 
 
 def _broker_env_keys() -> list[str]:
@@ -60,12 +82,159 @@ def broker_env() -> _t.Iterator[None]:
     yield
 
 
+# ---------------------------------------------------------------------------
+# AWS SQS helpers
+# ---------------------------------------------------------------------------
+
+
+async def _aws_queue_depth(queue_url: str, region: str) -> int:
+    """Reads the number of messages in the queue (visible + in-flight)."""
+    async with get_boto_session().create_client("sqs", region_name=region) as client:
+        resp = await client.get_queue_attributes(
+            QueueUrl=queue_url,
+            AttributeNames=["ApproximateNumberOfMessages", "ApproximateNumberOfMessagesNotVisible"],
+        )
+        attrs = resp["Attributes"]
+        return int(attrs["ApproximateNumberOfMessages"]) + int(
+            attrs["ApproximateNumberOfMessagesNotVisible"]
+        )
+
+
+async def _drain_aws_queue(queue_url: str, region: str, *, timeout: float = _DRAIN_TIMEOUT) -> int:
+    """Drains an SQS queue (purge, then receive-and-delete) and returns the count deleted.
+
+    Declares the queue empty only after several consecutive long-poll timeouts, so staggered
+    SNS->SQS delivery (or messages still becoming visible) does not cause a premature stop.
+    """
+    deleted = 0
+    empty_polls = 0
+    loop = asyncio.get_running_loop()
+    deadline = loop.time() + timeout
+    async with get_boto_session().create_client("sqs", region_name=region) as client:
+        with contextlib.suppress(Exception):
+            await client.purge_queue(QueueUrl=queue_url)
+        while loop.time() < deadline:
+            resp = await client.receive_message(
+                QueueUrl=queue_url,
+                MaxNumberOfMessages=10,
+                WaitTimeSeconds=_DRAIN_POLL_WAIT,
+            )
+            messages = resp.get("Messages") or []
+            if messages:
+                await client.delete_message_batch(
+                    QueueUrl=queue_url,
+                    Entries=[
+                        {"Id": str(i), "ReceiptHandle": msg["ReceiptHandle"]}
+                        for i, msg in enumerate(messages)
+                    ],
+                )
+                deleted += len(messages)
+                empty_polls = 0
+            elif empty_polls + 1 >= _DRAIN_EMPTY_POLLS:
+                return deleted
+            else:
+                empty_polls += 1
+    return deleted
+
+
+async def _assert_aws_queue_empty(queue_url: str, region: str) -> None:
+    """Retries the depth check to absorb SQS approximate-count eventual consistency."""
+    depth = await _aws_queue_depth(queue_url, region)
+    for _ in range(_DEPTH_CHECK_RETRIES):
+        if depth == 0:
+            return
+        await asyncio.sleep(_DEPTH_CHECK_INTERVAL)
+        depth = await _aws_queue_depth(queue_url, region)
+    pytest.fail(f"SQS queue {queue_url} not empty after drain (depth={depth})")
+
+
+# ---------------------------------------------------------------------------
+# GCP Pub/Sub helpers
+# ---------------------------------------------------------------------------
+
+
+def _drain_gcp_subscription(project_id: str, subscription_id: str, *, timeout: float = 2.0) -> int:
+    """Pulls and acknowledges all available messages on the subscription; returns the count.
+
+    Loops until a pull returns nothing. An empty subscription either returns no messages or
+    raises ``DeadlineExceeded`` once the pull window elapses; both are treated as "drained".
+    Only ``pubsub.subscriptions.pull``/``acknowledge`` are used (the subscriber role), so
+    no ``pubsub.subscriptions.get`` permission is needed.
+    """
+    sub_path = f"projects/{project_id}/subscriptions/{subscription_id}"
+    subscriber = pubsub_v1.SubscriberClient()
+    acked = 0
+    try:
+        while True:
+            try:
+                response = subscriber.pull(
+                    request={"subscription": sub_path, "max_messages": 10}, timeout=timeout
+                )
+            except Exception:  # DeadlineExceeded -> no messages available right now.
+                return acked
+            ack_ids = [msg.ack_id for msg in response.received_messages]
+            if not ack_ids:
+                return acked
+            subscriber.acknowledge(request={"subscription": sub_path, "ack_ids": ack_ids})
+            acked += len(ack_ids)
+    finally:
+        subscriber.close()
+
+
+# ---------------------------------------------------------------------------
+# Hygiene orchestrator
+# ---------------------------------------------------------------------------
+
+
+async def _clean_broker(
+    *,
+    pre_test: bool,
+    queue_url: _t.Optional[str] = None,
+    region: _t.Optional[str] = None,
+    project_id: _t.Optional[str] = None,
+    subscription_id: _t.Optional[str] = None,
+) -> None:
+    """Ensures a broker is empty.
+
+    In ``pre_test`` mode a non-empty broker emits a warning and is drained, then the empty
+    state is asserted (a leftover that cannot be drained fails the test). In post-test mode
+    it is drained unconditionally so a failed run leaves nothing for the next one.
+    """
+    if queue_url and region:
+        depth = await _aws_queue_depth(queue_url, region)
+        if depth:
+            message = f"SQS queue {queue_url} was not empty ({depth} message(s)); draining"
+            _LOG.warning(message) if pre_test else _LOG.info(message)
+            if pre_test:
+                warnings.warn(message, stacklevel=2)
+            await _drain_aws_queue(queue_url, region)
+            if pre_test:
+                await _assert_aws_queue_empty(queue_url, region)
+
+    if project_id and subscription_id:
+        drained = _drain_gcp_subscription(project_id, subscription_id)
+        if drained:
+            message = (
+                f"PubSub subscription {subscription_id} had {drained} leftover message(s); drained"
+            )
+            if pre_test:
+                warnings.warn(message, stacklevel=2)
+            (_LOG.warning if pre_test else _LOG.info)(message)
+
+
+# ---------------------------------------------------------------------------
+# Tests
+# ---------------------------------------------------------------------------
+
+
 @requires_broker
 async def test_aws_sns_sqs_round_trip(broker_env: None) -> None:
     """Writes records to the SNS topic and reads them back from the linked SQS queue."""
     queue_url = os.environ["AWS_SQS_QUEUE_URL"]
     topic_arn = os.environ["AWS_SNS_TOPIC_ARN"]
     region = os.environ["AWS_REGION"]
+
+    await _clean_broker(pre_test=True, queue_url=queue_url, region=region)
 
     writer = AWSSNSDataWriter(
         name="aws-sns-writer",
@@ -88,12 +257,16 @@ async def test_aws_sns_sqs_round_trip(broker_env: None) -> None:
     await writer.init()
     try:
         await write_records(writer, RECORDS)
+        received = await read_records(reader, len(RECORDS))
     finally:
         await writer.destroy()
         await reader.destroy()
 
-    received = await read_records(reader, len(RECORDS))
-    assert sorted(map(tuple, received)) == sorted(map(tuple, RECORDS))
+    assert sorted((record["x"], record["y"]) for record in received) == EXPECTED
+
+    # Reading acked every record, so the queue should be clean; drain + assert as a safety.
+    await _clean_broker(pre_test=False, queue_url=queue_url, region=region)
+    await _assert_aws_queue_empty(queue_url, region)
 
 
 @requires_broker
@@ -102,6 +275,8 @@ async def test_gcp_pubsub_round_trip(broker_env: None) -> None:
     project_id = os.environ["GCP_PUBSUB_PROJECT_ID"]
     topic_id = os.environ["GCP_TOPIC_ID"]
     subscription_id = os.environ["GCP_SUBSCRIPTION_ID"]
+
+    await _clean_broker(pre_test=True, project_id=project_id, subscription_id=subscription_id)
 
     writer = GCPPubSubDataWriter(
         name="gcp-pubsub-writer",
@@ -124,12 +299,20 @@ async def test_gcp_pubsub_round_trip(broker_env: None) -> None:
     await writer.init()
     try:
         await write_records(writer, RECORDS)
+        received = await read_records(reader, len(RECORDS))
     finally:
         await writer.destroy()
         await reader.destroy()
 
-    received = await read_records(reader, len(RECORDS))
-    assert sorted(map(tuple, received)) == sorted(map(tuple, RECORDS))
+    assert sorted((record["x"], record["y"]) for record in received) == EXPECTED
+
+    # Reading acked every record, so the subscription should be clean; drain as a safety.
+    await _clean_broker(pre_test=False, project_id=project_id, subscription_id=subscription_id)
+
+
+# ---------------------------------------------------------------------------
+# Driving helpers
+# ---------------------------------------------------------------------------
 
 
 async def write_records(
@@ -150,12 +333,12 @@ async def write_records(
 async def read_records(
     reader: AWSSQSDataReader | GCPPubSubDataReader,
     expected: int,
-    timeout: float = 60.0,
+    timeout: float = _READ_TIMEOUT,
 ) -> list[dict[str, _t.Any]]:
     """Steps the reader until ``expected`` records are collected or ``timeout`` elapses.
 
-    The reader waits for the next message rather than closing on an empty poll, so an
-    absent message surfaces as a timeout here instead of a silent pass.
+    A reader waits for the next message rather than closing on an empty poll, so an absent
+    message surfaces as a timeout here instead of a silent pass.
     """
     collected: list[dict[str, _t.Any]] = []
     loop = asyncio.get_running_loop()
