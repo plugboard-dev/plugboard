@@ -39,6 +39,7 @@ evironment below when they are not supplied:
 |---------------------------|----------------------------------------|---------------|
 | `GCP_PUBSUB_PROJECT_ID`   | GCP project for PubSub topics and subscriptions | |
 | `AWS_REGION`              | AWS region for SQS and SNS clients     | |
+| `KAFKA_BOOTSTRAP_SERVERS` | Kafka broker address(es)               | |
 
 Note that `AWS_REGION` is also read by the AWS SDK itself, so setting it affects both
 Plugboard's defaults and the credential/endpoint resolution of the underlying client.
