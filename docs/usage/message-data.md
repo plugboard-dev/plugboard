@@ -105,6 +105,12 @@ mid-batch leaves the unread messages to be redelivered (at-least-once). For SQS,
 per poll (and per send for writers). SQS delivers at most 10 messages per call, so a
 larger `chunk_size` is capped there and a warning is logged.
 
+**SNS fan-out is transparent to the SQS reader.** When you subscribe an SQS queue to an
+SNS topic (the usual `AWSSNSDataWriter` -> `AWSSQSDataReader` topology), SQS delivers the
+SNS notification envelope rather than the raw payload. `AWSSQSDataReader` unwraps the
+envelope automatically, so the reader still yields the published fields. A body that is
+not a JSON object (a raw string, or a JSON scalar) is exposed under a `data` field.
+
 **Failures are retried with backoff.** Transient broker errors trigger a reconnect and a
 retry, doubling the delay up to a cap. Permanent errors — such as `AccessDenied` or a
 deleted topic — fail immediately instead of burning the retries. Both the classification

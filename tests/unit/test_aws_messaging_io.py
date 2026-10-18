@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections import deque
 import contextlib
+import json
 import typing as _t
 from unittest.mock import AsyncMock, MagicMock, call
 
@@ -167,6 +168,22 @@ async def test_reader_non_json_body_uses_data_field() -> None:
     assert converted == {"data": deque(["hello"])}
 
 
+async def test_reader_unwraps_sns_envelope() -> None:
+    """Tests that an SNS notification envelope delivers the nested record."""
+    reader = make_reader()
+    await reader._connect()
+    envelope = json.dumps(
+        {
+            "Type": "Notification",
+            "MessageId": "abc-123",
+            "Message": json.dumps({"x": 1, "y": "a"}),
+            "TopicArn": "arn:aws:sns:us-east-1:123:topic",
+        }
+    )
+    batch = [sqs_message(envelope, "h1")]
+    assert await reader._convert(batch) == {"x": deque([1]), "y": deque(["a"])}
+
+
 async def test_reader_deletes_processed_messages(aws_client: MagicMock) -> None:
     """Tests that acking deletes by receipt handle, in one batch."""
     reader = make_reader()
@@ -177,7 +194,7 @@ async def test_reader_deletes_processed_messages(aws_client: MagicMock) -> None:
 
     aws_client.delete_message_batch.assert_awaited_once_with(
         QueueUrl="https://sqs.test/1/messages",
-        DeleteMessageRequests=[
+        Entries=[
             {"Id": "0", "ReceiptHandle": "h1"},
             {"Id": "1", "ReceiptHandle": "h2"},
         ],
@@ -193,8 +210,8 @@ async def test_reader_splits_deletes_into_batch_size_chunks(aws_client: MagicMoc
     await reader._ack(messages)
 
     calls = aws_client.delete_message_batch.await_args_list
-    assert [len(call.kwargs["DeleteMessageRequests"]) for call in calls] == [10, 2]
-    assert calls[1].kwargs["DeleteMessageRequests"][0]["ReceiptHandle"] == "h10"
+    assert [len(call.kwargs["Entries"]) for call in calls] == [10, 2]
+    assert calls[1].kwargs["Entries"][0]["ReceiptHandle"] == "h10"
 
 
 async def test_reader_skips_messages_without_receipt_handle(aws_client: MagicMock) -> None:

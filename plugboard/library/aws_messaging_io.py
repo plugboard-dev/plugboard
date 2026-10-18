@@ -80,6 +80,39 @@ _MISSING_RESOURCE_CODES = frozenset(
 )
 
 
+def _decode_body(body: str, *, parse_json: bool) -> dict[str, _t.Any]:
+    """Decodes an SQS message body into a record dict.
+
+    Handles SNS fan-out: when an SNS topic is subscribed to the queue, SQS delivers the
+    SNS notification envelope rather than the raw payload, so the actual record is nested
+    under the envelope's ``Message`` field. A record that is not an object (a raw string
+    body, or a JSON scalar) is exposed under the ``data`` field.
+
+    Args:
+        body: The raw SQS message body.
+        parse_json: Whether the record is JSON.
+
+    Returns:
+        The decoded record as a dict.
+    """
+    if not parse_json:
+        return {"data": body}
+    try:
+        record = json.loads(body)
+    except (json.JSONDecodeError, TypeError):
+        return {"data": body}
+    if isinstance(record, dict) and record.get("Type") == "Notification" and "Message" in record:
+        record = record["Message"]
+        if isinstance(record, str):
+            try:
+                record = json.loads(record)
+            except (json.JSONDecodeError, TypeError):
+                return {"data": record}
+    if not isinstance(record, dict):
+        return {"data": record}
+    return record
+
+
 def _error_code(error: Exception) -> _t.Optional[str]:
     """Extracts the AWS error code from a client error, if it has one."""
     if not isinstance(error, _CLIENT_ERRORS):
@@ -210,11 +243,7 @@ class AWSSQSDataReader(MessageDataReader):
         """
         converted: dict[str, deque] = {field: deque() for field in self.io.outputs}
         for msg in data:
-            body = msg.get("Body", "")
-            if self._parse_json:
-                record = json.loads(body)
-            else:
-                record = {"data": body}
+            record = _decode_body(msg.get("Body", ""), parse_json=self._parse_json)
             for field in self.io.outputs:
                 converted[field].append(record.get(field))
         return converted
@@ -243,7 +272,7 @@ class AWSSQSDataReader(MessageDataReader):
                 continue
             try:
                 response = await self._client.delete_message_batch(
-                    QueueUrl=self._queue_url, DeleteMessageRequests=entries
+                    QueueUrl=self._queue_url, Entries=entries
                 )
             except Exception as error:  # noqa: BLE001
                 raise _wrap_error(error) from error

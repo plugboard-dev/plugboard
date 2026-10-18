@@ -141,6 +141,13 @@ jobs:
           docker compose up -d
           sleep 10 # Wait for services to start
 
+      - name: Configure GCP Pub/Sub credentials
+        if: ${{ vars.PLUGBOARD_MESSAGE_BROKER_TESTS == 'true' }}
+        env:
+          GCP_SA_KEY_JSON: ${{ secrets.GCP_SA_KEY_JSON }}
+        run: |
+          echo "$GCP_SA_KEY_JSON" > /tmp/gcp-sa-key.json
+
       - name: Run integration tests
         run: COVERAGE_FILE=.coverage.py${{ matrix.python_version }}.integration uv run coverage run -m pytest ./tests/integration/ -m "not tuner"
         env:
@@ -148,6 +155,21 @@ jobs:
           REDIS_URL: redis://default:password@localhost:6379/
           RAY_ENABLE_UV_RUN_RUNTIME_ENV: 0
           PLUGBOARD_IO_READ_TIMEOUT: 5.0
+          # Run the message broker integration tests (AWS SQS/SNS + GCP Pub/Sub).
+          PLUGBOARD_MESSAGE_BROKER_TESTS: ${{ vars.PLUGBOARD_MESSAGE_BROKER_TESTS }}
+          # AWS SQS/SNS identifiers.
+          AWS_REGION: ${{ vars.AWS_REGION }}
+          AWS_SQS_QUEUE_URL: ${{ vars.AWS_SQS_QUEUE_URL }}
+          AWS_SNS_TOPIC_ARN: ${{ vars.AWS_SNS_TOPIC_ARN }}
+          # GCP Pub/Sub identifiers.
+          GCP_PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}
+          GCP_PUBSUB_PROJECT_ID: ${{ vars.GCP_PUBSUB_PROJECT_ID }}
+          GCP_TOPIC_ID: ${{ vars.GCP_TOPIC_ID }}
+          GCP_SUBSCRIPTION_ID: ${{ vars.GCP_SUBSCRIPTION_ID }}
+          # Broker credentials (AWS credential chain + GCP Application Default Credentials).
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          GOOGLE_APPLICATION_CREDENTIALS: /tmp/gcp-sa-key.json
 
       - name: Upload integration test coverage
         uses: actions/upload-artifact@v4
