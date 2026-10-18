@@ -5,7 +5,6 @@ from .data_reader import DataReader
 from .data_writer import DataWriter
 from .file_io import FileReader, FileWriter
 from .gcp_pubsub_io import GCPPubSubDataReader, GCPPubSubDataWriter
-from .kafka_io import KafkaDataReader, KafkaDataWriter
 from .llm import LLMChat, LLMImageProcessor
 from .message_reader import MessageDataReader
 from .message_writer import MessageDataWriter
@@ -22,8 +21,6 @@ __all__ = [
     "FileWriter",
     "GCPPubSubDataReader",
     "GCPPubSubDataWriter",
-    "KafkaDataReader",
-    "KafkaDataWriter",
     "LLMChat",
     "LLMImageProcessor",
     "MessageDataReader",

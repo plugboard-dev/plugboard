@@ -81,18 +81,6 @@ class _AWSSettings(BaseSettings):
     region: _t.Optional[str] = None
 
 
-class _KafkaSettings(BaseSettings):
-    """Apache Kafka settings.
-
-    Attributes:
-        bootstrap_servers: Kafka broker address(es).
-    """
-
-    model_config = SettingsConfigDict(env_prefix="KAFKA_")
-
-    bootstrap_servers: _t.Optional[str] = None
-
-
 class Settings(BaseSettings):
     """Settings for Plugboard.
 
@@ -107,7 +95,6 @@ class Settings(BaseSettings):
         redis: Redis settings.
         gcp_pubsub: Google Cloud PubSub settings.
         aws: AWS settings for SNS/SQS messaging.
-        kafka: Apache Kafka settings.
     """
 
     model_config = SettingsConfigDict(env_prefix=_ENV_PREFIX)
@@ -121,7 +108,6 @@ class Settings(BaseSettings):
     redis: _RedisSettings = Field(default_factory=_RedisSettings)
     gcp_pubsub: _GCPPubSubSettings = Field(default_factory=_GCPPubSubSettings)
     aws: _AWSSettings = Field(default_factory=_AWSSettings)
-    kafka: _KafkaSettings = Field(default_factory=_KafkaSettings)
 
 
 _ArgumentT = _t.TypeVar("_ArgumentT")
