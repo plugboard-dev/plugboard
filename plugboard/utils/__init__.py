@@ -9,6 +9,7 @@ from plugboard.utils.path_utils import add_sys_path
 from plugboard.utils.random import gen_rand_str
 from plugboard.utils.ray import build_actor_wrapper, is_on_ray_worker
 from plugboard.utils.registry import ClassRegistry
+from plugboard.utils.retry import RetryPolicy
 from plugboard.utils.settings import Settings
 
 
@@ -25,5 +26,6 @@ __all__ = [
     "EntityIdGen",
     "Exportable",
     "ExportMixin",
+    "RetryPolicy",
     "Settings",
 ]
