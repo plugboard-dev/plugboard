@@ -142,15 +142,52 @@ jobs:
           sleep 10 # Wait for services to start
 
       - name: Run integration tests
-        # The message broker tests (AWS SQS/SNS + GCP Pub/Sub) run in the
-        # test-message-brokers job, which is serialized on the shared SQS queue and GCP
-        # subscription; they are excluded here so the matrix legs cannot race on them.
-        run: COVERAGE_FILE=.coverage.py${{ matrix.python_version }}.integration uv run coverage run -m pytest ./tests/integration/ --ignore=./tests/integration/test_message_data_brokers.py -m "not tuner"
+        # The message broker round trips are part of this suite and run on every Python
+        # leg. Each leg resolves its own dedicated broker lane (one SNS+SQS pair and
+        # Pub/Sub topic+subscription per Python version, provisioned in plugboard-infra
+        # and stored in the BROKER_LANES_JSON variable), so the legs run concurrently
+        # without contending on a shared queue or subscription. When broker tests are off
+        # the lane resolution is skipped and the broker tests self-skip.
+        run: |
+          # Resolve this leg's broker lane. The broker tests self-skip unless these env vars
+          # are set, so when broker tests are off, or lanes have not been provisioned for this
+          # run (e.g. a fork pull request where vars/secrets are unavailable), they simply skip.
+          if [ "${PLUGBOARD_MESSAGE_BROKER_TESTS}" = "true" ] && [ -n "${BROKER_LANES_JSON:-}" ]; then
+            # A lanes file is present but has no entry for this Python version: that is a
+            # configuration mismatch (version in the matrix but not in terraform), so fail loud.
+            if ! jq -e --arg v "$PYTHON_VERSION" 'has($v)' <<< "$BROKER_LANES_JSON" > /dev/null; then
+              echo "::error::No broker lane for Python $PYTHON_VERSION in BROKER_LANES_JSON"
+              exit 1
+            fi
+            printf '%s' "$GCP_SA_KEY_JSON" > /tmp/gcp-sa-key.json
+            # The lane values are queue URLs, topic ARNs and resource ids (no shell metacharacters),
+            # so the generated `export` lines are safe to eval.
+            eval "$(jq -r --arg v "$PYTHON_VERSION" \
+              '.[$v] | "export AWS_SQS_QUEUE_URL=\(.aws_sqs_queue_url)\nexport AWS_SNS_TOPIC_ARN=\(.aws_sns_topic_arn)\nexport GCP_TOPIC_ID=\(.gcp_topic_id)\nexport GCP_SUBSCRIPTION_ID=\(.gcp_subscription_id)"' \
+              <<< "$BROKER_LANES_JSON")"
+            export GOOGLE_APPLICATION_CREDENTIALS=/tmp/gcp-sa-key.json
+            echo "Broker lane for Python $PYTHON_VERSION:"
+            echo "  AWS_SQS_QUEUE_URL=$AWS_SQS_QUEUE_URL"
+            echo "  GCP_TOPIC_ID=$GCP_TOPIC_ID"
+          fi
+          COVERAGE_FILE=.coverage.py${{ matrix.python_version }}.integration \
+            uv run coverage run -m pytest ./tests/integration/ -m "not tuner"
         env:
           RABBITMQ_URL: amqp://user:password@localhost:5672/
           REDIS_URL: redis://default:password@localhost:6379/
           RAY_ENABLE_UV_RUN_RUNTIME_ENV: 0
           PLUGBOARD_IO_READ_TIMEOUT: 5.0
+          # Message broker test inputs. The per-lane identifiers are resolved from
+          # BROKER_LANES_JSON in the step above (only when the tests are enabled).
+          PYTHON_VERSION: ${{ matrix.python_version }}
+          PLUGBOARD_MESSAGE_BROKER_TESTS: ${{ vars.PLUGBOARD_MESSAGE_BROKER_TESTS }}
+          BROKER_LANES_JSON: ${{ vars.BROKER_LANES_JSON }}
+          GCP_SA_KEY_JSON: ${{ secrets.GCP_SA_KEY_JSON }}
+          AWS_REGION: ${{ vars.AWS_REGION }}
+          GCP_PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}
+          GCP_PUBSUB_PROJECT_ID: ${{ vars.GCP_PUBSUB_PROJECT_ID }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 
       - name: Upload integration test coverage
         uses: actions/upload-artifact@v4
@@ -158,71 +195,6 @@ jobs:
           name: coverage-integration-py${{ matrix.python_version }}
           include-hidden-files: true
           path: .coverage.py${{ matrix.python_version }}.integration*
-
-  test-message-brokers:
-    name: Tests - message brokers
-    runs-on: ubuntu-latest
-    # The broker tests run on every supported Python version, each takes ~15 s against the
-    # real brokers, plus install time per version.
-    timeout-minutes: 20
-    # The broker tests publish to a single shared SQS queue and GCP subscription, so they
-    # must never run at the same time. A dedicated concurrency group serializes the job
-    # across concurrent workflow runs; because this is a single job (not a matrix), a run
-    # contributes at most one member to the group, so at most one is running and one queued
-    # and no leg is ever cancelled as a waiting request. The Python loop below runs the
-    # tests for each supported version in turn, keeping them on every version while
-    # contending for the shared brokers one at a time.
-    concurrency:
-      group: message-brokers
-      cancel-in-progress: false
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Install uv
-        uses: astral-sh/setup-uv@v4
-        with:
-          enable-cache: true
-          cache-dependency-glob: "uv.lock"
-
-      - name: Configure GCP Pub/Sub credentials
-        if: ${{ vars.PLUGBOARD_MESSAGE_BROKER_TESTS == 'true' }}
-        env:
-          GCP_SA_KEY_JSON: ${{ secrets.GCP_SA_KEY_JSON }}
-        run: |
-          echo "$GCP_SA_KEY_JSON" > /tmp/gcp-sa-key.json
-
-      - name: Run message broker tests on every supported Python
-        # Runs on every supported Python version (the loop) but one version at a time, so
-        # the shared SQS queue and GCP subscription are never contended. This is a plain
-        # test gate (no coverage): the broker code it exercises is already measured by the
-        # unit tests. When PLUGBOARD_MESSAGE_BROKER_TESTS is off, both tests skip and the
-        # job passes.
-        if: ${{ vars.PLUGBOARD_MESSAGE_BROKER_TESTS == 'true' }}
-        run: |
-          for version in 3.12 3.13 3.14; do
-            echo "::group::Python $version"
-            uv python install "$version"
-            uv sync --group test --python "$version"
-            uv run --python "$version" pytest ./tests/integration/test_message_data_brokers.py
-            echo "::endgroup::"
-          done
-        env:
-          PLUGBOARD_MESSAGE_BROKER_TESTS: "true"
-          PLUGBOARD_IO_READ_TIMEOUT: 5.0
-          # AWS SQS/SNS identifiers.
-          AWS_REGION: ${{ vars.AWS_REGION }}
-          AWS_SQS_QUEUE_URL: ${{ vars.AWS_SQS_QUEUE_URL }}
-          AWS_SNS_TOPIC_ARN: ${{ vars.AWS_SNS_TOPIC_ARN }}
-          # GCP Pub/Sub identifiers.
-          GCP_PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}
-          GCP_PUBSUB_PROJECT_ID: ${{ vars.GCP_PUBSUB_PROJECT_ID }}
-          GCP_TOPIC_ID: ${{ vars.GCP_TOPIC_ID }}
-          GCP_SUBSCRIPTION_ID: ${{ vars.GCP_SUBSCRIPTION_ID }}
-          # Broker credentials (AWS credential chain + GCP Application Default Credentials).
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          GOOGLE_APPLICATION_CREDENTIALS: /tmp/gcp-sa-key.json
 
   test-integration-tuner:
     name: Tests - integration:tuner
