@@ -329,15 +329,17 @@ async def test_gcp_pubsub_round_trip(broker_env: None) -> None:
         await write_records(writer, writer_channels, RECORDS)
         received = await read_records(reader, len(RECORDS))
         assert sorted((record["x"], record["y"]) for record in received) == EXPECTED
-    finally:
-        await writer.destroy()
-        await reader.destroy()
-        # Clean up so nothing interferes with the next run, then confirm the
-        # subscription is genuinely empty (the reader should have acked everything).
-        await _clean_broker(pre_test=False, project_id=project_id, subscription_id=subscription_id)
+        # The reader acknowledged every record, so the subscription should already be
+        # empty. Checked before the finally cleanup drains it, so leftover messages are
+        # caught rather than silently removed.
         assert _gcp_subscription_undelivered(project_id, subscription_id) == 0, (
             "PubSub subscription not empty after the round trip"
         )
+    finally:
+        await writer.destroy()
+        await reader.destroy()
+        # Clean up so nothing interferes with the next run.
+        await _clean_broker(pre_test=False, project_id=project_id, subscription_id=subscription_id)
 
 
 async def connect_writer(

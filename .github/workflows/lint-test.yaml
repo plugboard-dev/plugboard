@@ -115,12 +115,6 @@ jobs:
     name: Tests - integration
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    # The message broker integration tests publish to a single shared SQS queue and
-    # GCP subscription, so concurrent runs must not collide on them. Serializing the
-    # job across runs keeps one set of broker tests at a time.
-    concurrency:
-      group: test-integration
-      cancel-in-progress: false
     strategy:
       matrix:
         python_version: [3.12, 3.13, 3.14]
@@ -147,6 +141,50 @@ jobs:
           docker compose up -d
           sleep 10 # Wait for services to start
 
+      - name: Run integration tests
+        # The message broker tests (AWS SQS/SNS + GCP Pub/Sub) run in the
+        # test-message-brokers job, which is serialized on the shared SQS queue and GCP
+        # subscription; they are excluded here so the matrix legs cannot race on them.
+        run: COVERAGE_FILE=.coverage.py${{ matrix.python_version }}.integration uv run coverage run -m pytest ./tests/integration/ --ignore=./tests/integration/test_message_data_brokers.py -m "not tuner"
+        env:
+          RABBITMQ_URL: amqp://user:password@localhost:5672/
+          REDIS_URL: redis://default:password@localhost:6379/
+          RAY_ENABLE_UV_RUN_RUNTIME_ENV: 0
+          PLUGBOARD_IO_READ_TIMEOUT: 5.0
+
+      - name: Upload integration test coverage
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-integration-py${{ matrix.python_version }}
+          include-hidden-files: true
+          path: .coverage.py${{ matrix.python_version }}.integration*
+
+  test-message-brokers:
+    name: Tests - message brokers
+    runs-on: ubuntu-latest
+    # The broker tests run on every supported Python version, each takes ~15 s against the
+    # real brokers, plus install time per version.
+    timeout-minutes: 20
+    # The broker tests publish to a single shared SQS queue and GCP subscription, so they
+    # must never run at the same time. A dedicated concurrency group serializes the job
+    # across concurrent workflow runs; because this is a single job (not a matrix), a run
+    # contributes at most one member to the group, so at most one is running and one queued
+    # and no leg is ever cancelled as a waiting request. The Python loop below runs the
+    # tests for each supported version in turn, keeping them on every version while
+    # contending for the shared brokers one at a time.
+    concurrency:
+      group: message-brokers
+      cancel-in-progress: false
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+        with:
+          enable-cache: true
+          cache-dependency-glob: "uv.lock"
+
       - name: Configure GCP Pub/Sub credentials
         if: ${{ vars.PLUGBOARD_MESSAGE_BROKER_TESTS == 'true' }}
         env:
@@ -154,17 +192,24 @@ jobs:
         run: |
           echo "$GCP_SA_KEY_JSON" > /tmp/gcp-sa-key.json
 
-      - name: Run integration tests
-        run: COVERAGE_FILE=.coverage.py${{ matrix.python_version }}.integration uv run coverage run -m pytest ./tests/integration/ -m "not tuner"
+      - name: Run message broker tests on every supported Python
+        # Runs on every supported Python version (the loop) but one version at a time, so
+        # the shared SQS queue and GCP subscription are never contended. This is a plain
+        # test gate (no coverage): the broker code it exercises is already measured by the
+        # unit tests. When PLUGBOARD_MESSAGE_BROKER_TESTS is off, both tests skip and the
+        # job passes.
+        if: ${{ vars.PLUGBOARD_MESSAGE_BROKER_TESTS == 'true' }}
+        run: |
+          for version in 3.12 3.13 3.14; do
+            echo "::group::Python $version"
+            uv python install "$version"
+            uv sync --group test --python "$version"
+            uv run --python "$version" pytest ./tests/integration/test_message_data_brokers.py
+            echo "::endgroup::"
+          done
         env:
-          RABBITMQ_URL: amqp://user:password@localhost:5672/
-          REDIS_URL: redis://default:password@localhost:6379/
-          RAY_ENABLE_UV_RUN_RUNTIME_ENV: 0
+          PLUGBOARD_MESSAGE_BROKER_TESTS: "true"
           PLUGBOARD_IO_READ_TIMEOUT: 5.0
-          # Run the message broker integration tests (AWS SQS/SNS + GCP Pub/Sub).
-          # Gated to a single Python leg: the tests share one SQS queue and GCP
-          # subscription, so the matrix legs must not run them concurrently.
-          PLUGBOARD_MESSAGE_BROKER_TESTS: ${{ vars.PLUGBOARD_MESSAGE_BROKER_TESTS == 'true' && matrix.python_version == 3.12 && 'true' || 'false' }}
           # AWS SQS/SNS identifiers.
           AWS_REGION: ${{ vars.AWS_REGION }}
           AWS_SQS_QUEUE_URL: ${{ vars.AWS_SQS_QUEUE_URL }}
@@ -178,13 +223,6 @@ jobs:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           GOOGLE_APPLICATION_CREDENTIALS: /tmp/gcp-sa-key.json
-
-      - name: Upload integration test coverage
-        uses: actions/upload-artifact@v4
-        with:
-          name: coverage-integration-py${{ matrix.python_version }}
-          include-hidden-files: true
-          path: .coverage.py${{ matrix.python_version }}.integration*
 
   test-integration-tuner:
     name: Tests - integration:tuner
