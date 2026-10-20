@@ -63,6 +63,8 @@ We can now define a component to query a weather API and get temperature and win
 !!! info
     See how we used `self._logger` to record log messages. All Plugboard [`Component`][plugboard.component.Component] objects have a [structlog](https://www.structlog.org/) logger on the `_logger` attribute. See [configuration](../../../usage/configuration/) for more information on configuring the logging.
 
+`WeatherAPI` owns its HTTP client and closes it in `destroy`. HTTP status and transport failures are logged and emit `None` for both weather outputs, so a failed request cannot reuse weather from the previous location. Invalid response data raises an error instead of silently producing a result.
+
 ### Putting it all together
 
 As usual, we can link all our components together in a [`LocalProcess`][plugboard.process.Process] and run them as follows:
