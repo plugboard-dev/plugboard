@@ -110,11 +110,12 @@ class RayProcess(Process):
     async def init(self) -> None:
         """Performs component initialisation actions."""
         self.validate()
-        self._component_actors = {
-            # Recreate components on remote actors only when execution starts.
-            component.id: self._create_component_actor(component)
-            for component in self.components.values()
-        }
+        if not self._component_actors:
+            # Create actors on first initialization and reuse them across runs.
+            self._component_actors = {
+                component.id: self._create_component_actor(component)
+                for component in self.components.values()
+            }
         await asyncio.gather(*(connector.init() for connector in self.connectors.values()))
         await self.connect_state()
         await self._connect_components()
