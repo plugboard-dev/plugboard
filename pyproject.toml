@@ -207,4 +207,3 @@ cc_min = "C"
 mi_min = "B"
 
 [tool.licensecheck]
-ignore_packages = ["fsspec"]
