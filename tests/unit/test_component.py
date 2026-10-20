@@ -1,12 +1,15 @@
 """Unit tests for `Component`."""
 # ruff: noqa: D101,D102,D103
 
+import copy
+from pathlib import Path
 import typing as _t
 
 import pytest
 
 from plugboard.component import Component, IOController as IO
 from plugboard.connector import AsyncioConnector
+from plugboard.library.file_io import FileReader, FileWriter
 from plugboard.schemas import ComponentArgsDict, ConnectorSpec, Status
 
 
@@ -32,6 +35,81 @@ class S(Component):
         self.component_status = str(self.status)
         if self._remaining_iters <= 0:
             await self.io.close()
+
+
+@pytest.mark.parametrize("field", ["a", "b", "c"])
+def test_unset_declared_field(field: str) -> None:
+    component = A(name="static")
+    assert getattr(component, field) is None
+    assert hasattr(component, field)
+    assert field not in vars(component)
+    assert component._field_inputs == {}
+    assert not component._field_inputs_ready
+
+    setattr(component, field, None)
+    assert getattr(component, field) is None
+    assert field in vars(component)
+    if field in component.io.inputs:
+        assert field in component._field_inputs
+
+
+@pytest.mark.parametrize("field", ["misspelled", "_missing", "__setstate__"])
+def test_unknown_attribute(field: str) -> None:
+    component = A(name="static")
+    with pytest.raises(AttributeError, match=f"A component 'static'.*'{field}'"):
+        getattr(component, field)
+    assert not hasattr(component, field)
+    assert getattr(component, field, "fallback") == "fallback"
+
+
+def test_normal_attributes_and_inherited_ports() -> None:
+    class Derived(A):
+        io = IO(outputs=["extra"])
+
+    component = Derived(name="derived")
+    component.custom = 42
+    assert component.name == "derived"
+    assert component.custom == 42
+    for field in ("a", "b", "c", "extra"):
+        assert getattr(component, field) is None
+
+
+def test_attribute_lookup_before_initialization() -> None:
+    component = object.__new__(A)
+    assert component.a is None
+    with pytest.raises(AttributeError, match="A component '<unnamed>'.*'missing'"):
+        component.missing
+
+
+def test_dynamic_reader_ports_are_instance_specific(tmp_path: Path) -> None:
+    reader = FileReader(name="reader", path=tmp_path / "data.csv", field_names=["temperature"])
+    other = FileReader(name="other", path=tmp_path / "data.csv", field_names=["pressure"])
+    assert reader.temperature is None
+    assert hasattr(reader, "temperature")
+    assert not hasattr(other, "temperature")
+    assert other.pressure is None
+    assert not hasattr(reader, "pressure")
+    with pytest.raises(AttributeError, match="FileReader component 'reader'.*'temprature'"):
+        reader.temprature
+
+    reader.temperature = 12
+    assert reader.temperature == 12
+    restored = FileReader(**reader.export()["args"])
+    assert restored.temperature is None
+    assert not hasattr(restored, "pressure")
+    cloned = copy.deepcopy(reader)
+    assert cloned.temperature == 12
+    assert not hasattr(cloned, "pressure")
+
+
+def test_dynamic_writer_ports(tmp_path: Path) -> None:
+    writer = FileWriter(name="writer", path=tmp_path / "data.csv", field_names=["temperature"])
+    assert writer.temperature is None
+    assert "temperature" not in vars(writer)
+    assert not hasattr(writer, "temprature")
+    writer.temperature = None
+    assert writer._field_inputs == {"temperature": None}
+    assert "temperature" in vars(writer)
 
 
 @pytest.mark.asyncio
