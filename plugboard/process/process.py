@@ -109,12 +109,21 @@ class Process(ExportMixin, ABC):
     @abstractmethod
     async def init(self) -> None:
         """Performs component initialisation actions."""
+        self.validate()
+        self._is_initialised = True
+        await self._set_status(Status.INIT)
+
+    def validate(self) -> None:
+        """Validate the process topology without acquiring external resources."""
+        for component in self.components.values():
+            if not hasattr(component, "_state_is_connected"):
+                raise ValidationError(
+                    "Component invalid: did you forget to call super().__init__ in the constructor?"
+                )
         errors = validate_process(self.dict())
         if errors:
             msg = "Process validation failed:\n" + "\n".join(errors)
             raise ValidationError(msg)
-        self._is_initialised = True
-        await self._set_status(Status.INIT)
 
     @abstractmethod
     async def step(self) -> None:
