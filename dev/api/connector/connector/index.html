@@ -2034,6 +2034,17 @@ What's new: 🚀 we've open-sourced Plugboard - please <a href="https://github.c
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#plugboard.connector.Connector.init" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;init
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -2351,6 +2362,17 @@ What's new: 🚀 we've open-sourced Plugboard - please <a href="https://github.c
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#plugboard.connector.RayConnector.init" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;init
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -2556,6 +2578,17 @@ What's new: 🚀 we've open-sourced Plugboard - please <a href="https://github.c
     <span class="md-ellipsis">
       
         <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;connect_send
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#plugboard.connector.ZMQConnector.init" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;init
       
     </span>
   </a>
@@ -3080,6 +3113,17 @@ What's new: 🚀 we've open-sourced Plugboard - please <a href="https://github.c
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#plugboard.connector.Connector.init" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;init
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -3397,6 +3441,17 @@ What's new: 🚀 we've open-sourced Plugboard - please <a href="https://github.c
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#plugboard.connector.RayConnector.init" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;init
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -3602,6 +3657,17 @@ What's new: 🚀 we've open-sourced Plugboard - please <a href="https://github.c
     <span class="md-ellipsis">
       
         <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;connect_send
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#plugboard.connector.ZMQConnector.init" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;init
       
     </span>
   </a>
@@ -3846,6 +3912,30 @@ What's new: 🚀 we've open-sourced Plugboard - please <a href="https://github.c
     <div class="doc doc-contents ">
 
         <p>Returns a <code>Channel</code> for sending messages.</p>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="plugboard.connector.Connector.init" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-method"></code>            <span class="doc doc-object-name doc-function-name">init</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-async"><code>async</code></small>
+  </span>
+
+</h3>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">init</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span>
+</span></code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Acquire resources required by this connector.</p>
 
 
     </div>
@@ -4892,6 +4982,30 @@ Only relevant in the case of pub-sub mode channels.</p>
 
 </div>
 
+<div class="doc doc-object doc-function">
+
+
+<h3 id="plugboard.connector.RayConnector.init" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-method"></code>            <span class="doc doc-object-name doc-function-name">init</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-async"><code>async</code></small>
+  </span>
+
+</h3>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">init</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span>
+</span></code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Create the channel and its remote actor when execution starts.</p>
+
+
+    </div>
+
+</div>
+
 
 
   </div>
@@ -4923,7 +5037,7 @@ Only relevant in the case of pub-sub mode channels.</p>
 
         <p><code>RayChannel</code> enables async data exchange between coroutines on a Ray cluster.</p>
 
-        <p>Instantiates <code>RayChannel</code>.</p>
+        <p>Instantiates <code>RayChannel</code> and creates its remote actor.</p>
 
 
 <p><span class="doc-section-title">Parameters:</span></p>
@@ -5556,6 +5670,30 @@ environment variable.</p>
     <div class="doc doc-contents ">
 
         <p>Returns a <code>ZMQChannel</code> for sending messages.</p>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="plugboard.connector.ZMQConnector.init" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-method"></code>            <span class="doc doc-object-name doc-function-name">init</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-async"><code>async</code></small>
+  </span>
+
+</h3>
+<div class="language-python doc-signature highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nf">init</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span>
+</span></code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Allocate resources for the selected ZMQ implementation.</p>
 
 
     </div>
