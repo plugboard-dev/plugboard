@@ -70,12 +70,11 @@ async def test_component_validation() -> None:
         async def step(self) -> None:
             self.y = self.x
 
-    process = LocalProcess(
-        components=[A(name="a", iters=10), NoSuperCall(name="test-no-super")],
-        connectors=[
-            AsyncioConnector(spec=ConnectorSpec(source="a.out_1", target="test-no-super.x"))
-        ],
-    )
-
     with pytest.raises(exceptions.ValidationError, match="forget to call super"):
+        process = LocalProcess(
+            components=[A(name="a", iters=10), NoSuperCall(name="test-no-super")],
+            connectors=[
+                AsyncioConnector(spec=ConnectorSpec(source="a.out_1", target="test-no-super.x"))
+            ],
+        )
         await process.init()

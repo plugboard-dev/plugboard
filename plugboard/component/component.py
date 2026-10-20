@@ -238,7 +238,12 @@ class Component(ABC, ExportMixin):
     @property
     def id(self) -> str:
         """Unique ID for `Component`."""
-        return self.name
+        try:
+            return self.name
+        except AttributeError as e:
+            raise ValidationError(
+                "Component invalid: did you forget to call super().__init__ in the constructor?"
+            ) from e
 
     @property
     def state(self) -> _t.Optional[StateBackend]:
