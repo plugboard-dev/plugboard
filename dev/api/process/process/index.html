@@ -3834,7 +3834,10 @@ What's new: 🚀 we've open-sourced Plugboard - please <a href="https://github.c
 
 
 
-        <p><code>RayProcess</code> manages components in a process model on a multiple Ray actors.</p>
+        <p>Manages components on multiple Ray actors.</p>
+<p>Concurrent lifecycle calls use TaskGroup: a failure cancels sibling local
+waits, requests cancellation of remote calls, and raises an ExceptionGroup.
+Remote cancellation is cooperative and may still be in progress on return.</p>
 
         <p>Instantiates a <code>RayProcess</code>.</p>
 
