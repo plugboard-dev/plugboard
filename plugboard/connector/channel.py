@@ -85,7 +85,7 @@ class Channel(ABC):
             if self._is_recv_closed:
                 raise ChannelClosedError("Attempted recv on closed channel.")
             msg = await self._recv()
-            if msg == CHAN_CLOSE_MSG:
+            if isinstance(msg, str) and msg == CHAN_CLOSE_MSG:
                 await self.close()
                 self._is_recv_closed = True
                 self._is_send_closed = True
