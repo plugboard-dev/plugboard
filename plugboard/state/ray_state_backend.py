@@ -67,21 +67,38 @@ class RayStateBackend(DictStateBackend):
         super().__init__(*args, **kwargs)
         default_options = {"num_cpus": 0}
         actor_options = actor_options or {}
-        actor_options = {**default_options, **actor_options}
-        self._actor = ray.remote(**actor_options)(_DictionaryActor).remote()
+        self._actor_options = {**default_options, **actor_options}
+        self._actor: _t.Any = None
+
+    async def init(self) -> None:
+        """Create the state actor and transfer any state stored before initialization."""
+        if self._actor is None:
+            self._actor = ray.remote(**self._actor_options)(_DictionaryActor).remote()
+            await self._actor.set_dict.remote(self._state_dict)
+        await super().init()
 
     @property
     def _state(self) -> dict[str, _t.Any]:
         """State dictionary."""
+        if self._actor is None:
+            return self._state_dict
         return ray.get(self._actor.get_dict.remote())  # type: ignore
 
     @_state.setter
     def _state(self, value: dict[str, _t.Any]) -> None:
         """Set state dictionary."""
+        if self._actor is None:
+            self._state_dict = value
+            return
         ray.get(self._actor.set_dict.remote(value))  # type: ignore
 
     async def _get(self, key: str | tuple[str, ...], value: _t.Optional[_t.Any] = None) -> _t.Any:
+        if self._actor is None:
+            return await super()._get(key, value)
         return await self._actor._get.remote(key, value)  # type: ignore
 
     async def _set(self, key: str | tuple[str, ...], value: _t.Any) -> None:  # noqa: A003
+        if self._actor is None:
+            await super()._set(key, value)
+            return
         await self._actor._set.remote(key, value)  # type: ignore

@@ -2,6 +2,7 @@
 
 from contextlib import AbstractContextManager, nullcontext
 import typing as _t
+from unittest.mock import patch
 
 import pytest
 import time_machine
@@ -166,6 +167,45 @@ async def test_state_backend_set(state_backend_cls: _t.Type[DictStateBackend]) -
         "nested": {"key": "new_value"},
         "nonexistent": {"key": "value"},
     }
+
+
+@pytest.mark.asyncio
+async def test_ray_state_backend_preinit_access_does_not_create_actor() -> None:
+    """Pre-init state operations remain local and preserve dictionary replacement semantics."""
+    with (
+        patch("plugboard.state.ray_state_backend.ray.remote") as remote,
+        patch("plugboard.state.ray_state_backend.ray.get") as get,
+    ):
+        state_backend = RayStateBackend()
+        state_backend._state = {"discarded": True}
+        state_backend._state = {"nested": {"key": "value"}}
+        await state_backend._set(("nested", "other"), "local")
+
+        assert await state_backend._get(("nested", "key")) == "value"
+        assert await state_backend._get(("missing", "key"), "default") == "default"
+        assert state_backend._state == {"nested": {"key": "value", "other": "local"}}
+        remote.assert_not_called()
+        get.assert_not_called()
+
+
+@pytest.mark.asyncio
+async def test_state_backend_preserves_preinit_state(
+    state_backend_cls: _t.Type[DictStateBackend],
+) -> None:
+    """Initialization preserves local data and subsequent reads and writes use shared state."""
+    state_backend = state_backend_cls()
+    state_backend._state = {"existing": "value"}
+    await state_backend._set(("nested", "key"), "before")
+
+    try:
+        await state_backend.init()
+
+        assert await state_backend._get("existing") == "value"
+        assert await state_backend._get(("nested", "key")) == "before"
+        await state_backend._set(("nested", "key"), "after")
+        assert state_backend._state["nested"] == {"key": "after"}
+    finally:
+        await state_backend.destroy()
 
 
 @pytest.mark.asyncio

@@ -57,6 +57,10 @@ class LocalProcess(Process):
 
     async def init(self) -> None:
         """Performs component initialisation actions."""
+        self.validate()
+        async with asyncio.TaskGroup() as tg:
+            for connector in self.connectors.values():
+                tg.create_task(connector.init())
         async with asyncio.TaskGroup() as tg:
             await self.connect_state()
             await self._connect_components()

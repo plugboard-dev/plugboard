@@ -105,6 +105,7 @@ class _ZMQConnector(Connector, ABC):
         super().__init__(*args, **kwargs)
         self._zmq_address = zmq_address
         self._maxsize = maxsize
+        self._init_lock = asyncio.Lock()
 
     @abstractmethod
     async def connect_send(self) -> ZMQChannel:
@@ -124,23 +125,31 @@ class _ZMQPipelineConnector(_ZMQConnector):
         super().__init__(*args, **kwargs)
         self._send_channel: _t.Optional[ZMQChannel] = None
         self._recv_channel: _t.Optional[ZMQChannel] = None
-
-        # Socket to receive sender address from sender
-        self._sender_rep_socket = create_socket(zmq.REP, [])
-        self._sender_rep_socket_port = self._sender_rep_socket.bind_to_random_port("tcp://*")
-        self._sender_rep_socket_addr = f"{self._zmq_address}:{self._sender_rep_socket_port}"
-        self._sender_req_lock = asyncio.Lock()
+        self._sender_rep_socket: _t.Optional[zmq_asyncio.Socket] = None
+        self._sender_rep_socket_addr: _t.Optional[str] = None
+        self._sender_req_lock: _t.Optional[asyncio.Lock] = None
         self._sender_addr: _t.Optional[str] = None
+        self._receiver_rep_socket: _t.Optional[zmq_asyncio.Socket] = None
+        self._receiver_rep_socket_addr: _t.Optional[str] = None
+        self._receiver_req_lock: _t.Optional[asyncio.Lock] = None
+        self._exchange_addr_task: _t.Optional[asyncio.Task[None]] = None
 
-        # Socket to send sender address to receiver
-        self._receiver_rep_socket = create_socket(zmq.REP, [])
-        self._receiver_rep_socket_port = self._receiver_rep_socket.bind_to_random_port("tcp://*")
-        self._receiver_rep_socket_addr = f"{self._zmq_address}:{self._receiver_rep_socket_port}"
-        self._receiver_req_lock = asyncio.Lock()
-
-        self._exchange_addr_task = asyncio.create_task(self._exchange_address())
-        _zmq_exchange_addr_tasks.add(self._exchange_addr_task)
-        self._exchange_addr_task.add_done_callback(_zmq_exchange_addr_tasks.discard)
+    async def init(self) -> None:
+        """Allocate address exchange sockets when execution starts."""
+        async with self._init_lock:
+            if self._sender_rep_socket_addr is not None:
+                return
+            self._sender_rep_socket = create_socket(zmq.REP, [])
+            sender_port = self._sender_rep_socket.bind_to_random_port("tcp://*")
+            self._sender_rep_socket_addr = f"{self._zmq_address}:{sender_port}"
+            self._sender_req_lock = asyncio.Lock()
+            self._receiver_rep_socket = create_socket(zmq.REP, [])
+            receiver_port = self._receiver_rep_socket.bind_to_random_port("tcp://*")
+            self._receiver_rep_socket_addr = f"{self._zmq_address}:{receiver_port}"
+            self._receiver_req_lock = asyncio.Lock()
+            self._exchange_addr_task = asyncio.create_task(self._exchange_address())
+            _zmq_exchange_addr_tasks.add(self._exchange_addr_task)
+            self._exchange_addr_task.add_done_callback(_zmq_exchange_addr_tasks.discard)
 
     def __getstate__(self) -> dict:
         state = self.__dict__.copy()
@@ -152,6 +161,7 @@ class _ZMQPipelineConnector(_ZMQConnector):
             "_exchange_addr_task",
             "_send_channel",
             "_recv_channel",
+            "_init_lock",
         ):
             if attr in state:
                 del state[attr]
@@ -161,28 +171,41 @@ class _ZMQPipelineConnector(_ZMQConnector):
         self.__dict__.update(state)
         self._send_channel = None
         self._recv_channel = None
+        self._init_lock = asyncio.Lock()
 
     async def _exchange_address(self) -> None:
+        if (
+            self._sender_req_lock is None
+            or self._sender_rep_socket is None
+            or self._receiver_req_lock is None
+            or self._receiver_rep_socket is None
+        ):
+            raise ChannelSetupError("ZMQ connector is not initialized")
+        sender_req_lock = self._sender_req_lock
+        sender_rep_socket = self._sender_rep_socket
+        receiver_req_lock = self._receiver_req_lock
+        receiver_rep_socket = self._receiver_rep_socket
+
         async def _handle_sender_requests() -> None:
-            async with self._sender_req_lock:
-                sender_request = await self._sender_rep_socket.recv_json()
+            async with sender_req_lock:
+                sender_request = await sender_rep_socket.recv_json()
                 if (sender_addr := sender_request.get("sender_address")) is None:
-                    await self._sender_rep_socket.send_json({"success": False})
+                    await sender_rep_socket.send_json({"success": False})
                 else:
                     self._sender_addr = sender_addr
-                await self._sender_rep_socket.send_json({"success": True})
+                await sender_rep_socket.send_json({"success": True})
 
                 while True:
-                    await self._sender_rep_socket.recv_json()
-                    await self._sender_rep_socket.send_json({"success": False})
+                    await sender_rep_socket.recv_json()
+                    await sender_rep_socket.send_json({"success": False})
 
         async def _handle_receiver_requests() -> None:
             while self._sender_addr is None:
                 await asyncio.sleep(0.5)
             while True:
-                async with self._receiver_req_lock:
-                    await self._receiver_rep_socket.recv()
-                    await self._receiver_rep_socket.send(self._sender_addr.encode())
+                async with receiver_req_lock:
+                    await receiver_rep_socket.recv()
+                    await receiver_rep_socket.send(self._sender_addr.encode())
 
         async with asyncio.TaskGroup() as tg:
             tg.create_task(_handle_sender_requests())
@@ -190,8 +213,11 @@ class _ZMQPipelineConnector(_ZMQConnector):
 
     async def connect_send(self) -> ZMQChannel:
         """Returns a `ZMQChannel` for sending messages."""
+        await self.init()
         if self._send_channel is not None:
             return self._send_channel
+        if self._sender_rep_socket_addr is None:
+            raise ChannelSetupError("ZMQ connector is not initialized")
         send_socket = create_socket(zmq.PUSH, [(zmq.SNDHWM, self._maxsize)])
         send_port = send_socket.bind_to_random_port("tcp://*")
         send_addr = f"{self._zmq_address}:{send_port}"
@@ -210,8 +236,11 @@ class _ZMQPipelineConnector(_ZMQConnector):
 
     async def connect_recv(self) -> ZMQChannel:
         """Returns a `ZMQChannel` for receiving messages."""
+        await self.init()
         if self._recv_channel is not None:
             return self._recv_channel
+        if self._receiver_rep_socket_addr is None:
+            raise ChannelSetupError("ZMQ connector is not initialized")
         recv_socket = create_socket(zmq.PULL, [(zmq.RCVHWM, self._maxsize)])
 
         receiver_req_socket = create_socket(zmq.REQ, [])
@@ -232,16 +261,28 @@ class _ZMQPubsubConnector(_ZMQConnector):
     def __init__(self, *args: _t.Any, **kwargs: _t.Any) -> None:
         super().__init__(*args, **kwargs)
         self._topic = str(self.spec.source)
-        self._xsub_socket = create_socket(zmq.XSUB, [(zmq.RCVHWM, self._maxsize)])
-        self._xsub_port = self._xsub_socket.bind_to_random_port("tcp://*")
-        self._xpub_socket = create_socket(zmq.XPUB, [(zmq.SNDHWM, self._maxsize)])
-        self._xpub_port = self._xpub_socket.bind_to_random_port("tcp://*")
-        self._poller = zmq_asyncio.Poller()
-        self._poller.register(self._xsub_socket, zmq.POLLIN)
-        self._poller.register(self._xpub_socket, zmq.POLLIN)
-        self._poll_task = asyncio.create_task(self._poll())
-        _zmq_proxy_tasks.add(self._poll_task)
-        self._poll_task.add_done_callback(_zmq_proxy_tasks.discard)
+        self._xsub_port: _t.Optional[int] = None
+        self._xpub_port: _t.Optional[int] = None
+        self._poller: _t.Optional[zmq_asyncio.Poller] = None
+        self._poll_task: _t.Optional[asyncio.Task[None]] = None
+        self._xsub_socket: _t.Optional[zmq_asyncio.Socket] = None
+        self._xpub_socket: _t.Optional[zmq_asyncio.Socket] = None
+
+    async def init(self) -> None:
+        """Allocate proxy sockets when execution starts."""
+        async with self._init_lock:
+            if self._xsub_port is not None:
+                return
+            self._xsub_socket = create_socket(zmq.XSUB, [(zmq.RCVHWM, self._maxsize)])
+            self._xsub_port = self._xsub_socket.bind_to_random_port("tcp://*")
+            self._xpub_socket = create_socket(zmq.XPUB, [(zmq.SNDHWM, self._maxsize)])
+            self._xpub_port = self._xpub_socket.bind_to_random_port("tcp://*")
+            self._poller = zmq_asyncio.Poller()
+            self._poller.register(self._xsub_socket, zmq.POLLIN)
+            self._poller.register(self._xpub_socket, zmq.POLLIN)
+            self._poll_task = asyncio.create_task(self._poll())
+            _zmq_proxy_tasks.add(self._poll_task)
+            self._poll_task.add_done_callback(_zmq_proxy_tasks.discard)
 
     def __getstate__(self) -> dict:
         state = self.__dict__.copy()
@@ -252,6 +293,8 @@ class _ZMQPubsubConnector(_ZMQConnector):
         return state
 
     async def _poll(self) -> None:
+        if self._poller is None or self._xpub_socket is None or self._xsub_socket is None:
+            raise ChannelSetupError("ZMQ connector is not initialized")
         poll_fn, xps, xss = self._poller.poll, self._xpub_socket, self._xsub_socket
         try:
             while True:
@@ -266,6 +309,9 @@ class _ZMQPubsubConnector(_ZMQConnector):
 
     async def connect_send(self) -> ZMQChannel:
         """Returns a `ZMQChannel` for sending pubsub messages."""
+        await self.init()
+        if self._xsub_port is None:
+            raise ChannelSetupError("ZMQ connector is not initialized")
         send_socket = create_socket(zmq.PUB, [(zmq.SNDHWM, self._maxsize)])
         send_socket.connect(f"{self._zmq_address}:{self._xsub_port}")
         await asyncio.sleep(0.1)  # Ensure connections established before first send. Better way?
@@ -273,6 +319,9 @@ class _ZMQPubsubConnector(_ZMQConnector):
 
     async def connect_recv(self) -> ZMQChannel:
         """Returns a `ZMQChannel` for receiving pubsub messages."""
+        await self.init()
+        if self._xpub_port is None:
+            raise ChannelSetupError("ZMQ connector is not initialized")
         socket_opts: zmq_sockopts_t = [
             (zmq.RCVHWM, self._maxsize),
             (zmq.SUBSCRIBE, self._topic.encode("utf8")),
@@ -286,16 +335,23 @@ class _ZMQPubsubConnector(_ZMQConnector):
 class _ZMQPubsubConnectorProxy(_ZMQConnector):
     """`_ZMQPubsubConnectorProxy` acts is a python asyncio based proxy for `ZMQChannel` messages."""
 
-    @inject
-    def __init__(
-        self, *args: _t.Any, zmq_proxy: ZMQProxy = Provide[DI.zmq_proxy], **kwargs: _t.Any
-    ) -> None:
+    def __init__(self, *args: _t.Any, **kwargs: _t.Any) -> None:
         super().__init__(*args, **kwargs)
         self._topic = str(self.spec.source)
-        self._zmq_proxy = zmq_proxy
+        self._zmq_proxy: _t.Optional[ZMQProxy] = None
 
         self._send_channel: _t.Optional[ZMQChannel] = None
         self._recv_channel: _t.Optional[ZMQChannel] = None
+
+    @inject
+    async def _resolve_proxy(self, zmq_proxy: ZMQProxy = Provide[DI.zmq_proxy]) -> ZMQProxy:
+        return zmq_proxy
+
+    async def init(self) -> None:
+        """Resolve the shared proxy when execution starts."""
+        async with self._init_lock:
+            if self._zmq_proxy is None:
+                self._zmq_proxy = await self._resolve_proxy()
 
     def __getstate__(self) -> dict:
         state = self.__dict__.copy()
@@ -311,8 +367,11 @@ class _ZMQPubsubConnectorProxy(_ZMQConnector):
 
     async def connect_send(self) -> ZMQChannel:
         """Returns a `ZMQChannel` for sending pubsub messages."""
+        await self.init()
         if self._send_channel is not None:
             return self._send_channel
+        if self._zmq_proxy is None:
+            raise ChannelSetupError("ZMQ connector is not initialized")
         send_socket = create_socket(zmq.PUB, [(zmq.SNDHWM, self._maxsize)])
         send_socket.connect(self._zmq_proxy.xsub_addr)
         self._send_channel = ZMQChannel(
@@ -323,6 +382,9 @@ class _ZMQPubsubConnectorProxy(_ZMQConnector):
 
     async def connect_recv(self) -> ZMQChannel:
         """Returns a `ZMQChannel` for receiving pubsub messages."""
+        await self.init()
+        if self._zmq_proxy is None:
+            raise ChannelSetupError("ZMQ connector is not initialized")
         socket_opts: zmq_sockopts_t = [
             (zmq.RCVHWM, self._maxsize),
             (zmq.SUBSCRIBE, self._topic.encode("utf8")),
@@ -347,8 +409,11 @@ class _ZMQPipelineConnectorProxy(_ZMQPubsubConnectorProxy):
 
     async def connect_recv(self) -> ZMQChannel:
         """Returns a `ZMQChannel` for receiving messages."""
+        await self.init()
         if self._recv_channel is not None:
             return self._recv_channel
+        if self._zmq_proxy is None:
+            raise ChannelSetupError("ZMQ connector is not initialized")
         self._push_address = await self._zmq_proxy.add_push_socket(
             self._topic, maxsize=self._maxsize
         )
@@ -383,6 +448,10 @@ class ZMQConnector(_ZMQConnector):
             case _:
                 raise ValueError(f"Unsupported connector mode: {self.spec.mode}")
         self._zmq_conn_impl: _ZMQConnector = zmq_conn_cls(*args, **kwargs)
+
+    async def init(self) -> None:
+        """Allocate resources for the selected ZMQ implementation."""
+        await self._zmq_conn_impl.init()
 
     @property
     def zmq_address(self) -> str:

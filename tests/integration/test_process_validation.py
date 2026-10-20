@@ -77,7 +77,5 @@ async def test_component_validation() -> None:
         ],
     )
 
-    with pytest.raises(ExceptionGroup) as exc_info:
+    with pytest.raises(exceptions.ValidationError, match="forget to call super"):
         await process.init()
-
-    assert exc_info.group_contains(exceptions.ValidationError), "No ValidationError raised"
