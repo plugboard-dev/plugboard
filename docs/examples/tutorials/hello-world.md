@@ -25,6 +25,8 @@ Let's define two components, `A` and `B`. `A` puts data into the model by genera
     * During the `step` method, the inputs and outputs are available as attributes: so assigning to `self.out_1` lets us set the output of `A`, and reading `self.in_1` allows us to read the input of `B`.
     * Notice how each component can have additional parameters in the `__init__` constructor, allowing us to give our components configurable settings like the output file path.
 
+`B` owns the file it opens in `init` and closes it in `destroy`. Opening, writing, and closing run in worker threads via `asyncio.to_thread`, so disk operations do not block the event loop. Each operation is awaited before the next one uses the file. The `async with process` context ensures teardown after execution.
+
 ### Setting up a `Process`
 
 Now we take these components, connect them up as a [`Process`][plugboard.process.Process], and fire off the model. When instantiating each component we must provide a `name`, which we can use to help define the connections between them. Using a [`ConnectorSpec`][plugboard.schemas.ConnectorSpec] object, we tell Plugboard to connect the `out_1` output of the `a` component to the `in_1` input of `b`. Visually, the model will look like this:

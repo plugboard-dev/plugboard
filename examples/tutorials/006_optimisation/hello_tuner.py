@@ -74,9 +74,9 @@ class MaxHeight(Component):
 # --8<-- [start:custom_search_space]
 def custom_space(trial: Trial) -> dict[str, _t.Any] | None:
     """Defines a custom search space for Optuna."""
-    angle = trial.suggest_int("trajectory.angle", 0, 90)
+    angle = trial.suggest_int("component.trajectory.arg.angle", 0, 90)
     # Make velocity depend on angle
-    trial.suggest_int("trajectory.velocity", angle, 100)
+    trial.suggest_int("component.trajectory.arg.velocity", angle, 100)
 # --8<-- [end:custom_search_space]
 
 

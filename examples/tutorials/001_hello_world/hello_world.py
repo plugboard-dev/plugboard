@@ -34,14 +34,14 @@ class B(Component):
         self._path = path
 
     async def init(self) -> None:
-        self._f = open(self._path, "w")
+        self._f: _t.TextIO = await asyncio.to_thread(open, self._path, "w")
 
     async def step(self) -> None:
         out = 2 * self.in_1
-        self._f.write(f"{out}\n")
+        await asyncio.to_thread(self._f.write, f"{out}\n")
 
     async def destroy(self) -> None:
-        self._f.close() # (4)!
+        await asyncio.to_thread(self._f.close) # (4)!
 # --8<-- [end:components]
 
 

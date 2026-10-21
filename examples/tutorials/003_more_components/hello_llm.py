@@ -26,26 +26,28 @@ class WeatherAPI(Component):
         self._client = httpx2.AsyncClient()
 
     async def step(self) -> None:
-        response = await self._client.get(
-            "https://api.open-meteo.com/v1/forecast",
-            params={
-                "latitude": self.latitude,
-                "longitude": self.longitude,
-                "current": "temperature_2m,wind_speed_10m",
-            },
-        )
+        # Emit missing values on failure rather than reusing the previous location's weather.
+        self.temperature = None
+        self.wind_speed = None
         try:
-            response.raise_for_status()
-        except httpx2.HTTPStatusError:
-            self._logger.error(
-                "Error querying weather API",
-                code=response.status_code,
-                message=response.text,
+            response = await self._client.get(
+                "https://api.open-meteo.com/v1/forecast",
+                params={
+                    "latitude": self.latitude,
+                    "longitude": self.longitude,
+                    "current": "temperature_2m,wind_speed_10m",
+                },
             )
+            response.raise_for_status()
+        except httpx2.HTTPError as exc:
+            self._logger.error("Error querying weather API", error=str(exc))
             return
         data = response.json()
         self.temperature = data["current"]["temperature_2m"]
         self.wind_speed = data["current"]["wind_speed_10m"]
+
+    async def destroy(self) -> None:
+        await self._client.aclose()
 # --8<-- [end:components]
 
 

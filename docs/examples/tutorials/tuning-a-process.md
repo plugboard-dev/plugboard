@@ -93,7 +93,7 @@ Occasionally you may need to define more complex search spaces, which go beyond 
 These conditional search space functions are supported by Ray Tune and can be defined as described in the [Ray documentation](https://docs.ray.io/en/latest/tune/examples/optuna_example.html#conditional-search-spaces). To use such a function you will need to:
 
 1. Setup the [`Tuner`][plugboard.tune.Tuner], defining your parameters as usual;
-2. Write a custom function to define the search space, where each tunable parameter has a name of the form `"{component_name.field_or_arg_name}"`; then
+2. Write a custom function to define the search space, where each tunable parameter has a name of the form `"component.<name>.arg.<argument>"`, such as `component.trajectory.arg.angle`; then
 3. Supply your custom function to the `OptunaSpec` algorithm configuration.
 
 If your search space function accepts an argument named `spec`, Plugboard will pass the [`ProcessSpec`][plugboard.schemas.ProcessSpec] to it. This allows you to inspect the process definition when creating the parameter space, which is useful for example to use the process or component parameters to influence the search space.
@@ -108,7 +108,7 @@ Then use this configuration to point the  tuner to the `custom_space` function.
 --8<-- "examples/tutorials/006_optimisation/model-with-tuner-custom.yaml"
 ```
 
-1. We can reference a [`Process`][plugboard.process.Process] from another YAML file here to avoid repetition.
+1. Define the [`Process`][plugboard.process.Process] inline, using the same components and connectors as above.
 2. Add the algorithm configuration here.
 
 Then run using `plugboard process tune model-with-tuner-custom.yaml`.
