@@ -21,16 +21,6 @@ When implementing your own components, you will need to:
 * Optionally define an `init()` method to do any required preparatory steps before the model in run.
 * In the case of event based models, define custom [`Event`][plugboard.events.Event] subclasses and corresponding event handler methods decorated with `Event.handler`.
 
-Input and output fields can be accessed as component attributes. A declared public
-field that has not been assigned a value returns `None`, and `hasattr` returns
-`True` for it. Reading the field does not assign a value or make an input ready.
-Fields declared at runtime, such as `FileReader` outputs supplied through
-`field_names`, follow the same rules using the instance's current `io` controller.
-Ordinary attributes retain normal Python behavior: reading an unknown attribute
-raises `AttributeError` with the component and field names, and `hasattr` returns
-`False`. Assigning `None` explicitly stores it as the field's value; an unset field
-has no entry in the instance dictionary.
-
 ### Connectors
 
 Data flows between components via **Connectors**. You will need to use these to tell Plugboard how data should flow between your components. Your overall model might be very simple, for example:
