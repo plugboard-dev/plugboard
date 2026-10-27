@@ -4,6 +4,7 @@ from abc import ABC
 import asyncio
 from contextlib import contextmanager
 import multiprocessing
+from types import SimpleNamespace
 import typing as _t
 from unittest.mock import patch
 
@@ -17,8 +18,26 @@ from plugboard.component import Component, IOController as IO
 from plugboard.component.io_controller import IOStreamClosedError
 from plugboard.connector import Connector
 from plugboard.schemas import Status
+from plugboard.utils import retry as retry_utils
 from plugboard.utils.di import DI
 from plugboard.utils.settings import Settings
+
+
+@pytest.fixture
+def backoff_delays(monkeypatch: pytest.MonkeyPatch) -> _t.Iterator[list[float]]:
+    """Captures the non-zero backoff delays applied by the retry helper.
+
+    Only the retry module's `asyncio` reference is replaced: patching `asyncio.sleep`
+    globally would also break the event loop teardown that waits for pending tasks.
+    """
+    delays: list[float] = []
+
+    async def _fake_sleep(delay: float, *args: _t.Any) -> None:
+        if delay:  # Idle poll pacing is not a backoff delay.
+            delays.append(delay)
+
+    monkeypatch.setattr(retry_utils, "asyncio", _t.cast(_t.Any, SimpleNamespace(sleep=_fake_sleep)))
+    yield delays
 
 
 @contextmanager

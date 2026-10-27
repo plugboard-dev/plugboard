@@ -142,12 +142,52 @@ jobs:
           sleep 10 # Wait for services to start
 
       - name: Run integration tests
-        run: COVERAGE_FILE=.coverage.py${{ matrix.python_version }}.integration uv run coverage run -m pytest ./tests/integration/ -m "not tuner"
+        # The message broker round trips are part of this suite and run on every Python
+        # leg. Each leg resolves its own dedicated broker lane (one SNS+SQS pair and
+        # Pub/Sub topic+subscription per Python version, provisioned in plugboard-infra
+        # and stored in the BROKER_LANES_JSON variable), so the legs run concurrently
+        # without contending on a shared queue or subscription. When broker tests are off
+        # the lane resolution is skipped and the broker tests self-skip.
+        run: |
+          # Resolve this leg's broker lane. The broker tests self-skip unless these env vars
+          # are set, so when broker tests are off, or lanes have not been provisioned for this
+          # run (e.g. a fork pull request where vars/secrets are unavailable), they simply skip.
+          if [ "${PLUGBOARD_MESSAGE_BROKER_TESTS}" = "true" ] && [ -n "${BROKER_LANES_JSON:-}" ]; then
+            # A lanes file is present but has no entry for this Python version: that is a
+            # configuration mismatch (version in the matrix but not in terraform), so fail loud.
+            if ! jq -e --arg v "$PYTHON_VERSION" 'has($v)' <<< "$BROKER_LANES_JSON" > /dev/null; then
+              echo "::error::No broker lane for Python $PYTHON_VERSION in BROKER_LANES_JSON"
+              exit 1
+            fi
+            printf '%s' "$GCP_SA_KEY_JSON" > /tmp/gcp-sa-key.json
+            # The lane values are queue URLs, topic ARNs and resource ids (no shell metacharacters),
+            # so the generated `export` lines are safe to eval.
+            eval "$(jq -r --arg v "$PYTHON_VERSION" \
+              '.[$v] | "export AWS_SQS_QUEUE_URL=\(.aws_sqs_queue_url)\nexport AWS_SNS_TOPIC_ARN=\(.aws_sns_topic_arn)\nexport GCP_TOPIC_ID=\(.gcp_topic_id)\nexport GCP_SUBSCRIPTION_ID=\(.gcp_subscription_id)"' \
+              <<< "$BROKER_LANES_JSON")"
+            export GOOGLE_APPLICATION_CREDENTIALS=/tmp/gcp-sa-key.json
+            echo "Broker lane for Python $PYTHON_VERSION:"
+            echo "  AWS_SQS_QUEUE_URL=$AWS_SQS_QUEUE_URL"
+            echo "  GCP_TOPIC_ID=$GCP_TOPIC_ID"
+          fi
+          COVERAGE_FILE=.coverage.py${{ matrix.python_version }}.integration \
+            uv run coverage run -m pytest ./tests/integration/ -m "not tuner"
         env:
           RABBITMQ_URL: amqp://user:password@localhost:5672/
           REDIS_URL: redis://default:password@localhost:6379/
           RAY_ENABLE_UV_RUN_RUNTIME_ENV: 0
           PLUGBOARD_IO_READ_TIMEOUT: 5.0
+          # Message broker test inputs. The per-lane identifiers are resolved from
+          # BROKER_LANES_JSON in the step above (only when the tests are enabled).
+          PYTHON_VERSION: ${{ matrix.python_version }}
+          PLUGBOARD_MESSAGE_BROKER_TESTS: ${{ vars.PLUGBOARD_MESSAGE_BROKER_TESTS }}
+          BROKER_LANES_JSON: ${{ vars.BROKER_LANES_JSON }}
+          GCP_SA_KEY_JSON: ${{ secrets.GCP_SA_KEY_JSON }}
+          AWS_REGION: ${{ vars.AWS_REGION }}
+          GCP_PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}
+          GCP_PUBSUB_PROJECT_ID: ${{ vars.GCP_PUBSUB_PROJECT_ID }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 
       - name: Upload integration test coverage
         uses: actions/upload-artifact@v4
