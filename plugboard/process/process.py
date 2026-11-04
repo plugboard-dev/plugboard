@@ -12,6 +12,7 @@ import typing as _t
 import msgspec
 
 from plugboard.component import Component
+from plugboard.component.port_types import is_assignable, type_name
 from plugboard.connector import Connector
 from plugboard.exceptions import NotInitialisedError, ValidationError
 from plugboard.schemas import ConfigSpec, Status, validate_process
@@ -120,10 +121,34 @@ class Process(ExportMixin, ABC):
                 raise ValidationError(
                     "Component invalid: did you forget to call super().__init__ in the constructor?"
                 )
+        self._validate_io_types()
         errors = validate_process(self.dict())
         if errors:
             msg = "Process validation failed:\n" + "\n".join(errors)
             raise ValidationError(msg)
+
+    def _validate_io_types(self) -> None:
+        """Reject incompatible declared field connections without inspecting payloads."""
+        errors: list[str] = []
+        for connector in self.connectors.values():
+            source, target = connector.spec.source, connector.spec.target
+            source_component = self.components.get(source.entity)
+            target_component = self.components.get(target.entity)
+            if source_component is None or target_component is None:
+                continue  # Event connectors do not connect component field ports.
+            source_types = source_component.io.output_types
+            target_types = target_component.io.input_types
+            if source.descriptor not in source_types or target.descriptor not in target_types:
+                continue  # Existing channel setup handles unknown fields.
+            source_type = source_types[source.descriptor]
+            target_type = target_types[target.descriptor]
+            if is_assignable(source_type, target_type) is False:
+                errors.append(
+                    f"Incompatible port types: {source.id} ({type_name(source_type)}) -> "
+                    f"{target.id} ({type_name(target_type)})"
+                )
+        if errors:
+            raise ValidationError("Process type validation failed:\n" + "\n".join(errors))
 
     @abstractmethod
     async def step(self) -> None:

@@ -90,14 +90,22 @@ class Component(ABC, ExportMixin):
             except IOSetupError:
                 pass
         self.io = IO(
-            inputs=self.__class__.io.inputs,
-            outputs=self.__class__.io.outputs,
+            inputs={
+                name: self.__class__.io.input_types.get(name, _t.Any)
+                for name in self.__class__.io.inputs
+            },
+            outputs={
+                name: self.__class__.io.output_types.get(name, _t.Any)
+                for name in self.__class__.io.outputs
+            },
             initial_values=self._initial_values,
             input_events=self.__class__.io.input_events,
             output_events=self.__class__.io.output_events,
             event_field_coverage=self.__class__.io.event_field_coverage,
             namespace=self.name,
             component=self,
+            runtime_validation=self.__class__.io.runtime_validation,
+            validate_outputs=self.__class__.io.validate_outputs,
         )
         self.resources = resources or Resource(
             cpu=self.__class__.resources.cpu,
@@ -174,13 +182,36 @@ class Component(ABC, ExportMixin):
         # Get all parent classes that are Component subclasses
         io_args, exports = cls._get_aggregated_io_args()
         event_field_coverage = cls._get_event_field_coverage()
+        port_types: dict[str, dict[str, _t.Any]] = {"inputs": {}, "outputs": {}}
+        for base in reversed(cls.__mro__):
+            base_io = base.__dict__.get("io")
+            if not isinstance(base_io, IO):
+                continue
+            for direction, types in port_types.items():
+                for field, hint in getattr(base_io, f"{direction[:-1]}_types").items():
+                    previous = types.get(field, _t.Any)
+                    if previous is not _t.Any and hint is not _t.Any and previous != hint:
+                        raise IOSetupError(
+                            f"Conflicting inherited types for {cls.__name__}.{field}: "
+                            f"{previous!r} and {hint!r}"
+                        )
+                    if hint is not _t.Any or field not in types:
+                        types[field] = hint
+        runtime_validation = cls.io.runtime_validation
+        validate_outputs = cls.io.validate_outputs
         # Set io arguments for subclass
         cls.io = IO(
-            inputs=sorted(io_args["inputs"], key=str),
-            outputs=sorted(io_args["outputs"], key=str),
+            inputs={
+                name: port_types["inputs"].get(name, _t.Any) for name in sorted(io_args["inputs"])
+            },
+            outputs={
+                name: port_types["outputs"].get(name, _t.Any) for name in sorted(io_args["outputs"])
+            },
             input_events=_t.cast(list[_t.Type[Event]], sorted(io_args["input_events"], key=str)),
             output_events=_t.cast(list[_t.Type[Event]], sorted(io_args["output_events"], key=str)),
             event_field_coverage=event_field_coverage,
+            runtime_validation=runtime_validation,
+            validate_outputs=validate_outputs,
         )
         # Set exports for subclass
         cls.exports = sorted(set(exports))
@@ -364,15 +395,15 @@ class Component(ABC, ExportMixin):
                 await self._set_status(Status.RUNNING, publish=not self._is_running)
                 await self._io_read_with_status_check()
                 await self._handle_events()
-                self._bind_inputs()
-                if self._can_step:
-                    try:
+                try:
+                    self._bind_inputs()
+                    if self._can_step:
                         await self._step()
-                    except Exception as e:
-                        await self._set_status(Status.FAILED)
-                        self._logger.exception("Component step failed")
-                        raise e
-                self._bind_outputs()
+                    self._bind_outputs()
+                except Exception:
+                    await self._set_status(Status.FAILED)
+                    self._logger.exception("Component step failed")
+                    raise
                 await self.io.write()
                 self._reset_input_trackers()
                 await self._set_status(Status.WAITING, publish=not self._is_running)
@@ -473,6 +504,8 @@ class Component(ABC, ExportMixin):
         # Consume input data directly assigned and read from channels and reset to empty values
         received_inputs = dict(self.io.buf_fields[_io_key_in].flush())
         self._field_inputs.update(received_inputs)
+        if self.io._input_validators:
+            self.io.validate_inputs(self._field_inputs)
         # Check if all input fields have been set
         self._field_inputs_ready = all(k in self._field_inputs for k in self.io.inputs)
         for field in self.io.inputs:
@@ -489,6 +522,8 @@ class Component(ABC, ExportMixin):
         if not self._can_step:
             return
         output_data = {field: getattr(self, field, None) for field in self.io.outputs}
+        if self.io._output_validators:
+            self.io.validate_output_values(output_data)
         self.io.buf_fields[_io_key_out].put(output_data.items())
 
     async def _handle_events(self) -> None:

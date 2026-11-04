@@ -7,6 +7,13 @@ from collections import defaultdict, deque
 from functools import cache, cached_property
 import typing as _t
 
+from plugboard.component.port_types import (
+    PortDeclaration,
+    RuntimeValidation,
+    compile_validator,
+    normalize_ports,
+    type_name,
+)
 from plugboard.connector import AsyncioChannel, Channel, Connector
 from plugboard.events import Event, StopEvent
 from plugboard.exceptions import ChannelClosedError, IOStreamClosedError
@@ -29,22 +36,44 @@ _events_wait_task: str = "__AWAIT_EVENTS__"
 
 
 class IOController:
-    """`IOController` manages input/output to/from components."""
+    """`IOController` manages input/output to/from components.
+
+    Args:
+        inputs: Port names (implicitly Any), or a mapping of names to Python types.
+        outputs: Port names (implicitly Any), or a mapping of names to Python types.
+        runtime_validation: Input value checking: off (default), shallow (outer type),
+            or deep (including built-in container contents). Values are never coerced.
+        validate_outputs: Also check outputs before buffering, using runtime_validation.
+            Defaults to False. Each output is checked once before fan-out.
+    """
 
     def __init__(
         self,
-        inputs: _t.Optional[_t.Any] = None,
-        outputs: _t.Optional[_t.Any] = None,
+        inputs: PortDeclaration | None = None,
+        outputs: PortDeclaration | None = None,
         initial_values: _t.Optional[dict[str, _t.Iterable]] = None,
         input_events: _t.Optional[list[_t.Type[Event]]] = None,
         output_events: _t.Optional[list[_t.Type[Event]]] = None,
         event_field_coverage: _t.Optional[dict[str, list[str]]] = None,
         namespace: str = IO_NS_UNSET,
         component: _t.Optional[Component] = None,
+        *,
+        runtime_validation: RuntimeValidation = "off",
+        validate_outputs: bool = False,
     ) -> None:
         self.namespace = namespace
-        self.inputs = inputs or []
-        self.outputs = outputs or []
+        self.input_types = normalize_ports(inputs)
+        self.output_types = normalize_ports(outputs)
+        self.inputs = list(self.input_types)
+        self.outputs = list(self.output_types)
+        if runtime_validation not in ("off", "shallow", "deep"):
+            raise ValueError(f"Unknown runtime validation mode: {runtime_validation!r}")
+        self.runtime_validation = runtime_validation
+        self.validate_outputs = validate_outputs
+        self._input_validators = self._compile_validators(self.input_types)
+        self._output_validators = (
+            self._compile_validators(self.output_types) if validate_outputs else {}
+        )
         self.initial_values = initial_values or {}
         self.input_events = input_events or []
         self.output_events = output_events or []
@@ -86,6 +115,28 @@ class IOController:
         self._received_events: deque[Event] = deque()
         self._received_events_lock = asyncio.Lock()
         self._has_received_events = asyncio.Event()
+
+    def _compile_validators(
+        self, types: dict[str, _t.Any]
+    ) -> dict[str, _t.Callable[[_t.Any, str], None]]:
+        if self.runtime_validation == "off":
+            return {}
+        return {
+            field: compile_validator(hint, deep=self.runtime_validation == "deep")
+            for field, hint in types.items()
+            if hint is not _t.Any
+        }
+
+    def validate_inputs(self, values: dict[str, _t.Any]) -> None:
+        """Check supplied inputs, including event assignments and initial values."""
+        for field, validate in self._input_validators.items():
+            if field in values:
+                validate(values[field], f"{self.namespace}.{field} (input)")
+
+    def validate_output_values(self, values: dict[str, _t.Any]) -> None:
+        """Check each typed output once before buffering and fan-out."""
+        for field, validate in self._output_validators.items():
+            validate(values[field], f"{self.namespace}.{field} (output)")
 
     @property
     def is_closed(self) -> bool:
@@ -418,6 +469,15 @@ class IOController:
             "output_events": [e.safe_type() for e in self.output_events],
             "initial_values": {k: list(v) for k, v in self._initial_values.items()},
             "event_field_coverage": {k: list(v) for k, v in self.event_field_coverage.items()},
+            # Live types/validators stay out of state backend serialization.
+            **{
+                key: {field: type_name(hint) for field, hint in types.items()}
+                for key, types in (
+                    ("input_types", self.input_types),
+                    ("output_types", self.output_types),
+                )
+                if any(hint is not _t.Any for hint in types.values())
+            },
         }
 
 

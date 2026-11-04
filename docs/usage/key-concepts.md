@@ -21,6 +21,128 @@ When implementing your own components, you will need to:
 * Optionally define an `init()` method to do any required preparatory steps before the model in run.
 * In the case of event based models, define custom [`Event`][plugboard.events.Event] subclasses and corresponding event handler methods decorated with `Event.handler`.
 
+#### Optional input and output types
+
+Declare port types by passing a mapping of names to Python types to `IOController`:
+
+```python
+from plugboard.component import Component, IOController as IO
+
+
+class Double(Component):
+    io = IO(inputs={"value": int}, outputs={"result": int})
+
+    async def step(self) -> None:
+        self.result = self.value * 2
+```
+
+Existing lists of names still work: `IO(inputs=["value"], outputs=["result"])`
+declares both ports as `typing.Any`. You can mix a list on one side with a typed
+mapping on the other, or use `Any` explicitly for individual ports. Attribute
+annotations alone do not declare port types or directions. Mapping declarations
+provide runtime metadata; add ordinary attribute annotations separately if you
+want your editor or static type checker to check `self.value` and `self.result`.
+
+Supported types are `Any`, Python classes, unions such as `int | None`, and
+`list[T]`, `dict[K, V]`, `set[T]`, `frozenset[T]`, fixed-length `tuple[T, U]`, and
+variable-length `tuple[T, ...]`. These can be nested. `None` in a declaration
+means `type(None)`. Other typing constructs, including string forward references,
+`TypeVar`, `Literal`, `Annotated`, `TypedDict`, and protocols, raise `IOSetupError`.
+Use an ordinary class for a nominal check of an array, dataframe, or other custom
+payload; its internal contents, shape, and dtype are not inspected.
+
+Ports inherited from a base component retain their types. A name-only declaration
+does not erase an inherited type. Adding a type to an inherited `Any` port is
+allowed; conflicting explicit types raise `IOSetupError`, including conflicts
+between multiple base classes.
+
+The same syntax works for ports chosen at instance construction. For example,
+this component creates its output names from a configuration list:
+
+```python
+from plugboard.schemas import ComponentArgsDict
+from typing import Unpack
+
+
+class DynamicSource(Component):
+    # A class declaration is still needed for the component lifecycle.
+    io = IO(outputs=["ready"])
+
+    def __init__(self, fields: list[str], **kwargs: Unpack[ComponentArgsDict]) -> None:
+        super().__init__(**kwargs)
+        self.io = IO(
+            outputs={"ready": bool, **{name: int for name in fields}},
+            input_events=self.io.input_events,
+            output_events=self.io.output_events,
+            namespace=self.name,
+            component=self,
+            runtime_validation="deep",
+            validate_outputs=True,
+        )
+        self._fields = fields
+
+    async def step(self) -> None:
+        self.ready = True
+        for field in self._fields:
+            setattr(self, field, 42)
+```
+
+Keep constructor arguments serializable when using YAML configuration or JSON
+state backends. The example accepts a list of names and constructs the Python
+types inside the component. Type declarations in component code also work when
+the component is selected through YAML; there is no YAML type-expression syntax.
+
+#### Type validation
+
+Process initialization checks declared output-to-input compatibility, even when
+runtime checking is disabled. For example, `Dog` output can connect to `Animal`
+input when `Dog` subclasses `Animal`; the reverse fails with `ValidationError`.
+All possible members of an output union must be accepted by the input. Mutable
+containers (`list`, `dict`, `set`) are invariant, so `list[Dog]` cannot connect to
+`list[Animal]`; `tuple` and `frozenset` allow narrower element types. Each edge of
+a fan-in or fan-out is checked. `Any` and unknown element types of bare containers
+allow a connection without proving its compatibility.
+
+Runtime value checks are **off by default**. Enable them per controller:
+
+```python
+io = IO(
+    inputs={"samples": list[float], "label": str | None},
+    outputs={"average": float},
+    runtime_validation="deep",
+    validate_outputs=True,
+)
+```
+
+| Option | Behavior |
+| --- | --- |
+| `runtime_validation="off"` | No runtime value checks; initialization still checks declarations. |
+| `runtime_validation="shallow"` | Check each supplied input's outer type, without checking container contents. |
+| `runtime_validation="deep"` | Also check supported container contents and tuple lengths. |
+| `validate_outputs=True` | Apply the selected runtime mode to outputs before buffering and sending. Defaults to `False`. |
+
+Runtime validation uses `isinstance` semantics: subclasses are accepted, including
+`bool` for `int`. There is no numeric widening or coercion: an `int` is not a
+`float`, and a string containing digits is not an `int`. Union members follow the
+same rules. Values are checked in place, without converting or copying them.
+
+Input checks cover channel messages, initial values, and direct assignments
+(including event handlers) when inputs are bound for a step. A missing input is
+not checked, while an explicitly supplied `None` must match its declared type.
+Output checks run once per port before fan-out. Failures raise `ValidationError`
+with the component, port, expected and actual types, and a nested path where
+available, and mark the component as failed. Union failures report the union at
+the point where no alternative matches. Process execution may wrap failures in an
+`ExceptionGroup` or a Ray task error.
+
+Validators are built when the controller is created and reused for every value;
+untyped ports have no validators. Deep checks visit container contents on every
+message, so their cost grows with payload size. Use shallow checks for large
+payloads when checking only their outer class is sufficient. Validation policy
+belongs to each `IOController` declaration: a subclass declaring a new controller
+should specify its desired policy, and dynamically replaced controllers should
+do the same. Class controllers pass their policy to component instances.
+
 ### Connectors
 
 Data flows between components via **Connectors**. You will need to use these to tell Plugboard how data should flow between your components. Your overall model might be very simple, for example:
