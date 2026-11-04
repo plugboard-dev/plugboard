@@ -211,9 +211,18 @@ class Component(ABC, ExportMixin):
 
     # Prevents type-checker errors on public component IO attributes
     def __getattr__(self, key: str) -> _t.Any:
+        """Return `None` for unset declared public I/O fields only.
+
+        Use the current controller so fields declared at runtime are supported.
+        An unset field is not added to the instance dictionary, distinguishing it
+        from a field explicitly assigned `None`.
+        """
         if not key.startswith("_"):
-            return None
-        raise AttributeError(f"'{self.__class__.__name__}' object has no attribute '{key}'")
+            io = object.__getattribute__(self, "io")
+            if key in io.inputs or key in io.outputs:
+                return None
+        name = object.__getattribute__(self, "__dict__").get("name", "<unnamed>")
+        raise AttributeError(f"{type(self).__name__} component '{name}' has no attribute '{key}'")
 
     def __setattr__(self, key: str, value: _t.Any) -> None:
         """Sets attributes on the component.
@@ -229,7 +238,12 @@ class Component(ABC, ExportMixin):
     @property
     def id(self) -> str:
         """Unique ID for `Component`."""
-        return self.name
+        try:
+            return self.name
+        except AttributeError as e:
+            raise ValidationError(
+                "Component invalid: did you forget to call super().__init__ in the constructor?"
+            ) from e
 
     @property
     def state(self) -> _t.Optional[StateBackend]:
