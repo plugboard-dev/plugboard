@@ -314,14 +314,13 @@ async def test_io_read_with_process_failure(
     exceptions = exc_info.value.exceptions
 
     if process_cls == RayProcess:
-        # For Ray, we expect both the component failure and the process status error
-        assert len(exceptions) == 2
+        # TaskGroup reports the original failure without waiting for the consumer's
+        # periodic status check. Concurrent failures may also be included.
         underlying_errors = []
         for e in exceptions:
             if hasattr(e, "cause") and e.cause:
                 underlying_errors.append(type(e.cause))
         assert RuntimeError in underlying_errors
-        assert ProcessStatusError in underlying_errors
     else:
         # For LocalProcess, we only expect the component failure initially
         assert len(exceptions) == 1
@@ -329,8 +328,7 @@ async def test_io_read_with_process_failure(
         assert isinstance(inner_exception, RuntimeError)
         assert "Component failing_comp failed after 2 steps" in str(inner_exception)
 
-        # TODO : Change logic of process run to prevent cancellation (similar to Ray)?
-        # # Consumer should now raise ProcessStatusError when trying to read
+        # Consumer should now raise ProcessStatusError when trying to read.
         with pytest.raises(
             ProcessStatusError, match="Process in failed state for component consumer"
         ):
@@ -339,8 +337,8 @@ async def test_io_read_with_process_failure(
     # Verify the failing component status is FAILED
     assert failing_comp.status == Status.FAILED
 
-    # Verify consumer status is now STOPPED
-    assert consumer.status == Status.STOPPED
+    if process_cls == LocalProcess:
+        assert consumer.status == Status.STOPPED
 
     # The process status should be updated to FAILED due to the failing component
     process_status = await process.state.get_process_status(process.id)

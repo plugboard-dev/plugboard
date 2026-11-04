@@ -17,6 +17,10 @@ class Connector(ABC, ExportMixin):
     def __init__(self, spec: ConnectorSpec, *args: _t.Any, **kwargs: _t.Any) -> None:
         self.spec: ConnectorSpec = spec
 
+    async def init(self) -> None:
+        """Acquire resources required by this connector."""
+        pass
+
     @abstractmethod
     async def connect_send(self) -> Channel:
         """Returns a `Channel` for sending messages."""
