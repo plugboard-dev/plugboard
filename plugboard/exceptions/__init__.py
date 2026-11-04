@@ -116,3 +116,27 @@ class ProcessStatusError(Exception):
     """Raised when a `Process` is in an invalid state for the requested operation."""
 
     pass
+
+
+class MessageBrokerError(Exception):
+    """Base exception for message broker errors."""
+
+    pass
+
+
+class MessageBrokerConnectionError(MessageBrokerError):
+    """Raised when connection to a message broker fails."""
+
+    pass
+
+
+class MessageBrokerTransientError(MessageBrokerError):
+    """Raised on transient message broker errors (eligible for retry)."""
+
+    pass
+
+
+class MessageBrokerPermanentError(MessageBrokerError):
+    """Raised on permanent message broker errors (not eligible for retry)."""
+
+    pass

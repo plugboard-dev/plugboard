@@ -69,7 +69,7 @@ Optional integrations for different cloud providers can be installed using `plug
 
 Support for parallelisation and hyperparameter optimisation can be installed using `plugboard[ray]`.
 
-Additional optional extras: `plugboard[llm]` for LLM components, `plugboard[redis]` for Redis-based connectors, `plugboard[omq]` for the pyomq backend for ZMQ connectors, and `plugboard[websockets]` for WebSocket I/O.
+Additional optional extras: `plugboard[llm]` for LLM components, `plugboard[redis]` for Redis-based connectors, `plugboard[omq]` for the pyomq backend for ZMQ connectors, `plugboard[websockets]` for WebSocket I/O, and `plugboard[gcp-pubsub]` or `plugboard[aws-messaging]` for [message data components](https://docs.plugboard.dev/latest/usage/message-data/).
 
 ## ⚡ Quickstart with AI
 
