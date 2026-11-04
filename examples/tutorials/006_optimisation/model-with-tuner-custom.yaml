@@ -1,5 +1,24 @@
 plugboard:
-  process: model-with-tuner.yaml  # (1)!
+  process:  # (1)!
+    args:
+      components:
+      - type: hello_tuner.Iterator
+        args:
+          name: horizontal
+          iters: 100
+      - type: hello_tuner.Trajectory
+        args:
+          name: trajectory
+          angle: 25
+          velocity: 20
+      - type: hello_tuner.MaxHeight
+        args:
+          name: max-height
+      connectors:
+      - source: horizontal.x
+        target: trajectory.x
+      - source: trajectory.y
+        target: max-height.y
   tune:
     args:
       objective:

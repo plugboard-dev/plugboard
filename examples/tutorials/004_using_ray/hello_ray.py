@@ -30,7 +30,7 @@ class Iterator(Component):
 
     async def step(self) -> None:
         try:
-            self.out_1 = next(self._seq)
+            self.x = next(self._seq)
         except StopIteration:
             await self.io.close()
 
