@@ -19,6 +19,8 @@ from plugboard.library.message_writer import (
     iter_records,
 )
 from plugboard.schemas import ConnectorSpec
+from plugboard.state import DictStateBackend
+from plugboard.utils.entities import EntityIdGen
 from plugboard.utils.retry import RetryPolicy
 
 
@@ -352,3 +354,28 @@ def test_encode_records_bytes_preserves_binary_payloads() -> None:
     """Tests that non-UTF-8 bytes survive a raw (non-JSON) payload untouched."""
     payload = bytes([0xFF, 0xFE, 0x00])
     assert encode_records_bytes({"x": deque([payload])}, parse_json=False) == [payload]
+
+
+async def test_writer_job_id_resolution(job_id_ctx: str) -> None:
+    """Tests `job_id` precedence: explicit > state > DI context > generated fallback."""
+    from_ctx = make_writer(["x"])
+    assert from_ctx.job_id == job_id_ctx
+
+    explicit = make_writer(["x"], job_id="Job_explicit123")
+    assert explicit.job_id == "Job_explicit123"
+
+    state = DictStateBackend(job_id="Job_state1234567")
+    await state.init()
+    from_state = make_writer(["x"], state=state)
+    assert from_state.job_id == "Job_state1234567"
+
+
+def test_writer_job_id_standalone_fallback() -> None:
+    """Tests that a standalone writer outside a DI context generates a stable `job_id`."""
+    writer = make_writer(["x"])
+    resolved = writer.job_id
+    assert EntityIdGen.is_job_id(resolved)
+    assert writer.job_id == resolved
+    writer._job_id = None
+    with writer._job_id_ctx():
+        assert EntityIdGen.is_job_id(writer.job_id)

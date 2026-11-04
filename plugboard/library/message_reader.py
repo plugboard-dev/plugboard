@@ -12,6 +12,7 @@ from plugboard.component import IOController
 from plugboard.exceptions import NoMoreDataException
 from plugboard.library.data_reader import DataReader, DataReaderArgsSpec
 from plugboard.schemas import ComponentArgsDict
+from plugboard.utils import DI
 from plugboard.utils.retry import RetryPolicy, attempt_reconnect
 
 
@@ -25,11 +26,14 @@ class MessageDataReaderArgsDict(DataReaderArgsSpec):
         retry_policy: Optional; The backoff policy for retrying failed broker calls.
         idle_poll_delay: Optional; Delay in seconds between polls that return no
             messages.
+        job_id: Optional; The job ID to filter incoming messages by. Defaults to the
+            active Plugboard job ID.
     """
 
     topic: _t.NotRequired[str]
     retry_policy: _t.NotRequired[RetryPolicy]
     idle_poll_delay: _t.NotRequired[float]
+    job_id: _t.NotRequired[_t.Optional[str]]
 
 
 class MessageDataReader(DataReader):
@@ -59,6 +63,7 @@ class MessageDataReader(DataReader):
         chunk_size: _t.Optional[int] = None,
         retry_policy: RetryPolicy = RetryPolicy(),
         idle_poll_delay: float = 0.1,
+        job_id: _t.Optional[str] = None,
         **kwargs: _t.Unpack[ComponentArgsDict],
     ) -> None:
         """Instantiates the `MessageDataReader`.
@@ -70,14 +75,37 @@ class MessageDataReader(DataReader):
             retry_policy: The backoff policy for retrying failed broker calls.
             idle_poll_delay: Delay in seconds before polling again after a poll that
                 returned no messages.
+            job_id: Optional; The job ID to filter incoming messages by. Defaults to the
+                active Plugboard job ID.
             **kwargs: Additional keyword arguments for [`Component`][plugboard.component.Component].
         """
         super().__init__(field_names=field_names, chunk_size=chunk_size, **kwargs)
         self._topic = topic
         self._retry_policy = retry_policy
         self._idle_poll_delay = idle_poll_delay
+        self._explicit_job_id = job_id
+        self._job_id: _t.Optional[str] = job_id
+        if self._job_id is None:
+            with contextlib.suppress(RuntimeError):
+                self._job_id = DI.job_id.resolve_sync()
         self._pending_ack: list[_t.Any] = []
         self._connection_lock = asyncio.Lock()
+
+    @property
+    def job_id(self) -> str:
+        """The job ID used to filter incoming messages."""
+        if self._explicit_job_id is not None:
+            return self._explicit_job_id
+        if self._state is not None and self._state.job_id is not None:
+            return self._state.job_id
+        if self._job_id is not None:
+            return self._job_id
+        try:
+            self._job_id = DI.job_id.resolve_sync()
+        except RuntimeError:
+            with self._job_id_ctx():
+                self._job_id = DI.job_id.resolve_sync()
+        return self._job_id
 
     @abstractmethod
     async def _connect(self) -> None:

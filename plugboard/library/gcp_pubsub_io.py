@@ -104,6 +104,16 @@ def _decode_payload(payload: bytes, *, parse_json: bool) -> dict[str, _t.Any]:
     return record
 
 
+def _extract_job_id(msg_wrapper: _t.Any) -> _t.Optional[str]:
+    """Extracts the `job_id` attribute from a PubSub `ReceivedMessage`, if present."""
+    message = getattr(msg_wrapper, "message", None)
+    attributes = getattr(message, "attributes", None)
+    if not isinstance(attributes, _t.Mapping):
+        return None
+    value = attributes.get("job_id")
+    return value if isinstance(value, str) else None
+
+
 class GCPPubSubDataReader(MessageDataReader):
     """Reads data from a Google Cloud PubSub subscription.
 
@@ -185,7 +195,13 @@ class GCPPubSubDataReader(MessageDataReader):
             return []
         except Exception as error:  # noqa: BLE001
             raise _wrap_error(error, exhausted=True) from error
-        return list(response.received_messages)
+        messages = list(response.received_messages)
+        target_job_id = self.job_id
+        matching = [msg for msg in messages if _extract_job_id(msg) == target_job_id]
+        unmatched = [msg for msg in messages if _extract_job_id(msg) != target_job_id]
+        if unmatched:
+            await self._ack(unmatched)
+        return matching
 
     async def _convert(self, data: list[_t.Any]) -> dict[str, deque]:
         """Converts PubSub messages to a field buffer.
@@ -295,9 +311,13 @@ class GCPPubSubDataWriter(MessageDataWriter):
         if self._publisher is None:
             raise MessageBrokerConnectionError("Publisher client is not connected")
         publisher = self._publisher
+        job_id = self.job_id
 
         def _publish() -> None:
-            futures = [publisher.publish(self._topic_path, data=msg_data) for msg_data in messages]
+            futures = [
+                publisher.publish(self._topic_path, data=msg_data, job_id=job_id)
+                for msg_data in messages
+            ]
             # The publisher batches internally; each future resolves once the broker
             # has accepted that message.
             for future in futures:

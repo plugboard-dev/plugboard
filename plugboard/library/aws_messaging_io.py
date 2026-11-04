@@ -115,6 +115,31 @@ def _decode_body(body: str, *, parse_json: bool) -> dict[str, _t.Any]:
     return record
 
 
+def _attr_string(attrs: _t.Any, key: str) -> _t.Optional[str]:
+    """Reads a string message attribute from an SQS or SNS `MessageAttributes` mapping."""
+    if not isinstance(attrs, dict):
+        return None
+    entry = attrs.get(key)
+    if not isinstance(entry, dict):
+        return None
+    value = entry.get("StringValue") or entry.get("Value")
+    return value if isinstance(value, str) else None
+
+
+def _extract_job_id(msg: dict[str, _t.Any]) -> _t.Optional[str]:
+    """Extracts the `job_id` attribute from an SQS message or its SNS envelope."""
+    direct = _attr_string(msg.get("MessageAttributes"), "job_id")
+    if direct is not None:
+        return direct
+    body = msg.get("Body")
+    if not isinstance(body, str):
+        return None
+    parsed = _parse_json_or_raw(body)
+    if isinstance(parsed, dict) and parsed.get("Type") == "Notification":
+        return _attr_string(parsed.get("MessageAttributes"), "job_id")
+    return None
+
+
 def _error_code(error: Exception) -> _t.Optional[str]:
     """Extracts the AWS error code from a client error, if it has one."""
     if not isinstance(error, _CLIENT_ERRORS):
@@ -227,12 +252,19 @@ class AWSSQSDataReader(MessageDataReader):
             "QueueUrl": self._queue_url,
             "MaxNumberOfMessages": min(self._chunk_size or _SQS_MAX_MESSAGES, _SQS_MAX_MESSAGES),
             "WaitTimeSeconds": self._wait_time_seconds,
+            "MessageAttributeNames": ["job_id"],
         }
         try:
             response = await self._client.receive_message(**request)
         except Exception as error:  # noqa: BLE001
             raise _wrap_error(error, exhausted=True) from error
-        return response.get("Messages", [])
+        messages = response.get("Messages", [])
+        target_job_id = self.job_id
+        matching = [msg for msg in messages if _extract_job_id(msg) == target_job_id]
+        unmatched = [msg for msg in messages if _extract_job_id(msg) != target_job_id]
+        if unmatched:
+            await self._ack(unmatched)
+        return matching
 
     async def _convert(self, data: list[_t.Any]) -> dict[str, deque]:
         """Converts SQS messages to a field buffer.
@@ -349,9 +381,19 @@ class AWSSNSDataWriter(MessageDataWriter):
         """
         if self._client is None:
             raise MessageBrokerConnectionError("SNS client is not connected")
+        message_attributes = {
+            "job_id": {
+                "DataType": "String",
+                "StringValue": self.job_id,
+            }
+        }
         for msg_data in messages:
             try:
-                await self._client.publish(TopicArn=self._topic_arn, Message=msg_data)
+                await self._client.publish(
+                    TopicArn=self._topic_arn,
+                    Message=msg_data,
+                    MessageAttributes=message_attributes,
+                )
             except Exception as error:  # noqa: BLE001
                 raise _wrap_error(error) from error
 

@@ -15,6 +15,8 @@ from plugboard.exceptions import (
     NoMoreDataException,
 )
 from plugboard.library.message_reader import MessageDataReader
+from plugboard.state import DictStateBackend
+from plugboard.utils.entities import EntityIdGen
 from plugboard.utils.retry import RetryPolicy
 
 
@@ -445,3 +447,29 @@ async def test_retries_exhausted_after_failed_reconnect_raise_broker_error(
     assert reader.connects == 1  # Only `init` connected; the reconnects all failed.
     assert backoff_delays == [1.0, 2.0]
     await reader.destroy()
+
+
+async def test_reader_job_id_resolution(job_id_ctx: str) -> None:
+    """Tests `job_id` precedence: explicit > state > DI context > generated fallback."""
+    from_ctx = make_reader([])
+    assert from_ctx.job_id == job_id_ctx
+
+    explicit = make_reader([], job_id="Job_explicit123")
+    assert explicit.job_id == "Job_explicit123"
+
+    state = DictStateBackend(job_id="Job_state1234567")
+    await state.init()
+    from_state = make_reader([], state=state)
+    assert from_state.job_id == "Job_state1234567"
+
+
+def test_reader_job_id_standalone_fallback() -> None:
+    """Tests that a standalone reader outside a DI context generates a stable `job_id`."""
+    reader = make_reader([])
+    resolved = reader.job_id
+    assert EntityIdGen.is_job_id(resolved)
+    assert reader.job_id == resolved
+    # Re-resolving inside the component's own context hits the active DI context path.
+    reader._job_id = None
+    with reader._job_id_ctx():
+        assert EntityIdGen.is_job_id(reader.job_id)

@@ -118,6 +118,14 @@ jobs:
     strategy:
       matrix:
         python_version: [3.12, 3.13, 3.14]
+    # Each Python version has its own dedicated broker lane in plugboard-infra, so the
+    # matrix legs within a run execute concurrently. A per-version concurrency group with
+    # `queue: max` serialises same-version legs across concurrent pipeline runs (queueing
+    # up to 100 pending jobs in FIFO order rather than cancelling earlier pending ones).
+    concurrency:
+      group: test-integration-${{ matrix.python_version }}
+      cancel-in-progress: false
+      queue: max
     steps:
       - name: Checkout
         uses: actions/checkout@v4

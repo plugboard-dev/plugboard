@@ -5,12 +5,14 @@ from __future__ import annotations
 from abc import abstractmethod
 import asyncio
 from collections import deque
+import contextlib
 import json
 import typing as _t
 
 from plugboard.component import IOController
 from plugboard.library.data_writer import DataWriter, DataWriterArgsSpec
 from plugboard.schemas import ComponentArgsDict
+from plugboard.utils import DI
 from plugboard.utils.retry import RetryPolicy, attempt_reconnect
 
 
@@ -22,10 +24,13 @@ class MessageDataWriterArgsDict(DataWriterArgsSpec):
     Attributes:
         topic: The topic/queue to write to.
         retry_policy: Optional; The backoff policy for retrying failed broker calls.
+        job_id: Optional; The job ID to attach to outgoing messages. Defaults to the
+            active Plugboard job ID.
     """
 
     topic: _t.NotRequired[str]
     retry_policy: _t.NotRequired[RetryPolicy]
+    job_id: _t.NotRequired[_t.Optional[str]]
 
 
 def iter_records(data: dict[str, deque]) -> _t.Iterator[dict[str, _t.Any]]:
@@ -113,6 +118,7 @@ class MessageDataWriter(DataWriter):
         topic: str = "",
         chunk_size: _t.Optional[int] = None,
         retry_policy: RetryPolicy = RetryPolicy(),
+        job_id: _t.Optional[str] = None,
         **kwargs: _t.Unpack[ComponentArgsDict],
     ) -> None:
         """Instantiates the `MessageDataWriter`.
@@ -122,11 +128,34 @@ class MessageDataWriter(DataWriter):
             topic: The topic/queue to write to.
             chunk_size: Optional; The number of records to batch into a single send.
             retry_policy: The backoff policy for retrying failed broker calls.
+            job_id: Optional; The job ID to attach to outgoing messages. Defaults to the
+                active Plugboard job ID.
             **kwargs: Additional keyword arguments for [`Component`][plugboard.component.Component].
         """
         super().__init__(field_names=field_names, chunk_size=chunk_size, **kwargs)
         self._topic = topic
         self._retry_policy = retry_policy
+        self._explicit_job_id = job_id
+        self._job_id: _t.Optional[str] = job_id
+        if self._job_id is None:
+            with contextlib.suppress(RuntimeError):
+                self._job_id = DI.job_id.resolve_sync()
+
+    @property
+    def job_id(self) -> str:
+        """The job ID attached to outgoing messages."""
+        if self._explicit_job_id is not None:
+            return self._explicit_job_id
+        if self._state is not None and self._state.job_id is not None:
+            return self._state.job_id
+        if self._job_id is not None:
+            return self._job_id
+        try:
+            self._job_id = DI.job_id.resolve_sync()
+        except RuntimeError:
+            with self._job_id_ctx():
+                self._job_id = DI.job_id.resolve_sync()
+        return self._job_id
 
     @abstractmethod
     async def _connect(self) -> None:

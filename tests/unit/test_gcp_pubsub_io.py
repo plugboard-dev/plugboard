@@ -24,11 +24,15 @@ from plugboard.utils.settings import Settings
 from tests import conftest
 
 
-def make_message(data: bytes) -> MagicMock:
+DEFAULT_JOB_ID = "Job_test12345678"
+
+
+def make_message(data: bytes, *, job_id: _t.Optional[str] = DEFAULT_JOB_ID) -> MagicMock:
     """Builds a PubSub `ReceivedMessage` double carrying `data`."""
     wrapper = MagicMock()
     wrapper.message.data = data
-    wrapper.ack_id = f"ack-{data!r}"
+    wrapper.message.attributes = {"job_id": job_id} if job_id is not None else {}
+    wrapper.ack_id = f"ack-{data!r}-{job_id}"
     return wrapper
 
 
@@ -66,6 +70,7 @@ def publisher(monkeypatch: pytest.MonkeyPatch) -> MagicMock:
 def make_reader(**kwargs: _t.Any) -> GCPPubSubDataReader:
     """Builds a reader for the fixed test project/subscription."""
     kwargs.setdefault("field_names", ["x", "y"])
+    kwargs.setdefault("job_id", DEFAULT_JOB_ID)
     return GCPPubSubDataReader(
         name="gcp-reader",
         project_id="test-project",
@@ -77,6 +82,7 @@ def make_reader(**kwargs: _t.Any) -> GCPPubSubDataReader:
 def make_writer(**kwargs: _t.Any) -> GCPPubSubDataWriter:
     """Builds a writer for the fixed test project/topic."""
     kwargs.setdefault("field_names", ["x", "y"])
+    kwargs.setdefault("job_id", DEFAULT_JOB_ID)
     return GCPPubSubDataWriter(
         name="gcp-writer",
         project_id="test-project",
@@ -127,6 +133,34 @@ async def test_reader_pulls_from_subscription_path(subscriber: MagicMock) -> Non
         timeout=30.0,
     )
     assert len(messages) == 1
+
+
+async def test_reader_filters_messages_by_job_id_and_acks_unmatched(
+    subscriber: MagicMock,
+) -> None:
+    """Tests that only messages matching `job_id` are returned and others are acknowledged."""
+    matched = make_message(b'{"x": 1}', job_id=DEFAULT_JOB_ID)
+    wrong_job = make_message(b'{"x": 2}', job_id="Job_other")
+    no_job = make_message(b'{"x": 3}', job_id=None)
+    subscriber.pull.return_value = MagicMock(received_messages=[matched, wrong_job, no_job])
+    reader = make_reader()
+    await reader._connect()
+
+    messages = await reader._receive()
+
+    assert messages == [matched]
+    subscriber.acknowledge.assert_called_once_with(
+        request={
+            "subscription": "projects/test-project/subscriptions/test-subscription",
+            "ack_ids": [wrong_job.ack_id, no_job.ack_id],
+        }
+    )
+
+
+def test_extract_job_id_handles_missing_attributes() -> None:
+    """Tests that a message wrapper with non-mapping attributes returns `None`."""
+    wrapper = SimpleNamespace(message=SimpleNamespace(attributes=None))
+    assert gcp_pubsub_io._extract_job_id(wrapper) is None
 
 
 async def test_reader_empty_pull_returns_no_messages(subscriber: MagicMock) -> None:
@@ -326,6 +360,10 @@ async def test_writer_publishes_encoded_records(publisher: MagicMock) -> None:
     assert [published.kwargs["data"] for published in publisher.publish.call_args_list] == [
         b'{"x": 1}',
         b'{"x": 2}',
+    ]
+    assert [published.kwargs["job_id"] for published in publisher.publish.call_args_list] == [
+        DEFAULT_JOB_ID,
+        DEFAULT_JOB_ID,
     ]
     assert [published.args for published in publisher.publish.call_args_list] == [
         ("projects/test-project/topics/test-topic",)

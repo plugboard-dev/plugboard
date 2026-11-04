@@ -53,6 +53,7 @@ requires_broker = pytest.mark.skipif(
 FIELD_NAMES = ["x", "y"]
 # Enough to verify batch delivery, but small so a broken broker fails fast.
 RECORDS = [{"x": i, "y": f"value-{i}"} for i in range(1, 6)]
+OTHER_JOB_RECORDS = [{"x": 999, "y": "other-job"}]
 EXPECTED = sorted((record["x"], record["y"]) for record in RECORDS)
 _LOG = logging.getLogger(__name__)
 
@@ -252,7 +253,7 @@ async def _clean_broker(
 
 
 @requires_broker
-async def test_aws_sns_sqs_round_trip(broker_env: None) -> None:
+async def test_aws_sns_sqs_round_trip(broker_env: None, job_id_ctx: str) -> None:
     """Writes records to the SNS topic and reads them back from the linked SQS queue."""
     queue_url = os.environ["AWS_SQS_QUEUE_URL"]
     topic_arn = os.environ["AWS_SNS_TOPIC_ARN"]
@@ -267,6 +268,14 @@ async def test_aws_sns_sqs_round_trip(broker_env: None) -> None:
         region=region,
         parse_json=True,
     )
+    other_writer = AWSSNSDataWriter(
+        name="aws-sns-other-writer",
+        field_names=FIELD_NAMES,
+        topic_arn=topic_arn,
+        region=region,
+        parse_json=True,
+        job_id="Job_other00000000",
+    )
     reader = AWSSQSDataReader(
         name="aws-sqs-reader",
         field_names=FIELD_NAMES,
@@ -276,18 +285,23 @@ async def test_aws_sns_sqs_round_trip(broker_env: None) -> None:
         wait_time_seconds=2,
         chunk_size=10,
     )
+    assert writer.job_id == reader.job_id == job_id_ctx
 
     writer_channels = await connect_writer(writer)
+    other_channels = await connect_writer(other_writer)
     await reader.init()
     await writer.init()
+    await other_writer.init()
     received: list[dict[str, _t.Any]] = []
     try:
+        await write_records(other_writer, other_channels, OTHER_JOB_RECORDS)
         await write_records(writer, writer_channels, RECORDS)
         received = await read_records(reader, len(RECORDS))
         assert sorted((record["x"], record["y"]) for record in received) == EXPECTED
         # The reader acknowledged every record, so nothing should remain on the queue.
         await _assert_aws_queue_empty(queue_url, region)
     finally:
+        await other_writer.destroy()
         await writer.destroy()
         await reader.destroy()
         # Safety net: if the read or assertion failed mid-way, drain any unacked
@@ -296,7 +310,7 @@ async def test_aws_sns_sqs_round_trip(broker_env: None) -> None:
 
 
 @requires_broker
-async def test_gcp_pubsub_round_trip(broker_env: None) -> None:
+async def test_gcp_pubsub_round_trip(broker_env: None, job_id_ctx: str) -> None:
     """Writes records to the PubSub topic and reads them back from the linked subscription."""
     project_id = os.environ["GCP_PUBSUB_PROJECT_ID"]
     topic_id = os.environ["GCP_TOPIC_ID"]
@@ -311,6 +325,14 @@ async def test_gcp_pubsub_round_trip(broker_env: None) -> None:
         project_id=project_id,
         parse_json=True,
     )
+    other_writer = GCPPubSubDataWriter(
+        name="gcp-pubsub-other-writer",
+        field_names=FIELD_NAMES,
+        topic_id=topic_id,
+        project_id=project_id,
+        parse_json=True,
+        job_id="Job_other00000000",
+    )
     reader = GCPPubSubDataReader(
         name="gcp-pubsub-reader",
         field_names=FIELD_NAMES,
@@ -320,12 +342,16 @@ async def test_gcp_pubsub_round_trip(broker_env: None) -> None:
         chunk_size=10,
         pull_timeout=3,
     )
+    assert writer.job_id == reader.job_id == job_id_ctx
 
     writer_channels = await connect_writer(writer)
+    other_channels = await connect_writer(other_writer)
     await reader.init()
     await writer.init()
+    await other_writer.init()
     received: list[dict[str, _t.Any]] = []
     try:
+        await write_records(other_writer, other_channels, OTHER_JOB_RECORDS)
         await write_records(writer, writer_channels, RECORDS)
         received = await read_records(reader, len(RECORDS))
         assert sorted((record["x"], record["y"]) for record in received) == EXPECTED
@@ -336,6 +362,7 @@ async def test_gcp_pubsub_round_trip(broker_env: None) -> None:
             "PubSub subscription not empty after the round trip"
         )
     finally:
+        await other_writer.destroy()
         await writer.destroy()
         await reader.destroy()
         # Clean up so nothing interferes with the next run.

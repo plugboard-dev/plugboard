@@ -64,9 +64,13 @@ def aws_client(monkeypatch: pytest.MonkeyPatch) -> _t.Iterator[MagicMock]:
     yield client
 
 
+DEFAULT_JOB_ID = "Job_test12345678"
+
+
 def make_reader(**kwargs: _t.Any) -> AWSSQSDataReader:
     """Builds a reader for the fixed test queue."""
     kwargs.setdefault("field_names", ["x", "y"])
+    kwargs.setdefault("job_id", DEFAULT_JOB_ID)
     return AWSSQSDataReader(
         name="sqs-reader",
         queue_url="https://sqs.test/1/messages",
@@ -78,6 +82,7 @@ def make_reader(**kwargs: _t.Any) -> AWSSQSDataReader:
 def make_writer(**kwargs: _t.Any) -> AWSSNSDataWriter:
     """Builds a writer for the fixed test topic."""
     kwargs.setdefault("field_names", ["x", "y"])
+    kwargs.setdefault("job_id", DEFAULT_JOB_ID)
     return AWSSNSDataWriter(
         name="sns-writer",
         topic_arn="arn:aws:sns:eu-west-1:1:messages",
@@ -86,9 +91,14 @@ def make_writer(**kwargs: _t.Any) -> AWSSNSDataWriter:
     )
 
 
-def sqs_message(body: str, handle: str) -> dict[str, str]:
+def sqs_message(
+    body: str, handle: str, *, job_id: _t.Optional[str] = DEFAULT_JOB_ID
+) -> dict[str, _t.Any]:
     """Builds an SQS message dict as returned by `ReceiveMessage`."""
-    return {"Body": body, "ReceiptHandle": handle, "MessageId": handle}
+    msg: dict[str, _t.Any] = {"Body": body, "ReceiptHandle": handle, "MessageId": handle}
+    if job_id is not None:
+        msg["MessageAttributes"] = {"job_id": {"DataType": "String", "StringValue": job_id}}
+    return msg
 
 
 async def test_reader_connects_sqs_client_in_region(aws_client: MagicMock) -> None:
@@ -115,9 +125,71 @@ async def test_reader_receives_with_long_polling(aws_client: MagicMock) -> None:
     messages = await reader._receive()
 
     aws_client.receive_message.assert_awaited_once_with(
-        QueueUrl="https://sqs.test/1/messages", MaxNumberOfMessages=5, WaitTimeSeconds=7
+        QueueUrl="https://sqs.test/1/messages",
+        MaxNumberOfMessages=5,
+        WaitTimeSeconds=7,
+        MessageAttributeNames=["job_id"],
     )
     assert [msg["ReceiptHandle"] for msg in messages] == ["h1"]
+
+
+async def test_reader_filters_messages_by_job_id_and_acks_unmatched(
+    aws_client: MagicMock,
+) -> None:
+    """Tests that only messages matching `job_id` are returned and others are discarded."""
+    sns_matching = {
+        "Body": json.dumps(
+            {
+                "Type": "Notification",
+                "Message": '{"x": 2}',
+                "MessageAttributes": {"job_id": {"Type": "String", "Value": DEFAULT_JOB_ID}},
+            }
+        ),
+        "ReceiptHandle": "h-sns-match",
+        "MessageId": "h-sns-match",
+    }
+    sns_wrong = {
+        "Body": json.dumps(
+            {
+                "Type": "Notification",
+                "Message": '{"x": 99}',
+                "MessageAttributes": {"job_id": {"Type": "String", "Value": "Job_other"}},
+            }
+        ),
+        "ReceiptHandle": "h-sns-wrong",
+        "MessageId": "h-sns-wrong",
+    }
+    aws_client.receive_message.return_value = {
+        "Messages": [
+            sqs_message('{"x": 1}', "h-direct-match", job_id=DEFAULT_JOB_ID),
+            sqs_message('{"x": 98}', "h-direct-wrong", job_id="Job_other"),
+            sqs_message('{"x": 97}', "h-missing", job_id=None),
+            sns_matching,
+            sns_wrong,
+        ]
+    }
+    reader = make_reader()
+    await reader._connect()
+
+    messages = await reader._receive()
+
+    assert [msg["ReceiptHandle"] for msg in messages] == ["h-direct-match", "h-sns-match"]
+    aws_client.delete_message_batch.assert_awaited_once_with(
+        QueueUrl="https://sqs.test/1/messages",
+        Entries=[
+            {"Id": "0", "ReceiptHandle": "h-direct-wrong"},
+            {"Id": "1", "ReceiptHandle": "h-missing"},
+            {"Id": "2", "ReceiptHandle": "h-sns-wrong"},
+        ],
+    )
+
+
+def test_extract_job_id_handles_malformed_attributes() -> None:
+    """Tests that malformed message attributes or bodies resolve to `None` cleanly."""
+    assert aws_messaging_io._extract_job_id({}) is None
+    assert aws_messaging_io._extract_job_id({"MessageAttributes": {"job_id": "bad"}}) is None
+    assert aws_messaging_io._extract_job_id({"Body": 123}) is None
+    assert aws_messaging_io._extract_job_id({"Body": '{"Type": "Notification"}'}) is None
 
 
 async def test_reader_caps_batch_at_the_sqs_maximum(aws_client: MagicMock) -> None:
@@ -333,8 +405,16 @@ async def test_writer_publishes_each_message(aws_client: MagicMock) -> None:
     await writer._send(['{"x": 1}', '{"x": 2}'])
 
     assert aws_client.publish.await_args_list == [
-        call(TopicArn="arn:aws:sns:eu-west-1:1:messages", Message='{"x": 1}'),
-        call(TopicArn="arn:aws:sns:eu-west-1:1:messages", Message='{"x": 2}'),
+        call(
+            TopicArn="arn:aws:sns:eu-west-1:1:messages",
+            Message='{"x": 1}',
+            MessageAttributes={"job_id": {"DataType": "String", "StringValue": DEFAULT_JOB_ID}},
+        ),
+        call(
+            TopicArn="arn:aws:sns:eu-west-1:1:messages",
+            Message='{"x": 2}',
+            MessageAttributes={"job_id": {"DataType": "String", "StringValue": DEFAULT_JOB_ID}},
+        ),
     ]
 
 

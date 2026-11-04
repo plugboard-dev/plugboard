@@ -119,6 +119,10 @@ any connector.
 - **SNS fan-out is transparent.** Subscribing an SQS queue to an SNS topic delivers the
   notification envelope, which `AWSSQSDataReader` unwraps automatically; a non-object
   body is exposed under `data`.
+- **Messages are scoped by `job_id`.** Writers attach the active Plugboard `job_id` as a
+  `job_id` message attribute, and readers filter incoming messages by `job_id`
+  (acknowledging and discarding non-matching messages). Pass `job_id=...` to override the
+  active process job ID when reading messages produced by another job.
 
 ## Configuration
 
