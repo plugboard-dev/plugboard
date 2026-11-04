@@ -45,6 +45,7 @@ We're going to use the [`LLMChat`][plugboard.library.LLMChat] to access OpenAI:
 
 1. `LLMChat` can use [structured output](https://docs.llamaindex.ai/en/stable/understanding/extraction/structured_llms/) to process the LLM response into a known format. Here we define a Pydantic model that specifies everything we're expecting back.
 2. Setting `expand_response = True` will unpack `location`, `latitude` and `longitude` into separate outputs on the component.
+3. The LLM model is passed explicitly: LlamaIndex's default (`gpt-3.5-turbo`) has been [deprecated by OpenAI](https://platform.openai.com/docs/deprecations), so always specify a current model.
 
 !!! info
     To run this tutorial you'll need an API key for [OpenAI](https://platform.openai.com/docs/quickstart). Set the `OPENAI_API_KEY` environment variable to provide it to the model.
