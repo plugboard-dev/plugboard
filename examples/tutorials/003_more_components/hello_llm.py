@@ -72,6 +72,7 @@ async def main() -> None:
         system_prompt="Identify a geographical location from the input and provide its latitude and longitude",
         response_model=Location,
         expand_response=True,  # (2)!
+        llm_kwargs={"model": "gpt-4o-mini"},  # (3)!
     )
     # --8<-- [end:llm]
     # --8<-- [start:weather]
