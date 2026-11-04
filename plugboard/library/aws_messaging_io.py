@@ -260,10 +260,15 @@ class AWSSQSDataReader(MessageDataReader):
             raise _wrap_error(error, exhausted=True) from error
         messages = response.get("Messages", [])
         target_job_id = self.job_id
-        matching = [msg for msg in messages if _extract_job_id(msg) == target_job_id]
-        unmatched = [msg for msg in messages if _extract_job_id(msg) != target_job_id]
+        matching: list[_t.Any] = []
+        unmatched: list[_t.Any] = []
+        for msg in messages:
+            (matching if _extract_job_id(msg) == target_job_id else unmatched).append(msg)
         if unmatched:
-            await self._ack(unmatched)
+            # Discarded under the connection lock, like every other acknowledgment, so a
+            # concurrent reconnect cannot swap the client mid-delete.
+            async with self._connection_lock:
+                await self._ack(unmatched)
         return matching
 
     async def _convert(self, data: list[_t.Any]) -> dict[str, deque]:

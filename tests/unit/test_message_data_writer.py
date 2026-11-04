@@ -356,6 +356,20 @@ def test_encode_records_bytes_preserves_binary_payloads() -> None:
     assert encode_records_bytes({"x": deque([payload])}, parse_json=False) == [payload]
 
 
+def test_default_retry_policy_is_shared_and_immutable() -> None:
+    """Tests why instantiating `RetryPolicy` in the signature default is safe.
+
+    The default is evaluated once, so every writer that does not override it shares one
+    instance. That is safe only while the policy stays immutable, so this test locks in
+    the frozen contract that makes the shared default correct.
+    """
+    first = RecordingWriter(name="first", field_names=["x"], topic="test-topic")
+    second = RecordingWriter(name="second", field_names=["x"], topic="test-topic")
+    assert first._retry_policy is second._retry_policy
+    with pytest.raises(AttributeError, match="immutable"):
+        setattr(first._retry_policy, "max_retries", 10)
+
+
 async def test_writer_job_id_resolution(job_id_ctx: str) -> None:
     """Tests `job_id` precedence: explicit > state > DI context > generated fallback."""
     from_ctx = make_writer(["x"])

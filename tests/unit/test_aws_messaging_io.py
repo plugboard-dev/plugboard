@@ -184,6 +184,19 @@ async def test_reader_filters_messages_by_job_id_and_acks_unmatched(
     )
 
 
+async def test_reader_discard_failure_wraps_transient_error(aws_client: MagicMock) -> None:
+    """Tests that a failed discard of an unmatched message surfaces as retryable."""
+    aws_client.receive_message.return_value = {
+        "Messages": [sqs_message('{"x": 99}', "h-wrong", job_id="Job_other")]
+    }
+    aws_client.delete_message_batch.side_effect = client_error("ThrottlingException")
+    reader = make_reader()
+    await reader._connect()
+
+    with pytest.raises(MessageBrokerTransientError):
+        await reader._receive()
+
+
 def test_extract_job_id_handles_malformed_attributes() -> None:
     """Tests that malformed message attributes or bodies resolve to `None` cleanly."""
     assert aws_messaging_io._extract_job_id({}) is None

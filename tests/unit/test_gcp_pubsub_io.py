@@ -157,6 +157,19 @@ async def test_reader_filters_messages_by_job_id_and_acks_unmatched(
     )
 
 
+async def test_reader_discard_failure_wraps_transient_error(subscriber: MagicMock) -> None:
+    """Tests that a failed discard of an unmatched message surfaces as retryable."""
+    subscriber.pull.return_value = MagicMock(
+        received_messages=[make_message(b'{"x": 99}', job_id="Job_other")]
+    )
+    subscriber.acknowledge.side_effect = gcp_exceptions.DeadlineExceeded("deadline")
+    reader = make_reader()
+    await reader._connect()
+
+    with pytest.raises(MessageBrokerTransientError):
+        await reader._receive()
+
+
 def test_extract_job_id_handles_missing_attributes() -> None:
     """Tests that a message wrapper with non-mapping attributes returns `None`."""
     wrapper = SimpleNamespace(message=SimpleNamespace(attributes=None))
