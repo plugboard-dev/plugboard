@@ -10,6 +10,7 @@ import typing as _t
 from unittest.mock import MagicMock, call
 
 from google.api_core import exceptions as gcp_exceptions
+from google.auth.exceptions import RefreshError
 import pytest
 
 from plugboard.exceptions import (
@@ -288,6 +289,7 @@ async def test_reader_disconnect_closes_subscriber(subscriber: MagicMock) -> Non
         (gcp_exceptions.PermissionDenied("nope"), MessageBrokerPermanentError),
         (gcp_exceptions.InvalidArgument("bad"), MessageBrokerPermanentError),
         (gcp_exceptions.ServiceUnavailable("busy"), MessageBrokerTransientError),
+        (RefreshError("refresh token revoked"), MessageBrokerPermanentError),
     ],
 )
 async def test_reader_maps_broker_errors(

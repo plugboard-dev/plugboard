@@ -25,16 +25,20 @@ from plugboard.utils.settings import resolve_argument
 
 try:
     from google.api_core import exceptions as gcp_exceptions
+    from google.auth import exceptions as auth_exceptions
     from google.cloud import pubsub_v1
 
     # PubSub rejections that retrying cannot resolve, so the retry loop should stop
-    # rather than back off repeatedly against a guaranteed failure.
+    # rather than back off repeatedly against a guaranteed failure. `RefreshError` is
+    # the google-auth failure to renew an expired access token (a revoked or dead
+    # refresh token): reconnecting cannot fix it, so it fails fast like the others.
     _PERMANENT_ERRORS: tuple[type[Exception], ...] = (
         gcp_exceptions.PermissionDenied,
         gcp_exceptions.Unauthorized,
         gcp_exceptions.InvalidArgument,
         gcp_exceptions.MethodNotImplemented,
         gcp_exceptions.FailedPrecondition,
+        auth_exceptions.RefreshError,
     )
 
     # PubSub failures that are expected to clear on their own, so they are worth retrying.

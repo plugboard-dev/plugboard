@@ -130,6 +130,43 @@ Connection details are passed explicitly or read from the environment (explicit 
 always win), so the same model can target a different account or region without code
 changes. The message-data components read the `GCP_PUBSUB_PROJECT_ID` and `AWS_REGION`
 environment variables; see [Configuration](configuration.md#message-data-brokers) for
-how these are resolved. Credentials are never configured through Plugboard — the clients
-use their normal provider mechanisms (Application Default Credentials for PubSub, and the
-standard AWS credential chain for SQS/SNS).
+how these are resolved. Credentials are never configured through Plugboard — see
+[Credentials](#credentials) for the mechanisms each provider picks up.
+
+## Credentials
+
+Plugboard never configures, stores or refreshes credentials itself: the broker client
+libraries resolve them from your environment, so authenticate **before** starting a run.
+The mechanisms below are picked up in the provider's own precedence order — see the
+provider documentation for full details.
+
+**AWS (SQS/SNS)** uses the
+[standard credential chain](https://docs.aws.amazon.com/sdkref/latest/guide/standardized-credentials.html):
+
+- Static keys in the environment: `AWS_ACCESS_KEY_ID` + `AWS_SECRET_ACCESS_KEY`
+  (plus `AWS_SESSION_TOKEN` for temporary credentials).
+- Shared credentials/config files, optionally selected with `AWS_PROFILE` — including
+  IAM Identity Center (SSO) and assume-role profiles.
+- The instance or container role when running on EC2/ECS/EKS.
+
+**GCP (PubSub)** uses
+[Application Default Credentials](https://cloud.google.com/docs/authentication/application-default-credentials):
+
+- A service account key file pointed at by `GOOGLE_APPLICATION_CREDENTIALS`.
+- User credentials from `gcloud auth application-default login`.
+- The metadata server / Workload Identity when running on GCP infrastructure.
+
+### Long-running jobs and expiring sessions
+
+Credentials that renew themselves — instance/container roles, service account keys, and
+ADC refresh tokens — keep working for the life of a long-running job: the client
+libraries refresh them automatically as access tokens expire.
+
+IAM Identity Center (SSO) sessions are the exception: the login token is valid only for
+your organisation's configured session length (1-12 hours, commonly 8) and can only be
+renewed by an interactive `aws sso login`. If a job outlives the session, the next broker
+call fails; the component retries with backoff — each reconnect re-runs credential
+resolution, which heals any provider that can refresh — and then fails with the
+provider's own error rather than a synthetic one. Prefer a non-interactive credential
+source (static keys, an instance role, or a service account) for jobs that may run
+longer than a login session.

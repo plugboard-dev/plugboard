@@ -8,7 +8,7 @@ import json
 import typing as _t
 from unittest.mock import AsyncMock, MagicMock, call
 
-from botocore.exceptions import BotoCoreError, ClientError
+from botocore.exceptions import BotoCoreError, ClientError, TokenRetrievalError
 import pytest
 
 from plugboard.exceptions import (
@@ -386,6 +386,25 @@ async def test_reader_maps_aws_error_codes(
 async def test_reader_transport_error_is_transient(aws_client: MagicMock) -> None:
     """Tests that a connection-level failure is retryable."""
     aws_client.receive_message.side_effect = BotoCoreError()
+    reader = make_reader()
+    await reader._connect()
+
+    with pytest.raises(MessageBrokerTransientError):
+        await reader._receive()
+
+
+async def test_reader_credential_expiry_is_transient_for_reconnect(aws_client: MagicMock) -> None:
+    """Tests that a credential-expiry error stays retryable so reconnects can heal it.
+
+    botocore raises `TokenRetrievalError` when a profile's credentials cannot be
+    refreshed, for example an expired IAM Identity Center (SSO) session. Reconnects
+    re-run credential resolution, so the error must remain retryable: a refreshable
+    provider recovers, and a genuinely dead session exhausts the retries and surfaces
+    botocore's own message.
+    """
+    aws_client.receive_message.side_effect = TokenRetrievalError(
+        provider="sso", error_msg="SSO session expired"
+    )
     reader = make_reader()
     await reader._connect()
 
